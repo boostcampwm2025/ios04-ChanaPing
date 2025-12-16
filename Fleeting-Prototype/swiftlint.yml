@@ -1,0 +1,48 @@
+# 0. 적용 제외 경로
+excluded:
+  - .build
+  - DerivedData
+
+# 1. 기본 규칙 비활성화: 기본 규칙 중 팀에서 원하지 않는 규칙이 있다면 여기에 추가합니다.
+disabled_rules:
+
+# 2. 옵트인 규칙: API Design Guidelines 준수를 위해 반드시 켜야 하는 규칙
+opt_in_rules:
+  # 안정성 관련 (가장 중요)
+  - force_unwrapping           # ! 사용 금지
+  - force_cast                 # as! 사용 금지
+  - force_try                  # try! 사용 금지
+  - implicitly_unwrapped_optional # IUO 사용 제한
+  # 명확성 및 간결성 관련
+  - weak_delegate              # 델리게이트는 weak으로
+  - empty_count                # .count == 0 대신 .isEmpty 사용
+  - implicit_optional_initialization  # 불필요한 '= nil' 제거
+  - closure_parameter_position # 클로저 매개변수 위치 일관성 유지
+
+# 3. 규칙 커스터마이징: 길이 및 크기 제한을 조정하여 가이드라인 준수
+line_length:
+  ignores_urls: true                       # URL에 대해 행 길이 제한 미적용
+  ignores_comments: true                   # 주석에 대해 행 길이 제한 미적용
+  ignores_interpolated_strings: true       # 보간된 문자열 행 길이 제한 미적용
+
+function_body_length:
+  warning: 70  # 함수는 70라인 이하로 유지 (하나의 역할만!)
+type_body_length:
+  warning: 300 # 클래스/구조체는 300라인 이하로 유지
+file_length:
+  warning: 500 # 파일 크기 제한
+
+# 4. 이름 규칙 커스터마이징
+identifier_name:
+  min_length: # 짧은 이름 방지 (예: single-letter names)
+    error: 3
+  excluded: # 허용되는 짧은 이름
+    - id
+    - x
+    - y
+    - z
+    - i
+    - j
+    - r
+    - g
+    - b
