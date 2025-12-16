@@ -1,0 +1,12 @@
+name: ↺ Refactor
+description: 외부 동작을 유지하면서 내부 구조를 개선합니다.
+title: "[Refactor] <제목>"
+labels: ["🏗️ refactor"]
+body:
+- type: textarea
+  attributes:
+    label: 이슈의 SubTask들을 알려주세요.
+    description: 해당 내용의 SubTask를 나열해주세요.
+    placeholder: subtask1
+  validations:
+    required: true

@@ -1,0 +1,12 @@
+name: 🧹 chore
+description: 기능 개발이나 버그 수정과 직접 관련되지 않은 프로젝트 운영을 위한 작업을 다룹니다.
+title: "[Chore] <제목>"
+labels: ["🧹 chore"]
+body:
+- type: textarea
+  attributes:
+    label: 이슈의 SubTask들을 알려주세요.
+    description: 해당 내용의 SubTask를 나열해주세요.
+    placeholder: subtask1
+  validations:
+    required: true
