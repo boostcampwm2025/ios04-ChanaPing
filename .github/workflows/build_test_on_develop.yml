@@ -1,0 +1,55 @@
+# GitHub의 액션 탭에서 표시되는 워크플로우의 이름
+name: Build and Test
+
+on:
+  # develop 브랜치에 push 나 pull request 이벤트가 일어났을때 해당 workflow를 트리거
+  push:
+    branches: [ chore/CI-script ]
+  pull_request:
+    branches: [ develop ]
+
+jobs:
+  build:
+    runs-on: macos-15
+    steps:
+    # repository 체크아웃(저장소의 코드를 실행 환경으로 가져옴)
+    - uses: actions/checkout@v4
+    
+    # 해당 가상 머신 환경에서의 가용 Xcode 버전을 출력
+    - name: List available Xcode versions
+      run: ls /Applications | grep Xcode
+
+    # 현재 Xcode 버전 출력
+    - name: Show current version of Xcode
+      run: xcodebuild -version
+
+    # Xcode 버전 직접 설정 후 확인
+    - name: Set up Xcode version
+      run: |
+        sudo xcode-select -s /Applications/Xcode_26.1.app/Contents/Developer
+        xcodebuild -version
+
+    - name: Build the project 🛠
+      run: |
+        # 프로젝트 디렉토리로 이동
+        cd Fleeting-Prototype
+        
+        # .xcworkspace 또는 .xcodeproj 파일 찾기
+        if [ -d *.xcworkspace ] 2>/dev/null; then
+          filetype_parameter="workspace"
+          file_to_build=$(ls -d *.xcworkspace | head -1)
+        elif [ -d *.xcodeproj ] 2>/dev/null; then
+          filetype_parameter="project"
+          file_to_build=$(ls -d *.xcodeproj | head -1)
+        else
+          echo "❌ No .xcworkspace or .xcodeproj found"
+          exit 1
+        fi
+
+        echo "Building $file_to_build..."
+
+        xcodebuild clean build -"$filetype_parameter" "$file_to_build" -scheme Fleeting-Prototype -destination 'platform=iOS Simulator,name=iPhone 17,OS=latest' -skipPackagePluginValidation -skipMacroValidation
+    
+#    - name: Run tests 🧪
+#      run: |
+#        xcodebuild test -project Fleeting-Prototype.xcodeproj -scheme [테스트 스킴 이름] -destination 'platform=iOS Simulator,name=iPhone 17,OS=latest' -skipPackagePluginValidation -skipMacroValidation
