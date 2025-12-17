@@ -12,11 +12,17 @@ import SwiftUI
 struct DomeView: UIViewRepresentable {
     let modelFileName: String
     let modelFileExtension: String
+    let dragDelta: Float
+
+    func makeCoordinator() -> Coordinator {
+        Coordinator()
+    }
 
     func makeUIView(context: Context) -> ARView {
         let arView = ARView(frame: .zero)
         let rotationRootAnchor = AnchorEntity(world: .zero)
         arView.scene.addAnchor(rotationRootAnchor)
+        context.coordinator.rotationRootAnchor = rotationRootAnchor
 
         Task {
             do {
@@ -31,7 +37,29 @@ struct DomeView: UIViewRepresentable {
         return arView
     }
 
-    func updateUIView(_ uiView: ARView, context: Context) { }
+    func updateUIView(_ uiView: ARView, context: Context) {
+        context.coordinator.updateYawRotation(delta: dragDelta)
+    }
+
+    // MARK: - Coordinator
+
+    final class Coordinator {
+        var rotationRootAnchor: AnchorEntity?
+
+        private var accumulatedYaw: Float = 0
+
+        func updateYawRotation(delta: Float) {
+            guard let rotationRootAnchor else { return }
+            guard delta != 0 else { return }
+
+            accumulatedYaw += delta
+
+            rotationRootAnchor.transform.rotation = simd_quatf(
+                angle: accumulatedYaw,
+                axis: SIMD3<Float>(0, 1, 0)
+            )
+        }
+    }
 }
 
 private extension DomeView {
@@ -49,7 +77,8 @@ private extension DomeView {
 #Preview {
     DomeView(
         modelFileName: "Dome",
-        modelFileExtension: "usdz"
+        modelFileExtension: "usdz",
+        dragDelta: 0
     )
     .ignoresSafeArea()
 }
