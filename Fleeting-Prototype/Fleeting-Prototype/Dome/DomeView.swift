@@ -32,10 +32,22 @@ struct DomeView: UIViewRepresentable {
 
                 let bubbleFactory = BubbleFactory()
                 let bubblePlacer = BubblePlacer()
-                let bubbleCount = 10
 
-                for _ in 0..<bubbleCount {
-                    let bubbleEntity = bubbleFactory.makeBubbleEntity()
+                let messages: [String] = [
+                    "조용함",
+                    "커피 맛있다",
+                    "분위기 좋다",
+                    "햇살이 좋아",
+                    "좌석 편하다",
+                    "음악이 좋다",
+                    "집중 잘 된다",
+                    "향이 좋다",
+                    "라떼가 최고",
+                    "여유롭다"
+                ]
+
+                for index in 0..<messages.count {
+                    let bubbleEntity = bubbleFactory.makeBubbleEntity(message: messages[index])
 
                     bubbleEntity.position = bubblePlacer.randomPositionInsideHemisphere(
                         radiusRange: 0.9...1.2,
@@ -104,11 +116,55 @@ private extension DomeView {
 // MARK: - BubbleFactory
 
 private struct BubbleFactory {
-    func makeBubbleEntity() -> ModelEntity {
-        let radius = Float.random(in: 0.04...0.10)
-        let mesh = MeshResource.generateSphere(radius: radius)
-        var material = SimpleMaterial()
 
+    // MARK: - Tuning
+
+    private enum Tuning {
+        static let bubbleRadiusRange: ClosedRange<Float> = 0.04...0.10
+        static let bubbleScaleRange: ClosedRange<Float> = 0.9...1.2
+
+        static let textInsetRatio: Float = 0.85
+
+        static let textScaleMinimum: Float = 0.20
+        static let textScaleMaximum: Float = 2.50
+
+        // Billboard 기준 +Z는 항상 카메라 방향
+        static let textForwardOffset: Float = 0.002
+
+        static let fontSize: CGFloat = 0.05
+        static let extrusionDepth: Float = 0.001
+    }
+
+    // MARK: - Public
+
+    func makeBubbleEntity(message: String) -> Entity {
+        let containerEntity = Entity()
+
+        let (bubbleEntity, effectiveBubbleRadius) = makeBubbleSphereAndEffectiveRadius()
+        containerEntity.addChild(bubbleEntity)
+
+        // Billboard는 "회전 피벗" 역할만 담당
+        let billboardPivotEntity = Entity()
+        billboardPivotEntity.components.set(BillboardComponent())
+        containerEntity.addChild(billboardPivotEntity)
+
+        let textModelEntity = makeCenteredTextModel(
+            message: message,
+            maxRadius: effectiveBubbleRadius * Tuning.textInsetRatio
+        )
+
+        billboardPivotEntity.addChild(textModelEntity)
+
+        return containerEntity
+    }
+
+    // MARK: - Bubble
+
+    private func makeBubbleSphereAndEffectiveRadius() -> (ModelEntity, Float) {
+        let baseRadius = Float.random(in: Tuning.bubbleRadiusRange)
+        let sphereMesh = MeshResource.generateSphere(radius: baseRadius)
+
+        var material = SimpleMaterial()
         material.color = .init(
             tint: .white.withAlphaComponent(0.25),
             texture: nil
@@ -116,11 +172,76 @@ private struct BubbleFactory {
         material.roughness = .float(0.1)
         material.metallic = .float(0.0)
 
-        let entity = ModelEntity(mesh: mesh, materials: [material])
-        let scale = Float.random(in: 0.9...1.2)
-        entity.scale = SIMD3<Float>(repeating: scale)
+        let bubbleEntity = ModelEntity(mesh: sphereMesh, materials: [material])
 
-        return entity
+        let bubbleScale = Float.random(in: Tuning.bubbleScaleRange)
+        bubbleEntity.scale = SIMD3<Float>(repeating: bubbleScale)
+
+        let effectiveRadius = baseRadius * bubbleScale
+        return (bubbleEntity, effectiveRadius)
+    }
+
+    // MARK: - Text
+
+    private func makeCenteredTextModel(
+        message: String,
+        maxRadius: Float
+    ) -> ModelEntity {
+
+        let textMesh = MeshResource.generateText(
+            message,
+            extrusionDepth: Tuning.extrusionDepth,
+            font: .systemFont(ofSize: Tuning.fontSize, weight: .semibold),
+            containerFrame: .zero,
+            alignment: .center,
+            lineBreakMode: .byWordWrapping
+        )
+
+        var textMaterial = SimpleMaterial()
+        textMaterial.color = .init(
+            tint: .white.withAlphaComponent(1.0),
+            texture: nil
+        )
+        textMaterial.roughness = .float(1.0)
+        textMaterial.metallic = .float(0.0)
+
+        let textEntity = ModelEntity(mesh: textMesh, materials: [textMaterial])
+
+        // 기본 스케일에서 시각적 bounds 측정
+        textEntity.scale = SIMD3<Float>(repeating: 1.0)
+
+        let initialBounds = textEntity.visualBounds(relativeTo: nil)
+        let initialExtents = initialBounds.extents
+
+        // 회전에 영향받지 않도록 "바운딩 스피어 반지름" 기준 사용
+        let textBoundingRadius =
+            0.5 * sqrt(
+                initialExtents.x * initialExtents.x +
+                initialExtents.y * initialExtents.y +
+                initialExtents.z * initialExtents.z
+            )
+
+        // 버블 반지름에 맞게 자동 스케일
+        if textBoundingRadius > 0 {
+            let rawScale = maxRadius / textBoundingRadius
+            let clampedScale = min(
+                max(rawScale, Tuning.textScaleMinimum),
+                Tuning.textScaleMaximum
+            )
+            textEntity.scale = SIMD3<Float>(repeating: clampedScale)
+        }
+
+        // 스케일 반영 후 bounds 중심을 기준으로 중앙 정렬
+        let scaledBounds = textEntity.visualBounds(relativeTo: nil)
+        let scaledCenter = scaledBounds.center
+
+        textEntity.position = SIMD3<Float>(
+            -scaledCenter.x,
+            -scaledCenter.y,
+            -scaledCenter.z + Tuning.textForwardOffset
+        )
+
+        return textEntity
     }
 }
 
