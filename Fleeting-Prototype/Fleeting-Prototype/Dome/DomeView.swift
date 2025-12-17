@@ -29,6 +29,11 @@ struct DomeView: UIViewRepresentable {
                 let domeEntity = try await loadModelEntity()
                 configureDomeTransform(domeEntity)
                 rotationRootAnchor.addChild(domeEntity)
+
+                let bubbleFactory = BubbleFactory()
+                let bubbleEntity = bubbleFactory.makeBubbleEntity()
+                bubbleEntity.position = SIMD3<Float>(0.6, 0.4, -0.9)
+                rotationRootAnchor.addChild(bubbleEntity)
             } catch {
                 print("Failed to load dome model: \(error)")
             }
@@ -81,4 +86,27 @@ private extension DomeView {
         dragDelta: 0
     )
     .ignoresSafeArea()
+}
+
+// MARK: - BubbleFactory
+
+private struct BubbleFactory {
+    func makeBubbleEntity() -> ModelEntity {
+        let radius = Float.random(in: 0.04...0.10)
+        let mesh = MeshResource.generateSphere(radius: radius)
+        var material = SimpleMaterial()
+
+        material.color = .init(
+            tint: .white.withAlphaComponent(0.25),
+            texture: nil
+        )
+        material.roughness = .float(0.1)
+        material.metallic = .float(0.0)
+
+        let entity = ModelEntity(mesh: mesh, materials: [material])
+        let scale = Float.random(in: 0.9...1.2)
+        entity.scale = SIMD3<Float>(repeating: scale)
+
+        return entity
+    }
 }
