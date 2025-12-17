@@ -4,7 +4,7 @@ name: Build and Test
 on:
   # develop 브랜치에 push 나 pull request 이벤트가 일어났을때 해당 workflow를 트리거
   push:
-    branches: [ chore/CI-script ]
+    branches: [ develop ]
   pull_request:
     branches: [ develop ]
 
