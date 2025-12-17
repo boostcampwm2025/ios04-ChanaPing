@@ -11,6 +11,9 @@ on:
 jobs:
   build:
     runs-on: macos-15
+    env:
+      PROJECT_DIR: Fleeting-Prototype
+      SCHEME_NAME: Fleeting-Prototype
     steps:
     # repository 체크아웃(저장소의 코드를 실행 환경으로 가져옴)
     - uses: actions/checkout@v4
@@ -32,7 +35,7 @@ jobs:
     - name: Build the project 🛠
       run: |
         # 프로젝트 디렉토리로 이동
-        cd Fleeting-Prototype
+        cd "$PROJECT_DIR"
         
         # .xcworkspace 또는 .xcodeproj 파일 찾기
         if [ -d *.xcworkspace ] 2>/dev/null; then
@@ -48,8 +51,9 @@ jobs:
 
         echo "Building $file_to_build..."
 
-        xcodebuild clean build -"$filetype_parameter" "$file_to_build" -scheme Fleeting-Prototype -destination 'platform=iOS Simulator,name=iPhone 17,OS=latest' -skipPackagePluginValidation -skipMacroValidation
+        xcodebuild clean build -"$filetype_parameter" "$file_to_build" -scheme "$SCHEME_NAME" -destination 'platform=iOS Simulator,name=iPhone 17,OS=latest' -skipPackagePluginValidation -skipMacroValidation
     
 #    - name: Run tests 🧪
 #      run: |
-#        xcodebuild test -project Fleeting-Prototype.xcodeproj -scheme [테스트 스킴 이름] -destination 'platform=iOS Simulator,name=iPhone 17,OS=latest' -skipPackagePluginValidation -skipMacroValidation
+#        cd "$PROJECT_DIR"
+#        xcodebuild test -project "$SCHEME_NAME.xcodeproj" -scheme "$SCHEME_NAME" -destination 'platform=iOS Simulator,name=iPhone 17,OS=latest' -skipPackagePluginValidation -skipMacroValidation
