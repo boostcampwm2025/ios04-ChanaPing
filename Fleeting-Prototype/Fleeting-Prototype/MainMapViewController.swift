@@ -72,4 +72,204 @@ struct AnimatedBubbleStack: View {
 
 final class MainMapViewController: UIViewController {
 
+    private var bubbleConfigs: [BubbleConfiguration] = []
+
+    private var bubbleRotationTimer: Timer?
+    private let frameInterval: TimeInterval = 1.0 / 60.0 // 60fps
+    private let rotationInterval: TimeInterval = 1.0 // 1초마다 로테이션
+    private let animationDuration: TimeInterval = 1.2
+
+    private let naverMapView: NMFNaverMapView = {
+        let naverMapView = NMFNaverMapView()
+
+        // 지도 UI 설정
+        naverMapView.showCompass = false
+        naverMapView.showScaleBar = false
+        naverMapView.showZoomControls = false
+        naverMapView.showLocationButton = true
+
+        // 지도 스타일
+        naverMapView.mapView.customStyleId = "9d41e3bf-0e89-45bc-8261-776fcdd1660d"
+
+        // 초기 카메라
+        let camera = NMFCameraPosition(
+            NMGLatLng(lat: 37.5665, lng: 126.9780),
+            zoom: 16,
+            tilt: 45,
+            heading: 0
+        )
+        naverMapView.mapView.moveCamera(NMFCameraUpdate(position: camera))
+
+        return naverMapView
+    }()
+
+    override func viewDidLoad() {
+        super.viewDidLoad()
+        addDummyMarkers(count: 100, baseLat: 37.5665, baseLng: 126.9780)
+        configureInitialSettings()
+        configureSubviews()
+        configureLayout()
+    }
+
+    deinit {
+        stopTimer()
+    }
+}
+
+// MARK: Configure Initial Settings
+
+extension MainMapViewController {
+    private func configureInitialSettings() {
+        startTimer()
+    }
+
+    private func startTimer() {
+        let timer = Timer.scheduledTimer(withTimeInterval: frameInterval, repeats: true) { [weak self] _ in
+            guard let self else { return }
+            self.updateMarkers()
+        }
+        RunLoop.main.add(timer, forMode: .common)
+        bubbleRotationTimer = timer
+    }
+
+    private func stopTimer() {
+        bubbleRotationTimer?.invalidate()
+        bubbleRotationTimer = nil
+    }
+}
+
+// MARK: - Bubble Animation
+
+extension MainMapViewController {
+    private func updateMarkers() {
+        let currentTime = Date().timeIntervalSince1970
+
+        for config in bubbleConfigs {
+            guard config.messages.count > 1 else { continue }
+
+            if config.isAnimating {
+                updateAnimation(for: config, currentTime: currentTime)
+            } else {
+                // 로테이션 시간 확인
+                if currentTime - config.lastRotationTime >= rotationInterval {
+                    startAnimation(for: config, currentTime: currentTime)
+                }
+            }
+        }
+    }
+
+    private func startAnimation(for config: BubbleConfiguration, currentTime: TimeInterval) {
+        guard !config.isAnimating else { return }
+
+        config.isAnimating = true
+        config.animationStartTime = currentTime
+        config.animationProgress = 0.0
+
+        // 다음 메시지 인덱스 계산
+        let nextIndex = (config.currentIndex + 1) % config.messages.count
+        config.nextText = config.messages[nextIndex]
+        config.currentText = config.messages[config.currentIndex]
+    }
+
+    private func updateAnimation(for config: BubbleConfiguration, currentTime: TimeInterval) {
+        guard let startTime = config.animationStartTime else {
+            config.isAnimating = false
+            return
+        }
+
+        let elapsedTime = currentTime - startTime
+        let progress = min(elapsedTime / animationDuration, 1.0)
+        config.animationProgress = progress
+
+        let image = renderAnimatedBubbleImage(
+            currentText: config.currentText,
+            nextText: config.nextText,
+            animationProgress: progress
+        )
+        config.marker.iconImage = NMFOverlayImage(image: image)
+
+        // 로테이션 완료 후 다음 로테이션 준비
+        if progress >= 1.0 {
+            let nextIndex = (config.currentIndex + 1) % config.messages.count
+            config.currentIndex = nextIndex
+            config.isAnimating = false
+            config.animationProgress = 0.0
+            config.animationStartTime = nil
+            config.lastRotationTime = currentTime
+
+            // 최종 상태로 업데이트 (다음 메시지만 표시)
+            let finalImage = renderBubbleImage(text: config.nextText)
+            config.marker.iconImage = NMFOverlayImage(image: finalImage)
+
+            // 다음 메시지 준비
+            let nextNextIndex = (nextIndex + 1) % config.messages.count
+            config.currentText = config.messages[nextIndex]
+            config.nextText = config.messages[nextNextIndex]
+        }
+    }
+
+    // TODO: UIScreen.main 대체 필요 (deprecated)
+    private func renderBubbleImage(text: String, scale: CGFloat = UIScreen.main.scale) -> UIImage {
+        let renderer = ImageRenderer(
+            content: Text(text)
+                .shadow(radius: 6, y: 2)
+                .padding()
+                .background(Color.white.opacity(0.92))
+                .clipShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
+        )
+        renderer.scale = scale
+        renderer.isOpaque = false
+
+        guard let image = renderer.uiImage else {
+            return UIImage()
+        }
+
+        return image
+    }
+
+    // TODO: UIScreen.main 대체 필요 (deprecated)
+    func renderAnimatedBubbleImage(
+        currentText: String,
+        nextText: String,
+        animationProgress: Double,
+        scale: CGFloat = UIScreen.main.scale
+    ) -> UIImage {
+        let renderer = ImageRenderer(
+            content: AnimatedBubbleStack(
+                currentText: currentText,
+                nextText: nextText,
+                animationProgress: animationProgress
+            )
+        )
+        renderer.scale = scale
+        renderer.isOpaque = false
+
+        guard let image = renderer.uiImage else {
+            return UIImage()
+        }
+        return image
+    }
+}
+
+// MARK: - Configure UI
+
+extension MainMapViewController {
+    private func configureSubviews() {
+        [naverMapView].forEach {
+            view.addSubview($0)
+            $0.translatesAutoresizingMaskIntoConstraints = false
+        }
+    }
+
+    private func configureLayout() {
+        let safeArea = view.safeAreaLayoutGuide
+
+        NSLayoutConstraint.activate([
+            naverMapView.topAnchor.constraint(equalTo: safeArea.topAnchor),
+            naverMapView.leadingAnchor.constraint(equalTo: safeArea.leadingAnchor),
+            naverMapView.trailingAnchor.constraint(equalTo: safeArea.trailingAnchor),
+            naverMapView.bottomAnchor.constraint(equalTo: safeArea.bottomAnchor)
+        ])
+    }
+}
 }
