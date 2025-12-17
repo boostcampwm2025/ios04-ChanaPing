@@ -31,9 +31,22 @@ struct DomeView: UIViewRepresentable {
                 rotationRootAnchor.addChild(domeEntity)
 
                 let bubbleFactory = BubbleFactory()
-                let bubbleEntity = bubbleFactory.makeBubbleEntity()
-                bubbleEntity.position = SIMD3<Float>(0.6, 0.4, -0.9)
-                rotationRootAnchor.addChild(bubbleEntity)
+                let bubblePlacer = BubblePlacer()
+                let bubbleCount = 10
+
+                for _ in 0..<bubbleCount {
+                    let bubbleEntity = bubbleFactory.makeBubbleEntity()
+
+                    bubbleEntity.position = bubblePlacer.randomPositionInsideHemisphere(
+                        radiusRange: 0.9...1.2,
+                        yRange: 0.1...0.9,
+                        minimumDistanceFromCenter: 0.9,
+                        minimumDistanceFromViewAxis: 0.25,
+                        maxAttempts: 60
+                    )
+
+                    rotationRootAnchor.addChild(bubbleEntity)
+                }
             } catch {
                 print("Failed to load dome model: \(error)")
             }
@@ -108,5 +121,43 @@ private struct BubbleFactory {
         entity.scale = SIMD3<Float>(repeating: scale)
 
         return entity
+    }
+}
+
+// MARK: - BubblePlacer
+
+private struct BubblePlacer {
+    func randomPositionInsideHemisphere(
+        radiusRange: ClosedRange<Float>,
+        yRange: ClosedRange<Float>,
+        minimumDistanceFromCenter: Float,
+        minimumDistanceFromViewAxis: Float,
+        maxAttempts: Int
+    ) -> SIMD3<Float> {
+        for _ in 0..<maxAttempts {
+            let theta = Float.random(in: 0...(2 * .pi))
+            let yAxis = Float.random(in: yRange)
+            let radius = Float.random(in: radiusRange)
+
+            let xzLimit = max(0.0, sqrt(max(0.0, radius * radius - yAxis * yAxis)))
+            let xAxis = cos(theta) * xzLimit
+            let zAxis = sin(theta) * xzLimit
+
+            let position = SIMD3<Float>(xAxis, yAxis, zAxis)
+
+            if simd_length(position) < minimumDistanceFromCenter {
+                continue
+            }
+
+            let distanceFromViewAxis = simd_length(SIMD2<Float>(xAxis, yAxis))
+
+            if distanceFromViewAxis < minimumDistanceFromViewAxis {
+                continue
+            }
+
+            return position
+        }
+
+        return SIMD3<Float>(minimumDistanceFromViewAxis, yRange.upperBound, -radiusRange.upperBound)
     }
 }
