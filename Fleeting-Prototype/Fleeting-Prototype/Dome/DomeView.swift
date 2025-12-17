@@ -15,14 +15,14 @@ struct DomeView: UIViewRepresentable {
 
     func makeUIView(context: Context) -> ARView {
         let arView = ARView(frame: .zero)
-        let anchor = AnchorEntity(world: .zero)
-        arView.scene.addAnchor(anchor)
+        let rotationRootAnchor = AnchorEntity(world: .zero)
+        arView.scene.addAnchor(rotationRootAnchor)
 
         Task {
             do {
                 let domeEntity = try await loadModelEntity()
                 configureDomeTransform(domeEntity)
-                anchor.addChild(domeEntity)
+                rotationRootAnchor.addChild(domeEntity)
             } catch {
                 print("Failed to load dome model: \(error)")
             }
