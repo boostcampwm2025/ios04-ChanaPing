@@ -16,7 +16,7 @@ struct DomeScreen: View {
             modelFileExtension: "usdz",
             dragDelta: dragDelta
         )
-        .ignoresSafeArea()
+        .ignoresSafeArea(.container, edges: [.top, .leading, .trailing])
         .gesture(
             DragGesture(minimumDistance: 0)
                 .onChanged { value in
