@@ -7,48 +7,45 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
-		78EB0DF02EF1343F00C439A1 /* NMapsMap in Frameworks */ = {isa = PBXBuildFile; productRef = 78EB0DEF2EF1343F00C439A1 /* NMapsMap */; };
-		78EB0DF32EF1366300C439A1 /* swiftlint.yml in Resources */ = {isa = PBXBuildFile; fileRef = 78EB0DF22EF1366300C439A1 /* swiftlint.yml */; };
+		1628F47E2EF5376C005E6C42 /* NMapsMap in Frameworks */ = {isa = PBXBuildFile; productRef = 1628F47D2EF5376C005E6C42 /* NMapsMap */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
-		78EB0DE02EF130B200C439A1 /* Fleeting-Prototype.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "Fleeting-Prototype.app"; sourceTree = BUILT_PRODUCTS_DIR; };
-		78EB0DF22EF1366300C439A1 /* swiftlint.yml */ = {isa = PBXFileReference; lastKnownFileType = text.yaml; path = swiftlint.yml; sourceTree = "<group>"; };
+		1628F46A2EF53602005E6C42 /* Meomun.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Meomun.app; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
-		78EB0DE22EF130B200C439A1 /* Fleeting-Prototype */ = {
+		1628F46C2EF53602005E6C42 /* Meomun */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
-			path = "Fleeting-Prototype";
+			path = Meomun;
 			sourceTree = "<group>";
 		};
 /* End PBXFileSystemSynchronizedRootGroup section */
 
 /* Begin PBXFrameworksBuildPhase section */
-		78EB0DDD2EF130B200C439A1 /* Frameworks */ = {
+		1628F4672EF53602005E6C42 /* Frameworks */ = {
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				78EB0DF02EF1343F00C439A1 /* NMapsMap in Frameworks */,
+				1628F47E2EF5376C005E6C42 /* NMapsMap in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
-		78EB0DD72EF130B200C439A1 = {
+		1628F4612EF53602005E6C42 = {
 			isa = PBXGroup;
 			children = (
-				78EB0DF22EF1366300C439A1 /* swiftlint.yml */,
-				78EB0DE22EF130B200C439A1 /* Fleeting-Prototype */,
-				78EB0DE12EF130B200C439A1 /* Products */,
+				1628F46C2EF53602005E6C42 /* Meomun */,
+				1628F46B2EF53602005E6C42 /* Products */,
 			);
 			sourceTree = "<group>";
 		};
-		78EB0DE12EF130B200C439A1 /* Products */ = {
+		1628F46B2EF53602005E6C42 /* Products */ = {
 			isa = PBXGroup;
 			children = (
-				78EB0DE02EF130B200C439A1 /* Fleeting-Prototype.app */,
+				1628F46A2EF53602005E6C42 /* Meomun.app */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -56,81 +53,80 @@
 /* End PBXGroup section */
 
 /* Begin PBXNativeTarget section */
-		78EB0DDF2EF130B200C439A1 /* Fleeting-Prototype */ = {
+		1628F4692EF53602005E6C42 /* Meomun */ = {
 			isa = PBXNativeTarget;
-			buildConfigurationList = 78EB0DEB2EF130B700C439A1 /* Build configuration list for PBXNativeTarget "Fleeting-Prototype" */;
+			buildConfigurationList = 1628F4752EF53604005E6C42 /* Build configuration list for PBXNativeTarget "Meomun" */;
 			buildPhases = (
-				78EB0DDC2EF130B200C439A1 /* Sources */,
-				78EB0DDD2EF130B200C439A1 /* Frameworks */,
-				78EB0DDE2EF130B200C439A1 /* Resources */,
+				1628F4662EF53602005E6C42 /* Sources */,
+				1628F4672EF53602005E6C42 /* Frameworks */,
+				1628F4682EF53602005E6C42 /* Resources */,
 			);
 			buildRules = (
 			);
 			dependencies = (
-				78EB0DF62EF1398C00C439A1 /* PBXTargetDependency */,
+				1628F4812EF537F3005E6C42 /* PBXTargetDependency */,
 			);
 			fileSystemSynchronizedGroups = (
-				78EB0DE22EF130B200C439A1 /* Fleeting-Prototype */,
+				1628F46C2EF53602005E6C42 /* Meomun */,
 			);
-			name = "Fleeting-Prototype";
+			name = Meomun;
 			packageProductDependencies = (
-				78EB0DEF2EF1343F00C439A1 /* NMapsMap */,
+				1628F47D2EF5376C005E6C42 /* NMapsMap */,
 			);
-			productName = "Fleeting-Prototype";
-			productReference = 78EB0DE02EF130B200C439A1 /* Fleeting-Prototype.app */;
+			productName = Meomun;
+			productReference = 1628F46A2EF53602005E6C42 /* Meomun.app */;
 			productType = "com.apple.product-type.application";
 		};
 /* End PBXNativeTarget section */
 
 /* Begin PBXProject section */
-		78EB0DD82EF130B200C439A1 /* Project object */ = {
+		1628F4622EF53602005E6C42 /* Project object */ = {
 			isa = PBXProject;
 			attributes = {
 				BuildIndependentTargetsInParallel = 1;
 				LastSwiftUpdateCheck = 2610;
 				LastUpgradeCheck = 2610;
 				TargetAttributes = {
-					78EB0DDF2EF130B200C439A1 = {
+					1628F4692EF53602005E6C42 = {
 						CreatedOnToolsVersion = 26.1.1;
 					};
 				};
 			};
-			buildConfigurationList = 78EB0DDB2EF130B200C439A1 /* Build configuration list for PBXProject "Fleeting-Prototype" */;
+			buildConfigurationList = 1628F4652EF53602005E6C42 /* Build configuration list for PBXProject "Meomun" */;
 			developmentRegion = en;
 			hasScannedForEncodings = 0;
 			knownRegions = (
 				en,
 				Base,
 			);
-			mainGroup = 78EB0DD72EF130B200C439A1;
+			mainGroup = 1628F4612EF53602005E6C42;
 			minimizedProjectReferenceProxies = 1;
 			packageReferences = (
-				78EB0DEE2EF1343F00C439A1 /* XCRemoteSwiftPackageReference "SPM-NMapsMap" */,
-				78EB0DF12EF1348600C439A1 /* XCRemoteSwiftPackageReference "SwiftLintPlugins" */,
+				1628F47C2EF5376C005E6C42 /* XCRemoteSwiftPackageReference "SPM-NMapsMap" */,
+				1628F47F2EF53787005E6C42 /* XCRemoteSwiftPackageReference "SwiftLintPlugins" */,
 			);
 			preferredProjectObjectVersion = 77;
-			productRefGroup = 78EB0DE12EF130B200C439A1 /* Products */;
+			productRefGroup = 1628F46B2EF53602005E6C42 /* Products */;
 			projectDirPath = "";
 			projectRoot = "";
 			targets = (
-				78EB0DDF2EF130B200C439A1 /* Fleeting-Prototype */,
+				1628F4692EF53602005E6C42 /* Meomun */,
 			);
 		};
 /* End PBXProject section */
 
 /* Begin PBXResourcesBuildPhase section */
-		78EB0DDE2EF130B200C439A1 /* Resources */ = {
+		1628F4682EF53602005E6C42 /* Resources */ = {
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				78EB0DF32EF1366300C439A1 /* swiftlint.yml in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXResourcesBuildPhase section */
 
 /* Begin PBXSourcesBuildPhase section */
-		78EB0DDC2EF130B200C439A1 /* Sources */ = {
+		1628F4662EF53602005E6C42 /* Sources */ = {
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
@@ -140,14 +136,14 @@
 /* End PBXSourcesBuildPhase section */
 
 /* Begin PBXTargetDependency section */
-		78EB0DF62EF1398C00C439A1 /* PBXTargetDependency */ = {
+		1628F4812EF537F3005E6C42 /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
-			productRef = 78EB0DF52EF1398C00C439A1 /* SwiftLintBuildToolPlugin */;
+			productRef = 1628F4802EF537F3005E6C42 /* SwiftLintBuildToolPlugin */;
 		};
 /* End PBXTargetDependency section */
 
 /* Begin XCBuildConfiguration section */
-		78EB0DE92EF130B700C439A1 /* Debug */ = {
+		1628F4732EF53604005E6C42 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
@@ -200,18 +196,16 @@
 				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
-				IPHONEOS_DEPLOYMENT_TARGET = 26.1;
 				LOCALIZATION_PREFERS_STRING_CATALOGS = YES;
 				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
 				MTL_FAST_MATH = YES;
 				ONLY_ACTIVE_ARCH = YES;
-				SDKROOT = iphoneos;
 				SWIFT_ACTIVE_COMPILATION_CONDITIONS = "DEBUG $(inherited)";
 				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
 			};
 			name = Debug;
 		};
-		78EB0DEA2EF130B700C439A1 /* Release */ = {
+		1628F4742EF53604005E6C42 /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
@@ -258,17 +252,14 @@
 				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
-				IPHONEOS_DEPLOYMENT_TARGET = 26.1;
 				LOCALIZATION_PREFERS_STRING_CATALOGS = YES;
 				MTL_ENABLE_DEBUG_INFO = NO;
 				MTL_FAST_MATH = YES;
-				SDKROOT = iphoneos;
 				SWIFT_COMPILATION_MODE = wholemodule;
-				VALIDATE_PRODUCT = YES;
 			};
 			name = Release;
 		};
-		78EB0DEC2EF130B700C439A1 /* Debug */ = {
+		1628F4762EF53604005E6C42 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
@@ -276,37 +267,45 @@
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_TEAM = B3PWYBKFUK;
+				ENABLE_APP_SANDBOX = YES;
+				ENABLE_HARDENED_RUNTIME = YES;
 				ENABLE_PREVIEWS = YES;
+				ENABLE_USER_SELECTED_FILES = readonly;
 				GENERATE_INFOPLIST_FILE = YES;
-				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
-				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
-				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
-				INFOPLIST_KEY_UIStatusBarStyle = "";
+				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.social-networking";
+				"INFOPLIST_KEY_UIApplicationSceneManifest_Generation[sdk=iphoneos*]" = YES;
+				"INFOPLIST_KEY_UIApplicationSceneManifest_Generation[sdk=iphonesimulator*]" = YES;
+				"INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents[sdk=iphoneos*]" = YES;
+				"INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents[sdk=iphonesimulator*]" = YES;
+				"INFOPLIST_KEY_UILaunchScreen_Generation[sdk=iphoneos*]" = YES;
+				"INFOPLIST_KEY_UILaunchScreen_Generation[sdk=iphonesimulator*]" = YES;
+				"INFOPLIST_KEY_UIStatusBarStyle[sdk=iphoneos*]" = UIStatusBarStyleDefault;
+				"INFOPLIST_KEY_UIStatusBarStyle[sdk=iphonesimulator*]" = UIStatusBarStyleDefault;
 				INFOPLIST_KEY_UISupportedInterfaceOrientations = UIInterfaceOrientationPortrait;
 				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown";
 				IPHONEOS_DEPLOYMENT_TARGET = 18.0;
-				LD_RUNPATH_SEARCH_PATHS = (
-					"$(inherited)",
-					"@executable_path/Frameworks",
-				);
+				LD_RUNPATH_SEARCH_PATHS = "@executable_path/Frameworks";
+				"LD_RUNPATH_SEARCH_PATHS[sdk=macosx*]" = "@executable_path/../Frameworks";
+				MACOSX_DEPLOYMENT_TARGET = 15.7;
 				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = "kr.codesquad.Fleeting-Prototype";
+				PRODUCT_BUNDLE_IDENTIFIER = kr.codesquad.boostcamp10.Meomun;
 				PRODUCT_NAME = "$(TARGET_NAME)";
+				REGISTER_APP_GROUPS = YES;
+				SDKROOT = auto;
 				STRING_CATALOG_GENERATE_SYMBOLS = YES;
 				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
 				SUPPORTS_MACCATALYST = NO;
-				SUPPORTS_MAC_DESIGNED_FOR_IPHONE_IPAD = NO;
-				SUPPORTS_XR_DESIGNED_FOR_IPHONE_IPAD = NO;
 				SWIFT_APPROACHABLE_CONCURRENCY = YES;
 				SWIFT_DEFAULT_ACTOR_ISOLATION = MainActor;
 				SWIFT_EMIT_LOC_STRINGS = YES;
 				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
-				SWIFT_VERSION = 6.0;
+				SWIFT_VERSION = 5.0;
 				TARGETED_DEVICE_FAMILY = 1;
+				XROS_DEPLOYMENT_TARGET = 26.1;
 			};
 			name = Debug;
 		};
-		78EB0DED2EF130B700C439A1 /* Release */ = {
+		1628F4772EF53604005E6C42 /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
@@ -314,53 +313,61 @@
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_TEAM = B3PWYBKFUK;
+				ENABLE_APP_SANDBOX = YES;
+				ENABLE_HARDENED_RUNTIME = YES;
 				ENABLE_PREVIEWS = YES;
+				ENABLE_USER_SELECTED_FILES = readonly;
 				GENERATE_INFOPLIST_FILE = YES;
-				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
-				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
-				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
-				INFOPLIST_KEY_UIStatusBarStyle = "";
+				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.social-networking";
+				"INFOPLIST_KEY_UIApplicationSceneManifest_Generation[sdk=iphoneos*]" = YES;
+				"INFOPLIST_KEY_UIApplicationSceneManifest_Generation[sdk=iphonesimulator*]" = YES;
+				"INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents[sdk=iphoneos*]" = YES;
+				"INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents[sdk=iphonesimulator*]" = YES;
+				"INFOPLIST_KEY_UILaunchScreen_Generation[sdk=iphoneos*]" = YES;
+				"INFOPLIST_KEY_UILaunchScreen_Generation[sdk=iphonesimulator*]" = YES;
+				"INFOPLIST_KEY_UIStatusBarStyle[sdk=iphoneos*]" = UIStatusBarStyleDefault;
+				"INFOPLIST_KEY_UIStatusBarStyle[sdk=iphonesimulator*]" = UIStatusBarStyleDefault;
 				INFOPLIST_KEY_UISupportedInterfaceOrientations = UIInterfaceOrientationPortrait;
 				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown";
 				IPHONEOS_DEPLOYMENT_TARGET = 18.0;
-				LD_RUNPATH_SEARCH_PATHS = (
-					"$(inherited)",
-					"@executable_path/Frameworks",
-				);
+				LD_RUNPATH_SEARCH_PATHS = "@executable_path/Frameworks";
+				"LD_RUNPATH_SEARCH_PATHS[sdk=macosx*]" = "@executable_path/../Frameworks";
+				MACOSX_DEPLOYMENT_TARGET = 15.7;
 				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = "kr.codesquad.Fleeting-Prototype";
+				PRODUCT_BUNDLE_IDENTIFIER = kr.codesquad.boostcamp10.Meomun;
 				PRODUCT_NAME = "$(TARGET_NAME)";
+				REGISTER_APP_GROUPS = YES;
+				SDKROOT = auto;
 				STRING_CATALOG_GENERATE_SYMBOLS = YES;
 				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
 				SUPPORTS_MACCATALYST = NO;
-				SUPPORTS_MAC_DESIGNED_FOR_IPHONE_IPAD = NO;
-				SUPPORTS_XR_DESIGNED_FOR_IPHONE_IPAD = NO;
 				SWIFT_APPROACHABLE_CONCURRENCY = YES;
 				SWIFT_DEFAULT_ACTOR_ISOLATION = MainActor;
 				SWIFT_EMIT_LOC_STRINGS = YES;
 				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
-				SWIFT_VERSION = 6.0;
+				SWIFT_VERSION = 5.0;
 				TARGETED_DEVICE_FAMILY = 1;
+				XROS_DEPLOYMENT_TARGET = 26.1;
 			};
 			name = Release;
 		};
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
-		78EB0DDB2EF130B200C439A1 /* Build configuration list for PBXProject "Fleeting-Prototype" */ = {
+		1628F4652EF53602005E6C42 /* Build configuration list for PBXProject "Meomun" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
-				78EB0DE92EF130B700C439A1 /* Debug */,
-				78EB0DEA2EF130B700C439A1 /* Release */,
+				1628F4732EF53604005E6C42 /* Debug */,
+				1628F4742EF53604005E6C42 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
 		};
-		78EB0DEB2EF130B700C439A1 /* Build configuration list for PBXNativeTarget "Fleeting-Prototype" */ = {
+		1628F4752EF53604005E6C42 /* Build configuration list for PBXNativeTarget "Meomun" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
-				78EB0DEC2EF130B700C439A1 /* Debug */,
-				78EB0DED2EF130B700C439A1 /* Release */,
+				1628F4762EF53604005E6C42 /* Debug */,
+				1628F4772EF53604005E6C42 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
@@ -368,7 +375,7 @@
 /* End XCConfigurationList section */
 
 /* Begin XCRemoteSwiftPackageReference section */
-		78EB0DEE2EF1343F00C439A1 /* XCRemoteSwiftPackageReference "SPM-NMapsMap" */ = {
+		1628F47C2EF5376C005E6C42 /* XCRemoteSwiftPackageReference "SPM-NMapsMap" */ = {
 			isa = XCRemoteSwiftPackageReference;
 			repositoryURL = "https://github.com/navermaps/SPM-NMapsMap";
 			requirement = {
@@ -376,7 +383,7 @@
 				minimumVersion = 3.23.0;
 			};
 		};
-		78EB0DF12EF1348600C439A1 /* XCRemoteSwiftPackageReference "SwiftLintPlugins" */ = {
+		1628F47F2EF53787005E6C42 /* XCRemoteSwiftPackageReference "SwiftLintPlugins" */ = {
 			isa = XCRemoteSwiftPackageReference;
 			repositoryURL = "https://github.com/SimplyDanny/SwiftLintPlugins";
 			requirement = {
@@ -387,17 +394,17 @@
 /* End XCRemoteSwiftPackageReference section */
 
 /* Begin XCSwiftPackageProductDependency section */
-		78EB0DEF2EF1343F00C439A1 /* NMapsMap */ = {
+		1628F47D2EF5376C005E6C42 /* NMapsMap */ = {
 			isa = XCSwiftPackageProductDependency;
-			package = 78EB0DEE2EF1343F00C439A1 /* XCRemoteSwiftPackageReference "SPM-NMapsMap" */;
+			package = 1628F47C2EF5376C005E6C42 /* XCRemoteSwiftPackageReference "SPM-NMapsMap" */;
 			productName = NMapsMap;
 		};
-		78EB0DF52EF1398C00C439A1 /* SwiftLintBuildToolPlugin */ = {
+		1628F4802EF537F3005E6C42 /* SwiftLintBuildToolPlugin */ = {
 			isa = XCSwiftPackageProductDependency;
-			package = 78EB0DF12EF1348600C439A1 /* XCRemoteSwiftPackageReference "SwiftLintPlugins" */;
+			package = 1628F47F2EF53787005E6C42 /* XCRemoteSwiftPackageReference "SwiftLintPlugins" */;
 			productName = "plugin:SwiftLintBuildToolPlugin";
 		};
 /* End XCSwiftPackageProductDependency section */
 	};
-	rootObject = 78EB0DD82EF130B200C439A1 /* Project object */;
+	rootObject = 1628F4622EF53602005E6C42 /* Project object */;
 }

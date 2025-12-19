@@ -12,8 +12,8 @@ jobs:
   build:
     runs-on: macos-15
     env:
-      PROJECT_DIR: Fleeting-Prototype
-      SCHEME_NAME: Fleeting-Prototype
+      PROJECT_DIR: Meomun
+      SCHEME_NAME: Meomun
     steps:
     # repository 체크아웃(저장소의 코드를 실행 환경으로 가져옴)
     - uses: actions/checkout@v4
