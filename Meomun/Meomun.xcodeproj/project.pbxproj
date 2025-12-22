@@ -9,11 +9,15 @@
 /* Begin PBXBuildFile section */
 		1628F47E2EF5376C005E6C42 /* NMapsMap in Frameworks */ = {isa = PBXBuildFile; productRef = 1628F47D2EF5376C005E6C42 /* NMapsMap */; };
 		531A22F72EF92C540014BE96 /* Secrets.xcconfig in Resources */ = {isa = PBXBuildFile; fileRef = 531A22F62EF92C540014BE96 /* Secrets.xcconfig */; };
+		531A22FE2EF9367C0014BE96 /* Secrets.example.xcconfig in Resources */ = {isa = PBXBuildFile; fileRef = 531A22FD2EF9367C0014BE96 /* Secrets.example.xcconfig */; };
+		531A23002EF936BA0014BE96 /* Config.xcconfig in Resources */ = {isa = PBXBuildFile; fileRef = 531A22FF2EF936BA0014BE96 /* Config.xcconfig */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
 		1628F46A2EF53602005E6C42 /* Meomun.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Meomun.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		531A22F62EF92C540014BE96 /* Secrets.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = Secrets.xcconfig; sourceTree = "<group>"; };
+		531A22FD2EF9367C0014BE96 /* Secrets.example.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = Secrets.example.xcconfig; sourceTree = "<group>"; };
+		531A22FF2EF936BA0014BE96 /* Config.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = Config.xcconfig; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
@@ -52,6 +56,8 @@
 		1628F4612EF53602005E6C42 = {
 			isa = PBXGroup;
 			children = (
+				531A22FF2EF936BA0014BE96 /* Config.xcconfig */,
+				531A22FD2EF9367C0014BE96 /* Secrets.example.xcconfig */,
 				531A22F62EF92C540014BE96 /* Secrets.xcconfig */,
 				1628F46C2EF53602005E6C42 /* Meomun */,
 				1628F46B2EF53602005E6C42 /* Products */,
@@ -136,6 +142,8 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				531A23002EF936BA0014BE96 /* Config.xcconfig in Resources */,
+				531A22FE2EF9367C0014BE96 /* Secrets.example.xcconfig in Resources */,
 				531A22F72EF92C540014BE96 /* Secrets.xcconfig in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -162,7 +170,7 @@
 /* Begin XCBuildConfiguration section */
 		1628F4732EF53604005E6C42 /* Debug */ = {
 			isa = XCBuildConfiguration;
-			baseConfigurationReference = 531A22F62EF92C540014BE96 /* Secrets.xcconfig */;
+			baseConfigurationReference = 531A22FF2EF936BA0014BE96 /* Config.xcconfig */;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
 				ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS = YES;
@@ -225,7 +233,7 @@
 		};
 		1628F4742EF53604005E6C42 /* Release */ = {
 			isa = XCBuildConfiguration;
-			baseConfigurationReference = 531A22F62EF92C540014BE96 /* Secrets.xcconfig */;
+			baseConfigurationReference = 531A22FF2EF936BA0014BE96 /* Config.xcconfig */;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
 				ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS = YES;
