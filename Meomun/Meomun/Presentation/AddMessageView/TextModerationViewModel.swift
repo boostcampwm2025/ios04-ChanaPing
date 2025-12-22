@@ -122,15 +122,12 @@ labels는 아래 중에서만 선택:
         req.timeoutInterval = 20
         req.httpBody = try JSONSerialization.data(withJSONObject: body, options: [])
 
-        print("request:", endpoint.absoluteString)
-
         let (bytes, response) = try await URLSession.shared.bytes(for: req)
 
         guard let http = response as? HTTPURLResponse else {
             throw URLError(.badServerResponse)
         }
-        print("response:", http)
-
+        
         guard (200..<300).contains(http.statusCode) else {
             var raw = ""
             for try await line in bytes.lines.prefix(50) { raw += line + "\n" }
