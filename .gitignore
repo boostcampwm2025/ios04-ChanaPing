@@ -106,6 +106,8 @@ iOSInjectionProject/
 /*.gcno
 **/xcshareddata/WorkspaceSettings.xcsettings
 
+Secrets.xcconfig
+
 # Cursor
 .cursorrules
 .cursor/
