@@ -21,9 +21,11 @@ jobs:
    # Secrets.xcconfig 생성
     - name: Create Secrets.xcconfig 🔐
       run: |
-        cat <<EOF > Meomun/Secrets.xcconfig
+        mkdir -p Config
+        cat <<EOF > Config/Secrets.xcconfig
         NAVER_API_KEY=${{ secrets.NAVER_API_KEY }}
         EOF
+        cat Config/Secrets.xcconfig
         
     # 해당 가상 머신 환경에서의 가용 Xcode 버전을 출력
     - name: List available Xcode versions
