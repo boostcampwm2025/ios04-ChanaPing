@@ -17,7 +17,23 @@ jobs:
     steps:
     # repository 체크아웃(저장소의 코드를 실행 환경으로 가져옴)
     - uses: actions/checkout@v4
-    
+
+    # Secrets.xcconfig 생성
+    - name: Create Secrets.xcconfig 🔐
+      run: |
+        echo "repo root: $(pwd)"
+        echo "PROJECT_DIR: $PROJECT_DIR"
+        ls -al
+
+        # Config.xcconfig가 있는 폴더(Meomun) 옆에 생성
+        cat <<EOF > "$PROJECT_DIR/Secrets.xcconfig"
+        NAVER_API_KEY = ${{ secrets.NAVER_API_KEY }}
+        EOF
+
+        echo "✅ created:"
+        ls -al "$PROJECT_DIR"
+        test -f "$PROJECT_DIR/Secrets.xcconfig"
+        
     # 해당 가상 머신 환경에서의 가용 Xcode 버전을 출력
     - name: List available Xcode versions
       run: ls /Applications | grep Xcode
