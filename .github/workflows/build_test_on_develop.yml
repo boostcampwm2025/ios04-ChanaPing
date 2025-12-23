@@ -18,7 +18,7 @@ jobs:
     # repository 체크아웃(저장소의 코드를 실행 환경으로 가져옴)
     - uses: actions/checkout@v4
 
-   # Secrets.xcconfig 생성
+    # Secrets.xcconfig 생성
     - name: Create Secrets.xcconfig 🔐
       run: |
         echo "repo root: $(pwd)"
