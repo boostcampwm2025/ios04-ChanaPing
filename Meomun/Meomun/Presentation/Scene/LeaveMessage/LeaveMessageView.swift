@@ -18,6 +18,7 @@ struct LeaveMessageView: View {
             ZStack {
                 Text("잠시 남겨놓기")
                     .font(.headline.weight(.semibold))
+                    .foregroundStyle(Color.meomunPrimaryColor)
                     .frame(maxWidth: .infinity, alignment: .center)
 
                 HStack {
