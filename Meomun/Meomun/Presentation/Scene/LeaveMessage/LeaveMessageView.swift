@@ -11,11 +11,23 @@ struct LeaveMessageView: View {
     @State private var message: String = ""
     @State private var placeText: String = ""
 
+    private var suggestPlaces: [String] = ["스타벅스 파주가람점", "ONUTE", "콰이어트라이트", "메가MGC커피 파주별하람마을점"]
+
     var body: some View {
         VStack(alignment: .center, spacing: 12) {
-            BackButton(action: {})
+            ZStack {
+                Text("잠시 남겨놓기")
+                    .font(.headline.weight(.semibold))
+                    .frame(maxWidth: .infinity, alignment: .center)
 
-            Spacer()
+                HStack {
+                    BackButton(action: {})
+                    Spacer()
+                }
+            }
+            .frame(height: 44)
+
+            Spacer(minLength: 0)
 
             Text("이 말은 잠시 머물거에요.")
                 .font(.headline.bold())
@@ -24,7 +36,7 @@ struct LeaveMessageView: View {
 
             MessageTextEditor(text: $message)
 
-            Spacer()
+            Spacer(minLength: 0)
 
             HStack(spacing: 8) {
                 PlaceTextField(text: $placeText)
@@ -32,13 +44,22 @@ struct LeaveMessageView: View {
                 CancelButton(action: {})
             }
 
-            Spacer()
+            PlaceTagSlider(places: suggestPlaces) { selected in
+                placeText = selected
+            }
+
+            Spacer(minLength: 0)
 
             ConfirmButton(action: {})
-
-            Spacer()
         }
         .padding(.horizontal, 24)
+        .padding(.vertical, 24)
+        .background {
+            Image("backgroundImage")
+                .resizable()
+                .scaledToFill()
+                .ignoresSafeArea()
+        }
     }
 }
 
