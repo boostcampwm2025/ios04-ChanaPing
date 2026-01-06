@@ -42,20 +42,16 @@ extension SpaceView {
             do {
                 // 1. 배경 돔 로드
                 let domeEntity = try await Entity(named: "Dome.usdz")
-
-                // 2. 돔 앵커에 추가
-                let domeAnchor = AnchorEntity(world: .zero)
-                domeAnchor.addChild(domeEntity)
-                content.add(domeAnchor)
+                content.add(domeEntity)
             } catch {
                 print("돔 로드 실패: \(error)")
             }
 
-            // 3. 카메라 설정 (돔 중앙에 위치)
+            // 2. 카메라 설정 (돔 중앙에 위치)
             let cameraAnchor = AnchorEntity()
             let camera = PerspectiveCamera()
 
-            // 4. 카메라를 돔 중앙(원점)에 배치
+            // 3. 카메라를 돔 중앙(원점)에 배치
             camera.position = [0, 0.7, 0]
             cameraAnchor.addChild(camera)
             content.add(cameraAnchor)
