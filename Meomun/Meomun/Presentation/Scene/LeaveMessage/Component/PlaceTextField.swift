@@ -37,8 +37,12 @@ struct PlaceTextField: View {
             RoundedRectangle(cornerRadius: 12, style: .continuous)
                 .fill(Color.white.opacity(0.6))
         )
-        .shadow(color: .black.opacity(0.05), radius: 2, y: 1)
-        .shadow(color: .black.opacity(0.15), radius: 0, x: 1, y: 1)
+        .overlay(
+            RoundedRectangle(cornerRadius: 12, style: .continuous)
+                .strokeBorder(Color.meomunPrimaryColor.opacity(0.15), lineWidth: 0.5)
+        )
+        .shadow(color: .black.opacity(0.05), radius: 2)
+        .shadow(color: .black.opacity(0.05), radius: 0, x: 1, y: 1)
         .contentShape(Rectangle())
         .onTapGesture {
             isFocused = true

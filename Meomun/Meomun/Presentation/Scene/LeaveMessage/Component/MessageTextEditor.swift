@@ -28,10 +28,14 @@ struct MessageTextEditor: View {
     var body: some View {
         ZStack(alignment: .bottom) {
             // Background
-            RoundedRectangle(cornerRadius: 24, style: .continuous)
+            RoundedRectangle(cornerRadius: 12, style: .continuous)
                 .fill(.white.opacity(0.5))
+                .overlay(
+                    RoundedRectangle(cornerRadius: 12, style: .continuous)
+                        .strokeBorder(Color.meomunPrimaryColor.opacity(0.15), lineWidth: 0.5)
+                )
                 .shadow(color: .black.opacity(0.05), radius: 2)
-                .shadow(color: .black.opacity(0.15), radius: 0, x: 1, y: 1)
+                .shadow(color: .black.opacity(0.05), radius: 0, x: 1, y: 1)
 
             // Editor + placeholder
             ZStack(alignment: .topLeading) {
