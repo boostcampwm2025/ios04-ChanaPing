@@ -29,7 +29,7 @@ struct LeaveMessageView: View {
 
             Spacer(minLength: 0)
 
-            Text("이 말은 잠시 머물거에요.")
+            Text("이 말은 잠시 머물 거예요.")
                 .font(.headline.bold())
                 .foregroundStyle(Color.meomunSecondaryColor)
                 .frame(maxWidth: .infinity, alignment: .leading)
@@ -41,7 +41,7 @@ struct LeaveMessageView: View {
             HStack(spacing: 8) {
                 PlaceTextField(text: $placeText)
                 SearchButton(action: {})
-                CancelButton() {
+                CancelButton {
                     placeText = ""
                 }
             }
