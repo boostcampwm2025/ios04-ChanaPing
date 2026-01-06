@@ -41,7 +41,9 @@ struct LeaveMessageView: View {
             HStack(spacing: 8) {
                 PlaceTextField(text: $placeText)
                 SearchButton(action: {})
-                CancelButton(action: {})
+                CancelButton() {
+                    placeText = ""
+                }
             }
 
             PlaceTagSlider(places: suggestPlaces) { selected in
