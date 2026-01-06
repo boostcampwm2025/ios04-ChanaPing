@@ -38,7 +38,7 @@ struct MessageTextEditor: View {
                 TextEditor(text: $text)
                     .focused($isFocused)
                     .font(.body.bold())
-                    .foregroundStyle(Color.meomunDefaultColor.opacity(0.8))
+                    .foregroundStyle(Color.meomunPrimaryColor.opacity(0.8))
                     .padding(.horizontal, 18)
                     .padding(.top, 18)
                     .padding(.bottom, 22)
@@ -53,7 +53,7 @@ struct MessageTextEditor: View {
                 if text.isEmpty {
                     Text(placeholder)
                         .font(.body.bold())
-                        .foregroundStyle(.secondary)
+                        .foregroundStyle(Color.meomunPrimaryColor.opacity(0.3))
                         .padding(.horizontal, 24)
                         .padding(.top, 26)
                         .allowsHitTesting(false)
@@ -62,11 +62,11 @@ struct MessageTextEditor: View {
 
             // Counter pill
             Text("\(text.count) / \(maxCount)")
-                .font(.subheadline.weight(.semibold))
-                .foregroundStyle(.secondary)
-                .padding(.horizontal, 14)
-                .padding(.vertical, 8)
-                .background(Color.meomunDefaultColor.opacity(0.05), in: Capsule())
+                .font(.footnote.bold())
+                .foregroundStyle(Color.meomunSecondaryColor)
+                .padding(.horizontal, 12)
+                .padding(.vertical, 6)
+                .background(Color.meomunPrimaryColor.opacity(0.05), in: Capsule())
                 .padding(.bottom, 14)
         }
         .frame(height: 140)

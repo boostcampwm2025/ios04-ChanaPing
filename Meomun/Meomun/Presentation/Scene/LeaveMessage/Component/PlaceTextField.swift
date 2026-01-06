@@ -25,7 +25,7 @@ struct PlaceTextField: View {
             TextField(placeholder, text: $text)
                 .focused($isFocused)
                 .font(.system(size: 14, weight: .medium))
-                .foregroundStyle(Color.meomunDefaultColor)
+                .foregroundStyle(Color.meomunPrimaryColor)
                 .submitLabel(.search)
                 .onSubmit {
                     onSubmit?()

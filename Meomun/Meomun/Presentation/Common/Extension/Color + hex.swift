@@ -9,7 +9,8 @@ import SwiftUI
 
 extension Color {
     static let meomunWriteButton = Color(hex: "#5C9397")
-    static let meomunDefaultColor = Color(hex: "#0E1B1A")
+    static let meomunPrimaryColor = Color(hex: "#0E1B1A")
+    static let meomunSecondaryColor = Color(hex: "#789290")
     static let meomunPointColor = Color(hex: "#1DC9C0")
 }
 

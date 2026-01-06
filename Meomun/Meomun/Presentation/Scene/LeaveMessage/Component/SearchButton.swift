@@ -14,7 +14,7 @@ struct SearchButton: View {
         Button(action: action) {
             Image(systemName: "magnifyingglass")
                 .font(.system(size: 16))
-                .foregroundStyle(Color.meomunDefaultColor)
+                .foregroundStyle(Color.meomunPrimaryColor)
                 .frame(width: 44, height: 44)
                 .background(
                     RoundedRectangle(cornerRadius: 12)
