@@ -10,7 +10,7 @@ import RealityKit
 
 struct SpaceView: View {
     // 카메라 회전 상태 관리
-    @State private var cameraAnchor: AnchorEntity?
+    @State private var camera: PerspectiveCamera?
     @State private var yaw: Float = 0  // 수평 회전 (좌우)
     @State private var pitch: Float = 0  // 수직 회전 (상하)
 
@@ -48,22 +48,20 @@ extension SpaceView {
             }
 
             // 2. 카메라 설정 (돔 중앙에 위치)
-            let cameraAnchor = AnchorEntity()
             let camera = PerspectiveCamera()
 
             // 3. 카메라를 돔 중앙(원점)에 배치
             camera.position = [0, 0.7, 0]
-            cameraAnchor.addChild(camera)
-            content.add(cameraAnchor)
+            content.add(camera)
 
-            self.cameraAnchor = cameraAnchor
+            self.camera = camera
         }
     }
 }
 
 extension SpaceView {
     private func handleDrag(value: DragGesture.Value) {
-        guard let cameraAnchor else { return }
+        guard let camera else { return }
 
         // 드래그 변화량 계산
         let deltaX = Float(value.translation.width - lastDragValue.width)
@@ -79,11 +77,11 @@ extension SpaceView {
         pitch += deltaY * sensitivity
         pitch = max(0, min(Float.pi / 2, pitch)) // 0도 ~ 90도 제한
 
-        // 카메라 앵커 회전 적용
+        // 카메라 시야 방향 변경 (위치는 고정, 시야만 변경)
         // Y축 기준 회전(yaw) 후 X축 기준 회전(pitch)
         let yawRotation = simd_quatf(angle: yaw, axis: [0, 1, 0])
         let pitchRotation = simd_quatf(angle: pitch, axis: [1, 0, 0])
-        cameraAnchor.orientation = yawRotation * pitchRotation
+        camera.orientation = yawRotation * pitchRotation
 
         lastDragValue = value.translation
     }
