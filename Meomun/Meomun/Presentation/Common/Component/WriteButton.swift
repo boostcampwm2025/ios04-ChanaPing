@@ -68,7 +68,5 @@ struct WriteButton: View {
 }
 
 #Preview {
-    WriteButton(action: {
-        MapView()
-    })
+    WriteButton(action: {})
 }
