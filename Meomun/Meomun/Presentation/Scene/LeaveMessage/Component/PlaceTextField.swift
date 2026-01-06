@@ -18,8 +18,12 @@ struct PlaceTextField: View {
 
     var body: some View {
         HStack(spacing: 10) {
-            Image(systemName: "mappin.and.ellipse")
-                .font(.system(size: 16))
+            Image("placeSymbol")
+                .renderingMode(.template)
+                .resizable()
+                .scaledToFit()
+                .frame(width: 20, height: 20)
+                .clipped()
                 .foregroundStyle(Color.meomunPointColor)
 
             TextField(placeholder, text: $text)
