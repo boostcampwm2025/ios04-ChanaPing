@@ -7,6 +7,12 @@
 
 import SwiftUI
 
+fileprivate enum Constants {
+    static let navigationTitle = "잠시 남겨놓기"
+    static let textEditorTitle = "이 말은 잠시 머물 거에요."
+    static let textEditorPlaceholder = "지금 어디에 있나요?"
+}
+
 struct LeaveMessageView: View {
     @State private var message: String = ""
     @State private var placeText: String = ""
@@ -16,7 +22,7 @@ struct LeaveMessageView: View {
     var body: some View {
         VStack(alignment: .center, spacing: 12) {
             ZStack {
-                Text("잠시 남겨놓기")
+                Text(Constants.navigationTitle)
                     .font(.headline.weight(.semibold))
                     .foregroundStyle(Color.meomunPrimaryColor)
                     .frame(maxWidth: .infinity, alignment: .center)
@@ -30,7 +36,7 @@ struct LeaveMessageView: View {
 
             Spacer(minLength: 0)
 
-            Text("이 말은 잠시 머물 거예요.")
+            Text(Constants.textEditorTitle)
                 .font(.headline.bold())
                 .foregroundStyle(Color.meomunSecondaryColor)
                 .frame(maxWidth: .infinity, alignment: .leading)
@@ -44,7 +50,7 @@ struct LeaveMessageView: View {
                     NavigationLink {
                         SearchPlaceView()
                     } label: {
-                        Text("지금 어디에 있나요?")
+                        Text(Constants.textEditorPlaceholder)
                             .font(.system(size: 14, weight: .medium))
                             .foregroundStyle(Color(.placeholderText))
                             .frame(maxWidth: .infinity, alignment: .leading)
