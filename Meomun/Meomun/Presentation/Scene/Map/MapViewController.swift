@@ -11,6 +11,9 @@ import UIKit
 
 final class MapViewController: UIViewController {
 
+    private var locationManager = CLLocationManager()
+    private var didMoveToCurrentLocation = false
+
     private let naverMapView: NMFNaverMapView = {
         let naverMapView = NMFNaverMapView()
 
@@ -64,6 +67,61 @@ extension MapViewController {
         ])
     }
 }
+
+// MARK: - CLLocationManagerDelegate
+
+extension MapViewController: CLLocationManagerDelegate {
+    private func configureLocationManager() {
+        locationManager.delegate = self
+        locationManager.desiredAccuracy = kCLLocationAccuracyBest
+    }
+
+    private func requestLocationAuthorizationIfNeeded() {
+        let status = locationManager.authorizationStatus
+
+        switch status {
+        case .notDetermined:
+            locationManager.requestWhenInUseAuthorization()
+        case .authorizedWhenInUse, .authorizedAlways:
+            startUpdatingLocationIfNeeded()
+        case .denied, .restricted:
+            print("위치 권한이 거부/제한되어 있어 현재 위치로 이동할 수 없습니다.")
+        @unknown default:
+            break
+        }
+    }
+
+    private func startUpdatingLocationIfNeeded() {
+        locationManager.startUpdatingLocation()
+        naverMapView.mapView.positionMode = .direction
+    }
+
+    func locationManagerDidChangeAuthorization(_ manager: CLLocationManager) {
+        requestLocationAuthorizationIfNeeded()
+    }
+
+    func locationManager(_ manager: CLLocationManager, didUpdateLocations locations: [CLLocation]) {
+        guard let currentLocation = locations.last else { return }
+        guard didMoveToCurrentLocation == false else { return }
+
+        didMoveToCurrentLocation = true
+
+        let latLng = NMGLatLng(
+            lat: currentLocation.coordinate.latitude,
+            lng: currentLocation.coordinate.longitude
+        )
+
+        // 현재 위치로 카메라 이동
+        let cameraUpdate = NMFCameraUpdate(scrollTo: latLng)
+        cameraUpdate.animation = .easeIn
+        naverMapView.mapView.moveCamera(cameraUpdate)
+    }
+
+    func locationManager(_ manager: CLLocationManager, didFailWithError error: Error) {
+        print("위치 업데이트 실패: \(error)")
+    }
+}
+
 // MARK: - MapViewWrapper
 
 struct MapViewWrapper: UIViewControllerRepresentable {
