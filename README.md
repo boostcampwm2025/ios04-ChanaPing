@@ -63,7 +63,7 @@
   - 공간감을 느낄 수 있는 **3D/반추상 배경**
   - 말풍선(Message Bubble) 중심의 간단한 UI
 
-## 🧱 아키텍처 (간단 개요)
+## 🧱 아키텍처
 
 - **Presentation (iOS)**
   - SwiftUI 기반 View
