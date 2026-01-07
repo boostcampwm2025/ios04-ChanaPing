@@ -41,10 +41,14 @@ struct LeaveMessageView: View {
 
             HStack(spacing: 8) {
                 PlaceSearchContainerView {
-                    Text("지금 어디에 있나요?")
-                        .font(.system(size: 14, weight: .medium))
-                        .foregroundStyle(Color(.placeholderText))
-                        .frame(maxWidth: .infinity, alignment: .leading)
+                    NavigationLink {
+                        SearchPlaceView()
+                    } label: {
+                        Text("지금 어디에 있나요?")
+                            .font(.system(size: 14, weight: .medium))
+                            .foregroundStyle(Color(.placeholderText))
+                            .frame(maxWidth: .infinity, alignment: .leading)
+                    }
                 }
 
                 CancelButton {
@@ -74,5 +78,7 @@ struct LeaveMessageView: View {
 #Preview {
     @Previewable @State var message: String = ""
 
-    LeaveMessageView()
+    NavigationStack {
+        LeaveMessageView()
+    }
 }
