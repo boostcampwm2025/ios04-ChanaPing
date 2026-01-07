@@ -36,6 +36,7 @@ struct WriteButton: View {
                 )
                 .shadow(color: .black.opacity(0.15), radius: 6, y: 4)
         }
+        .padding(.horizontal, 24)
     }
 }
 

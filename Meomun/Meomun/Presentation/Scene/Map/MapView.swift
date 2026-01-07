@@ -13,8 +13,14 @@ struct MapView: View {
     var body: some View {
         ZStack {
             MapViewWrapper()
+                .ignoresSafeArea()
 
             VStack {
+                FloatingNavigationBar(
+                    title: "머문",
+                    onTapSearch: {}
+                )
+
                 Spacer()
                 HStack {
                     Spacer()
@@ -23,8 +29,8 @@ struct MapView: View {
                     }
                 }
             }
-            .padding(.bottom, 30)
-            .padding(.trailing, 30)
+            .padding(.top, 12)
+            .padding(.bottom, 96)
         }
         .sheet(isPresented: $showAddMessage) {
             AddMessageView()
