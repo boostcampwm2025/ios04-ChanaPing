@@ -7,14 +7,25 @@
 
 import SwiftUI
 
+/// 1) 버블 내부 텍스트 rotate 기능 지원 X 시
+///     - placeName 있을 수도 / 없을 수도
+///     - 좌측 라인 visible
+/// 2) 버블 내부 텍스트 rotate 기능 지원 O 시
+///     - placeName 항상 있음
+///     - 좌측 라인 invisible
+
 struct MessageBubble: View {
     let text: String
     let placeName: String?
     let isRecent: Bool
+    let showsAccentLine: Bool
     var maxWidth: CGFloat = 210
 
     private var accentColor: Color {
-        isRecent ? Color.orange : Color.blue
+        if !showsAccentLine {
+            return Color.clear
+        }
+        return isRecent ? Color.orange : Color.blue
     }
 
     var body: some View {
@@ -71,19 +82,22 @@ struct MessageBubble: View {
             MessageBubble(
                 text: "오늘 좀 춥다🫥🍃",
                 placeName: "장소 이름",
-                isRecent: false
+                isRecent: false,
+                showsAccentLine: true
             )
 
             MessageBubble(
                 text: "🫥🫥🫥🫥🫥🫥🫥🫥🫥🫥🫥🫥🫥🫥🫥🫥🫥🫥",
                 placeName: "장소 이름",
-                isRecent: false
+                isRecent: false,
+                showsAccentLine: false
             )
 
             MessageBubble(
                 text: "최근에 남긴 따끈따끈한 메시지라서 주황색 라인으로 표시",
                 placeName: nil,
-                isRecent: true
+                isRecent: true,
+                showsAccentLine: true
             )
         }
     }
