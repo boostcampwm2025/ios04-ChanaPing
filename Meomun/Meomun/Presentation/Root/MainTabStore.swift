@@ -13,23 +13,20 @@ enum MainTab: Hashable {
     case myPage
 }
 
-enum MainTabIntent {
-    case selectTab(MainTab)
-    case onAppear
-}
-
-enum MainTabAction {
-    case setSelectedTab(MainTab)
-}
-
-struct MainTabState {
-    var selectedTab: MainTab = .map
-}
-
 final class MainTabStore: Store {
-    typealias Intent = MainTabIntent
-    typealias Action = MainTabAction
-    typealias State = MainTabState
+
+    enum Intent {
+        case selectTab(MainTab)
+        case onAppear
+    }
+
+    enum Action {
+        case setSelectedTab(MainTab)
+    }
+
+    struct State {
+        var selectedTab: MainTab = .map
+    }
 
     @Published var state: State = .init()
 
