@@ -73,7 +73,7 @@ struct LeaveMessageView: View {
         .padding(.horizontal, 24)
         .padding(.vertical, 24)
         .background {
-            Image("backgroundImage")
+            Image(.background)
                 .resizable()
                 .scaledToFill()
                 .ignoresSafeArea()
