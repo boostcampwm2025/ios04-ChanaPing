@@ -64,14 +64,28 @@ struct MessageTextEditor: View {
                 }
             }
 
-            // Counter pill
-            Text("\(text.count) / \(maxCount)")
-                .font(.footnote.bold())
-                .foregroundStyle(Color.meomunSecondaryColor)
-                .padding(.horizontal, 12)
-                .padding(.vertical, 6)
-                .background(Color.meomunPrimaryColor.opacity(0.05), in: Capsule())
-                .padding(.bottom, 14)
+            HStack {
+                // Counter pill
+                Text("\(text.count) / \(maxCount)")
+                    .font(.footnote.bold())
+                    .foregroundStyle(Color.meomunSecondaryColor)
+                    .padding(.horizontal, 12)
+                    .padding(.vertical, 6)
+                    .background(Color.meomunPrimaryColor.opacity(0.05), in: Capsule())
+
+                Spacer()
+
+                Button {
+                    text = ""
+                } label: {
+                    Image(systemName: "xmark.circle")
+                        .resizable()
+                        .frame(width: 24, height: 24)
+                        .foregroundStyle(Color.meomunSecondaryColor)
+                }
+            }
+            .padding(.horizontal, 12)
+            .padding(.bottom, 14)
         }
         .frame(height: 140)
         .onTapGesture {
