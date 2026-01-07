@@ -14,6 +14,7 @@ fileprivate enum Constants {
 }
 
 struct LeaveMessageView: View {
+    @FocusState var isFocused: Bool
     @State private var message: String = ""
     @State private var placeText: String = ""
 
@@ -42,6 +43,7 @@ struct LeaveMessageView: View {
                 .frame(maxWidth: .infinity, alignment: .leading)
 
             MessageTextEditor(text: $message)
+                .focused($isFocused)
 
             Spacer(minLength: 0)
 
@@ -77,6 +79,9 @@ struct LeaveMessageView: View {
                 .resizable()
                 .scaledToFill()
                 .ignoresSafeArea()
+        }
+        .onTapGesture {
+            isFocused = false
         }
     }
 }
