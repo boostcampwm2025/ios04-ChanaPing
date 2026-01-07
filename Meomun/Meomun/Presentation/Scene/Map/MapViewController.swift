@@ -14,6 +14,8 @@ final class MapViewController: UIViewController {
     private var locationManager = CLLocationManager()
     private var didMoveToCurrentLocation = false
 
+    private var messageMarkers: [UUID: NMFMarker] = [:]
+
     private let naverMapView: NMFNaverMapView = {
         let naverMapView = NMFNaverMapView()
 
@@ -75,6 +77,61 @@ extension MapViewController {
     }
 }
 
+//MARK: - messages
+
+extension MapViewController {
+    func updateMessages(_ messages: [Message]) {
+        let ids = Set(messages.map(\.id))
+
+        // 1) 사라진 메시지 마커 제거
+        for (id, marker) in messageMarkers where !ids.contains(id) {
+            marker.mapView = nil
+            messageMarkers.removeValue(forKey: id)
+        }
+
+        // 2) 메시지 마커 생성 및 업데이트
+        for message in messages {
+            let marker: NMFMarker
+
+            if let existing = messageMarkers[message.id] {
+                marker = existing
+            } else {
+                marker = NMFMarker()
+                messageMarkers[message.id] = marker
+            }
+
+            marker.position = NMGLatLng(
+                lat: message.coordinate.latitude,
+                lng: message.coordinate.longitude
+            )
+
+            marker.iconImage = NMFOverlayImage(image: renderBubbleImage(for: message))
+            marker.anchor = CGPoint(x: 0.5, y: 1.0)
+            marker.zIndex = 1000
+            marker.isFlat = false
+            marker.mapView = naverMapView.mapView
+        }
+    }
+
+    private func renderBubbleImage(
+        for message: Message,
+        scale: CGFloat = UIScreen.main.scale
+    ) -> UIImage {
+        let bubble = MessageBubble(
+            text: message.content,
+            placeName: message.placeTag?.name,
+            isRecent: message.isRecent(),
+            showsAccentLine: true
+        )
+
+        let renderer = ImageRenderer(content: bubble)
+        renderer.scale = scale
+        renderer.isOpaque = false
+
+        return renderer.uiImage ?? UIImage()
+    }
+}
+
 // MARK: - CLLocationManagerDelegate
 
 extension MapViewController: CLLocationManagerDelegate {
@@ -132,10 +189,15 @@ extension MapViewController: CLLocationManagerDelegate {
 // MARK: - MapViewWrapper
 
 struct MapViewWrapper: UIViewControllerRepresentable {
+    let messages: [Message]
+
     func makeUIViewController(context: Context) -> MapViewController {
         let viewController = MapViewController()
+        viewController.updateMessages(messages)
         return viewController
     }
 
-    func updateUIViewController(_ uiViewController: MapViewController, context: Context) { }
+    func updateUIViewController(_ uiViewController: MapViewController, context: Context) {
+        uiViewController.updateMessages(messages)
+    }
 }
