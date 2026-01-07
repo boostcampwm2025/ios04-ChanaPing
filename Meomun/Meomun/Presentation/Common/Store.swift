@@ -6,6 +6,7 @@
 //
 
 import Foundation
+import SwiftUI
 
 protocol Store: AnyObject, ObservableObject {
     associatedtype Intent
