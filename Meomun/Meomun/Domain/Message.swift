@@ -7,7 +7,7 @@
 
 import Foundation
 
-struct Message {
+struct Message: Identifiable {
     let id: UUID
     let author: User
     let timestamp: Date
@@ -15,4 +15,8 @@ struct Message {
     var content: String
     var coordinate: Coordinate
     var placeTag: Place?
+
+    func isRecent(recentInterval: TimeInterval = 60 * 20) -> Bool {
+        Date().timeIntervalSince(timestamp) <= recentInterval
+    }
 }

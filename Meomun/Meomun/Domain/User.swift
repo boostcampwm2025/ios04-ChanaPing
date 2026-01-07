@@ -9,5 +9,5 @@ import Foundation
 
 struct User {
     let id: UUID
-    var reportMessageIDS: [UUID]
+    var reportMessageIDS: [UUID] = []
 }
