@@ -32,60 +32,149 @@ final class MapStore: Store {
     private var messageStreamTask: Task<Void, Never>?
 
     // dummy
-    private let dummyMessages: [Message] = [
-        Message(
+    private let dummyMessages: [Message] = {
+        // ───────────── 세종문화회관 (회전 그룹) ─────────────
+        let place1 = Place(
             id: UUID(),
-            author: User(id: UUID()),
-            timestamp: Date().addingTimeInterval(-10 * 60),
-            content: "오늘 좀 춥다🥲🍃",
-            coordinate: .init(latitude: 37.5720, longitude: 126.9760),
-            placeTag: Place(
-                id: UUID(),
-                name: "세종문화회관",
-                coordinate: .init(latitude: 37.5720, longitude: 126.9760)
+            name: "세종문화회관",
+            coordinate: .init(
+                latitude: 37.5720,
+                longitude: 126.9760
             )
-        ),
-        Message(
-            id: UUID(),
-            author: User(id: UUID()),
-            timestamp: Date().addingTimeInterval(-30 * 60),
-            content: "따뜻한 햇살 좋아요☀️",
-            coordinate: .init(latitude: 37.5712, longitude: 126.9780),
-            placeTag: Place(
-                id: UUID(),
-                name: "광화문광장",
-                coordinate: .init(latitude: 37.5712, longitude: 126.9780)
-            )
-        ),
-        Message(
-            id: UUID(),
-            author: User(id: UUID()),
-            timestamp: Date().addingTimeInterval(-2 * 60 * 60),
-            content: "여기 조용해서 좋아요",
-            coordinate: .init(latitude: 37.5705, longitude: 126.9790),
-            placeTag: nil
-        ),
-        Message(
-            id: UUID(),
-            author: User(id: UUID()),
-            timestamp: Date().addingTimeInterval(-5 * 60),
-            content: "바람 소리가 기분 좋아요🍃",
-            coordinate: .init(latitude: 37.5730, longitude: 126.9770),
-            placeTag: Place(
-                id: UUID(),
-                name: "경복궁 담벼락",
-                coordinate: .init(latitude: 37.5730, longitude: 126.9770)
-            )
-        ),
-        Message(
-            id: UUID(),
-            author: User(id: UUID()),
-            timestamp: Date().addingTimeInterval(-24 * 60 * 60),
-            content: "어제는 사람 많았는데 오늘은 한산하네",
-            coordinate: .init(latitude: 37.5698, longitude: 126.9775),
-            placeTag: nil
         )
-    ]
+
+        let group1 = [
+            Message(
+                id: UUID(),
+                author: User(id: UUID()),
+                timestamp: Date().addingTimeInterval(-3 * 60),
+                content: "따뜻한 바람 지나가요🍃",
+                coordinate: .init(latitude: 37.5720, longitude: 126.9760),
+                placeTag: place1
+            ),
+            Message(
+                id: UUID(),
+                author: User(id: UUID()),
+                timestamp: Date().addingTimeInterval(-12 * 60),
+                content: "공연 리허설 소리 들린다🎻",
+                coordinate: .init(latitude: 37.5720, longitude: 126.9760),
+                placeTag: place1
+            )
+        ]
+
+        // ───────────── 광화문광장 (회전 그룹) ─────────────
+
+        let place2 = Place(
+            id: UUID(),
+            name: "광화문광장",
+            coordinate: .init(
+                latitude: 37.5712,
+                longitude: 126.9780
+            )
+        )
+
+        let group2 = [
+            Message(
+                id: UUID(),
+                author: User(id: UUID()),
+                timestamp: Date().addingTimeInterval(-8 * 60),
+                content: "햇살이 광장 위에 내려앉았어요☀️",
+                coordinate: .init(latitude: 37.5712, longitude: 126.9780),
+                placeTag: place2
+            ),
+            Message(
+                id: UUID(),
+                author: User(id: UUID()),
+                timestamp: Date().addingTimeInterval(-50 * 60),
+                content: "차분한 아침 분위기 좋다",
+                coordinate: .init(latitude: 37.5712, longitude: 126.9780),
+                placeTag: place2
+            )
+        ]
+
+        // ───────────── 경복궁 담벼락 (회전 그룹) ─────────────
+        let place3 = Place(
+            id: UUID(),
+            name: "경복궁 담벼락",
+            coordinate: .init(
+                latitude: 37.5730,
+                longitude: 126.9770
+            )
+        )
+
+        let group3 = [
+            Message(
+                id: UUID(),
+                author: User(id: UUID()),
+                timestamp: Date().addingTimeInterval(-6 * 60),
+                content: "벽에 스치는 바람 소리가 좋다🍃",
+                coordinate: .init(latitude: 37.5730, longitude: 126.9770),
+                placeTag: place3
+            ),
+            Message(
+                id: UUID(),
+                author: User(id: UUID()),
+                timestamp: Date().addingTimeInterval(-2 * 60 * 60),
+                content: "발자국 소리가 멀리 울려요",
+                coordinate: .init(latitude: 37.5730, longitude: 126.9770),
+                placeTag: place3
+            )
+        ]
+
+        // ───────────── 단일 버블 (Static) ─────────────
+        let statics = [
+            Message(
+                id: UUID(),
+                author: User(id: UUID()),
+                timestamp: Date().addingTimeInterval(-40 * 60),
+                content: "벤치에 앉아 잠깐 쉬어요",
+                coordinate: .init(latitude: 37.5698, longitude: 126.9775),
+                placeTag: nil
+            ),
+            Message(
+                id: UUID(),
+                author: User(id: UUID()),
+                timestamp: Date().addingTimeInterval(-1 * 60 * 60),
+                content: "따뜻한 커피 향이 지나간다☕️",
+                coordinate: .init(latitude: 37.5704, longitude: 126.9766),
+                placeTag: nil
+            ),
+            Message(
+                id: UUID(),
+                author: User(id: UUID()),
+                timestamp: Date().addingTimeInterval(-3 * 60 * 60),
+                content: "멀리서 버스 브레이크 소리🚍",
+                coordinate: .init(latitude: 37.5718, longitude: 126.9792),
+                placeTag: nil
+            ),
+            Message(
+                id: UUID(),
+                author: User(id: UUID()),
+                timestamp: Date().addingTimeInterval(-20 * 60),
+                content: "바닥에 그림자가 길게 늘어져요🌒",
+                coordinate: .init(latitude: 37.5728, longitude: 126.9756),
+                placeTag: nil
+            ),
+            Message(
+                id: UUID(),
+                author: User(id: UUID()),
+                timestamp: Date().addingTimeInterval(-15 * 60),
+                content: "누군가 웃는 소리 지나갔다🙂",
+                coordinate: .init(latitude: 37.5709, longitude: 126.9786),
+                placeTag: nil
+            ),
+            Message(
+                id: UUID(),
+                author: User(id: UUID()),
+                timestamp: Date().addingTimeInterval(-10 * 60 * 60),
+                content: "새벽 공기가 차갑고 맑다🌙",
+                coordinate: .init(latitude: 37.5692, longitude: 126.9798),
+                placeTag: nil
+            )
+        ]
+
+        return group1 + group2 + group3 + statics
+    }()
 
     func action(intent: Intent) -> AsyncStream<Action> {
         AsyncStream { continuation in

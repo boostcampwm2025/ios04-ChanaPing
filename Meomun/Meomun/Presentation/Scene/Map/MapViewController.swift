@@ -9,12 +9,54 @@ import NMapsMap
 import SwiftUI
 import UIKit
 
+final class BubbleConfiguration {
+    let marker: NMFMarker
+    let messages: [Message] // 같은 장소 태그로 묶인 메시지들
+    var currentIndex: Int
+    var lastRotationTime: TimeInterval
+    var animationStartTime: TimeInterval?
+    var animationProgress: Double
+    var isAnimating: Bool
+    var currentMessage: Message
+    var nextMessage: Message
+
+    init(
+        marker: NMFMarker,
+        messages: [Message],
+        currentIndex: Int,
+        lastRotationTime: TimeInterval,
+        animationStartTime: TimeInterval? = nil,
+        animationProgress: Double,
+        isAnimating: Bool,
+        currentMessage: Message,
+        nextMessage: Message
+    ) {
+        self.marker = marker
+        self.messages = messages
+        self.currentIndex = currentIndex
+        self.lastRotationTime = lastRotationTime
+        self.animationStartTime = animationStartTime
+        self.animationProgress = animationProgress
+        self.isAnimating = isAnimating
+        self.currentMessage = currentMessage
+        self.nextMessage = nextMessage
+    }
+}
+
 final class MapViewController: UIViewController {
 
     private var locationManager = CLLocationManager()
     private var didMoveToCurrentLocation = false
 
+    // 일반 버블용 마커
     private var messageMarkers: [UUID: NMFMarker] = [:]
+
+    // 회전 버블용 설정들
+    private var bubbleConfigs: [BubbleConfiguration] = []
+    private var bubbleRotationTimer: Timer?
+    private let frameInterval: TimeInterval = 1.0 / 60.0
+    private let rotationInterval: TimeInterval = 3.0
+    private let animationDuration: TimeInterval = 1.0
 
     private let naverMapView: NMFNaverMapView = {
         let naverMapView = NMFNaverMapView()
@@ -56,6 +98,12 @@ final class MapViewController: UIViewController {
             bottom: tabBarHeight - 20,
             right: 24
         )
+
+        startBubbleRotationTimer()
+    }
+
+    deinit {
+        bubbleRotationTimer?.invalidate()
     }
 }
 
@@ -74,61 +122,6 @@ extension MapViewController {
             naverMapView.trailingAnchor.constraint(equalTo: view.trailingAnchor),
             naverMapView.bottomAnchor.constraint(equalTo: view.bottomAnchor)
         ])
-    }
-}
-
-//MARK: - messages
-
-extension MapViewController {
-    func updateMessages(_ messages: [Message]) {
-        let ids = Set(messages.map(\.id))
-
-        // 1) 사라진 메시지 마커 제거
-        for (id, marker) in messageMarkers where !ids.contains(id) {
-            marker.mapView = nil
-            messageMarkers.removeValue(forKey: id)
-        }
-
-        // 2) 메시지 마커 생성 및 업데이트
-        for message in messages {
-            let marker: NMFMarker
-
-            if let existing = messageMarkers[message.id] {
-                marker = existing
-            } else {
-                marker = NMFMarker()
-                messageMarkers[message.id] = marker
-            }
-
-            marker.position = NMGLatLng(
-                lat: message.coordinate.latitude,
-                lng: message.coordinate.longitude
-            )
-
-            marker.iconImage = NMFOverlayImage(image: renderBubbleImage(for: message))
-            marker.anchor = CGPoint(x: 0.5, y: 1.0)
-            marker.zIndex = 1000
-            marker.isFlat = false
-            marker.mapView = naverMapView.mapView
-        }
-    }
-
-    private func renderBubbleImage(
-        for message: Message,
-        scale: CGFloat = UIScreen.main.scale
-    ) -> UIImage {
-        let bubble = MessageBubble(
-            text: message.content,
-            placeName: message.placeTag?.name,
-            isRecent: message.isRecent(),
-            showsAccentLine: true
-        )
-
-        let renderer = ImageRenderer(content: bubble)
-        renderer.scale = scale
-        renderer.isOpaque = false
-
-        return renderer.uiImage ?? UIImage()
     }
 }
 
@@ -183,6 +176,199 @@ extension MapViewController: CLLocationManagerDelegate {
 
     func locationManager(_ manager: CLLocationManager, didFailWithError error: Error) {
         print("위치 업데이트 실패: \(error)")
+    }
+}
+
+// MARK: - messages
+
+extension MapViewController {
+    func updateMessages(_ messages: [Message]) {
+        // 1) 기존 마커 전부 제거
+        for (_, marker) in messageMarkers {
+            marker.mapView = nil
+        }
+        messageMarkers.removeAll()
+
+        for config in bubbleConfigs {
+            config.marker.mapView = nil
+        }
+        bubbleConfigs.removeAll()
+
+        // 2) placeTag.id 기준으로 그룹핑
+        let grouped = Dictionary(grouping: messages) { message in
+            message.placeTag?.id ?? message.id
+        }
+
+        // 3) 그룹별로 마커 생성
+        for (_, groupMessages) in grouped {
+            guard let firstMessage = groupMessages.first else { continue }
+
+            let coordinate = NMGLatLng(
+                lat: firstMessage.coordinate.latitude,
+                lng: firstMessage.coordinate.longitude
+            )
+
+            let marker = NMFMarker(position: coordinate)
+            marker.anchor = CGPoint(x: 0.5, y: 1.0)
+            marker.zIndex = 1000
+            marker.isFlat = false
+            marker.mapView = naverMapView.mapView
+
+            if groupMessages.count == 1 {
+                // 단일 메세지: 일반 버블
+                let image = renderStaticBubbleImage(for: firstMessage)
+                marker.iconImage = NMFOverlayImage(image: image)
+
+                messageMarkers[firstMessage.id] = marker
+            } else {
+                // 여러 개: 회전 버블
+                let currentTime = Date().timeIntervalSince1970
+                let current = groupMessages[0]
+                let next = groupMessages[1 % groupMessages.count]
+
+                let image = renderStaticBubbleImage(
+                    for: current,
+                    showsAccentLine: false
+                )
+                marker.iconImage = NMFOverlayImage(image: image)
+
+                let config = BubbleConfiguration(
+                    marker: marker,
+                    messages: groupMessages,
+                    currentIndex: 0,
+                    lastRotationTime: currentTime,
+                    animationStartTime: nil,
+                    animationProgress: 0,
+                    isAnimating: false,
+                    currentMessage: current,
+                    nextMessage: next
+                )
+
+                bubbleConfigs.append(config)
+            }
+        }
+    }
+
+    private func renderStaticBubbleImage(
+        for message: Message,
+        showsAccentLine: Bool = true,
+        scale: CGFloat = UIScreen.main.scale
+    ) -> UIImage {
+        let bubble = MessageBubble(
+            text: message.content,
+            placeName: message.placeTag?.name,
+            isRecent: message.isRecent(),
+            showsAccentLine: showsAccentLine
+        )
+
+        let renderer = ImageRenderer(content: bubble.padding(4))
+        renderer.scale = scale
+        renderer.isOpaque = false
+
+        return renderer.uiImage ?? UIImage()
+    }
+
+    private func renderRotatingBubbleImage(
+        current: Message,
+        next: Message,
+        progress: Double,
+        scale: CGFloat = UIScreen.main.scale
+    ) -> UIImage {
+        let rotateBubbleStack = RotatingMessageBubbleStack(
+            current: current,
+            next: next,
+            progress: progress
+        )
+
+        let renderer = ImageRenderer(content: rotateBubbleStack.padding(4))
+        renderer.scale = scale
+        renderer.isOpaque = false
+
+        return renderer.uiImage ?? UIImage()
+    }
+}
+
+// MARK: - Animation
+
+extension MapViewController {
+    private func startBubbleRotationTimer() {
+        bubbleRotationTimer?.invalidate()
+
+        bubbleRotationTimer = Timer.scheduledTimer(
+            withTimeInterval: frameInterval,
+            repeats: true
+        ) { [weak self] _ in
+            self?.updateMarkers()
+        }
+
+        if let timer = bubbleRotationTimer {
+            RunLoop.main.add(timer, forMode: .common)
+        }
+    }
+
+    private func updateMarkers() {
+        let currentTime = Date().timeIntervalSince1970
+
+        for config in bubbleConfigs {
+            guard config.messages.count > 1 else { continue }
+
+            if config.isAnimating {
+                updateAnimation(for: config, currentTime: currentTime)
+            } else {
+                if currentTime - config.lastRotationTime >= rotationInterval {
+                    startAnimation(for: config, currentTime: currentTime)
+                }
+            }
+        }
+    }
+
+    private func startAnimation(for config: BubbleConfiguration, currentTime: TimeInterval) {
+        guard !config.isAnimating else { return }
+
+        config.isAnimating = true
+        config.animationStartTime = currentTime
+        config.animationProgress = 0.0
+
+        let nextIndex = (config.currentIndex + 1) % config.messages.count
+        config.nextMessage = config.messages[nextIndex]
+        config.currentMessage = config.messages[config.currentIndex]
+    }
+
+    private func updateAnimation(for config: BubbleConfiguration, currentTime: TimeInterval) {
+        guard let startTime = config.animationStartTime else {
+            config.isAnimating = false
+            return
+        }
+
+        let elapsed = currentTime - startTime
+        let progress = min(elapsed / animationDuration, 1.0)
+        config.animationProgress = progress
+
+        let image = renderRotatingBubbleImage(
+            current: config.currentMessage,
+            next: config.nextMessage,
+            progress: progress
+        )
+        config.marker.iconImage = NMFOverlayImage(image: image)
+
+        if progress >= 1.0 {
+            let nextIndex = (config.currentIndex + 1) % config.messages.count
+            config.currentIndex = nextIndex
+            config.isAnimating = false
+            config.animationProgress = 0
+            config.animationStartTime = nil
+            config.lastRotationTime = currentTime
+
+            let finalImage = renderStaticBubbleImage(
+                for: config.nextMessage,
+                showsAccentLine: false
+            )
+            config.marker.iconImage = NMFOverlayImage(image: finalImage)
+
+            let nextNextIndex = (nextIndex + 1) % config.messages.count
+            config.currentMessage = config.messages[nextIndex]
+            config.nextMessage = config.messages[nextNextIndex]
+        }
     }
 }
 
