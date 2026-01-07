@@ -19,10 +19,9 @@ final class MapViewController: UIViewController {
 
         // 지도 UI 설정
         naverMapView.showCompass = false
-        naverMapView.showScaleBar = false
+        naverMapView.showScaleBar = true
         naverMapView.showZoomControls = false
         naverMapView.showLocationButton = true
-        naverMapView.showScaleBar = true
 
         // 최소 및 최대 줌 레벨 설정
         naverMapView.mapView.minZoomLevel = 15
