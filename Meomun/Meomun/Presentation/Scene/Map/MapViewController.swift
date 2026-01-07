@@ -24,7 +24,7 @@ final class MapViewController: UIViewController {
         naverMapView.showLocationButton = true
 
         // 지도 스타일
-        naverMapView.mapView.customStyleId = "9d41e3bf-0e89-45bc-8261-776fcdd1660d"
+        naverMapView.mapView.customStyleId = "bf0bd9ae-f750-4895-8246-2744297005d0"
 
         // 초기 카메라
         let camera = NMFCameraPosition(
@@ -39,12 +39,21 @@ final class MapViewController: UIViewController {
         return naverMapView
     }()
 
+    private let tabBarHeight: CGFloat = 96
+
     override func viewDidLoad() {
         super.viewDidLoad()
         configureLocationManager()
         configureSubviews()
         configureLayout()
         requestLocationAuthorizationIfNeeded()
+
+        naverMapView.mapView.contentInset = UIEdgeInsets(
+            top: 0,
+            left: 24,
+            bottom: tabBarHeight - 20,
+            right: 24
+        )
     }
 }
 
@@ -57,13 +66,11 @@ extension MapViewController {
     }
 
     private func configureLayout() {
-        let safeArea = view.safeAreaLayoutGuide
-
         NSLayoutConstraint.activate([
-            naverMapView.topAnchor.constraint(equalTo: safeArea.topAnchor),
-            naverMapView.leadingAnchor.constraint(equalTo: safeArea.leadingAnchor),
-            naverMapView.trailingAnchor.constraint(equalTo: safeArea.trailingAnchor),
-            naverMapView.bottomAnchor.constraint(equalTo: safeArea.bottomAnchor)
+            naverMapView.topAnchor.constraint(equalTo: view.topAnchor),
+            naverMapView.leadingAnchor.constraint(equalTo: view.leadingAnchor),
+            naverMapView.trailingAnchor.constraint(equalTo: view.trailingAnchor),
+            naverMapView.bottomAnchor.constraint(equalTo: view.bottomAnchor)
         ])
     }
 }
