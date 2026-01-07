@@ -8,8 +8,8 @@
 import SwiftUI
 
 struct LeftTopCutRoundedShape: Shape {
-    var baseRadius: CGFloat = 22
-    var cutRadius: CGFloat = 34
+    private let baseRadius: CGFloat = 22
+    private let cutRadius: CGFloat = 34
 
     func path(in rect: CGRect) -> Path {
         CornerRadiusShape(
