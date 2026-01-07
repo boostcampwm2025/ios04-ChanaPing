@@ -13,7 +13,14 @@ fileprivate enum Constants {
 }
 
 struct SearchPlaceView: View {
-    @State var text: String = ""
+    @State private var text: String = ""
+    @FocusState private var isFocused: Bool
+
+    private var onSubmit: (() -> Void)?
+
+    init(onSubmit: (() -> Void)?) {
+        self.onSubmit = onSubmit
+    }
 
     var body: some View {
         VStack {
@@ -22,6 +29,9 @@ struct SearchPlaceView: View {
             searchResultList
         }
         .navigationTitle(Constants.navigationTitle)
+        .onTapGesture {
+            isFocused = false
+        }
     }
 }
 
@@ -29,6 +39,13 @@ extension SearchPlaceView {
     var searchBar: some View {
         PlaceSearchContainerView {
             TextField(Constants.searchTextFieldPlaceholder, text: $text)
+                .focused($isFocused)
+                .font(.system(size: 14, weight: .medium))
+                .foregroundStyle(Color.meomunPrimaryColor)
+                .submitLabel(.search)
+                .onSubmit {
+                    onSubmit?()
+                }
         }
         .padding(.horizontal)
     }

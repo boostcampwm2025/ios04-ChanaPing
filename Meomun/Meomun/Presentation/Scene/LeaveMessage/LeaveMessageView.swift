@@ -50,7 +50,9 @@ struct LeaveMessageView: View {
             HStack(spacing: 8) {
                 PlaceSearchContainerView {
                     NavigationLink {
-                        SearchPlaceView()
+                        SearchPlaceView {
+                            // TODO: 키보드 Enter 누른 후 작업 추가
+                        }
                     } label: {
                         Text(Constants.textEditorPlaceholder)
                             .font(.system(size: 14, weight: .medium))
