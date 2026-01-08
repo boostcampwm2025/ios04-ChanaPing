@@ -1,5 +1,5 @@
 //
-//  MapStore +dummy.swift
+//  MapStore+dummy.swift
 //  Meomun
 //
 //  Created by 지연 on 1/8/26.

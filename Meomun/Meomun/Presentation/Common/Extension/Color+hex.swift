@@ -1,5 +1,5 @@
 //
-//  Color + hex.swift
+//  Color+hex.swift
 //  Meomun
 //
 //  Created by 송지연 on 12/22/25.
