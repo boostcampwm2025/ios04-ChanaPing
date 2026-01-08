@@ -9,14 +9,14 @@ import Foundation
 
 struct Message: Identifiable, Sendable {
     let id: MessageID
-    let author: User
-    let timestamp: Date
+    let authorID: UserID
+    let createdAt: Date
 
     let content: String
     let location: Location
     let placeTag: Place?
 
     func isRecent(recentInterval: TimeInterval = 60 * 20) -> Bool {
-        Date().timeIntervalSince(timestamp) <= recentInterval
+        Date().timeIntervalSince(createdAt) <= recentInterval
     }
 }
