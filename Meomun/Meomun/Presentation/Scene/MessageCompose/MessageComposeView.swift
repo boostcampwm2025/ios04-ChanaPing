@@ -17,25 +17,13 @@ struct MessageComposeView: View {
     @FocusState var isFocused: Bool
     @State private var message: String = ""
     @State private var placeText: String = ""
+    @Environment(\.dismiss) private var dismiss
 
     private var suggestPlaces: [String] = ["스타벅스 파주가람점", "ONUTE", "콰이어트라이트", "메가MGC커피 파주별하람마을점"]
 
     var body: some View {
         VStack(alignment: .center, spacing: 12) {
-            ZStack {
-                Text(Constants.navigationTitle)
-                    .font(.headline.weight(.semibold))
-                    .foregroundStyle(Color.meomunPrimaryColor)
-                    .frame(maxWidth: .infinity, alignment: .center)
-
-                HStack {
-                    BackButton(action: {})
-                    Spacer()
-                }
-            }
-            .frame(height: 44)
-
-            Spacer(minLength: 0)
+            Spacer()
 
             Text(Constants.textEditorTitle)
                 .font(.headline.bold())
@@ -84,6 +72,29 @@ struct MessageComposeView: View {
         }
         .onTapGesture {
             isFocused = false
+        }
+        .navigationBarBackButtonHidden()
+        .toolbar {
+            if #available(iOS 26.0, *) {
+                ToolbarItem(placement: .topBarLeading) {
+                    BackButton {
+                        dismiss()
+                    }
+                }
+                .sharedBackgroundVisibility(.hidden)
+            } else {
+                ToolbarItem(placement: .topBarLeading) {
+                    BackButton {
+                        dismiss()
+                    }
+                }
+            }
+
+            ToolbarItem(placement: .principal) {
+                Text(Constants.navigationTitle)
+                    .font(.headline.weight(.semibold))
+                    .foregroundStyle(Color.meomunPrimaryColor)
+            }
         }
     }
 }
