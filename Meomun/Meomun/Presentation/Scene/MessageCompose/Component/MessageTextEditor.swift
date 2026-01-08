@@ -50,6 +50,9 @@ struct MessageTextEditor: View {
                         .scrollContentBackground(.hidden)
                         .background(Color.clear)
                         .onChange(of: text) { _, newValue in
+                            if newValue.contains("\n") {
+                                text = newValue.replacingOccurrences(of: "\n", with: "")
+                            }
                             if newValue.count > maxCount {
                                 text = String(newValue.prefix(maxCount))
                             }
