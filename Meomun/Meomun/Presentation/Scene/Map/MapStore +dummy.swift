@@ -37,6 +37,24 @@ extension MapStore {
                 coordinate: .init(latitude: 37.5720, longitude: 126.9760),
                 placeTag: place1
             )
+            ,
+            Message(
+                id: UUID(),
+                author: User(id: UUID()),
+                timestamp: Date().addingTimeInterval(-12 * 60),
+                content: "공연 리허설 소리 들린다공연 리허설 소리 들린다",
+                coordinate: .init(latitude: 37.5720, longitude: 126.9760),
+                placeTag: place1
+            )
+            ,
+            Message(
+                id: UUID(),
+                author: User(id: UUID()),
+                timestamp: Date().addingTimeInterval(-12 * 60),
+                content: "공연 리허설 소리 들린다공연 리허설 소리 들린다",
+                coordinate: .init(latitude: 37.5720, longitude: 126.9760),
+                placeTag: place1
+            )
         ]
 
         // ───────────── 광화문광장 (회전 그룹) ─────────────
@@ -106,6 +124,14 @@ extension MapStore {
                 timestamp: Date().addingTimeInterval(-40 * 60),
                 content: "벤치에 앉아 잠깐 쉬어요",
                 coordinate: .init(latitude: 37.5698, longitude: 126.9775),
+                placeTag: nil
+            ),
+            Message(
+                id: UUID(),
+                author: User(id: UUID()),
+                timestamp: Date().addingTimeInterval(-12 * 60),
+                content: "장소태그는없는데좌표는같은메시지임",
+                coordinate: .init(latitude: 37.5720, longitude: 126.9760),  // 좌표가 완전히 겹치는 ... 문제의 상황 (엣지케이스)
                 placeTag: nil
             ),
             Message(

@@ -20,11 +20,30 @@ enum MessageStatusIndicator {
     case normal
 }
 
-struct MessageBubble: View {
-    let text: String
+enum BubbleLayout {
+    case flexible      // 단일 메시지
+    case fixedWidth(CGFloat)    // 회전 메시지
+}
+
+struct MessageBubble<Content: View>: View {
     let placeName: String?
     let statusIndicator: MessageStatusIndicator
+    let layout: BubbleLayout
+    let content: Content
+
     var maxWidth: CGFloat = 210
+
+    init(
+        placeName: String?,
+        statusIndicator: MessageStatusIndicator,
+        layout: BubbleLayout,
+        @ViewBuilder content: () -> Content
+    ) {
+        self.placeName = placeName
+        self.statusIndicator = statusIndicator
+        self.layout = layout
+        self.content = content()
+    }
 
     private var statusIndicatorColor: Color {
         switch statusIndicator {
@@ -59,13 +78,7 @@ struct MessageBubble: View {
                     }
                 }
 
-                // 본문 (최대 2줄)
-                Text(text)
-                    .font(.system(size: 14, weight: .regular))
-                    .foregroundStyle(Color.black.opacity(0.9))
-                    .lineLimit(2)
-                    .multilineTextAlignment(.leading)
-                    .fixedSize(horizontal: false, vertical: true)
+                content
             }
             .padding(.vertical, 13)
             .padding(.trailing, 13)
@@ -78,8 +91,39 @@ struct MessageBubble: View {
                         x: 0,
                         y: 6)
         )
-        .frame(maxWidth: maxWidth, alignment: .leading)
-        .fixedSize(horizontal: false, vertical: true)
+        .applyLayout(layout, maxWidth: maxWidth)
+    }
+}
+
+struct BubbleText: View {
+    let text: String
+
+    var body: some View {
+        // 본문 (최대 2줄)
+        Text(text)
+            .font(.system(size: 14, weight: .regular))
+            .foregroundStyle(Color.black.opacity(0.9))
+            .lineLimit(2)
+            .multilineTextAlignment(.leading)
+            .fixedSize(horizontal: false, vertical: true)
+    }
+}
+
+// MARK: - layout 전용 모디파이어
+
+private extension View {
+    @ViewBuilder
+    func applyLayout(_ layout: BubbleLayout, maxWidth: CGFloat) -> some View {
+        switch layout {
+        case .flexible:
+            self
+                .frame(maxWidth: maxWidth, alignment: .leading)
+                .fixedSize(horizontal: false, vertical: true)
+
+        case .fixedWidth(let fixedSize):
+            self
+                .frame(width: fixedSize, height: 82, alignment: .leading)
+        }
     }
 }
 
@@ -89,22 +133,28 @@ struct MessageBubble: View {
 
         VStack(alignment: .leading, spacing: 24) {
             MessageBubble(
-                text: "오늘 좀 춥다🫥🍃",
                 placeName: "장소 이름",
-                statusIndicator: .normal
-            )
+                statusIndicator: .normal,
+                layout: .flexible
+            ) {
+                BubbleText(text: "오늘 좀 춥다🫥🍃")
+            }
 
             MessageBubble(
-                text: "🫥🫥🫥🫥🫥🫥🫥🫥🫥🫥🫥🫥🫥🫥🫥🫥🫥🫥",
                 placeName: "장소 이름",
-                statusIndicator: .none
-            )
+                statusIndicator: .none,
+                layout: .fixedWidth(170)
+            ) {
+                BubbleText(text: "🫥🫥🫥🫥🫥🫥🫥🫥🫥🫥🫥🫥🫥🫥🫥🫥🫥🫥")
+            }
 
             MessageBubble(
-                text: "최근에 남긴 따끈따끈한 메시지라서 주황색 라인으로 표시",
                 placeName: nil,
-                statusIndicator: .recent
-            )
+                statusIndicator: .recent,
+                layout: .flexible
+            ) {
+                BubbleText(text: "최근에 남긴 따끈따끈한 메시지라서 주황색 라인으로 표시")
+            }
         }
     }
 }
