@@ -1,11 +1,11 @@
 //
-//  Environment.swift
+//  DomeEnvironment.swift
 //  Meomun
 //
 //  Created by MinwooJe on 1/8/26.
 //
 
-struct Environment {
+struct DomeEnvironment {
     let weather: Weather
     let dayPart: DayPart
 }

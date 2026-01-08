@@ -11,14 +11,15 @@ import SwiftUI
 struct SpaceView: View {
 
     @StateObject private var store = SpaceViewStore()
+    @State private var domeEnvironment: DomeEnvironment
 
     private let rotationCamera = RotationCamera(
         position: .init(x: 0, y: 0.7, z: 0),
         rotateSensitivity: 0.003
     )
 
-    init(environment: Environment) {
-        self.environment = environment
+    init(environment: DomeEnvironment) {
+        self.domeEnvironment = environment
     }
 
     var body: some View {
@@ -78,7 +79,7 @@ extension SpaceView {
         }
 
         if var material = surfaceEntity.components[ModelComponent.self]?.materials.first as? ShaderGraphMaterial {
-            let gradientPair = DomeColor.colors(for: environment.dayPart)
+            let gradientPair = DomeColor.colors(for: domeEnvironment.dayPart)
 
             do {
                 try material.setParameter(
@@ -101,6 +102,6 @@ extension SpaceView {
 
 #Preview {
     NavigationStack {
-        SpaceView()
+        SpaceView(environment: .init(weather: .sunny, dayPart: .afternoon))
     }
 }
