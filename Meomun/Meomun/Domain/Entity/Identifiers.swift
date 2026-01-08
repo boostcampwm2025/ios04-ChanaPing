@@ -7,6 +7,14 @@
 
 import Foundation
 
-struct MessageID: Hashable, Sendable { public let value: UUID }
-struct PlaceID: Hashable, Sendable { public let value: UUID }
-struct UserID: Hashable, Sendable { public let value: UUID }
+struct MessageID: Hashable, Sendable {
+    let value: UUID
+}
+
+struct PlaceID: Hashable, Sendable {
+    let value: UUID
+}
+
+struct UserID: Hashable, Sendable {
+    let value: UUID
+}
