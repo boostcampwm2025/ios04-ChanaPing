@@ -19,7 +19,7 @@ final class MockNetworkClient: NetworkClient {
     func request<T>(
         endpoint: Endpoint,
         responseType: T.Type
-    ) async throws -> T where T : Sendable & Decodable {
+    ) async throws -> T where T: Sendable & Decodable {
 
         guard let value = result as? T else {
             throw NetworkError.unknown
