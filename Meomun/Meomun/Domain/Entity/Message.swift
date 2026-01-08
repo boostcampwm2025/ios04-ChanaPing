@@ -13,6 +13,6 @@ struct Message: Identifiable, Sendable {
     let timestamp: Date
 
     let content: String
-    let coordinate: Coordinate
+    let location: Location
     let placeTag: Place?
 }

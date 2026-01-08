@@ -8,5 +8,5 @@
 struct Place: Identifiable, Sendable {
     let id: PlaceID
     let name: String
-    let coordinate: Coordinate
+    let location: Location
 }
