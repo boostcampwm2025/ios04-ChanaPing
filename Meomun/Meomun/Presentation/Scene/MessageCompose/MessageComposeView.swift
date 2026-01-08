@@ -1,5 +1,5 @@
 //
-//  LeaveMessageView.swift
+//  MessageComposeView.swift
 //  Meomun
 //
 //  Created by Hayeon Park on 1/6/26.
@@ -13,7 +13,7 @@ fileprivate enum Constants {
     static let textEditorPlaceholder = "지금 어디에 있나요?"
 }
 
-struct LeaveMessageView: View {
+struct MessageComposeView: View {
     @FocusState var isFocused: Bool
     @State private var message: String = ""
     @State private var placeText: String = ""
@@ -92,6 +92,6 @@ struct LeaveMessageView: View {
     @Previewable @State var message: String = ""
 
     NavigationStack {
-        LeaveMessageView()
+        MessageComposeView()
     }
 }

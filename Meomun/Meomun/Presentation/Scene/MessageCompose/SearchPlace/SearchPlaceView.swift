@@ -60,6 +60,6 @@ extension SearchPlaceView {
 
 #Preview {
     NavigationStack {
-        LeaveMessageView()
+        MessageComposeView()
     }
 }
