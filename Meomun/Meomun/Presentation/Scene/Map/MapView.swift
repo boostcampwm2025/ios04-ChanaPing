@@ -31,7 +31,7 @@ struct MapView: View {
                     }
                 }
             }
-            .padding(.top, 12)
+            .padding(.top, 8)
             .padding(.bottom, 96)
         }
         .sheet(

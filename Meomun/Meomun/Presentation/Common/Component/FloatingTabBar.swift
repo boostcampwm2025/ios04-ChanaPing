@@ -35,7 +35,7 @@ struct FloatingTabBar: View {
             }
         }
         .padding(.horizontal, 22)
-        .padding(.vertical, 18)
+        .padding(.vertical, 14)
         .background(
             CornerRadiusShape(
                 topLeft: 24,
@@ -43,7 +43,7 @@ struct FloatingTabBar: View {
                 bottomLeft: 10,
                 bottomRight: 10
             )
-                .fill(.white.opacity(0.96))
+                .fill(.white.opacity(0.76))
                 .shadow(
                     color: .black.opacity(0.12),
                     radius: 18,
