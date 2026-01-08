@@ -127,7 +127,7 @@ labels는 아래 중에서만 선택:
         guard let http = response as? HTTPURLResponse else {
             throw URLError(.badServerResponse)
         }
-        
+
         guard (200..<300).contains(http.statusCode) else {
             var raw = ""
             for try await line in bytes.lines.prefix(50) { raw += line + "\n" }
@@ -136,7 +136,7 @@ labels는 아래 중에서만 선택:
         }
 
         var accumulated = ""
-        var finalContent: String? = nil
+        var finalContent: String?
 
         for try await line in bytes.lines {
             guard line.hasPrefix("data:") else { continue }

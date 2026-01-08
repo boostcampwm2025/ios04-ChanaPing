@@ -7,14 +7,14 @@
 
 import Foundation
 
-struct Message: Identifiable {
-    let id: UUID
+struct Message: Identifiable, Sendable {
+    let id: MessageID
     let author: User
     let timestamp: Date
 
-    var content: String
-    var coordinate: Coordinate
-    var placeTag: Place?
+    let content: String
+    let location: Location
+    let placeTag: Place?
 
     func isRecent(recentInterval: TimeInterval = 60 * 20) -> Bool {
         Date().timeIntervalSince(timestamp) <= recentInterval
