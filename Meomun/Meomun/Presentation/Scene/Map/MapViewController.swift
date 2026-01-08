@@ -45,6 +45,8 @@ final class BubbleConfiguration {
 
 final class MapViewController: UIViewController {
 
+    private var appLifecycleObservers: [NSObjectProtocol] = []
+
     private var locationManager = CLLocationManager()
     private var didMoveToCurrentLocation = false
 
@@ -98,6 +100,9 @@ final class MapViewController: UIViewController {
             bottom: tabBarHeight - 20,
             right: 24
         )
+
+        // 앱 라이프사이클 옵저버 등록
+        registerAppLifecycleObservers()
     }
 
     override func viewWillAppear(_ animated: Bool) {
@@ -111,7 +116,49 @@ final class MapViewController: UIViewController {
     }
 
     deinit {
+        unregisterAppLifecycleObservers()
         stopBubbleRotationTimer()
+    }
+}
+
+// MARK: - Register Observers
+
+extension MapViewController {
+    private func registerAppLifecycleObservers() {
+        // 이미 있으면 중복 등록 방지
+        unregisterAppLifecycleObservers()
+
+        let center = NotificationCenter.default
+
+        appLifecycleObservers.append(
+            center.addObserver(
+                forName: UIApplication.didEnterBackgroundNotification,
+                object: nil,
+                queue: .main
+            ) { [weak self] _ in
+                self?.stopBubbleRotationTimer()
+            }
+        )
+
+        appLifecycleObservers.append(
+            center.addObserver(
+                forName: UIApplication.willEnterForegroundNotification,
+                object: nil,
+                queue: .main
+            ) { [weak self] _ in
+                // 화면이 아직 보이는 상태면 다시 시작
+                guard let self else { return }
+                if self.view.window != nil {
+                    self.startBubbleRotationTimer()
+                }
+            }
+        )
+    }
+
+    private func unregisterAppLifecycleObservers() {
+        let center = NotificationCenter.default
+        appLifecycleObservers.forEach { center.removeObserver($0) }
+        appLifecycleObservers.removeAll()
     }
 }
 
