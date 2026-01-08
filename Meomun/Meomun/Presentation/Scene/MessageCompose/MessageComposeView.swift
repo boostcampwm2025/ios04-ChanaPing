@@ -1,5 +1,5 @@
 //
-//  LeaveMessageView.swift
+//  MessageComposeView.swift
 //  Meomun
 //
 //  Created by Hayeon Park on 1/6/26.
@@ -7,7 +7,14 @@
 
 import SwiftUI
 
-struct LeaveMessageView: View {
+fileprivate enum Constants {
+    static let navigationTitle = "잠시 남겨놓기"
+    static let textEditorTitle = "이 말은 잠시 머물 거에요."
+    static let textEditorPlaceholder = "지금 어디에 있나요?"
+}
+
+struct MessageComposeView: View {
+    @FocusState var isFocused: Bool
     @State private var message: String = ""
     @State private var placeText: String = ""
 
@@ -16,7 +23,7 @@ struct LeaveMessageView: View {
     var body: some View {
         VStack(alignment: .center, spacing: 12) {
             ZStack {
-                Text("잠시 남겨놓기")
+                Text(Constants.navigationTitle)
                     .font(.headline.weight(.semibold))
                     .foregroundStyle(Color.meomunPrimaryColor)
                     .frame(maxWidth: .infinity, alignment: .center)
@@ -30,18 +37,30 @@ struct LeaveMessageView: View {
 
             Spacer(minLength: 0)
 
-            Text("이 말은 잠시 머물 거예요.")
+            Text(Constants.textEditorTitle)
                 .font(.headline.bold())
                 .foregroundStyle(Color.meomunSecondaryColor)
                 .frame(maxWidth: .infinity, alignment: .leading)
 
             MessageTextEditor(text: $message)
+                .focused($isFocused)
 
             Spacer(minLength: 0)
 
             HStack(spacing: 8) {
-                PlaceTextField(text: $placeText)
-                SearchButton(action: {})
+                PlaceSearchContainerView {
+                    NavigationLink {
+                        SearchPlaceView {
+                            // TODO: 키보드 Enter 누른 후 작업 추가
+                        }
+                    } label: {
+                        Text(Constants.textEditorPlaceholder)
+                            .font(.system(size: 14, weight: .medium))
+                            .foregroundStyle(Color(.placeholderText))
+                            .frame(maxWidth: .infinity, alignment: .leading)
+                    }
+                }
+
                 CancelButton {
                     placeText = ""
                 }
@@ -58,10 +77,13 @@ struct LeaveMessageView: View {
         .padding(.horizontal, 24)
         .padding(.vertical, 24)
         .background {
-            Image("backgroundImage")
+            Image(.background)
                 .resizable()
                 .scaledToFill()
                 .ignoresSafeArea()
+        }
+        .onTapGesture {
+            isFocused = false
         }
     }
 }
@@ -69,5 +91,7 @@ struct LeaveMessageView: View {
 #Preview {
     @Previewable @State var message: String = ""
 
-    LeaveMessageView()
+    NavigationStack {
+        MessageComposeView()
+    }
 }
