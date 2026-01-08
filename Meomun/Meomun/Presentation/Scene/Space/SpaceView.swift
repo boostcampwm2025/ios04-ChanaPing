@@ -38,6 +38,14 @@ struct SpaceView: View {
                 }
         )
         .ignoresSafeArea()
+        .overlay(alignment: .bottomTrailing) {
+            NavigationLink {
+                MessageComposeView()
+            } label: {
+                WriteButton { }
+                    .disabled(true)
+            }
+        }
     }
 }
 
@@ -59,5 +67,7 @@ extension SpaceView {
 }
 
 #Preview {
-    SpaceView()
+    NavigationStack {
+        SpaceView()
+    }
 }
