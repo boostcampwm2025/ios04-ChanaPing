@@ -49,6 +49,7 @@ struct MessageTextEditor: View {
                         .padding(.bottom, 22)
                         .scrollContentBackground(.hidden)
                         .background(Color.clear)
+                        .submitLabel(.done)
                         .onChange(of: text) { _, newValue in
                             if newValue.contains("\n") {
                                 text = newValue.replacingOccurrences(of: "\n", with: "")
