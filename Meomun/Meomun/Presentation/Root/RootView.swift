@@ -25,6 +25,7 @@ struct RootView: View {
                 }
             )
         }
+        .ignoresSafeArea(.keyboard)
         .task {
             await store.send(intent: .onAppear)
         }
