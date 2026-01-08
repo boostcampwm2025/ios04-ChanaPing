@@ -12,7 +12,7 @@ struct MapView: View {
 
     var body: some View {
         ZStack {
-            // TODO: - 지도뷰
+            MapViewWrapper()
 
             VStack {
                 Spacer()
