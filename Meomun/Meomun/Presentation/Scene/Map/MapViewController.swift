@@ -51,7 +51,7 @@ final class MapViewController: UIViewController {
     private var didMoveToCurrentLocation = false
 
     // 일반 버블용 마커
-    private var messageMarkers: [UUID: NMFMarker] = [:]
+    private var messageMarkers: [MessageID: NMFMarker] = [:]
 
     // 회전 버블용 설정들
     private var bubbleConfigs: [BubbleConfiguration] = []
@@ -242,6 +242,11 @@ extension MapViewController: CLLocationManagerDelegate {
 // MARK: - messages
 
 extension MapViewController {
+    private enum BubbleGroupKey: Hashable {
+        case place(PlaceID)
+        case message(MessageID)
+    }
+
     func updateMessages(_ messages: [Message]) {
         // 1) 기존 마커 전부 제거
         for (_, marker) in messageMarkers {
@@ -255,8 +260,14 @@ extension MapViewController {
         bubbleConfigs.removeAll()
 
         // 2) placeTag.id 기준으로 그룹핑
-        let grouped = Dictionary(grouping: messages) { message in
-            message.placeTag?.id ?? message.id
+        // - Place가 있으면 PlaceID 기반으로 묶고
+        // - Place가 없으면 MessageID 기반으로 각각 단독 그룹
+        let grouped = Dictionary(grouping: messages) { message -> BubbleGroupKey in
+            if let placeID = message.placeTag?.id {
+                return .place(placeID)
+            } else {
+                return .message(message.id)
+            }
         }
 
         // 3) 그룹별로 마커 생성
@@ -264,8 +275,8 @@ extension MapViewController {
             guard let firstMessage = groupMessages.first else { continue }
 
             let coordinate = NMGLatLng(
-                lat: firstMessage.coordinate.latitude,
-                lng: firstMessage.coordinate.longitude
+                lat: firstMessage.location.latitude,
+                lng: firstMessage.location.longitude
             )
 
             let marker = NMFMarker(position: coordinate)

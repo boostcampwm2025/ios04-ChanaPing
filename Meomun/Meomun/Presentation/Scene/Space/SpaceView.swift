@@ -10,13 +10,17 @@ import SwiftUI
 
 struct SpaceView: View {
 
-    // 드래그 제스처 상태
-    @State private var lastDragValue: CGSize = .zero
+    @StateObject private var store = SpaceViewStore()
+    @State private var domeEnvironment: DomeEnvironment
 
     private let rotationCamera = RotationCamera(
         position: .init(x: 0, y: 0.7, z: 0),
         rotateSensitivity: 0.003
     )
+
+    init(environment: DomeEnvironment) {
+        self.domeEnvironment = environment
+    }
 
     var body: some View {
         RealityView { content in
@@ -27,17 +31,27 @@ struct SpaceView: View {
         .gesture(
             DragGesture()
                 .onChanged { value in
-                    // 드래그 변화량 계산
-                    let deltaX = Float(value.translation.width - lastDragValue.width)
-                    let deltaY = Float(value.translation.height - lastDragValue.height)
-                    rotationCamera.rotate(deltaX: deltaX, deltaY: deltaY)
-                    lastDragValue = value.translation
+                    rotationCamera.handleDrag(
+                        translationX: Float(value.translation.width),
+                        translationY: Float(value.translation.height)
+                    )
                 }
                 .onEnded { _ in
-                    lastDragValue = .zero
+                    rotationCamera.endDrag()
                 }
         )
+        .task {
+            await store.send(intent: .onAppear)
+        }
         .ignoresSafeArea()
+        .overlay(alignment: .bottomTrailing) {
+            NavigationLink {
+                MessageComposeView()
+            } label: {
+                WriteButton { }
+                    .disabled(true)
+            }
+        }
     }
 }
 
@@ -48,6 +62,7 @@ extension SpaceView {
                 // 1. 배경 돔 로드
                 let domeEntity = try await Entity(named: "Dome.usdz")
                 content.add(domeEntity)
+                configureDomeSurface(domeEntity: domeEntity)
 
                 // 2. 카메라 추가
                 rotationCamera.addToScene(content)
@@ -56,8 +71,37 @@ extension SpaceView {
             }
         }
     }
+
+    private func configureDomeSurface(domeEntity: Entity) {
+        guard let surfaceEntity = domeEntity.findEntity(named: "Dome_01") else {
+            print("Dome_01을 찾을 수 없음")
+            return
+        }
+
+        if var material = surfaceEntity.components[ModelComponent.self]?.materials.first as? ShaderGraphMaterial {
+            let gradientPair = DomeColor.colors(for: domeEnvironment.dayPart)
+
+            do {
+                try material.setParameter(
+                    name: "topColor",
+                    value: .color(gradientPair.top)
+                )
+
+                try material.setParameter(
+                    name: "bottomColor",
+                    value: .color(gradientPair.bottom)
+                )
+
+                surfaceEntity.components[ModelComponent.self]?.materials = [material]
+            } catch {
+                print("material을 찾을 수 없음: \(error)")
+            }
+        }
+    }
 }
 
 #Preview {
-    SpaceView()
+    NavigationStack {
+        SpaceView(environment: .init(weather: .sunny, dayPart: .afternoon))
+    }
 }

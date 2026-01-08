@@ -17,6 +17,9 @@ final class RotationCamera {
     /// 수직 회전 (상하)
     private var pitch: Float = 0
 
+    /// 드래그 추적을 위한 이전 translation 값
+    private var lastTranslation: (x: Float, y: Float) = (0, 0)
+
     /// 회전 감도 조절을 위한 상수 (값이 클수록 빠르게 회전)
     private let sensitivity: Float
 
@@ -33,7 +36,22 @@ final class RotationCamera {
         content.add(camera)
     }
 
-    func rotate(deltaX: Float, deltaY: Float) {
+    /// 드래그 입력을 처리하여 카메라를 회전시킵니다
+    func handleDrag(translationX: Float, translationY: Float) {
+        let deltaX = translationX - lastTranslation.x
+        let deltaY = translationY - lastTranslation.y
+
+        rotate(deltaX: deltaX, deltaY: deltaY)
+
+        lastTranslation = (translationX, translationY)
+    }
+
+    /// 드래그가 끝났을 때 호출합니다
+    func endDrag() {
+        lastTranslation = (0, 0)
+    }
+
+    private func rotate(deltaX: Float, deltaY: Float) {
         yaw += deltaX * sensitivity
         pitch += deltaY * sensitivity
 
