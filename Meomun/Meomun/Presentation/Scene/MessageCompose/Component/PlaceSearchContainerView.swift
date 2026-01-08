@@ -1,20 +1,20 @@
 //
-//  PlaceTextField.swift
+//  PlaceSearchContainerView.swift
 //  Meomun
 //
-//  Created by Hayeon Park on 1/6/26.
+//  Created by MinwooJe on 1/7/26.
 //
 
 import SwiftUI
 
-struct PlaceTextField: View {
-    @Binding var text: String
+struct PlaceSearchContainerView<Content: View>: View {
+    private let content: () -> Content
 
-    var placeholder: String = "지금 어디에 있나요?"
-    var onTap: (() -> Void)?
-    var onSubmit: (() -> Void)?
-
-    @FocusState private var isFocused: Bool
+    init(
+        content: @escaping () -> Content
+    ) {
+        self.content = content
+    }
 
     var body: some View {
         HStack(spacing: 10) {
@@ -26,14 +26,7 @@ struct PlaceTextField: View {
                 .clipped()
                 .foregroundStyle(Color.meomunPointColor)
 
-            TextField(placeholder, text: $text)
-                .focused($isFocused)
-                .font(.system(size: 14, weight: .medium))
-                .foregroundStyle(Color.meomunPrimaryColor)
-                .submitLabel(.search)
-                .onSubmit {
-                    onSubmit?()
-                }
+            content()
         }
         .padding(.horizontal, 14)
         .frame(height: 44)
@@ -48,13 +41,14 @@ struct PlaceTextField: View {
         .shadow(color: .black.opacity(0.05), radius: 2)
         .shadow(color: .black.opacity(0.05), radius: 0, x: 1, y: 1)
         .contentShape(Rectangle())
-        .onTapGesture {
-            isFocused = true
-            onTap?()
-        }
     }
 }
 
 #Preview {
-    PlaceTextField(text: .constant("GABAôN Salon"))
+    @FocusState var isFocused: Bool
+
+    PlaceSearchContainerView {
+        TextField("placeHolder", text: .constant("Text"))
+            .focused($isFocused)
+    }
 }

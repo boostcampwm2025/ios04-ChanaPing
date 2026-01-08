@@ -65,9 +65,13 @@ final class MapViewController: UIViewController {
 
         // 지도 UI 설정
         naverMapView.showCompass = false
-        naverMapView.showScaleBar = false
+        naverMapView.showScaleBar = true
         naverMapView.showZoomControls = false
         naverMapView.showLocationButton = true
+
+        // 최소 및 최대 줌 레벨 설정
+        naverMapView.mapView.minZoomLevel = 15
+        naverMapView.mapView.maxZoomLevel = 18
 
         // 지도 스타일
         naverMapView.mapView.customStyleId = "bf0bd9ae-f750-4895-8246-2744297005d0"
@@ -75,7 +79,7 @@ final class MapViewController: UIViewController {
         // 초기 카메라
         let camera = NMFCameraPosition(
             NMGLatLng(lat: 37.5665, lng: 126.9780),
-            zoom: 16,
+            zoom: 17,
             tilt: 45,
             heading: 0
         )
