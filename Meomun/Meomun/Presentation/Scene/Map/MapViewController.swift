@@ -98,12 +98,20 @@ final class MapViewController: UIViewController {
             bottom: tabBarHeight - 20,
             right: 24
         )
+    }
 
+    override func viewWillAppear(_ animated: Bool) {
+        super.viewWillAppear(animated)
         startBubbleRotationTimer()
     }
 
+    override func viewDidDisappear(_ animated: Bool) {
+        super.viewDidDisappear(animated)
+        stopBubbleRotationTimer()
+    }
+
     deinit {
-        bubbleRotationTimer?.invalidate()
+        stopBubbleRotationTimer()
     }
 }
 
@@ -304,6 +312,11 @@ extension MapViewController {
         if let timer = bubbleRotationTimer {
             RunLoop.main.add(timer, forMode: .common)
         }
+    }
+
+    private func stopBubbleRotationTimer() {
+        bubbleRotationTimer?.invalidate()
+        bubbleRotationTimer = nil
     }
 
     private func updateMarkers() {
