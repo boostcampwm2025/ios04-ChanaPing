@@ -8,26 +8,48 @@
 import SwiftUI
 
 struct MapView: View {
-    @State private var showAddMessage = false
+    @StateObject private var store = MapStore()
 
     var body: some View {
         ZStack {
-            MapViewWrapper()
+            MapViewWrapper(messages: store.state.messages)
+                .ignoresSafeArea()
 
             VStack {
+                FloatingNavigationBar(
+                    title: "머문",
+                    onTapSearch: {}
+                )
+
                 Spacer()
                 HStack {
                     Spacer()
                     WriteButton {
-                        showAddMessage = true
+                        Task {
+                            await store.send(intent: .tapWriteButton)
+                        }
                     }
                 }
             }
-            .padding(.bottom, 30)
-            .padding(.trailing, 30)
+            .padding(.top, 12)
+            .padding(.bottom, 96)
         }
-        .sheet(isPresented: $showAddMessage) {
+        .sheet(
+            isPresented: Binding(
+                get: { store.state.isShowingAddMessage },
+                set: { isPresented in
+                    if !isPresented {
+                        Task {
+                            await store.send(intent: .dismissAddMessage)
+                        }
+                    }
+                }
+            )
+        ) {
             AddMessageView()
+        }
+        .task {
+            await store.send(intent: .onAppear)
         }
     }
 }
