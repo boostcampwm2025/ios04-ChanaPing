@@ -10,6 +10,7 @@ import SwiftUI
 
 struct SpaceView: View {
 
+    @StateObject private var store = SpaceViewStore()
 
     private let rotationCamera = RotationCamera(
         position: .init(x: 0, y: 0.7, z: 0),
@@ -34,6 +35,9 @@ struct SpaceView: View {
                     rotationCamera.endDrag()
                 }
         )
+        .task {
+            await store.send(intent: .onAppear)
+        }
         .ignoresSafeArea()
         .overlay(alignment: .bottomTrailing) {
             NavigationLink {
