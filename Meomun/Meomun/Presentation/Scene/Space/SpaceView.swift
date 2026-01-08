@@ -17,6 +17,10 @@ struct SpaceView: View {
         rotateSensitivity: 0.003
     )
 
+    init(environment: Environment) {
+        self.environment = environment
+    }
+
     var body: some View {
         RealityView { content in
             // 가상 카메라 모드 설정 (AR이 아닌 3D 공간)
@@ -57,11 +61,39 @@ extension SpaceView {
                 // 1. 배경 돔 로드
                 let domeEntity = try await Entity(named: "Dome.usdz")
                 content.add(domeEntity)
+                configureDomeSurface(domeEntity: domeEntity)
 
                 // 2. 카메라 추가
                 rotationCamera.addToScene(content)
             } catch {
                 print("돔 로드 실패: \(error)")
+            }
+        }
+    }
+
+    private func configureDomeSurface(domeEntity: Entity) {
+        guard let surfaceEntity = domeEntity.findEntity(named: "Dome_01") else {
+            print("Dome_01을 찾을 수 없음")
+            return
+        }
+
+        if var material = surfaceEntity.components[ModelComponent.self]?.materials.first as? ShaderGraphMaterial {
+            let gradientPair = DomeColor.colors(for: environment.dayPart)
+
+            do {
+                try material.setParameter(
+                    name: "topColor",
+                    value: .color(gradientPair.top)
+                )
+
+                try material.setParameter(
+                    name: "bottomColor",
+                    value: .color(gradientPair.bottom)
+                )
+
+                surfaceEntity.components[ModelComponent.self]?.materials = [material]
+            } catch {
+                print("material을 찾을 수 없음: \(error)")
             }
         }
     }

@@ -63,7 +63,7 @@ struct FloatingTabBar: View {
 }
 
 #Preview {
-    FloatingTabBar(selectedTab: .map) { tab in
+    FloatingTabBar(selectedTab: .map) { _ in
         print("hi")
     }
 }
