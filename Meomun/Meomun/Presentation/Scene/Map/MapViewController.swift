@@ -312,8 +312,7 @@ extension MapViewController {
         let bubble = MessageBubble(
             text: message.content,
             placeName: message.placeTag?.name,
-            isRecent: message.isRecent(),
-            showsAccentLine: showsAccentLine
+            statusIndicator: showsAccentLine ? (message.isRecent() ? .recent : .normal) : .none
         )
 
         let renderer = ImageRenderer(content: bubble.padding(4))

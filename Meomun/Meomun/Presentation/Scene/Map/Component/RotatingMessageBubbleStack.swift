@@ -18,8 +18,7 @@ struct RotatingMessageBubbleStack: View {
                 MessageBubble(
                     text: next.content,
                     placeName: next.placeTag?.name,
-                    isRecent: next.isRecent(),
-                    showsAccentLine: false
+                    statusIndicator: .none
                 )
                 .opacity(progress)
                 .offset(y: (1 - progress) * 30)
@@ -28,8 +27,7 @@ struct RotatingMessageBubbleStack: View {
             MessageBubble(
                 text: current.content,
                 placeName: current.placeTag?.name,
-                isRecent: current.isRecent(),
-                showsAccentLine: false
+                statusIndicator: .none
             )
             .opacity(1 - progress)
             .offset(y: -progress * 30)

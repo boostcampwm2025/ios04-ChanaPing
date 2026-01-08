@@ -14,25 +14,34 @@ import SwiftUI
 ///     - placeName 항상 있음
 ///     - 좌측 라인 invisible
 
+enum MessageStatusIndicator {
+    case none
+    case recent
+    case normal
+}
+
 struct MessageBubble: View {
     let text: String
     let placeName: String?
-    let isRecent: Bool
-    let showsAccentLine: Bool
+    let statusIndicator: MessageStatusIndicator
     var maxWidth: CGFloat = 210
 
-    private var accentColor: Color {
-        if !showsAccentLine {
-            return Color.clear
+    private var statusIndicatorColor: Color {
+        switch statusIndicator {
+        case .none:
+            return .clear
+        case .recent:
+            return .orange
+        case .normal:
+            return .blue
         }
-        return isRecent ? Color.orange : Color.blue
     }
 
     var body: some View {
         HStack(alignment: .top, spacing: 10) {
             // 왼쪽 세로 라인
             Capsule()
-                .fill(accentColor)
+                .fill(statusIndicatorColor)
                 .frame(width: 3)
                 .padding(.vertical, 11)
 
@@ -82,22 +91,19 @@ struct MessageBubble: View {
             MessageBubble(
                 text: "오늘 좀 춥다🫥🍃",
                 placeName: "장소 이름",
-                isRecent: false,
-                showsAccentLine: true
+                statusIndicator: .normal
             )
 
             MessageBubble(
                 text: "🫥🫥🫥🫥🫥🫥🫥🫥🫥🫥🫥🫥🫥🫥🫥🫥🫥🫥",
                 placeName: "장소 이름",
-                isRecent: false,
-                showsAccentLine: false
+                statusIndicator: .none
             )
 
             MessageBubble(
                 text: "최근에 남긴 따끈따끈한 메시지라서 주황색 라인으로 표시",
                 placeName: nil,
-                isRecent: true,
-                showsAccentLine: true
+                statusIndicator: .recent
             )
         }
     }
