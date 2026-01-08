@@ -75,9 +75,18 @@ struct MessageComposeView: View {
         }
         .navigationBarBackButtonHidden()
         .toolbar {
-            ToolbarItem(placement: .topBarLeading) {
-                BackButton {
-                    dismiss()
+            if #available(iOS 26.0, *) {
+                ToolbarItem(placement: .topBarLeading) {
+                    BackButton {
+                        dismiss()
+                    }
+                }
+                .sharedBackgroundVisibility(.hidden)
+            } else {
+                ToolbarItem(placement: .topBarLeading) {
+                    BackButton {
+                        dismiss()
+                    }
                 }
             }
 
