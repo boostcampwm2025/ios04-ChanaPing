@@ -8,6 +8,7 @@
 
 /* Begin PBXBuildFile section */
 		1628F47E2EF5376C005E6C42 /* NMapsMap in Frameworks */ = {isa = PBXBuildFile; productRef = 1628F47D2EF5376C005E6C42 /* NMapsMap */; };
+		16EFC15D2F1093210010465C /* meomun.icon in Resources */ = {isa = PBXBuildFile; fileRef = 16EFC15C2F1093210010465C /* meomun.icon */; };
 		531A22FE2EF9367C0014BE96 /* Secrets.example.xcconfig in Resources */ = {isa = PBXBuildFile; fileRef = 531A22FD2EF9367C0014BE96 /* Secrets.example.xcconfig */; };
 		531A23002EF936BA0014BE96 /* Config.xcconfig in Resources */ = {isa = PBXBuildFile; fileRef = 531A22FF2EF936BA0014BE96 /* Config.xcconfig */; };
 		7866C0112F0EDCCC00C69ADE /* SeoulCityHall.gpx in Resources */ = {isa = PBXBuildFile; fileRef = 7866C0102F0EDCCC00C69ADE /* SeoulCityHall.gpx */; };
@@ -16,6 +17,7 @@
 
 /* Begin PBXFileReference section */
 		1628F46A2EF53602005E6C42 /* Meomun.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Meomun.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		16EFC15C2F1093210010465C /* meomun.icon */ = {isa = PBXFileReference; lastKnownFileType = folder.iconcomposer.icon; path = meomun.icon; sourceTree = "<group>"; };
 		531A22FD2EF9367C0014BE96 /* Secrets.example.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = Secrets.example.xcconfig; sourceTree = "<group>"; };
 		531A22FF2EF936BA0014BE96 /* Config.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = Config.xcconfig; sourceTree = "<group>"; };
 		7866C0102F0EDCCC00C69ADE /* SeoulCityHall.gpx */ = {isa = PBXFileReference; lastKnownFileType = text.xml; path = SeoulCityHall.gpx; sourceTree = "<group>"; };
@@ -64,6 +66,7 @@
 				531A22FD2EF9367C0014BE96 /* Secrets.example.xcconfig */,
 				1628F46C2EF53602005E6C42 /* Meomun */,
 				1628F46B2EF53602005E6C42 /* Products */,
+				16EFC15C2F1093210010465C /* meomun.icon */,
 			);
 			sourceTree = "<group>";
 		};
@@ -148,6 +151,7 @@
 				7866C0112F0EDCCC00C69ADE /* SeoulCityHall.gpx in Resources */,
 				90E847342F0B899D005C8966 /* Secrets.xcconfig in Resources */,
 				531A23002EF936BA0014BE96 /* Config.xcconfig in Resources */,
+				16EFC15D2F1093210010465C /* meomun.icon in Resources */,
 				531A22FE2EF9367C0014BE96 /* Secrets.example.xcconfig in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -293,8 +297,9 @@
 		1628F4762EF53604005E6C42 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_APPICON_NAME = meomun;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				ASSETCATALOG_COMPILER_INCLUDE_ALL_APPICON_ASSETS = NO;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_TEAM = B3PWYBKFUK;
@@ -304,6 +309,7 @@
 				ENABLE_USER_SELECTED_FILES = readonly;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = Meomun/Info.plist;
+				INFOPLIST_KEY_CFBundleDisplayName = "머문";
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.social-networking";
 				"INFOPLIST_KEY_UIApplicationSceneManifest_Generation[sdk=iphoneos*]" = YES;
 				"INFOPLIST_KEY_UIApplicationSceneManifest_Generation[sdk=iphonesimulator*]" = YES;
@@ -340,8 +346,9 @@
 		1628F4772EF53604005E6C42 /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_APPICON_NAME = meomun;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				ASSETCATALOG_COMPILER_INCLUDE_ALL_APPICON_ASSETS = NO;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_TEAM = B3PWYBKFUK;
@@ -351,6 +358,7 @@
 				ENABLE_USER_SELECTED_FILES = readonly;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = Meomun/Info.plist;
+				INFOPLIST_KEY_CFBundleDisplayName = "머문";
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.social-networking";
 				"INFOPLIST_KEY_UIApplicationSceneManifest_Generation[sdk=iphoneos*]" = YES;
 				"INFOPLIST_KEY_UIApplicationSceneManifest_Generation[sdk=iphonesimulator*]" = YES;

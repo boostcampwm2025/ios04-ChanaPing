@@ -39,7 +39,7 @@ struct RootView: View {
         case .record:
             EmptyView()
         case .myPage:
-            EmptyView()
+            SpaceView(environment: DomeEnvironment(weather: .sunny, dayPart: .daybreak))
         }
     }
 }
