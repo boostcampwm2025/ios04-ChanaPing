@@ -61,6 +61,8 @@ struct MessageComposeView: View {
             Spacer(minLength: 0)
 
             ConfirmButton(action: {})
+
+            Spacer(minLength: 0)
         }
         .padding(.horizontal, 24)
         .padding(.vertical, 24)

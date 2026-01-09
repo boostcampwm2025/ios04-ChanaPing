@@ -11,45 +11,54 @@ struct MapView: View {
     @StateObject private var store = MapStore()
 
     var body: some View {
-        ZStack {
-            MapViewWrapper(messages: store.state.messages)
-                .ignoresSafeArea()
+        NavigationStack {
+            ZStack {
+                MapViewWrapper(messages: store.state.messages)
+                    .ignoresSafeArea()
 
-            VStack {
-                FloatingNavigationBar(
-                    title: "머문",
-                    onTapSearch: {}
-                )
+                VStack {
+                    FloatingNavigationBar(
+                        title: "머문",
+                        onTapSearch: {}
+                    )
 
-                Spacer()
-                HStack {
                     Spacer()
-                    WriteButton {
-                        Task {
-                            await store.send(intent: .tapWriteButton)
+
+                    HStack {
+                        Spacer()
+
+                        WriteButton {
+                            Task {
+                                await store.send(intent: .tapWriteButton)
+                            }
                         }
                     }
+                }
+                .padding(.top, 12)
+                .padding(.bottom, 96)
+            }
+            .navigationDestination(
+                isPresented: Binding(
+                    get: { store.state.isShowingAddMessage },
+                    set: { isPresented in
+                        if !isPresented {
+                            Task {
+                                await store.send(intent: .dismissAddMessage)
+                            }
+                        }
+                    }
+                )
+            ) {
+                MessageComposeView()
+            }
+            .task {
+                await store.send(intent: .onAppear)
+            }
+            .onDisappear {
+                Task {
+                    await store.send(intent: .onDisappear)
                 }
             }
-            .padding(.top, 12)
-            .padding(.bottom, 96)
-        }
-        .sheet(
-            isPresented: Binding(
-                get: { store.state.isShowingAddMessage },
-                set: { isPresented in
-                    if !isPresented {
-                        Task {
-                            await store.send(intent: .dismissAddMessage)
-                        }
-                    }
-                }
-            )
-        ) {
-            AddMessageView()
-        }
-        .task {
-            await store.send(intent: .onAppear)
         }
     }
 }
