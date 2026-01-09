@@ -59,6 +59,7 @@ final class MapViewController: UIViewController {
     private let frameInterval: TimeInterval = 1.0 / 60.0
     private let rotationInterval: TimeInterval = 3.0
     private let animationDuration: TimeInterval = 1.0
+    private let rotatingBubbleWidth: CGFloat = 170
 
     private let naverMapView: NMFNaverMapView = {
         let naverMapView = NMFNaverMapView()
@@ -296,10 +297,7 @@ extension MapViewController {
                 let current = groupMessages[0]
                 let next = groupMessages[1 % groupMessages.count]
 
-                let image = renderStaticBubbleImage(
-                    for: current,
-                    showsAccentLine: false
-                )
+                let image = renderStaticRotatingBubbleImage(message: current)
                 marker.iconImage = NMFOverlayImage(image: image)
 
                 let config = BubbleConfiguration(
@@ -325,10 +323,12 @@ extension MapViewController {
         scale: CGFloat = UIScreen.main.scale
     ) -> UIImage {
         let bubble = MessageBubble(
-            text: message.content,
             placeName: message.placeTag?.name,
-            statusIndicator: showsAccentLine ? (message.isRecent() ? .recent : .normal) : .none
-        )
+            statusIndicator: showsAccentLine ? (message.isRecent() ? .recent : .normal) : .none,
+            layout: showsAccentLine ? .flexible : .fixedWidth(rotatingBubbleWidth)
+        ) {
+            BubbleText(text: message.content)
+        }
 
         let renderer = ImageRenderer(content: bubble.padding(4))
         renderer.scale = scale
@@ -343,16 +343,40 @@ extension MapViewController {
         progress: Double,
         scale: CGFloat = UIScreen.main.scale
     ) -> UIImage {
-        let rotateBubbleStack = RotatingMessageBubbleStack(
-            current: current,
-            next: next,
-            progress: progress
-        )
+        let bubble = MessageBubble(
+            placeName: current.placeTag?.name,
+            statusIndicator: .none,
+            layout: .fixedWidth(rotatingBubbleWidth)
+        ) {
+            RotatingTextStack(
+                currentText: current.content,
+                nextText: next.content,
+                progress: progress
+            )
+        }
 
-        let renderer = ImageRenderer(content: rotateBubbleStack.padding(4))
+        let renderer = ImageRenderer(content: bubble.padding(4))
         renderer.scale = scale
         renderer.isOpaque = false
 
+        return renderer.uiImage ?? UIImage()
+    }
+
+    private func renderStaticRotatingBubbleImage(
+        message: Message,
+        scale: CGFloat = UIScreen.main.scale
+    ) -> UIImage {
+        let bubble = MessageBubble(
+            placeName: message.placeTag?.name,
+            statusIndicator: .none,
+            layout: .fixedWidth(rotatingBubbleWidth)
+        ) {
+            BubbleText(text: message.content)
+        }
+
+        let renderer = ImageRenderer(content: bubble.padding(4))
+        renderer.scale = scale
+        renderer.isOpaque = false
         return renderer.uiImage ?? UIImage()
     }
 }
@@ -433,10 +457,7 @@ extension MapViewController {
             config.animationStartTime = nil
             config.lastRotationTime = currentTime
 
-            let finalImage = renderStaticBubbleImage(
-                for: config.nextMessage,
-                showsAccentLine: false
-            )
+            let finalImage = renderStaticRotatingBubbleImage(message: config.nextMessage)
             config.marker.iconImage = NMFOverlayImage(image: finalImage)
 
             let nextNextIndex = (nextIndex + 1) % config.messages.count
