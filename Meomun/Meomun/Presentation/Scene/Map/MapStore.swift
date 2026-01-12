@@ -15,16 +15,20 @@ final class MapStore: Store {
         case tapWriteButton
         case dismissAddMessage
         case updateMessages([Message])
+        case tapPlaceMarker(Place)
+        case dismissSpaceView
     }
 
     enum Action {
         case setShowAddMessage(Bool)
         case groupMessages([Message])
+        case setSelectedPlace(Place?)
     }
 
     struct State {
         var groupedMessages: [BubbleGroupKey: [Message]] = [:]
         var isShowingAddMessage: Bool = false
+        var selectedPlace: Place? = nil
     }
 
     @Published var state: State = .init()
@@ -59,6 +63,14 @@ final class MapStore: Store {
             case .updateMessages(let messages):
                 continuation.yield(.groupMessages(messages))
                 continuation.finish()
+
+            case .tapPlaceMarker(let place):
+                continuation.yield(.setSelectedPlace(place))
+                continuation.finish()
+
+            case .dismissSpaceView:
+                continuation.yield(.setSelectedPlace(nil))
+                continuation.finish()
             }
         }
     }
@@ -73,6 +85,9 @@ final class MapStore: Store {
 
         case .setShowAddMessage(let isShown):
             newState.isShowingAddMessage = isShown
+
+        case .setSelectedPlace(let place):
+            newState.selectedPlace = place
         }
 
         return newState
