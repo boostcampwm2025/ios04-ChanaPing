@@ -13,7 +13,7 @@ fileprivate enum Constants {
     static let searchEmptyText = "검색 결과가 없어요."
 }
 
-struct SearchPlaceView: View {
+struct PlaceSearchOverlayView: View {
     @State private var query: String = ""
     @FocusState private var isFocused: Bool
 
@@ -56,7 +56,7 @@ struct SearchPlaceView: View {
     }
 }
 
-extension SearchPlaceView {
+extension PlaceSearchOverlayView {
     var header: some View {
         HStack {
             Spacer()
@@ -138,7 +138,7 @@ extension SearchPlaceView {
 
 #Preview {
     NavigationStack {
-        SearchPlaceView { selected in
+        PlaceSearchOverlayView { selected in
             print(selected)
         } onDismiss: {
             print("dismiss")

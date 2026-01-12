@@ -50,7 +50,7 @@ struct MapView: View {
                     }
                 )
             ) {
-                MessageComposeView()
+                MessageComposerView()
                     .onAppear { setTabBarHidden(true) }
                     .onDisappear { setTabBarHidden(false) }
             }

@@ -13,18 +13,18 @@ fileprivate enum Constants {
     static let textEditorPlaceholder = "지금 어디에 있나요?"
 }
 
-struct MessageComposeView: View {
+struct MessageComposerView: View {
     @FocusState var isFocused: Bool
     @Environment(\.dismiss) private var dismiss
 
-    @StateObject private var store = MessageComposeStore()
+    @StateObject private var store = MessageComposerStore()
 
     var body: some View {
         ZStack {
             content
 
             if store.state.isPlaceSearchPresented {
-                SearchPlaceView(
+                PlaceSearchOverlayView(
                     onSelect: { selected in
                         Task { await store.send(intent: .selectPlace(selected)) }
                     },
@@ -39,7 +39,7 @@ struct MessageComposeView: View {
     }
 }
 
-extension MessageComposeView {
+extension MessageComposerView {
     private var content: some View {
         VStack(alignment: .center, spacing: 12) {
             Spacer()
@@ -133,6 +133,6 @@ extension MessageComposeView {
     @Previewable @State var message: String = ""
 
     NavigationStack {
-        MessageComposeView()
+        MessageComposerView()
     }
 }

@@ -7,7 +7,7 @@
 
 import Combine
 
-final class MessageComposeStore: Store {
+final class MessageComposerStore: Store {
     struct State: Equatable {
         var message: String = ""
         var placeText: String = ""
