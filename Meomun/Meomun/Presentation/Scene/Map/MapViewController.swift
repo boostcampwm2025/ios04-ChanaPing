@@ -45,10 +45,25 @@ final class BubbleConfiguration {
 
 final class MapViewController: UIViewController {
 
+    // 마커 탭 콜백 (장소 태그가 있는 회전 버블 탭 시)
+    private let onTapPlace: ((Place) -> Void)?
+
     private var appLifecycleObservers: [NSObjectProtocol] = []
 
     private var locationManager = CLLocationManager()
     private var didMoveToCurrentLocation = false
+
+    // MARK: - Init
+
+    init(onTapPlace: ((Place) -> Void)? = nil) {
+        self.onTapPlace = onTapPlace
+        super.init(nibName: nil, bundle: nil)
+    }
+
+    required init?(coder: NSCoder) {
+        self.onTapPlace = nil
+        super.init(coder: coder)
+    }
 
     // 단일 버블용 마커
     private var singleMarkers: [BubbleGroupKey: NMFMarker] = [:]
@@ -270,6 +285,17 @@ extension MapViewController {
             marker.isFlat = false
             marker.mapView = naverMapView.mapView
 
+            // 마커 탭 핸들러 설정
+            marker.touchHandler = { [weak self] _ in
+                // 조건: .places 그룹 + 메시지 2개 이상 (회전 버블)
+                if case .places = groupKey,
+                   groupMessages.count >= 2,
+                   let place = groupMessages.first?.placeTag {
+                    self?.onTapPlace?(place)
+                }
+                return true
+            }
+
             if groupMessages.count == 1 {
                 // 단일 메시지: 일반 버블
                 let image = renderStaticBubbleImage(for: firstMessage)
@@ -456,13 +482,18 @@ extension MapViewController {
 
 struct MapViewWrapper: UIViewControllerRepresentable {
     private let groupedMessages: [BubbleGroupKey: [Message]]
+    private let onTapPlace: ((Place) -> Void)?
 
-    init(groupedMessages: [BubbleGroupKey: [Message]]) {
+    init(
+        groupedMessages: [BubbleGroupKey: [Message]],
+        onTapPlace: ((Place) -> Void)? = nil
+    ) {
         self.groupedMessages = groupedMessages
+        self.onTapPlace = onTapPlace
     }
 
     func makeUIViewController(context: Context) -> MapViewController {
-        let viewController = MapViewController()
+        let viewController = MapViewController(onTapPlace: onTapPlace)
         viewController.updateGroups(groupedMessages)
         return viewController
     }
