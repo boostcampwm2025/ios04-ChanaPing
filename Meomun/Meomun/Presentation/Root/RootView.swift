@@ -13,17 +13,22 @@ struct RootView: View {
     var body: some View {
         ZStack {
             contentView(for: store.state.selectedTab)
+                .environment(\.setTabBarHidden) { hidden in
+                    Task { await store.send(intent: .setTabBarHidden(hidden))}
+                }
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
         .overlay(alignment: .bottom) {
-            FloatingTabBar(
-                selectedTab: store.state.selectedTab,
-                onSelect: { tab in
-                    Task {
-                        await store.send(intent: .selectTab(tab))
+            if !store.state.isTabBarHidden {
+                FloatingTabBar(
+                    selectedTab: store.state.selectedTab,
+                    onSelect: { tab in
+                        Task {
+                            await store.send(intent: .selectTab(tab))
+                        }
                     }
-                }
-            )
+                )
+            }
         }
         .ignoresSafeArea(.keyboard)
         .task {
@@ -41,6 +46,17 @@ struct RootView: View {
         case .myPage:
             SpaceView(environment: DomeEnvironment(weather: .sunny, dayPart: .daybreak))
         }
+    }
+}
+
+private struct SetTabBarHiddenKey: EnvironmentKey {
+    static let defaultValue: (Bool) -> Void = { _ in }
+}
+
+extension EnvironmentValues {
+    var setTabBarHidden: (Bool) -> Void {
+        get { self[SetTabBarHiddenKey.self] }
+        set { self[SetTabBarHiddenKey.self] = newValue }
     }
 }
 

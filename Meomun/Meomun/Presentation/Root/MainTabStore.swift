@@ -17,15 +17,18 @@ final class MainTabStore: Store {
 
     enum Intent {
         case selectTab(MainTab)
+        case setTabBarHidden(Bool)
         case onAppear
     }
 
     enum Action {
         case setSelectedTab(MainTab)
+        case setTabBarHidden(Bool)
     }
 
     struct State {
         var selectedTab: MainTab = .map
+        var isTabBarHidden: Bool = false
     }
 
     @Published var state: State = .init()
@@ -35,6 +38,9 @@ final class MainTabStore: Store {
             switch intent {
             case .selectTab(let tab):
                 continuation.yield(.setSelectedTab(tab))
+
+            case .setTabBarHidden(let hidden):
+                continuation.yield(.setTabBarHidden(hidden))
 
             case .onAppear:
                 break
@@ -49,6 +55,9 @@ final class MainTabStore: Store {
         switch action {
         case .setSelectedTab(let tab):
             newState.selectedTab = tab
+            newState.isTabBarHidden = false
+        case .setTabBarHidden(let isHidden):
+            newState.isTabBarHidden = isHidden
         }
 
         return newState

@@ -8,6 +8,7 @@
 import SwiftUI
 
 struct MapView: View {
+    @Environment(\.setTabBarHidden) private var setTabBarHidden
     @StateObject private var store = MapStore()
 
     var body: some View {
@@ -50,10 +51,13 @@ struct MapView: View {
                 )
             ) {
                 MessageComposeView()
+                    .onAppear { setTabBarHidden(true) }
+                    .onDisappear { setTabBarHidden(false) }
             }
             .task {
                 await store.send(intent: .onAppear)
             }
+            .onAppear { setTabBarHidden(false) }
             .onDisappear {
                 Task {
                     await store.send(intent: .onDisappear)
