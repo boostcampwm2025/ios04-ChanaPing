@@ -5,6 +5,7 @@ excluded:
 
 # 1. 기본 규칙 비활성화: 기본 규칙 중 팀에서 원하지 않는 규칙이 있다면 여기에 추가합니다.
 disabled_rules:
+  - private_over_fileprivate
 
 # 2. 옵트인 규칙: API Design Guidelines 준수를 위해 반드시 켜야 하는 규칙
 opt_in_rules:
