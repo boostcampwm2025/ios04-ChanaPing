@@ -71,7 +71,7 @@ struct MapView: View {
                 )
             ) {
                 if let place = store.state.selectedPlace {
-                    SpaceView(environment: .init(weather: .sunny, dayPart: .afternoon))
+                    SpaceView(domeEnvironment: .init(weather: .sunny, dayPart: .afternoon), place: place)
                 }
             }
             .task {
