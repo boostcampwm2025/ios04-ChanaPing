@@ -36,7 +36,10 @@ struct SpaceView: View {
             guard store.state.messages.isEmpty == false else { return }
 
             addMessageBubbles(to: root, messages: store.state.messages)
-            didAddMessageBubbles = true
+
+            Task { @MainActor in
+                didAddMessageBubbles = true
+            }
         }
         .gesture(
             DragGesture()
