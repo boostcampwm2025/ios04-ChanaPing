@@ -15,13 +15,32 @@ fileprivate enum Constants {
 
 struct MessageComposeView: View {
     @FocusState var isFocused: Bool
-    @State private var message: String = ""
-    @State private var placeText: String = ""
     @Environment(\.dismiss) private var dismiss
 
-    private var suggestPlaces: [String] = ["스타벅스 파주가람점", "ONUTE", "콰이어트라이트", "메가MGC커피 파주별하람마을점"]
+    @StateObject private var store = MessageComposeStore()
 
     var body: some View {
+        ZStack {
+            content
+
+            if store.state.isPlaceSearchPresented {
+                SearchPlaceView(
+                    onSelect: { selected in
+                        Task { await store.send(intent: .selectPlace(selected)) }
+                    },
+                    onDismiss: {
+                        Task { await store.send(intent: .dismissPlaceSearch) }
+                    }
+                )
+                .transition(.opacity.combined(with: .scale(scale: 0.98)))
+                .zIndex(999)
+            }
+        }
+    }
+}
+
+extension MessageComposeView {
+    private var content: some View {
         VStack(alignment: .center, spacing: 12) {
             Spacer()
 
@@ -30,37 +49,46 @@ struct MessageComposeView: View {
                 .foregroundStyle(Color.meomunSecondaryColor)
                 .frame(maxWidth: .infinity, alignment: .leading)
 
-            MessageTextEditor(text: $message)
-                .focused($isFocused)
+            MessageTextEditor(text: Binding(
+                get: {
+                    store.state.message
+                }, set: { newValue in
+                    Task {
+                        await store.send(intent: .setMessage(newValue))
+                    }
+                }
+            ))
+            .focused($isFocused)
 
             Spacer(minLength: 0)
 
             HStack(spacing: 8) {
                 PlaceSearchContainerView {
-                    NavigationLink {
-                        SearchPlaceView {
-                            // TODO: 키보드 Enter 누른 후 작업 추가
-                        }
+                    Button {
+                        isFocused = false
+                        Task { await store.send(intent: .tapPlaceField) }
                     } label: {
-                        Text(Constants.textEditorPlaceholder)
-                            .font(.system(size: 14, weight: .medium))
-                            .foregroundStyle(Color(.placeholderText))
+                        Text(store.state.placeText.isEmpty ? Constants.textEditorPlaceholder : store.state.placeText)
+                            .font(.system(size: 16, weight: .medium))
+                            .foregroundStyle(store.state.placeText.isEmpty ? Color(.placeholderText) : Color.tabActive)
                             .frame(maxWidth: .infinity, alignment: .leading)
                     }
                 }
 
                 CancelButton {
-                    placeText = ""
+                    Task { await store.send(intent: .clearPlace) }
                 }
             }
 
-            PlaceTagSlider(places: suggestPlaces) { selected in
-                placeText = selected
+            PlaceTagSlider(places: store.state.suggestPlaces) { selected in
+                Task { await store.send(intent: .selectSuggestedPlace(selected))}
             }
 
             Spacer(minLength: 0)
 
-            ConfirmButton(action: {})
+            ConfirmButton(action: {
+                Task { await store.send(intent: .tapConfirm)}
+            })
 
             Spacer(minLength: 0)
         }
