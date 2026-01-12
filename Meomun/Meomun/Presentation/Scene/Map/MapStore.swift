@@ -18,25 +18,28 @@ final class MapStore: Store {
     }
 
     enum Action {
-        case setMessages([Message])
         case setShowAddMessage(Bool)
+        case groupMessages([Message])
     }
 
     struct State {
-        var messages: [Message] = []
+        var groupedMessages: [BubbleGroupKey: [Message]] = [:]
         var isShowingAddMessage: Bool = false
     }
 
     @Published var state: State = .init()
 
     private var messageStreamTask: Task<Void, Never>?
+    private let groupingUseCase = GroupMessageUseCase()
 
     func action(intent: Intent) -> AsyncStream<Action> {
         AsyncStream { continuation in
             switch intent {
             case .onAppear:
                 // TODO: - api 호출 (messageStreamTask 프로퍼티 사용)
-                continuation.yield(.setMessages(getDummyMessages()))
+                let messages = getDummyMessages()
+
+                continuation.yield(.groupMessages(messages))
                 continuation.finish()
 
             case .onDisappear:
@@ -54,7 +57,7 @@ final class MapStore: Store {
                 continuation.finish()
 
             case .updateMessages(let messages):
-                continuation.yield(.setMessages(messages))
+                continuation.yield(.groupMessages(messages))
                 continuation.finish()
             }
         }
@@ -64,8 +67,10 @@ final class MapStore: Store {
         var newState = state
 
         switch action {
-        case .setMessages(let messages):
-            newState.messages = messages
+        case .groupMessages(let messages):
+            let groupedMessages = groupingUseCase.groupAll(messages: messages)
+            newState.groupedMessages = groupedMessages
+
         case .setShowAddMessage(let isShown):
             newState.isShowingAddMessage = isShown
         }

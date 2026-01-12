@@ -13,7 +13,7 @@ struct MapView: View {
     var body: some View {
         NavigationStack {
             ZStack {
-                MapViewWrapper(messages: store.state.messages)
+                MapViewWrapper(groupedMessages: store.state.groupedMessages)
                     .ignoresSafeArea()
 
                 VStack {

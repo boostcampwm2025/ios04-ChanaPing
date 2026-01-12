@@ -11,7 +11,7 @@ import UIKit
 
 final class BubbleConfiguration {
     let marker: NMFMarker
-    let messages: [Message] // 같은 장소 태그로 묶인 메시지들
+    let messages: [Message] // 같은 그룹으로 묶인 메시지들
     var currentIndex: Int
     var lastRotationTime: TimeInterval
     var animationStartTime: TimeInterval?
@@ -50,11 +50,11 @@ final class MapViewController: UIViewController {
     private var locationManager = CLLocationManager()
     private var didMoveToCurrentLocation = false
 
-    // 일반 버블용 마커
-    private var messageMarkers: [MessageID: NMFMarker] = [:]
+    // 단일 버블용 마커
+    private var singleMarkers: [BubbleGroupKey: NMFMarker] = [:]
 
     // 회전 버블용 설정들
-    private var bubbleConfigs: [BubbleConfiguration] = []
+    private var bubbleConfigs: [BubbleGroupKey: BubbleConfiguration] = [:]
     private var bubbleRotationTimer: Timer?
     private let frameInterval: TimeInterval = 1.0 / 60.0
     private let rotationInterval: TimeInterval = 3.0
@@ -239,39 +239,24 @@ extension MapViewController: CLLocationManagerDelegate {
     }
 }
 
-// MARK: - messages
+// MARK: - Messages
 
 extension MapViewController {
-    private enum BubbleGroupKey: Hashable {
-        case place(PlaceID)
-        case message(MessageID)
-    }
-
-    func updateMessages(_ messages: [Message]) {
+    /// 그룹화된 메시지로 마커를 업데이트합니다.
+    func updateGroups(_ groups: [BubbleGroupKey: [Message]]) {
         // 1) 기존 마커 전부 제거
-        for (_, marker) in messageMarkers {
+        for (_, marker) in singleMarkers {
             marker.mapView = nil
         }
-        messageMarkers.removeAll()
+        singleMarkers.removeAll()
 
-        for config in bubbleConfigs {
+        for (_, config) in bubbleConfigs {
             config.marker.mapView = nil
         }
         bubbleConfigs.removeAll()
 
-        // 2) placeTag.id 기준으로 그룹핑
-        // - Place가 있으면 PlaceID 기반으로 묶고
-        // - Place가 없으면 MessageID 기반으로 각각 단독 그룹
-        let grouped = Dictionary(grouping: messages) { message -> BubbleGroupKey in
-            if let placeID = message.placeTag?.id {
-                return .place(placeID)
-            } else {
-                return .message(message.id)
-            }
-        }
-
-        // 3) 그룹별로 마커 생성
-        for (_, groupMessages) in grouped {
+        // 2) 그룹별로 마커 생성
+        for (groupKey, groupMessages) in groups {
             guard let firstMessage = groupMessages.first else { continue }
 
             let coordinate = NMGLatLng(
@@ -286,11 +271,11 @@ extension MapViewController {
             marker.mapView = naverMapView.mapView
 
             if groupMessages.count == 1 {
-                // 단일 메세지: 일반 버블
+                // 단일 메시지: 일반 버블
                 let image = renderStaticBubbleImage(for: firstMessage)
                 marker.iconImage = NMFOverlayImage(image: image)
 
-                messageMarkers[firstMessage.id] = marker
+                singleMarkers[groupKey] = marker
             } else {
                 // 여러 개: 회전 버블
                 let currentTime = Date().timeIntervalSince1970
@@ -312,7 +297,7 @@ extension MapViewController {
                     nextMessage: next
                 )
 
-                bubbleConfigs.append(config)
+                bubbleConfigs[groupKey] = config
             }
         }
     }
@@ -407,7 +392,7 @@ extension MapViewController {
     private func updateMarkers() {
         let currentTime = Date().timeIntervalSince1970
 
-        for config in bubbleConfigs {
+        for (_, config) in bubbleConfigs {
             guard config.messages.count > 1 else { continue }
 
             if config.isAnimating {
@@ -470,15 +455,19 @@ extension MapViewController {
 // MARK: - MapViewWrapper
 
 struct MapViewWrapper: UIViewControllerRepresentable {
-    let messages: [Message]
+    private let groupedMessages: [BubbleGroupKey: [Message]]
+
+    init(groupedMessages: [BubbleGroupKey: [Message]]) {
+        self.groupedMessages = groupedMessages
+    }
 
     func makeUIViewController(context: Context) -> MapViewController {
         let viewController = MapViewController()
-        viewController.updateMessages(messages)
+        viewController.updateGroups(groupedMessages)
         return viewController
     }
 
     func updateUIViewController(_ uiViewController: MapViewController, context: Context) {
-        uiViewController.updateMessages(messages)
+        uiViewController.updateGroups(groupedMessages)
     }
 }
