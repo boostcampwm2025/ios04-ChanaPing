@@ -131,18 +131,65 @@ extension SpaceView {
 
 extension SpaceView {
     private func addMessageBubbles(to root: Entity, messages: [SpaceMessage]) {
+        let placer = BubblePlacer()
+
         for message in messages {
             let marker = ModelEntity(
                 mesh: .generateSphere(radius: 0.05),
                 materials: [SimpleMaterial(color: .white.withAlphaComponent(0.6), isMetallic: false)]
             )
 
-            // 한 곳에 메시지 버블 배치
             marker.name = "MessageBubble-\(message.id.uuidString)"
-            marker.position = SIMD3<Float>(0, 0.5, -1.0)
+            marker.position = placer.randomPositionInsideHemisphere(
+                radiusRange: 1.4...1.7,
+                yRange: 0.5...1.1,
+                minimumDistanceFromCenter: 1.3,
+                minimumDistanceFromViewAxis: 0.25,
+                maxAttempts: 60
+            )
 
             root.addChild(marker)
         }
+    }
+}
+
+// MARK: - BubblePlacer
+
+private struct BubblePlacer {
+    func randomPositionInsideHemisphere(
+        radiusRange: ClosedRange<Float>,
+        yRange: ClosedRange<Float>,
+        minimumDistanceFromCenter: Float,
+        minimumDistanceFromViewAxis: Float,
+        maxAttempts: Int
+    ) -> SIMD3<Float> {
+        for _ in 0..<maxAttempts {
+            let theta = Float.random(in: 0...(2 * .pi))
+            let y = Float.random(in: yRange)
+            let radius = Float.random(in: radiusRange)
+
+            let xzLimit = max(0.0, sqrt(max(0.0, radius * radius - y * y)))
+            let x = cos(theta) * xzLimit
+            let z = sin(theta) * xzLimit
+
+            let position = SIMD3<Float>(x, y, z)
+
+            // 1) 중심 근처 피하기
+            if simd_length(position) < minimumDistanceFromCenter {
+                continue
+            }
+
+            // 2) 뷰 축(카메라 방향 축) 근처 피하기
+            let distanceFromViewAxis = simd_length(SIMD2<Float>(x, y))
+            if distanceFromViewAxis < minimumDistanceFromViewAxis {
+                continue
+            }
+
+            return position
+        }
+
+        // 실패 시 fallback
+        return SIMD3<Float>(minimumDistanceFromViewAxis, yRange.upperBound, -radiusRange.upperBound)
     }
 }
 
