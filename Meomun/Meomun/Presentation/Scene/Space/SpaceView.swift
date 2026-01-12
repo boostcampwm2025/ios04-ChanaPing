@@ -16,8 +16,8 @@ struct SpaceView: View {
     @State private var didAddMessageBubbles = false
 
     private let rotationCamera = RotationCamera(
-        position: .init(x: 0, y: 0.7, z: 0),
-        rotateSensitivity: 0.003
+        position: .init(x: 0, y: 0.7, z: 0),    // 카메라 시작 위치 (돔 중심에서 약간 위)
+        rotateSensitivity: 0.003                // 회전 민감도 (값이 클수록 더 빠르게 회전)
     )
 
     init(environment: DomeEnvironment) {
@@ -68,7 +68,7 @@ struct SpaceView: View {
     }
 }
 
-// MARK: - Dome UI
+// MARK: - Dome UI (배경 돔 로딩/표현)
 
 extension SpaceView {
     private func configureSpace(content: RealityViewCameraContent) {
@@ -76,7 +76,7 @@ extension SpaceView {
 
         Task {
             do {
-                // 0) SpaceRoot 생성 + 보관
+                // SpaceRoot 생성: 돔/버블 오브젝트를 한 곳에 묶는 컨테이너
                 let root = Entity()
                 root.name = "SpaceRoot"
                 content.add(root)
@@ -85,13 +85,13 @@ extension SpaceView {
                     spaceRootEntity = root
                 }
 
-                // 1. 배경 돔 로드
+                // 돔 배경 로드
                 let domeEntity = try await Entity(named: "Dome.usdz")
                 domeEntity.name = "Dome"
                 root.addChild(domeEntity)
                 configureDomeSurface(domeEntity: domeEntity)
 
-                // 2. 카메라 추가
+                // 카메라 추가
                 rotationCamera.addToScene(content)
             } catch {
                 print("돔 로드 실패: \(error)")
@@ -127,57 +127,49 @@ extension SpaceView {
     }
 }
 
-// MARK: - Message Bubble UI
+// MARK: - Message Bubble UI (말풍선/텍스트 생성)
 
 extension SpaceView {
     private enum BubbleSizingTuning {
-        static let textScale: Float = 0.60              // 모든 텍스트 동일 스케일
-        static let insetRatio: Float = 1.25             // 텍스트보다 버블이 조금 더 크게(여유)
+        static let textScale: Float = 0.55              // 텍스트 엔티티 스케일
+        static let insetRatio: Float = 1.10             // 텍스트보다 버블 크기의 여유 공간
         static let minRadius: Float = 0.05              // 최소 버블 크기
-        static let maxRadius: Float = 0.22              // 최대 버블 크기(너무 커지는 것 방지)
-        static let textForwardPadding: Float = 0.01
-        static let textContainerWidth: Float = 0.55
-        static let textContainerHeight: Float = 0.18
+        static let maxRadius: Float = 0.22              // 최대 버블 크기
+        static let textForwardPadding: Float = 0.01     // 텍스트를 버블 표면보다 앞(z+)으로 띄우는 패딩
+        static let textContainerWidth: Float = 0.55     // 텍스트 최대 넓이
+        static let textContainerHeight: Float = 0.18    // 텍스트 최대 높이
     }
 
     private func addMessageBubbles(to root: Entity, messages: [SpaceMessage]) {
         let placer = BubblePlacer()
 
         for message in messages {
-            // 텍스트 먼저 생성 (스케일 고정)
-            let processed = forceTwoLinesNoEllipsis(message.text)
+            // 텍스트 가공 및 생성
+            let processed = arrangeText(message.text)
             let textEntity = makeTextEntity(processed)
 
             // 중앙 정렬 보정
             centerTextEntity(textEntity)
 
-            // 텍스트 크기 기반으로 버블 반지름 계산
+            // 텍스트 크기 기반 버블 반지름 계산
             let bubbleRadius = bubbleRadiusToFitText(textEntity)
 
-            // 반지름 기반으로 버블 생성
+            // 버블 머티리얼
             var bubbleMaterial = SimpleMaterial()
-            bubbleMaterial.color = .init(tint: .white.withAlphaComponent(0.18), texture: nil)
-            bubbleMaterial.roughness = .float(0.05) // 표면 매끈 → 하이라이트 또렷
-            bubbleMaterial.metallic = .float(0.0)   // 금속 아님
-
-            // 반지름 기반 버블 생성
-            let marker = ModelEntity(
-                mesh: .generateSphere(radius: bubbleRadius),
-                materials: [bubbleMaterial]
+            bubbleMaterial.color = .init(
+                tint: .white.withAlphaComponent(0.18),
+                texture: nil
             )
+            bubbleMaterial.roughness = .float(0.02)
+            bubbleMaterial.metallic = .float(0.0)
 
-            // Billboard pivot + 텍스트 부착
-            let billboardPivot = Entity()
-            billboardPivot.components.set(BillboardComponent()) // 항상 카메라를 향함
-            marker.addChild(billboardPivot)
-            billboardPivot.addChild(textEntity)
+            // 버블 루트 (전체 billboard 대상)
+            let bubbleRoot = Entity()
+            bubbleRoot.name = "MessageBubble-\(message.id.uuidString)"
+            bubbleRoot.components.set(BillboardComponent())
 
-            // 텍스트를 버블 반지름 기준으로 앞쪽에 배치
-            textEntity.position += SIMD3<Float>(0, 0, bubbleRadius + BubbleSizingTuning.textForwardPadding)
-
-            // 위치/이름 세팅
-            marker.name = "MessageBubble-\(message.id.uuidString)"
-            marker.position = placer.randomPositionInsideHemisphere(
+            // 버블 랜덤 배치
+            bubbleRoot.position = placer.randomPositionInsideHemisphere(
                 radiusRange: 1.4...1.7,
                 yRange: 0.5...1.1,
                 minimumDistanceFromCenter: 1.3,
@@ -185,7 +177,30 @@ extension SpaceView {
                 maxAttempts: 60
             )
 
-            root.addChild(marker)
+            // 버블 본체 (타원)
+            let bubbleBody = ModelEntity(
+                mesh: .generateSphere(radius: bubbleRadius),
+                materials: [bubbleMaterial]
+            )
+
+            // 텍스트 가로 길이에 따른 타원 스케일
+            let textBounds = textEntity.visualBounds(relativeTo: nil)
+            let textExtents = textBounds.extents
+            let diameter = bubbleRadius * 2
+            let widthRatio = textExtents.x / diameter
+            let xScale = min(max(1.15, 1.25 + widthRatio * 1.0), 1.5)
+
+            bubbleBody.scale = SIMD3<Float>(xScale, 1.0, 1.0)
+
+            // Entity 계층 구성: (루트) - (버블) + (텍스트)
+            bubbleRoot.addChild(bubbleBody)
+            bubbleRoot.addChild(textEntity)
+
+            // 텍스트를 버블 앞쪽으로 배치
+            textEntity.position += SIMD3<Float>(0, 0, bubbleRadius + BubbleSizingTuning.textForwardPadding)
+
+            // 씬에 추가
+            root.addChild(bubbleRoot)
         }
     }
 
@@ -221,7 +236,7 @@ extension SpaceView {
         let bounds = textEntity.visualBounds(relativeTo: nil)
         let extents = bounds.extents
 
-        // 텍스트를 감싸는 구의 반지름(대각선 기준)
+        // 텍스트를 감싸는 구의 반지름 (대각선 기준)
         let textBoundingRadius =
         0.5 * sqrt(
             extents.x * extents.x +
@@ -246,24 +261,23 @@ extension SpaceView {
         )
     }
 
-    private func forceTwoLinesNoEllipsis(_ text: String) -> String {
+    private func arrangeText(_ text: String) -> String {
         let words = text.split(separator: " ").map(String.init)
 
         if text.count >= 10 && words.count >= 2 {
-            // 총 길이를 반으로 나눠서 가장 균형 좋은 지점 찾기
             let target = text.count / 2
-
             var bestIndex = 1
             var bestDiff = Int.max
             var prefixCount = 0
 
-            for i in 1..<words.count {
-                // i개 단어를 첫 줄에 넣었을 때 길이
-                prefixCount = words[0..<i].joined(separator: " ").count
+            for index in 1..<words.count {
+                // index 개 단어를 첫 줄에 넣었을 때 길이
+                prefixCount = words[0..<index].joined(separator: " ").count
                 let diff = abs(prefixCount - target)
+
                 if diff < bestDiff {
                     bestDiff = diff
-                    bestIndex = i
+                    bestIndex = index
                 }
             }
 
@@ -288,9 +302,9 @@ private struct BubblePlacer {
         maxAttempts: Int
     ) -> SIMD3<Float> {
         for _ in 0..<maxAttempts {
-            let theta = Float.random(in: 0...(2 * .pi))
-            let y = Float.random(in: yRange)
-            let radius = Float.random(in: radiusRange)
+            let theta = Float.random(in: 0...(2 * .pi)) // 수평 회전 각도 (0~360도)
+            let y = Float.random(in: yRange)            // 높이 범위 (바닥에 너무 붙지 않도록 yRange로 제한)
+            let radius = Float.random(in: radiusRange)  // 중심에서 떨어지는 거리 (돔 내부에서 "멀리/가까이" 범위)
 
             let xzLimit = max(0.0, sqrt(max(0.0, radius * radius - y * y)))
             let x = cos(theta) * xzLimit
@@ -298,12 +312,12 @@ private struct BubblePlacer {
 
             let position = SIMD3<Float>(x, y, z)
 
-            // 1) 중심 근처 피하기
+            // 중심 근처 피하기
             if simd_length(position) < minimumDistanceFromCenter {
                 continue
             }
 
-            // 2) 뷰 축(카메라 방향 축) 근처 피하기
+            // 뷰 축(카메라 방향 축) 근처 피하기
             let distanceFromViewAxis = simd_length(SIMD2<Float>(x, y))
             if distanceFromViewAxis < minimumDistanceFromViewAxis {
                 continue
