@@ -18,13 +18,13 @@ struct PlaceSearchContainerView<Content: View>: View {
 
     var body: some View {
         HStack(spacing: 10) {
-            Image("placeSymbol")
+            Image(systemName: "mappin.and.ellipse")
                 .renderingMode(.template)
                 .resizable()
                 .scaledToFit()
                 .frame(width: 20, height: 20)
                 .clipped()
-                .foregroundStyle(Color.meomunPointColor)
+                .foregroundStyle(Color(hex: "#53808C"))
 
             content()
         }
