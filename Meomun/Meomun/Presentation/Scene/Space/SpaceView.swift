@@ -12,6 +12,8 @@ struct SpaceView: View {
 
     @StateObject private var store = SpaceViewStore()
     @State private var domeEnvironment: DomeEnvironment
+    @State private var spaceRootEntity: Entity?
+    @State private var didAddMessageBubbles = false
 
     private let rotationCamera = RotationCamera(
         position: .init(x: 0, y: 0.7, z: 0),
@@ -27,6 +29,14 @@ struct SpaceView: View {
             // 가상 카메라 모드 설정 (AR이 아닌 3D 공간)
             content.camera = .virtual
             configureSpace(content: content)
+        } update: { _ in
+            // messages 로드 완료 + 루트 준비 + 아직 생성 전 => 생성
+            guard didAddMessageBubbles == false else { return }
+            guard let root = spaceRootEntity else { return }
+            guard store.state.messages.isEmpty == false else { return }
+
+            addMessageBubbles(to: root, messages: store.state.messages)
+            didAddMessageBubbles = true
         }
         .gesture(
             DragGesture()
@@ -55,13 +65,27 @@ struct SpaceView: View {
     }
 }
 
+// MARK: - Dome UI
+
 extension SpaceView {
     private func configureSpace(content: RealityViewCameraContent) {
+        guard spaceRootEntity == nil else { return }
+
         Task {
             do {
+                // 0) SpaceRoot 생성 + 보관
+                let root = Entity()
+                root.name = "SpaceRoot"
+                content.add(root)
+
+                await MainActor.run {
+                    spaceRootEntity = root
+                }
+
                 // 1. 배경 돔 로드
                 let domeEntity = try await Entity(named: "Dome.usdz")
-                content.add(domeEntity)
+                domeEntity.name = "Dome"
+                root.addChild(domeEntity)
                 configureDomeSurface(domeEntity: domeEntity)
 
                 // 2. 카메라 추가
@@ -96,6 +120,25 @@ extension SpaceView {
             } catch {
                 print("material을 찾을 수 없음: \(error)")
             }
+        }
+    }
+}
+
+// MARK: - Message Bubble UI
+
+extension SpaceView {
+    private func addMessageBubbles(to root: Entity, messages: [SpaceMessage]) {
+        for message in messages {
+            let marker = ModelEntity(
+                mesh: .generateSphere(radius: 0.05),
+                materials: [SimpleMaterial(color: .white.withAlphaComponent(0.6), isMetallic: false)]
+            )
+
+            // 한 곳에 메시지 버블 배치
+            marker.name = "MessageBubble-\(message.id.uuidString)"
+            marker.position = SIMD3<Float>(0, 0.5, -1.0)
+
+            root.addChild(marker)
         }
     }
 }
