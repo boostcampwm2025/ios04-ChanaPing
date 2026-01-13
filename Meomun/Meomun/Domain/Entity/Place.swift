@@ -8,7 +8,7 @@
 struct Place: Identifiable, Sendable, Hashable {
     let id: PlaceID
     let name: String
-    let location: Location
+    let location: Coordinate?
     var address: String? = nil
 
     static func == (lhs: Place, rhs: Place) -> Bool {

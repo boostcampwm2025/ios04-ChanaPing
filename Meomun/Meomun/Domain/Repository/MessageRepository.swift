@@ -11,7 +11,7 @@ import Foundation
 struct CreateMessageRequest: Sendable {
     let text: String
     let placeID: PlaceID?
-    let location: Location?
+    let location: Coordinate?
 }
 
 protocol MessageRepository: Sendable {
@@ -24,6 +24,6 @@ protocol MessageRepository: Sendable {
     func deleteSavedMessage(messageID: MessageID) async throws
     func deleteSavedMessages(messageIDs: [MessageID]) async throws
 
-    func getNearbyMessages(center: Location, radiusMeters: Double, limit: Int?) async throws -> [Message]
+    func getNearbyMessages(center: Coordinate, radiusMeters: Double, limit: Int?) async throws -> [Message]
     func getPlaceMessages(placeID: PlaceID, limit: Int?, before: Date?) async throws -> [Message]
 }
