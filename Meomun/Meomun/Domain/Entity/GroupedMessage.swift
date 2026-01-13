@@ -5,11 +5,10 @@
 //  Created by MinwooJe on 1/13/26.
 //
 
-
 struct GroupedMessage {
-    var messages: [BubbleGroupKey: [Message]]
+    private var messages: [BubbleGroupKey: [Message]]
 
-    init(messages: [BubbleGroupKey : [Message]]) {
+    init(messages: [BubbleGroupKey: [Message]]) {
         self.messages = messages
     }
 
@@ -43,30 +42,25 @@ struct GroupedMessage {
             }
         }
 
-        self.messages = result
-
-        return self
+        return .init(messages: result)
     }
 
     func update(messageEvent: MessageEvent) -> Self {
+        var result = self.messages
         let message = messageEvent.message
-        let event = messageEvent.event
 
-        switch event {
+        let key: BubbleGroupKey = message.placeTag != nil
+            ? .places(message.location)
+            : .location(message.location)
+
+        switch messageEvent.event {
         case .insert:
-            if let placeTag = message.placeTag {
-                messages[.places(message.location), default: []]?.append(message)
-            } else {
-                messages[.location(message.location), default: []]?.append(message)
-            }
+            result[key, default: []].append(message)
+
         case .delete:
-            if let placeTag = message.placeTag {
-                messages[.places(message.location), default: []]?.removeAll(where: { $0.id == message.id})
-            } else {
-                messages[.location(message.location), default: []]?.removeAll(where: { $0.id == message.id})
-            }
+            result[key, default: []].removeAll { $0.id == message.id }
         }
 
-        return self
+        return .init(messages: result)
     }
 }
