@@ -258,7 +258,7 @@ extension MapViewController: CLLocationManagerDelegate {
 
 extension MapViewController {
     /// 그룹화된 메시지로 마커를 업데이트합니다.
-    func updateGroups(_ groups: [BubbleGroupKey: [Message]]) {
+    func updateGroups(_ groups: GroupedMessage) {
         // 1) 기존 마커 전부 제거
         for (_, marker) in singleMarkers {
             marker.mapView = nil
@@ -271,7 +271,7 @@ extension MapViewController {
         bubbleConfigs.removeAll()
 
         // 2) 그룹별로 마커 생성
-        for (groupKey, groupMessages) in groups {
+        for (groupKey, groupMessages) in groups.messages {
             guard let firstMessage = groupMessages.first else { continue }
 
             let coordinate = NMGLatLng(
@@ -481,11 +481,11 @@ extension MapViewController {
 // MARK: - MapViewWrapper
 
 struct MapViewWrapper: UIViewControllerRepresentable {
-    private let groupedMessages: [BubbleGroupKey: [Message]]
+    private let groupedMessages: GroupedMessage
     private let onTapPlace: ((Place) -> Void)?
 
     init(
-        groupedMessages: [BubbleGroupKey: [Message]],
+        groupedMessages: GroupedMessage,
         onTapPlace: ((Place) -> Void)? = nil
     ) {
         self.groupedMessages = groupedMessages

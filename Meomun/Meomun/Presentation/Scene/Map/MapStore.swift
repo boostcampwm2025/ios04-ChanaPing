@@ -22,11 +22,12 @@ final class MapStore: Store {
     enum Action {
         case setShowAddMessage(Bool)
         case groupMessages([Message])
+        case updateMessage(event: MessageEvent)
         case setSelectedPlace(Place?)
     }
 
     struct State {
-        var groupedMessages: [BubbleGroupKey: [Message]] = [:]
+        var groupedMessages: GroupedMessage = .init(messages: [:])
         var isShowingAddMessage: Bool = false
         var selectedPlace: Place? = nil
     }
@@ -79,10 +80,13 @@ final class MapStore: Store {
 
         switch action {
         case .groupMessages(let messages):
-            print("로직 교체 필요")
+            newState.groupedMessages = newState.groupedMessages.groupAll(for: messages)
 
         case .setShowAddMessage(let isShown):
             newState.isShowingAddMessage = isShown
+
+        case .updateMessage(event: let event):
+            newState.groupedMessages = newState.groupedMessages.update(messageEvent: event)
 
         case .setSelectedPlace(let place):
             newState.selectedPlace = place
