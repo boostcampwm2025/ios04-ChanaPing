@@ -6,11 +6,7 @@
 //
 
 struct GroupedMessage {
-    private var messages: [BubbleGroupKey: [Message]]
-
-    init(messages: [BubbleGroupKey: [Message]]) {
-        self.messages = messages
-    }
+    private(set) var messages: [BubbleGroupKey: [Message]]
 
     /// 전체 메시지 그룹핑
     ///
