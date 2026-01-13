@@ -12,7 +12,7 @@ extension MapStore {
     func getDummyMessages() -> [Message] {
         // ───────────── 세종문화회관 (회전 그룹) ─────────────
         let place1 = Place(
-            id: PlaceID(value: UUID()),
+            id: PlaceID(value: ""),
             name: "세종문화회관",
             location: .init(
                 latitude: 37.5720,
@@ -42,7 +42,7 @@ extension MapStore {
         // ───────────── 광화문광장 (회전 그룹) ─────────────
 
         let place2 = Place(
-            id: PlaceID(value: UUID()),
+            id: PlaceID(value: ""),
             name: "광화문광장",
             location: .init(
                 latitude: 37.5712,
@@ -71,7 +71,7 @@ extension MapStore {
 
         // ───────────── 경복궁 담벼락 (회전 그룹) ─────────────
         let place3 = Place(
-            id: PlaceID(value: UUID()),
+            id: PlaceID(value: ""),
             name: "경복궁 담벼락",
             location: .init(
                 latitude: 37.5730,
