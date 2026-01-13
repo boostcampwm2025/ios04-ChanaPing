@@ -34,7 +34,6 @@ final class MapStore: Store {
     @Published var state: State = .init()
 
     private var messageStreamTask: Task<Void, Never>?
-    private let groupingUseCase = GroupMessageUseCase()
 
     func action(intent: Intent) -> AsyncStream<Action> {
         AsyncStream { continuation in
@@ -80,8 +79,7 @@ final class MapStore: Store {
 
         switch action {
         case .groupMessages(let messages):
-            let groupedMessages = groupingUseCase.groupAll(messages: messages)
-            newState.groupedMessages = groupedMessages
+            print("로직 교체 필요")
 
         case .setShowAddMessage(let isShown):
             newState.isShowingAddMessage = isShown
