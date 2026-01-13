@@ -33,11 +33,11 @@ final class NaverGeocodingRepositoryImpl: GeocodingRepository {
         )
 
         guard let first = dto.addresses.first,
-              let longtitude = Double(first.x),
+              let longitude = Double(first.x),
               let latitude = Double(first.y) else {
             throw DomainError.notFound
         }
 
-        return Coordinate(latitude: latitude, longitude: longtitude)
+        return Coordinate(latitude: latitude, longitude: longitude)
     }
 }
