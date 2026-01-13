@@ -11,7 +11,7 @@ import Foundation
 struct CreateMessageRequest: Sendable {
     let text: String
     let placeID: PlaceID?
-    let location: Coordinate?
+    let coordinate: Coordinate?
 }
 
 protocol MessageRepository: Sendable {

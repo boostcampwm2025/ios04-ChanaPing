@@ -275,8 +275,8 @@ extension MapViewController {
             guard let firstMessage = groupMessages.first else { continue }
 
             let coordinate = NMGLatLng(
-                lat: firstMessage.location.latitude,
-                lng: firstMessage.location.longitude
+                lat: firstMessage.coordinate.latitude,
+                lng: firstMessage.coordinate.longitude
             )
 
             let marker = NMFMarker(position: coordinate)

@@ -11,9 +11,8 @@ struct Message: Identifiable, Sendable {
     let id: MessageID
     let authorID: UserID
     let createdAt: Date
-
     let content: String
-    let location: Coordinate
+    let coordinate: Coordinate
     let placeTag: Place?
 
     func isRecent(recentInterval: TimeInterval = 60 * 20) -> Bool {

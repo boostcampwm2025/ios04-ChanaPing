@@ -6,16 +6,16 @@
 //
 
 final class NaverGeocodingRepositoryImpl: GeocodingRepository {
-    private let client: NetworkClient
+    private let network: NetworkClient
     private let apiKeyId: String
     private let apiKey: String
 
     init(
-        client: NetworkClient,
+        network: NetworkClient,
         apiKeyId: String = AppConfig.naverGeocodingApiKeyId,
         apiKey: String = AppConfig.naverGeocodingApiKey
     ) {
-        self.client = client
+        self.network = network
         self.apiKeyId = apiKeyId
         self.apiKey = apiKey
     }
@@ -27,7 +27,7 @@ final class NaverGeocodingRepositoryImpl: GeocodingRepository {
             apiKey: apiKey
         )
 
-        let dto = try await client.request(
+        let dto = try await network.request(
             endpoint: endpoint,
             responseType: NaverGeocodeResponseDTO.self
         )
