@@ -25,12 +25,18 @@ struct MessageComposerView: View {
 
             if store.state.isPlaceSearchPresented {
                 PlaceSearchOverlayView(
-                    onSelect: { selected in
-                        Task { await store.send(intent: .selectPlace(selected)) }
-                    },
-                    onDismiss: {
-                        Task { await store.send(intent: .dismissPlaceSearch) }
-                    }
+                    store: PlaceSearchStore(
+                        searchPlaces: SearchPlaceUseCase(
+                            repository: NaverPlaceSearchRepositoryImpl(
+                                network: NetworkClientImpl()
+                            )
+                        ),
+                        onSelect: { selected in
+                            Task { await store.send(intent: .selectPlace(selected.name)) }
+                        },
+                        onDismiss: {
+                            Task { await store.send(intent: .dismissPlaceSearch) }
+                        })
                 )
                 .transition(.opacity.combined(with: .scale(scale: 0.98)))
                 .zIndex(999)
