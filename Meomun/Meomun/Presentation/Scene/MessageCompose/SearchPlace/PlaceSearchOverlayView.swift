@@ -117,7 +117,7 @@ extension PlaceSearchOverlayView {
                                         Text(place.name)
                                             .font(.system(size: 14, weight: .medium))
                                             .padding(.bottom, 1)
-                                        Text(place.address ?? "")
+                                        Text(place.address)
                                             .font(.system(size: 11, weight: .thin))
                                             .foregroundStyle(Color.gray)
                                     }
