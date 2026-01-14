@@ -43,7 +43,7 @@ struct PlaceSearchOverlayView: View {
                 isFocused = false
             }
             .onAppear {
-                DispatchQueue.main.async { isFocused = true }
+                isFocused = true
             }
         }
     }
@@ -151,7 +151,7 @@ extension PlaceSearchOverlayView {
     NavigationStack {
         PlaceSearchOverlayView(
             store: PlaceSearchStore(
-                searchPlaces: SearchNearbyPlaceUseCase(
+                searchPlaces: SearchNearbyPlaceUseCaseImpl(
                     placeRepository: NaverPlaceSearchRepositoryImpl(
                         network: NetworkClientImpl()
                     )
