@@ -7,14 +7,14 @@
 
 import Foundation
 
-final class MessagesByCoordinate {
+struct MessagesByCoordinate {
     private(set) var messagesByCoordinate: [Location: MessageCoordinateGroup]
 
     init(groupedMessages: [Location: MessageCoordinateGroup]) {
         self.messagesByCoordinate = groupedMessages
     }
 
-    func groupAll(for messages: [Message]) {
+    mutating func groupAll(for messages: [Message]) {
         var newGroups: [Location: MessageCoordinateGroup] = [:]
 
         for message in messages {
@@ -27,7 +27,7 @@ final class MessagesByCoordinate {
         self.messagesByCoordinate = newGroups
     }
 
-    func update(_ messageEvent: MessageEvent) {
+    mutating func update(_ messageEvent: MessageEvent) {
         let message = messageEvent.message
 
         switch messageEvent.event {
@@ -38,14 +38,14 @@ final class MessagesByCoordinate {
         }
     }
 
-    private func append(_ message: Message) {
+    private mutating func append(_ message: Message) {
         let coordinate = message.location
         var group = messagesByCoordinate[coordinate] ?? MessageCoordinateGroup(coordinate: coordinate)
         group.add(message)
         messagesByCoordinate[coordinate] = group
     }
 
-    private func remove(_ message: Message) {
+    private mutating func remove(_ message: Message) {
         let coordinate = message.location
         guard var group = messagesByCoordinate[coordinate] else { return }
 
