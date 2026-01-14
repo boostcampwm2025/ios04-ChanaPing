@@ -43,7 +43,9 @@ struct PlaceSearchOverlayView: View {
                 isFocused = false
             }
             .onAppear {
-                DispatchQueue.main.async { isFocused = true }
+                Task {
+                    isFocused = true
+                }
             }
         }
     }
