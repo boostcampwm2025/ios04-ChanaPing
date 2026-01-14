@@ -46,7 +46,13 @@ struct SpaceView: View {
         .ignoresSafeArea()
         .overlay(alignment: .bottomTrailing) {
             NavigationLink {
-                MessageComposerView()
+                MessageComposerView(
+                    store: MessageComposerStore(
+                        moderateMessage: TextModerationUseCaseImpl(
+                            messageRepository: MessageRepositoryImpl()
+                        )
+                    )
+                )
             } label: {
                 WriteButton { }
                     .disabled(true)

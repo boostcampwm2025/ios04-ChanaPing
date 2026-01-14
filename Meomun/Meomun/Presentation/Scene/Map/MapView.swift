@@ -50,7 +50,13 @@ struct MapView: View {
                     }
                 )
             ) {
-                MessageComposerView()
+                MessageComposerView(
+                    store: MessageComposerStore(
+                        moderateMessage: TextModerationUseCaseImpl(
+                            messageRepository: MessageRepositoryImpl()
+                        )
+                    )
+                )
                     .onAppear { setTabBarHidden(true) }
             }
             .task {
