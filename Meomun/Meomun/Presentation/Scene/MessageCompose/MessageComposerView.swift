@@ -55,6 +55,15 @@ struct MessageComposerView: View {
 }
 
 extension MessageComposerView {
+    private var messageBinding: Binding<String> {
+        Binding(
+            get: { store.state.message },
+            set: { newValue in
+                Task { await store.send(intent: .setMessage(newValue)) }
+            }
+        )
+    }
+
     private var alertBinding: Binding<MessageComposerStore.AlertState?> {
         Binding(
             get: { store.state.alert },
@@ -71,15 +80,7 @@ extension MessageComposerView {
                 .foregroundStyle(Color.meomunSecondaryColor)
                 .frame(maxWidth: .infinity, alignment: .leading)
 
-            MessageTextEditor(text: Binding(
-                get: {
-                    store.state.message
-                }, set: { newValue in
-                    Task {
-                        await store.send(intent: .setMessage(newValue))
-                    }
-                }
-            ))
+            MessageTextEditor(text: messageBinding)
             .focused($isFocused)
 
             Spacer(minLength: 0)
