@@ -10,7 +10,7 @@ import SwiftUI
 
 struct SpaceView: View {
     @EnvironmentObject private var locationProvider: LocationProvider
-    @StateObject private var store: SpaceViewStore
+    @StateObject private var store: SpaceStore
     @State private var domeEnvironment: DomeEnvironment
 
     private let rotationCamera = RotationCamera(
@@ -18,7 +18,7 @@ struct SpaceView: View {
         rotateSensitivity: 0.003
     )
 
-    init(environment: DomeEnvironment, store: SpaceViewStore) {
+    init(environment: DomeEnvironment, store: SpaceStore) {
         self.domeEnvironment = environment
         _store = StateObject(wrappedValue: store)
     }
@@ -142,7 +142,7 @@ extension SpaceView {
         let provider = LocationProvider()
         SpaceView(
             environment: .init(weather: .sunny, dayPart: .afternoon),
-            store: SpaceViewStore(locationProvider: provider)
+            store: SpaceStore(locationProvider: provider)
         )
         .environmentObject(provider)
     }

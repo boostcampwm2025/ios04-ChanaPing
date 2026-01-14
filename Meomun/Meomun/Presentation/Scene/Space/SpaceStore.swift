@@ -7,7 +7,7 @@
 
 import Combine
 
-final class SpaceViewStore: Store {
+final class SpaceStore: Store {
 
     enum Intent {
         case onAppear

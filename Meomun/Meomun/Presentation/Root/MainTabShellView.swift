@@ -51,7 +51,7 @@ struct MainTabShellView: View {
                     weather: .sunny,
                     dayPart: .daybreak
                 ),
-                store: SpaceViewStore(locationProvider: locationProvider)
+                store: SpaceStore(locationProvider: locationProvider)
             )
         }
     }
