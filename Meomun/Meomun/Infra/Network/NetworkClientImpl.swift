@@ -7,7 +7,7 @@
 
 import Foundation
 
-final class NetworkClientImpl: NetworkClient {
+final class NetworkClientImpl: NetworkClient, @unchecked Sendable {
 
     private let session: URLSession
     private let decoder: JSONDecoder
