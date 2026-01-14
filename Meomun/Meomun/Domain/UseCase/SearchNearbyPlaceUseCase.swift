@@ -33,8 +33,8 @@ final class SearchNearbyPlaceUseCase: SearchNearbyPlaceUseCaseProtocol {
         let places: [Place] = candidates.compactMap { item in
             // mapx = longitude, mapy = latitude
             // 네이버 Local Search API의 mapx, mapy는 WGS84이지만, 1e7(천만) 배 스케일된 정수값
-            guard let longitude = Double(item.mapx),
-                  let latitude = Double(item.mapy) else {
+            guard let doubleMapx = Double(item.mapx),
+                  let doubleMapy = Double(item.mapy) else {
                 return nil
             }
 
@@ -44,8 +44,8 @@ final class SearchNearbyPlaceUseCase: SearchNearbyPlaceUseCaseProtocol {
                 id: PlaceID(value: "\(item.mapx)|\(item.mapy)|\(item.title)"),
                 name: item.title.strippingHTMLBoldTags(),
                 coordinate: Coordinate(
-                    latitude: latitude / 10_000_000,
-                    longitude: longitude / 10_000_000
+                    latitude: doubleMapy / 10_000_000,
+                    longitude: doubleMapx / 10_000_000
                 ),
                 address: address
             )

@@ -42,7 +42,8 @@ final class NetworkClientImpl: NetworkClient {
             }
 
             do {
-                return try decoder.decode(T.self, from: data)
+                let decoded = try decoder.decode(T.self, from: data)
+                return decoded
             } catch {
                 throw NetworkError.decodingError(error)
             }

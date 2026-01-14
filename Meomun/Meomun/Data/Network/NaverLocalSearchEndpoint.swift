@@ -18,7 +18,7 @@ struct NaverLocalSearchEndpoint: Endpoint {
 
     init(
         query: String,
-        display: Int = 10,
+        display: Int = 5,   // 공식문서상 5가 최댓값
         start: Int = 1,
         sort: String = "random",
         clientId: String,
