@@ -18,10 +18,10 @@ final class MessagesByCoordinate {
         var newGroups: [Location: MessageCoordinateGroup] = [:]
 
         for message in messages {
-            let location = message.location
-            var group = newGroups[location] ?? MessageCoordinateGroup(coordinate: location)
+            let coordinate = message.location
+            var group = newGroups[coordinate] ?? MessageCoordinateGroup(coordinate: coordinate)
             group.add(message)
-            newGroups[location] = group
+            newGroups[coordinate] = group
         }
 
         self.messagesByCoordinate = newGroups
@@ -39,22 +39,22 @@ final class MessagesByCoordinate {
     }
 
     private func append(_ message: Message) {
-        let location = message.location
-        var group = messagesByCoordinate[location] ?? MessageCoordinateGroup(coordinate: location)
+        let coordinate = message.location
+        var group = messagesByCoordinate[coordinate] ?? MessageCoordinateGroup(coordinate: coordinate)
         group.add(message)
-        messagesByCoordinate[location] = group
+        messagesByCoordinate[coordinate] = group
     }
 
     private func remove(_ message: Message) {
-        let location = message.location
-        guard var group = messagesByCoordinate[location] else { return }
+        let coordinate = message.location
+        guard var group = messagesByCoordinate[coordinate] else { return }
 
         group.remove(message)
 
         if group.isEmpty {
-            messagesByCoordinate.removeValue(forKey: location)
+            messagesByCoordinate.removeValue(forKey: coordinate)
         } else {
-            messagesByCoordinate[location] = group
+            messagesByCoordinate[coordinate] = group
         }
     }
 }

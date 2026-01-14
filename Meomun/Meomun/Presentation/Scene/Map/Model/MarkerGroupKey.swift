@@ -7,6 +7,6 @@
 
 /// 마커 구분을 위한 복합 키 (좌표 + 마커 타입)
 struct MarkerGroupKey: Hashable {
-    let location: Location
+    let coordinate: Location
     let isPlace: Bool
 }

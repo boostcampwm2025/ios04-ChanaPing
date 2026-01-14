@@ -102,7 +102,7 @@ extension MessageMarkerManager {
 
         let position = NMGLatLng(lat: coordinate.latitude, lng: coordinate.longitude)
         let marker = makeMarker(at: position, mapView: mapView)
-        let groupKey = MarkerGroupKey(location: coordinate, isPlace: isPlace)
+        let groupKey = MarkerGroupKey(coordinate: coordinate, isPlace: isPlace)
 
         marker.touchHandler = { _ in
             onTap()
