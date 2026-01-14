@@ -9,9 +9,12 @@ import RealityKit
 import SwiftUI
 
 struct SpaceView: View {
-
+    @EnvironmentObject private var locationProvider: LocationProvider
     @StateObject private var store = SpaceViewStore()
     @State private var domeEnvironment: DomeEnvironment
+
+    @State private var isShowingComposer = false
+    @State private var composerLocation: Coordinate? = nil
 
     private let rotationCamera = RotationCamera(
         position: .init(x: 0, y: 0.7, z: 0),
@@ -23,39 +26,68 @@ struct SpaceView: View {
     }
 
     var body: some View {
-        RealityView { content in
-            // 가상 카메라 모드 설정 (AR이 아닌 3D 공간)
-            content.camera = .virtual
-            configureSpace(content: content)
-        }
-        .gesture(
-            DragGesture()
-                .onChanged { value in
-                    rotationCamera.handleDrag(
-                        translationX: Float(value.translation.width),
-                        translationY: Float(value.translation.height)
-                    )
+        NavigationStack {
+            ZStack {
+                RealityView { content in
+                    // 가상 카메라 모드 설정 (AR이 아닌 3D 공간)
+                    content.camera = .virtual
+                    configureSpace(content: content)
                 }
-                .onEnded { _ in
-                    rotationCamera.endDrag()
+                .gesture(
+                    DragGesture()
+                        .onChanged { value in
+                            rotationCamera.handleDrag(
+                                translationX: Float(value.translation.width),
+                                translationY: Float(value.translation.height)
+                            )
+                        }
+                        .onEnded { _ in
+                            rotationCamera.endDrag()
+                        }
+                )
+                .ignoresSafeArea()
+
+                VStack {
+                    Spacer()
+
+                    HStack {
+                        Spacer()
+
+                        WriteButton {   // TODO: - 위치 조정 필요
+                            Task { await openComposerWithFreshLocation() }
+                        }
+                    }
+                    .padding(.trailing, 24)
+                    .padding(.bottom, 96)
                 }
-        )
-        .task {
-            await store.send(intent: .onAppear)
-        }
-        .ignoresSafeArea()
-        .overlay(alignment: .bottomTrailing) {
-            NavigationLink {
-                MessageComposerView(userLocation: .init(latitude: 37.5665, longitude: 126.9780))    // 임시 값
-            } label: {
-                WriteButton { }
-                    .disabled(true)
             }
+            .navigationDestination(isPresented: $isShowingComposer) {
+                if let coordinate = composerLocation {
+                    MessageComposerView(userLocation: coordinate)
+                }
+            }
+        }
+        .task {
+            locationProvider.requestAuthorizationIfNeeded()
+            await store.send(intent: .onAppear)
         }
     }
 }
 
 extension SpaceView {
+    @MainActor
+    private func openComposerWithFreshLocation() async {
+        do {
+            // 작성 버튼 탭 시점 최신 좌표 one-shot
+            let coordinate = try await locationProvider.requestCurrentOnce()
+            AppLog.debug("Space write: got location: \(coordinate)", category: .location)
+            composerLocation = coordinate
+            isShowingComposer = true
+        } catch {
+            AppLog.error("Space write: failed to get location", category: .location, error: error)
+        }
+    }
+
     private func configureSpace(content: RealityViewCameraContent) {
         Task {
             do {

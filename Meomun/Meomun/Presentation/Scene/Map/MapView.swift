@@ -9,12 +9,10 @@ import SwiftUI
 
 struct MapView: View {
     @Environment(\.setTabBarHidden) private var setTabBarHidden
+    @EnvironmentObject private var locationProvider: LocationProvider
     @StateObject private var store: MapStore
 
-    let userLocation: Coordinate
-
     init(userLocation: Coordinate) {
-        self.userLocation = userLocation
         _store = StateObject(wrappedValue: MapStore(userLocation: userLocation))
     }
 
@@ -65,15 +63,19 @@ struct MapView: View {
                     .onDisappear { setTabBarHidden(false) }
             }
             .task {
+                locationProvider.requestAuthorizationIfNeeded()
+                locationProvider.startContinuous()
                 await store.send(intent: .onAppear)
             }
             .onAppear { setTabBarHidden(false) }
             .onDisappear {
+                locationProvider.stopContinuous()
                 Task {
                     await store.send(intent: .onDisappear)
                 }
             }
-            .onChange(of: userLocation) { _, newValue in
+            .onChange(of: locationProvider.current) { _, newValue in
+                guard let newValue else { return }
                 Task {
                     await store.send(intent: .updateUserLocation(newValue))
                 }

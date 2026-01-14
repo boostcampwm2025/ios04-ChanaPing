@@ -8,16 +8,20 @@
 import SwiftUI
 
 struct RootView: View {
+    @StateObject private var locationProvider = LocationProvider()
     @State private var userLocation: Coordinate? = nil
 
     var body: some View {
-        if let userLocation {
-            MainTabShellView(userLocation: userLocation)
-        } else {
-            LocationGateView { coordinate in
-                self.userLocation = coordinate
+        Group {
+            if let userLocation {
+                MainTabShellView(userLocation: userLocation)
+            } else {
+                LocationGateView { coordinate in
+                    self.userLocation = coordinate
+                }
             }
         }
+        .environmentObject(locationProvider)
     }
 }
 

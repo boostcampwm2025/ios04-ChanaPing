@@ -9,7 +9,7 @@ import SwiftUI
 import CoreLocation
 
 struct LocationGateView: View {
-    @StateObject private var locationProvider = LocationProvider()
+    @EnvironmentObject private var locationProvider: LocationProvider
     @State private var didSendReady = false
     let onReady: (Coordinate) -> Void
 
@@ -18,7 +18,6 @@ struct LocationGateView: View {
             switch locationProvider.authorizationStatus {
             case .notDetermined:
                 Text("위치 권한을 요청 중...")
-                    .task { locationProvider.requestAuthorizationIfNeeded() }
 
             case .denied, .restricted:
                 // 설정으로 이동 안내 화면
@@ -34,12 +33,14 @@ struct LocationGateView: View {
                         }
                 } else {
                     ProgressView("현재 위치 불러오는 중...")
-                        .task { locationProvider.requestAuthorizationIfNeeded() }
                 }
 
             @unknown default:
                 Text("알 수 없는 권한 상태")
             }
+        }
+        .task {
+            locationProvider.requestAuthorizationIfNeeded()
         }
     }
 }
