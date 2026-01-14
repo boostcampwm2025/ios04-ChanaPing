@@ -14,6 +14,7 @@ struct CreateMessageRequest: Sendable {
 }
 
 protocol MessageRepository: Sendable {
+    func moderateMessage(text: String) async throws -> TextModerationResponse
     func createMessage(_ request: CreateMessageRequest) async throws
     func deleteMessage(messageID: MessageID) async throws
 
