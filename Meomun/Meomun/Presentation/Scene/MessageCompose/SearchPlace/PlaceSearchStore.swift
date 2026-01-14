@@ -50,7 +50,7 @@ final class PlaceSearchStore: Store {
     // 검색 작업이 결과를 반환
     private var searchTask: Task<[Place], Never>?
 
-    private let searchNearbyPlaces: SearchNearbyPlaceUseCaseProtocol
+    private let searchNearbyPlaces: SearchNearbyPlaceUseCase
     private let userLocation: Coordinate
     private let radiusMeters: Double
 
@@ -58,7 +58,7 @@ final class PlaceSearchStore: Store {
     private let onDismiss: () -> Void
 
     init(
-        searchPlaces: SearchNearbyPlaceUseCaseProtocol,
+        searchPlaces: SearchNearbyPlaceUseCase,
         userLocation: Coordinate,
         radiusMeters: Double = 60,
         onSelect: @escaping (Place) -> Void,

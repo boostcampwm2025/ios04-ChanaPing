@@ -153,7 +153,7 @@ extension PlaceSearchOverlayView {
     NavigationStack {
         PlaceSearchOverlayView(
             store: PlaceSearchStore(
-                searchPlaces: SearchNearbyPlaceUseCase(
+                searchPlaces: SearchNearbyPlaceUseCaseImpl(
                     placeRepository: NaverPlaceSearchRepositoryImpl(
                         network: NetworkClientImpl()
                     )
