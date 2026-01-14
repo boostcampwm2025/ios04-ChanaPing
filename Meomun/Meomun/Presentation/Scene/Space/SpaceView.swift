@@ -12,9 +12,11 @@ struct SpaceView: View {
 
     @StateObject private var store = SpaceViewStore()
     @State private var domeEnvironment: DomeEnvironment
+
     @State private var spaceRootEntity: Entity?
-    @State private var didAddMessageBubbles = false
-    @State private var messageBubbleEntity: Entity?
+    @State private var messageBubbleTemplateEntity: Entity?
+
+    @State private var messageBubbleRootByID: [UUID: Entity] = [:]
 
     private let rotationCamera = RotationCamera(
         position: .init(x: 0, y: 0.7, z: 0),    // 카메라 시작 위치 (돔 중심에서 약간 위)
@@ -30,18 +32,6 @@ struct SpaceView: View {
             // 가상 카메라 모드 설정 (AR이 아닌 3D 공간)
             content.camera = .virtual
             configureSpace(content: content)
-        } update: { _ in
-            // messages 로드 완료 + 루트 준비 + 아직 생성 전 => 생성
-            guard didAddMessageBubbles == false else { return }
-            guard let root = spaceRootEntity else { return }
-            guard store.state.messages.isEmpty == false else { return }
-            guard messageBubbleEntity != nil else { return }
-
-            addMessageBubbles(to: root, messages: store.state.messages)
-
-            Task { @MainActor in
-                didAddMessageBubbles = true
-            }
         }
         .gesture(
             DragGesture()
@@ -57,6 +47,10 @@ struct SpaceView: View {
         )
         .task {
             await store.send(intent: .onAppear)
+            syncIfPossible()
+        }
+        .onChange(of: store.state.messages.map(\.id)) {
+            syncIfPossible()
         }
         .ignoresSafeArea()
         .overlay(alignment: .bottomTrailing) {
@@ -97,7 +91,8 @@ extension SpaceView {
                 let messageEntity = try await Entity(named: "Message.usdz")
                 messageEntity.name = "MessageBubble"
                 await MainActor.run {
-                    messageBubbleEntity = messageEntity
+                    messageBubbleTemplateEntity = messageEntity
+                    syncIfPossible()
                 }
 
                 // 카메라 추가
@@ -144,63 +139,101 @@ extension SpaceView {
         static let textScale: Float = 0.50              // 텍스트 엔티티 스케일
         static let paddingX: Float = 0.10               // 텍스트 좌우 여백
         static let paddingY: Float = 0.02               // 텍스트 상하 여백
-        static let minUniform: Float = 0.85
-        static let maxUniform: Float = 2.2
+        static let minUniform: Float = 0.85             // 버블 최소 크기 제한
+        static let maxUniform: Float = 2.2              // 버블 최대 크기 제한
         static let textContainerWidth: Float = 0.55     // 텍스트 최대 넓이
         static let textContainerHeight: Float = 0.18    // 텍스트 최대 높이
         static let textForwardPadding: Float = 0.01     // 텍스트를 버블 표면보다 앞(z+)으로 띄우는 패딩
     }
 
-    private func addMessageBubbles(to root: Entity, messages: [SpaceMessage]) {
-        guard let messageBubbleEntity = messageBubbleEntity else { return }
+    private func syncIfPossible() {
+        guard let root = spaceRootEntity else { return }
+        guard messageBubbleTemplateEntity != nil else { return }
 
-        let placer = BubblePlacer()
-
-        for message in messages {
-            // 텍스트 가공 및 생성
-            let processed = arrangeText(message.text)
-            let textEntity = makeTextEntity(processed)
-
-            // 중앙 정렬 보정
-            centerTextEntity(textEntity)
-
-            // 버블 루트 (전체 billboard 대상)
-            let bubbleRoot = Entity()
-            bubbleRoot.name = "MessageBubble-\(message.id.uuidString)"
-            bubbleRoot.components.set(BillboardComponent())
-
-            // 버블 랜덤 배치
-            bubbleRoot.position = placer.randomPositionInsideHemisphere(
-                radiusRange: 1.4...1.7,
-                yRange: 0.5...1.1,
-                minimumDistanceFromCenter: 1.3,
-                minimumDistanceFromViewAxis: 0.25,
-                maxAttempts: 60
-            )
-
-            // messageBubbleEntity 복제
-            let bubbleEntity = messageBubbleEntity.clone(recursive: true)
-            bubbleEntity.name = "MessageModel-\(message.id.uuidString)"
-
-            // 텍스트에 맞는 uniform 배율 계산
-            let multiplier = uniformMultiplierToFitText(
-                textEntity: textEntity,
-                bubbleEntity: messageBubbleEntity
-            )
-
-            // 엔티티 크기 조절
-            let finalScale = BubbleSizingTuning.baseBubbleScale * multiplier
-            bubbleEntity.scale = SIMD3<Float>(repeating: finalScale)
-
-            // Entity 계층 구성: (루트) - (버블) + (텍스트)
-            bubbleRoot.addChild(bubbleEntity)
-            bubbleRoot.addChild(textEntity)
-
-            // 텍스트를 버블 앞쪽으로 배치
-            placeTextInFrontOfBubble(textEntity, bubbleEntity: bubbleEntity)
-
-            root.addChild(bubbleRoot)
+        Task { @MainActor in
+            syncMessageBubbles(to: root, messages: store.state.messages)
         }
+    }
+
+    private func syncMessageBubbles(to root: Entity, messages: [SpaceMessage]) {
+        guard let messageBubbleTemplateEntity = messageBubbleTemplateEntity else { return }
+
+        let incomingMessageIDSet = Set(messages.map(\.id))
+        let existingMessageIDSet = Set(messageBubbleRootByID.keys)
+        let messageIDSetToRemove = existingMessageIDSet.subtracting(incomingMessageIDSet)
+        let messageIDSetToAdd = incomingMessageIDSet.subtracting(existingMessageIDSet)
+
+        for messageID in messageIDSetToRemove {
+            removeMessageBubble(messageID: messageID)
+        }
+
+        for messageID in messageIDSetToAdd {
+            guard let message = messages.first(where: { $0.id == messageID }) else { continue }
+
+            addMessageBubble(
+                to: root,
+                message: message,
+                messageBubbleTemplateEntity: messageBubbleTemplateEntity
+            )
+        }
+    }
+
+    private func removeMessageBubble(messageID: UUID) {
+        guard let bubbleRootEntity = messageBubbleRootByID[messageID] else { return }
+        bubbleRootEntity.removeFromParent()
+        messageBubbleRootByID[messageID] = nil
+    }
+
+    private func addMessageBubble(to root: Entity, message: SpaceMessage, messageBubbleTemplateEntity: Entity) {
+        let bubblePlacer = BubblePlacer()
+
+        // 텍스트 가공 및 생성
+        let processedText = arrangeText(message.text)
+        let textEntity = makeTextEntity(processedText)
+
+        // 중앙 정렬 보정
+        centerTextEntity(textEntity)
+
+        // 버블 루트 (전체 billboard 대상)
+        let bubbleRootEntity = Entity()
+        bubbleRootEntity.name = "MessageBubble-\(message.id.uuidString)"
+        bubbleRootEntity.components.set(BillboardComponent())
+
+        // 버블 랜덤 배치
+        bubbleRootEntity.position = bubblePlacer.randomPositionInsideHemisphere(
+            radiusRange: 1.4...1.7,
+            yRange: 0.5...1.1,
+            minimumDistanceFromCenter: 1.3,
+            minimumDistanceFromViewAxis: 0.25,
+            maxAttempts: 60
+        )
+
+        // messageBubbleTemplateEntity 복제
+        let bubbleBubbleEntity = messageBubbleTemplateEntity.clone(recursive: true)
+        bubbleBubbleEntity.name = "MessageModel-\(message.id.uuidString)"
+
+        // 텍스트에 맞는 uniform 배율 계산
+        let multiplier = uniformMultiplierToFitText(
+            textEntity: textEntity,
+            bubbleEntity: messageBubbleTemplateEntity
+        )
+
+        // 엔티티 크기 조절
+        let finalScale = BubbleSizingTuning.baseBubbleScale * multiplier
+        bubbleBubbleEntity.scale = SIMD3<Float>(repeating: finalScale)
+
+        // Entity 계층 구성: (루트) - (버블) + (텍스트)
+        bubbleRootEntity.addChild(bubbleBubbleEntity)
+        bubbleRootEntity.addChild(textEntity)
+
+        // 텍스트를 버블 앞쪽으로 배치
+        placeTextInFrontOfBubble(textEntity, bubbleEntity: bubbleBubbleEntity)
+
+        // 씬에 추가
+        root.addChild(bubbleRootEntity)
+
+        // 추적 저장
+        messageBubbleRootByID[message.id] = bubbleRootEntity
     }
 
     private func arrangeText(_ text: String) -> String {
