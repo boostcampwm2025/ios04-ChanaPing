@@ -235,9 +235,9 @@ extension MapViewController: CLLocationManagerDelegate {
 
 extension MapViewController {
     /// 그룹화된 메시지로 마커를 업데이트합니다.
-    func updateGroups(_ groups: MessagesByCoordinate) {
+    func updateGroups(_ groups: MessageGroupContainer) {
         messageMarkerManager.updateMarkers(
-            groups: groups,
+            messageGroupContainer: groups,
             mapView: naverMapView.mapView,
             onTapPlace: onTapPlace,
             onTapNoPlace: onTapNoPlace
@@ -334,20 +334,20 @@ extension MapViewController {
 // MARK: - MapViewWrapper
 
 struct MapViewWrapper: UIViewControllerRepresentable {
-    private let messagesByCoordinate: MessagesByCoordinate
+    private let messageGroupContainer: MessageGroupContainer
     private let onTapPlace: ((Place) -> Void)?
     private let onTapNoPlace: (([Message]) -> Void)?
 
     private let messageMarkerManager: MessageMarkerManager
 
     init(
-        messageMarkerManager: MessageMarkerManager,
-        groupedMessages: MessagesByCoordinate,
+        markerManager: MessageMarkerManager,
+        messageContainer: MessageGroupContainer,
         onTapPlace: ((Place) -> Void)? = nil,
         onTapNoPlace: (([Message]) -> Void)? = nil
     ) {
-        self.messageMarkerManager = messageMarkerManager
-        self.messagesByCoordinate = groupedMessages
+        self.messageMarkerManager = markerManager
+        self.messageGroupContainer = messageContainer
         self.onTapPlace = onTapPlace
         self.onTapNoPlace = onTapNoPlace
     }
@@ -358,11 +358,11 @@ struct MapViewWrapper: UIViewControllerRepresentable {
             onTapPlace: onTapPlace,
             onTapNoPlace: onTapNoPlace
         )
-        viewController.updateGroups(messagesByCoordinate)
+        viewController.updateGroups(messageGroupContainer)
         return viewController
     }
 
     func updateUIViewController(_ uiViewController: MapViewController, context: Context) {
-        uiViewController.updateGroups(messagesByCoordinate)
+        uiViewController.updateGroups(messageGroupContainer)
     }
 }

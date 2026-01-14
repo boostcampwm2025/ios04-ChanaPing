@@ -20,8 +20,8 @@ struct MapView: View {
         NavigationStack {
             ZStack {
                 MapViewWrapper(
-                    messageMarkerManager: messageMarkerManager,
-                    groupedMessages: store.state.messagesByCoordinate,
+                    markerManager: messageMarkerManager,
+                    messageContainer: store.state.messageGroupContainer,
                     onTapPlace: { place in
                         Task {
                             await store.send(intent: .tapPlaceMarker(place))

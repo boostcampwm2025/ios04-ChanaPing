@@ -39,14 +39,14 @@ final class MessageMarkerManager {
     }
     /// GroupedMessage를 기반으로 마커를 생성/업데이트합니다.
     func updateMarkers(
-        groups: MessagesByCoordinate,
+        messageGroupContainer: MessageGroupContainer,
         mapView: NMFMapView,
         onTapPlace: ((Place) -> Void)?,
         onTapNoPlace: (([Message]) -> Void)?
     ) {
         clearAllMarkers()
 
-        for (_, messagesInCoordinate) in groups.groups {
+        for (_, messagesInCoordinate) in messageGroupContainer.groups {
             // Place 마커 생성
             let placeMessages = messagesInCoordinate.placeMessages
             let countByPlace = messagesInCoordinate.messageCountByPlace
