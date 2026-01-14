@@ -10,5 +10,9 @@
 	<string>$(NAVER_CLIENT_SECRET)</string>
 	<key>NMFNcpKeyId</key>
 	<string>$(NMF_NCP_KEY_ID)</string>
+	<key>SUPABASE_URL</key>
+	<string>$(SUPABASE_URL)</string>
+	<key>SUPABASE_KEY</key>
+	<string>$(SUPABASE_KEY)</string>
 </dict>
 </plist>
