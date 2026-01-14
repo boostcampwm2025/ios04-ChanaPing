@@ -34,6 +34,8 @@ final class NetworkClientImpl: NetworkClient, @unchecked Sendable {
                 throw NetworkError.unknown
             }
 
+            AppLog.debug("Request: \(request.url?.absoluteString ?? "")", category: .network)
+
             guard (200..<300).contains(httpResponse.statusCode) else {
                 throw NetworkError.serverError(
                     statusCode: httpResponse.statusCode,

@@ -202,7 +202,7 @@ extension MapViewController: CLLocationManagerDelegate {
         case .authorizedWhenInUse, .authorizedAlways:
             startUpdatingLocationIfNeeded()
         case .denied, .restricted:
-            print("위치 권한이 거부/제한되어 있어 현재 위치로 이동할 수 없습니다.")
+            AppLog.error("위치 권한이 거부/제한되어 있어 현재 위치로 이동할 수 없습니다.", category: .permission)
         @unknown default:
             break
         }
@@ -235,7 +235,11 @@ extension MapViewController: CLLocationManagerDelegate {
     }
 
     func locationManager(_ manager: CLLocationManager, didFailWithError error: Error) {
-        print("위치 업데이트 실패: \(error)")
+        AppLog.error(
+            "위치 업데이트 실패",
+            category: .location,
+            error: error
+        )
     }
 }
 

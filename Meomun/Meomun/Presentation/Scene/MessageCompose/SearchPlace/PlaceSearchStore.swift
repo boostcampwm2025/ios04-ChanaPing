@@ -179,14 +179,34 @@ final class PlaceSearchStore: Store {
 
     @MainActor
     private func handleSearchError(_ error: Error) {
-        if let urlError = error as? URLError, urlError.code == .cancelled { return }
+        if let urlError = error as? URLError, urlError.code == .cancelled {
+            AppLog.debug("Search cancelled", category: .store)
+            return
+        }
 
         if case let NetworkError.serverError(statusCode, data) = error {
-            print("LocalSearch status:", statusCode)
-            if let data { print(String(data: data, encoding: .utf8) ?? "") }
+            AppLog.error(
+                "LocalSearch server error",
+                category: .network,
+                error: error
+            )
+
+            if let data,
+               let body = String(data: data, encoding: .utf8) {
+                AppLog.debug(
+                    "Response body: \(body)",
+                    category: .network
+                )
+            }
+
             apply(.setPhase(.failed("검색 중 오류가 발생했습니다. (\(statusCode))")))
         } else {
-            print("LocalSearch error:", error)
+            AppLog.error(
+                "LocalSearch unknown error",
+                category: .network,
+                error: error
+            )
+
             apply(.setPhase(.failed("검색 중 오류가 발생했습니다.")))
         }
     }
