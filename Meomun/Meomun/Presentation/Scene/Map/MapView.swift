@@ -52,7 +52,6 @@ struct MapView: View {
             ) {
                 MessageComposerView()
                     .onAppear { setTabBarHidden(true) }
-                    .onDisappear { setTabBarHidden(false) }
             }
             .task {
                 await store.send(intent: .onAppear)
