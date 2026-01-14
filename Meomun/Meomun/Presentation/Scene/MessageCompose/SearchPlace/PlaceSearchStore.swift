@@ -43,15 +43,15 @@ final class PlaceSearchStore: Store {
     struct State {
         var query: String = ""
         var phase: Phase = .idle
+        var userLocation: Coordinate
     }
 
-    @Published var state: State = .init()
+    @Published var state: State
 
     // 검색 작업이 결과를 반환
     private var searchTask: Task<[Place], Never>?
 
     private let searchNearbyPlaces: SearchNearbyPlaceUseCaseProtocol
-    private let userLocation: Coordinate
     private let radiusMeters: Double
 
     private let onSelect: (Place) -> Void
@@ -65,7 +65,7 @@ final class PlaceSearchStore: Store {
         onDismiss: @escaping () -> Void
     ) {
         self.searchNearbyPlaces = searchPlaces
-        self.userLocation = userLocation
+        self.state = State(userLocation: userLocation)
         self.radiusMeters = radiusMeters
         self.onSelect = onSelect
         self.onDismiss = onDismiss
@@ -129,7 +129,7 @@ final class PlaceSearchStore: Store {
         }
 
         let stabilizedQuery = trimmedQuery
-        let userLocation = self.userLocation
+        let userLocation = self.state.userLocation
         let radiusMeters = self.radiusMeters
         let useCase = self.searchNearbyPlaces
 

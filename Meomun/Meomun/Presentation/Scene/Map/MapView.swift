@@ -9,12 +9,22 @@ import SwiftUI
 
 struct MapView: View {
     @Environment(\.setTabBarHidden) private var setTabBarHidden
-    @StateObject private var store = MapStore()
+    @StateObject private var store: MapStore
+
+    let userLocation: Coordinate
+
+    init(userLocation: Coordinate) {
+        self.userLocation = userLocation
+        _store = StateObject(wrappedValue: MapStore(userLocation: userLocation))
+    }
 
     var body: some View {
         NavigationStack {
             ZStack {
-                MapViewWrapper(messages: store.state.messages)
+                MapViewWrapper(
+                    messages: store.state.messages,
+                    userLocation: store.state.userLocation
+                )
                     .ignoresSafeArea()
 
                 VStack {
@@ -50,7 +60,7 @@ struct MapView: View {
                     }
                 )
             ) {
-                MessageComposerView()
+                MessageComposerView(userLocation: store.state.userLocation)
                     .onAppear { setTabBarHidden(true) }
                     .onDisappear { setTabBarHidden(false) }
             }
@@ -63,10 +73,11 @@ struct MapView: View {
                     await store.send(intent: .onDisappear)
                 }
             }
+            .onChange(of: userLocation) { _, newValue in
+                Task {
+                    await store.send(intent: .updateUserLocation(newValue))
+                }
+            }
         }
     }
-}
-
-#Preview {
-    MapView()
 }

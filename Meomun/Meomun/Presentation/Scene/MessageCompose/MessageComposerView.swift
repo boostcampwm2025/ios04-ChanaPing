@@ -17,7 +17,11 @@ struct MessageComposerView: View {
     @FocusState var isFocused: Bool
     @Environment(\.dismiss) private var dismiss
 
-    @StateObject private var store = MessageComposerStore()
+    @StateObject private var store: MessageComposerStore
+
+    init(userLocation: Coordinate) {
+        _store = StateObject(wrappedValue: MessageComposerStore(userLocation: userLocation))
+    }
 
     var body: some View {
         ZStack {
@@ -31,10 +35,7 @@ struct MessageComposerView: View {
                                 network: NetworkClientImpl()
                             )
                         ),
-                        userLocation: .init(
-                            latitude: 37.5665,
-                            longitude: 126.9780
-                        ),
+                        userLocation: store.state.userLocation,
                         onSelect: { selected in
                             Task { await store.send(intent: .selectPlace(selected.name)) }
                         },
@@ -144,6 +145,6 @@ extension MessageComposerView {
     @Previewable @State var message: String = ""
 
     NavigationStack {
-        MessageComposerView()
+        MessageComposerView(userLocation: .init(latitude: 37.5665, longitude: 126.9780))
     }
 }

@@ -46,7 +46,7 @@ struct SpaceView: View {
         .ignoresSafeArea()
         .overlay(alignment: .bottomTrailing) {
             NavigationLink {
-                MessageComposerView()
+                MessageComposerView(userLocation: .init(latitude: 37.5665, longitude: 126.9780))    // 임시 값
             } label: {
                 WriteButton { }
                     .disabled(true)
