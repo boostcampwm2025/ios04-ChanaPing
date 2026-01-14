@@ -85,6 +85,7 @@ final class PlaceSearchStore: Store {
                 onSelect(place)
 
             case .dismiss:
+                cancelSearch()
                 onDismiss()
             }
 
@@ -118,8 +119,7 @@ final class PlaceSearchStore: Store {
     private func search(for query: String, immediate: Bool = false) {
         let trimmedQuery = query.trimmingCharacters(in: .whitespacesAndNewlines)
 
-        searchTask?.cancel()
-        searchTask = nil
+        cancelSearch()
 
         guard !trimmedQuery.isEmpty else {
             Task { @MainActor in
@@ -209,5 +209,10 @@ final class PlaceSearchStore: Store {
 
             apply(.setPhase(.failed("검색 중 오류가 발생했습니다.")))
         }
+    }
+
+    private func cancelSearch() {
+        searchTask?.cancel()
+        searchTask = nil
     }
 }
