@@ -9,40 +9,6 @@ import NMapsMap
 import SwiftUI
 import UIKit
 
-final class BubbleConfiguration {
-    let marker: NMFMarker
-    let messages: [Message] // 같은 그룹으로 묶인 메시지들
-    var currentIndex: Int
-    var lastRotationTime: TimeInterval
-    var animationStartTime: TimeInterval?
-    var animationProgress: Double
-    var isAnimating: Bool
-    var currentMessage: Message
-    var nextMessage: Message
-
-    init(
-        marker: NMFMarker,
-        messages: [Message],
-        currentIndex: Int,
-        lastRotationTime: TimeInterval,
-        animationStartTime: TimeInterval? = nil,
-        animationProgress: Double,
-        isAnimating: Bool,
-        currentMessage: Message,
-        nextMessage: Message
-    ) {
-        self.marker = marker
-        self.messages = messages
-        self.currentIndex = currentIndex
-        self.lastRotationTime = lastRotationTime
-        self.animationStartTime = animationStartTime
-        self.animationProgress = animationProgress
-        self.isAnimating = isAnimating
-        self.currentMessage = currentMessage
-        self.nextMessage = nextMessage
-    }
-}
-
 final class MapViewController: UIViewController {
 
     // 마커 탭 콜백 (장소 태그가 있는 회전 버블 탭 시)
