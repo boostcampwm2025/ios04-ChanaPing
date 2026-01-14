@@ -49,7 +49,7 @@ final class MessageMarkerManager {
         for (_, messagesInCoordinate) in groups.messagesByCoordinate {
             // Place 마커 생성
             let placeMessages = messagesInCoordinate.placeMessages
-            let countByPlace = messagesInCoordinate.countByPlace
+            let countByPlace = messagesInCoordinate.messageCountByPlace
 
             createMarker(
                 messages: placeMessages,

@@ -11,7 +11,7 @@ struct MessageCoordinateGroup {
 
     private(set) var placeMessages: [Message] = []
     private(set) var noPlaceMessages: [Message] = []
-    private(set) var countByPlace: [Place: Int] = [:]
+    private(set) var messageCountByPlace: [Place: Int] = [:]
 
     var isEmpty: Bool {
         placeMessages.isEmpty && noPlaceMessages.isEmpty
@@ -26,7 +26,7 @@ struct MessageCoordinateGroup {
             placeMessages.append(message)
             // 최신순 정렬 (내림차순)
             placeMessages.sort { $0.createdAt > $1.createdAt }
-            countByPlace[place, default: 0] += 1
+            messageCountByPlace[place, default: 0] += 1
         } else {
             noPlaceMessages.append(message)
             // 최신순 정렬 (내림차순)
@@ -37,9 +37,9 @@ struct MessageCoordinateGroup {
     mutating func remove(_ message: Message) {
         if let place = message.placeTag {
             placeMessages.removeAll { $0.id == message.id }
-            countByPlace[place, default: 0] -= 1
-            if countByPlace[place] == 0 {
-                countByPlace.removeValue(forKey: place)
+            messageCountByPlace[place, default: 0] -= 1
+            if messageCountByPlace[place] == 0 {
+                messageCountByPlace.removeValue(forKey: place)
             }
         } else {
             noPlaceMessages.removeAll { $0.id == message.id }
