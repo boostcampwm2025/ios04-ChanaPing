@@ -14,6 +14,7 @@ struct SpaceView: View {
     @State private var domeEnvironment: DomeEnvironment
     @State private var spaceRootEntity: Entity?
     @State private var didAddMessageBubbles = false
+    @State private var messageBubbleEntity: Entity?
 
     private let rotationCamera = RotationCamera(
         position: .init(x: 0, y: 0.7, z: 0),    // 카메라 시작 위치 (돔 중심에서 약간 위)
@@ -34,6 +35,7 @@ struct SpaceView: View {
             guard didAddMessageBubbles == false else { return }
             guard let root = spaceRootEntity else { return }
             guard store.state.messages.isEmpty == false else { return }
+            guard messageBubbleEntity != nil else { return }
 
             addMessageBubbles(to: root, messages: store.state.messages)
 
@@ -91,6 +93,13 @@ extension SpaceView {
                 root.addChild(domeEntity)
                 configureDomeSurface(domeEntity: domeEntity)
 
+                // 메시지 버블 로드
+                let messageEntity = try await Entity(named: "Message.usdz")
+                messageEntity.name = "MessageBubble"
+                await MainActor.run {
+                    messageBubbleEntity = messageEntity
+                }
+
                 // 카메라 추가
                 rotationCamera.addToScene(content)
             } catch {
@@ -131,16 +140,20 @@ extension SpaceView {
 
 extension SpaceView {
     private enum BubbleSizingTuning {
-        static let textScale: Float = 0.55              // 텍스트 엔티티 스케일
-        static let insetRatio: Float = 1.10             // 텍스트보다 버블 크기의 여유 공간
-        static let minRadius: Float = 0.05              // 최소 버블 크기
-        static let maxRadius: Float = 0.22              // 최대 버블 크기
-        static let textForwardPadding: Float = 0.01     // 텍스트를 버블 표면보다 앞(z+)으로 띄우는 패딩
+        static let baseBubbleScale: Float = 0.10        // 버블 스케일 표준
+        static let textScale: Float = 0.20              // 텍스트 엔티티 스케일
+        static let paddingX: Float = 0.03               // 텍스트 좌우 여백
+        static let paddingY: Float = 0.02               // 텍스트 상하 여백
+        static let minUniform: Float = 0.85
+        static let maxUniform: Float = 2.2
         static let textContainerWidth: Float = 0.55     // 텍스트 최대 넓이
         static let textContainerHeight: Float = 0.18    // 텍스트 최대 높이
+        static let textForwardPadding: Float = 0.01     // 텍스트를 버블 표면보다 앞(z+)으로 띄우는 패딩
     }
 
     private func addMessageBubbles(to root: Entity, messages: [SpaceMessage]) {
+        guard let messageBubbleEntity = messageBubbleEntity else { return }
+
         let placer = BubblePlacer()
 
         for message in messages {
@@ -150,18 +163,6 @@ extension SpaceView {
 
             // 중앙 정렬 보정
             centerTextEntity(textEntity)
-
-            // 텍스트 크기 기반 버블 반지름 계산
-            let bubbleRadius = bubbleRadiusToFitText(textEntity)
-
-            // 버블 머티리얼
-            var bubbleMaterial = SimpleMaterial()
-            bubbleMaterial.color = .init(
-                tint: .white.withAlphaComponent(0.18),
-                texture: nil
-            )
-            bubbleMaterial.roughness = .float(0.02)
-            bubbleMaterial.metallic = .float(0.0)
 
             // 버블 루트 (전체 billboard 대상)
             let bubbleRoot = Entity()
@@ -177,88 +178,29 @@ extension SpaceView {
                 maxAttempts: 60
             )
 
-            // 버블 본체 (타원)
-            let bubbleBody = ModelEntity(
-                mesh: .generateSphere(radius: bubbleRadius),
-                materials: [bubbleMaterial]
+            // messageBubbleEntity 복제
+            let bubbleEntity = messageBubbleEntity.clone(recursive: true)
+            bubbleEntity.name = "MessageModel-\(message.id.uuidString)"
+
+            // 텍스트에 맞는 uniform 배율 계산
+            let multiplier = uniformMultiplierToFitText(
+                textEntity: textEntity,
+                bubbleEntity: messageBubbleEntity
             )
 
-            // 텍스트 가로 길이에 따른 타원 스케일
-            let textBounds = textEntity.visualBounds(relativeTo: nil)
-            let textExtents = textBounds.extents
-            let diameter = bubbleRadius * 2
-            let widthRatio = textExtents.x / diameter
-            let xScale = min(max(1.15, 1.25 + widthRatio * 1.0), 1.5)
-
-            bubbleBody.scale = SIMD3<Float>(xScale, 1.0, 1.0)
+            // 엔티티 크기 조절
+            let finalScale = BubbleSizingTuning.baseBubbleScale * multiplier
+            bubbleEntity.scale = SIMD3<Float>(repeating: finalScale)
 
             // Entity 계층 구성: (루트) - (버블) + (텍스트)
-            bubbleRoot.addChild(bubbleBody)
+            bubbleRoot.addChild(bubbleEntity)
             bubbleRoot.addChild(textEntity)
 
             // 텍스트를 버블 앞쪽으로 배치
-            textEntity.position += SIMD3<Float>(0, 0, bubbleRadius + BubbleSizingTuning.textForwardPadding)
+            placeTextInFrontOfBubble(textEntity, bubbleEntity: bubbleEntity)
 
-            // 씬에 추가
             root.addChild(bubbleRoot)
         }
-    }
-
-    private func makeTextEntity(_ text: String) -> ModelEntity {
-        let mesh = MeshResource.generateText(
-            text,
-            extrusionDepth: 0.001,
-            font: .systemFont(ofSize: 0.05, weight: .semibold),
-            containerFrame: CGRect(
-                x: 0,
-                y: 0,
-                width: CGFloat(BubbleSizingTuning.textContainerWidth),
-                height: CGFloat(BubbleSizingTuning.textContainerHeight)
-            ),
-            alignment: .center,
-            lineBreakMode: .byWordWrapping
-        )
-
-        var material = SimpleMaterial()
-        material.color = .init(tint: .black.withAlphaComponent(1.0), texture: nil)
-        material.roughness = .float(1.0)
-        material.metallic = .float(0.0)
-
-        let textEntity = ModelEntity(mesh: mesh, materials: [material])
-
-        // 메시지 텍스트 크기 조절
-        textEntity.scale = SIMD3<Float>(repeating: BubbleSizingTuning.textScale)
-
-        return textEntity
-    }
-
-    private func bubbleRadiusToFitText(_ textEntity: ModelEntity) -> Float {
-        let bounds = textEntity.visualBounds(relativeTo: nil)
-        let extents = bounds.extents
-
-        // 텍스트를 감싸는 구의 반지름 (대각선 기준)
-        let textBoundingRadius =
-        0.5 * sqrt(
-            extents.x * extents.x +
-            extents.y * extents.y +
-            extents.z * extents.z
-        )
-
-        let padded = textBoundingRadius * BubbleSizingTuning.insetRatio
-        let clamped = min(max(padded, BubbleSizingTuning.minRadius), BubbleSizingTuning.maxRadius)
-        return clamped
-    }
-
-    private func centerTextEntity(_ textEntity: ModelEntity) {
-        let bounds = textEntity.visualBounds(relativeTo: nil)
-        let center = bounds.center
-
-        // 텍스트 로컬 중심을 원점으로 오게 보정
-        textEntity.position = SIMD3<Float>(
-            -center.x,
-            -center.y,
-            -center.z
-        )
     }
 
     private func arrangeText(_ text: String) -> String {
@@ -288,6 +230,86 @@ extension SpaceView {
         }
 
         return text
+    }
+
+    private func makeTextEntity(_ text: String) -> ModelEntity {
+        let mesh = MeshResource.generateText(
+            text,
+            extrusionDepth: 0.001,
+            font: .systemFont(ofSize: 0.05, weight: .semibold),
+            containerFrame: CGRect(
+                x: 0,
+                y: 0,
+                width: CGFloat(BubbleSizingTuning.textContainerWidth),
+                height: CGFloat(BubbleSizingTuning.textContainerHeight)
+            ),
+            alignment: .center,
+            lineBreakMode: .byWordWrapping
+        )
+
+        var material = SimpleMaterial()
+        material.color = .init(tint: .black.withAlphaComponent(0.95), texture: nil)
+        material.roughness = .float(1.0)
+        material.metallic = .float(0.0)
+
+        let textEntity = ModelEntity(mesh: mesh, materials: [material])
+
+        // 메시지 텍스트 크기 조절
+        textEntity.scale = SIMD3<Float>(repeating: BubbleSizingTuning.textScale)
+
+        return textEntity
+    }
+
+    private func centerTextEntity(_ textEntity: ModelEntity) {
+        let bounds = textEntity.visualBounds(relativeTo: nil)
+        let center = bounds.center
+
+        // 텍스트 로컬 중심을 원점으로 오게 보정
+        textEntity.position = SIMD3<Float>(
+            -center.x,
+            -center.y,
+            -center.z
+        )
+    }
+
+    private func uniformMultiplierToFitText(textEntity: ModelEntity, bubbleEntity: Entity) -> Float {
+        let textBounds = textEntity.visualBounds(relativeTo: nil)
+        let text = textBounds.extents
+
+        let base = bubbleBaseSize(entity: bubbleEntity)
+        let baseWidth = max(base.x, 0.0001)
+        let baseHeight = max(base.y, 0.0001)
+
+        let neededWidth = text.x + BubbleSizingTuning.paddingX
+        let neededHeight = text.y + BubbleSizingTuning.paddingY
+
+        let widthMultiplier = neededWidth / baseWidth
+        let heightMultiplier = neededHeight / baseHeight
+
+        let raw = max(widthMultiplier, heightMultiplier)
+
+        return min(max(raw, BubbleSizingTuning.minUniform), BubbleSizingTuning.maxUniform)
+    }
+
+    private func bubbleBaseSize(entity: Entity) -> SIMD2<Float> {
+        let bubble = entity.clone(recursive: true)
+        bubble.scale = SIMD3<Float>(repeating: BubbleSizingTuning.baseBubbleScale)
+
+        let bounds = bubble.visualBounds(relativeTo: nil)
+        let extents = bounds.extents
+
+        return SIMD2<Float>(extents.x, extents.y)
+    }
+
+    private func placeTextInFrontOfBubble(_ textEntity: ModelEntity, bubbleEntity: Entity) {
+        // bubbleModel의 로컬 bounds (대부분 ModelEntity 포함한 하위 구조라 recursive bounds가 더 안전)
+        let bounds = bubbleEntity.visualBounds(relativeTo: nil)
+        let extents = bounds.extents
+
+        // 모델의 ‘두께(깊이)’ 절반 정도 + 패딩만큼 앞으로
+        let frontOffset = (extents.z * 0.5) + BubbleSizingTuning.textForwardPadding
+
+        textEntity.position += SIMD3<Float>(0, 0, frontOffset)
     }
 }
 
