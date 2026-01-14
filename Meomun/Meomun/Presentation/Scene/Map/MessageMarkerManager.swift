@@ -88,6 +88,7 @@ final class MessageMarkerManager {
         }
     }
 }
+
 // MARK: - Marker 생성
 
 extension MessageMarkerManager {
