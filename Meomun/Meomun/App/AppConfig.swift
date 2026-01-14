@@ -35,12 +35,15 @@ enum AppConfig {
         return key
     }
 
-    static var supabaseURL: String {
-        guard let url = Bundle.main.object(
-            forInfoDictionaryKey: "SUPABASE_URL"
-        ) as? String else {
-            fatalError("SUPABASE_URL not found")
+    static var supabaseURL: URL {
+        guard let key = Bundle.main.object(forInfoDictionaryKey: "SUPABASE_PROJECT_ID") as? String else {
+            fatalError("SUPABASE_PROJECT_ID not found")
         }
+
+        guard let url = URL(string: "https://\(key).supabase.co") else {
+            fatalError("SUPABASE_URL의 형식이 올바르지 않습니다: https://\(key).supabase.co")
+        }
+
         return url
     }
 

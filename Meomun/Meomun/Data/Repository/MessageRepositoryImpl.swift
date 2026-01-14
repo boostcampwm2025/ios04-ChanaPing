@@ -13,7 +13,7 @@ final class MessageRepositoryImpl: MessageRepository {
 
     init(
         supabase: SupabaseClient = SupabaseClient(
-            supabaseURL: URL(string: AppConfig.supabaseURL)!,
+            supabaseURL: AppConfig.supabaseURL,
             supabaseKey: AppConfig.supabaseKey
         )
     ) {
