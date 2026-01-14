@@ -7,7 +7,7 @@
 
 /// 동일한 좌표(Location)에 존재하는 메시지들을 관리하는 구조체
 struct SameCoordinateMessageGroup {
-    private let coordinate: Location
+    private let coordinate: Coordinate
 
     private(set) var placeMessages: [Message] = []
     private(set) var noPlaceMessages: [Message] = []
@@ -17,7 +17,7 @@ struct SameCoordinateMessageGroup {
         placeMessages.isEmpty && noPlaceMessages.isEmpty
     }
 
-    init(coordinate: Location) {
+    init(coordinate: Coordinate) {
         self.coordinate = coordinate
     }
 
@@ -51,19 +51,19 @@ struct SameCoordinateMessageGroup {
 
 extension SameCoordinateMessageGroup {
     /// Place 메시지들의 표시 좌표 (원본 좌표)
-    func getPlaceCoordinate() -> Location {
+    func getPlaceCoordinate() -> Coordinate {
         return coordinate
     }
 
     /// NoPlace 메시지들의 표시 좌표
     /// Place 메시지와 함께 표시될 경우 Offset을 적용하여 겹침을 방지합니다.
-    func getNoPlaceCoordinate() -> Location {
+    func getNoPlaceCoordinate() -> Coordinate {
         guard !placeMessages.isEmpty else { return coordinate }
 
         // 소수점 5번째 자리 변경 (약 1.1m)
         // 화면상 겹침 방지를 위해 약간의 오프셋 적용
         let offset: Double = 0.00005
-        return Location(
+        return Coordinate(
             latitude: coordinate.latitude - offset,
             longitude: coordinate.longitude + offset
         )

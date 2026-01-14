@@ -11,6 +11,17 @@ struct Coordinate: Sendable {
     let latitude: Double
     let longitude: Double
 
+    // 소수점 5자리 정밀도 (약 1.1m 오차)
+    private static let precision: Double = 100_000
+
+    private var normalizedLatitude: Int {
+        Int((latitude * Self.precision).rounded())
+    }
+
+    private var normalizedLongitude: Int {
+        Int((longitude * Self.precision).rounded())
+    }
+
     func distance(to other: Coordinate) -> Double {
         let earthRadiusMeters = 6_371_000.0
         let latitude1Radians = latitude * .pi / 180
@@ -27,5 +38,19 @@ struct Coordinate: Sendable {
         2 * atan2(sqrt(haversineValue), sqrt(1 - haversineValue))
 
         return earthRadiusMeters * centralAngle
+    }
+}
+
+extension Coordinate: Equatable {
+    static func == (lhs: Coordinate, rhs: Coordinate) -> Bool {
+        lhs.normalizedLatitude == rhs.normalizedLatitude &&
+        lhs.normalizedLongitude == rhs.normalizedLongitude
+    }
+}
+
+extension Coordinate: Hashable {
+    func hash(into hasher: inout Hasher) {
+        hasher.combine(normalizedLatitude)
+        hasher.combine(normalizedLongitude)
     }
 }

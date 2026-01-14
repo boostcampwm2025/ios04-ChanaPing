@@ -11,6 +11,7 @@ import UIKit
 import NMapsMap
 
 /// 메시지 마커의 생성 및 관리를 담당하는 클래스
+@MainActor
 final class MessageMarkerManager {
     /// 단일 버블용 마커 (Place/NoPlace 각각 저장)
     private(set) var singleMarkers: [MarkerGroupKey: NMFMarker] = [:]
@@ -94,7 +95,7 @@ final class MessageMarkerManager {
 extension MessageMarkerManager {
     private func createMarker(
         messages: [Message],
-        coordinate: Location,
+        coordinate: Coordinate,
         isPlace: Bool,
         mapView: NMFMapView,
         onTap: @escaping () -> Void

@@ -19,9 +19,3 @@ struct Place: Identifiable, Sendable, Hashable {
         hasher.combine(id)
     }
 }
-
-extension Place: Hashable {
-    func hash(into hasher: inout Hasher) {
-        hasher.combine(id)
-    }
-}

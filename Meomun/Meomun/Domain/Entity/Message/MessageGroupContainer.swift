@@ -8,17 +8,17 @@
 import Foundation
 
 struct MessageGroupContainer {
-    private(set) var groups: [Location: SameCoordinateMessageGroup]
+    private(set) var groups: [Coordinate: SameCoordinateMessageGroup]
 
-    init(groups: [Location: SameCoordinateMessageGroup]) {
+    init(groups: [Coordinate: SameCoordinateMessageGroup]) {
         self.groups = groups
     }
 
     mutating func groupAll(for messages: [Message]) {
-        var newGroups: [Location: SameCoordinateMessageGroup] = [:]
+        var newGroups: [Coordinate: SameCoordinateMessageGroup] = [:]
 
         for message in messages {
-            let coordinate = message.location
+            let coordinate = message.coordinate
             var group = newGroups[coordinate] ?? SameCoordinateMessageGroup(coordinate: coordinate)
             group.append(message)
             newGroups[coordinate] = group
@@ -39,14 +39,14 @@ struct MessageGroupContainer {
     }
 
     private mutating func append(_ message: Message) {
-        let coordinate = message.location
+        let coordinate = message.coordinate
         var group = groups[coordinate] ?? SameCoordinateMessageGroup(coordinate: coordinate)
         group.append(message)
         groups[coordinate] = group
     }
 
     private mutating func remove(_ message: Message) {
-        let coordinate = message.location
+        let coordinate = message.coordinate
         guard var group = groups[coordinate] else { return }
 
         group.remove(message)

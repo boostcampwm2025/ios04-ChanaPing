@@ -118,7 +118,7 @@ extension SpaceView {
     NavigationStack {
         SpaceView(
             domeEnvironment: .init(weather: .sunny, dayPart: .afternoon),
-            place: .init(id: .init(value: .init()), name: "광화문", location: .init(latitude: 0, longitude: 0))
+            place: .init(id: .init(value: .init()), name: "광화문", coordinate: .init(latitude: 0, longitude: 0))
         )
     }
 }
