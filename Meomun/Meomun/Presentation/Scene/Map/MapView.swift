@@ -26,6 +26,10 @@ struct MapView: View {
                         Task {
                             await store.send(intent: .tapPlaceMarker(place))
                         }
+                    },
+                    onTapNoPlace: { messages in
+                        // TODO: NoPlace 2개 이상 터치 시 UI(스택 펼치기 등) 연결 예정
+                        print("NoPlace messages tapped: \(messages.count)")
                     }
                 )
                 .ignoresSafeArea()

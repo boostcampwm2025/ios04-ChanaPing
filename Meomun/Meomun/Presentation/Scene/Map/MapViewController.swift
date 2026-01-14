@@ -336,23 +336,27 @@ extension MapViewController {
 struct MapViewWrapper: UIViewControllerRepresentable {
     private let messagesByCoordinate: MessagesByCoordinate
     private let onTapPlace: ((Place) -> Void)?
+    private let onTapNoPlace: (([Message]) -> Void)?
 
     private let messageMarkerManager: MessageMarkerManager
 
     init(
         messageMarkerManager: MessageMarkerManager,
         groupedMessages: MessagesByCoordinate,
-        onTapPlace: ((Place) -> Void)? = nil
+        onTapPlace: ((Place) -> Void)? = nil,
+        onTapNoPlace: (([Message]) -> Void)? = nil
     ) {
         self.messageMarkerManager = messageMarkerManager
         self.messagesByCoordinate = groupedMessages
         self.onTapPlace = onTapPlace
+        self.onTapNoPlace = onTapNoPlace
     }
 
     func makeUIViewController(context: Context) -> MapViewController {
         let viewController = MapViewController(
             messageMarkerManager: messageMarkerManager,
-            onTapPlace: onTapPlace
+            onTapPlace: onTapPlace,
+            onTapNoPlace: onTapNoPlace
         )
         viewController.updateGroups(messagesByCoordinate)
         return viewController
