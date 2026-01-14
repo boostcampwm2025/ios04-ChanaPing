@@ -25,7 +25,7 @@ final class SearchNearbyPlaceUseCase: SearchNearbyPlaceUseCaseProtocol {
     func execute(
         query: String,
         userLocation: Coordinate,
-        radiusMeters: Double = 60
+        radiusMeters: Double
     ) async throws -> [Place] {
 
         let candidates = try await placeRepository.searchPlace(query: query)
