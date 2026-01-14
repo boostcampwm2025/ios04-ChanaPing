@@ -20,7 +20,7 @@ struct MessagesByCoordinate {
         for message in messages {
             let coordinate = message.location
             var group = newGroups[coordinate] ?? MessageCoordinateGroup(coordinate: coordinate)
-            group.add(message)
+            group.append(message)
             newGroups[coordinate] = group
         }
 
@@ -41,7 +41,7 @@ struct MessagesByCoordinate {
     private mutating func append(_ message: Message) {
         let coordinate = message.location
         var group = messagesByCoordinate[coordinate] ?? MessageCoordinateGroup(coordinate: coordinate)
-        group.add(message)
+        group.append(message)
         messagesByCoordinate[coordinate] = group
     }
 

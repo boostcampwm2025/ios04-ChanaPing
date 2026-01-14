@@ -21,7 +21,7 @@ struct MessageCoordinateGroup {
         self.coordinate = coordinate
     }
 
-    mutating func add(_ message: Message) {
+    mutating func append(_ message: Message) {
         if let place = message.placeTag {
             placeMessages.append(message)
             // 최신순 정렬 (내림차순)
