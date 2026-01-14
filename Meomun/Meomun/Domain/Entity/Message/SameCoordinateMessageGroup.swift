@@ -1,12 +1,12 @@
 //
-//  MessageCoordinateGroup.swift
+//  SameCoordinateMessageGroup.swift
 //  Meomun
 //
 //  Created by MinwooJe on 1/14/26.
 //
 
 /// 동일한 좌표(Location)에 존재하는 메시지들을 관리하는 구조체
-struct MessageCoordinateGroup {
+struct SameCoordinateMessageGroup {
     private let coordinate: Location
 
     private(set) var placeMessages: [Message] = []
@@ -49,7 +49,7 @@ struct MessageCoordinateGroup {
 
 // MARK: - Coordinate
 
-extension MessageCoordinateGroup {
+extension SameCoordinateMessageGroup {
     /// Place 메시지들의 표시 좌표 (원본 좌표)
     func getPlaceCoordinate() -> Location {
         return coordinate

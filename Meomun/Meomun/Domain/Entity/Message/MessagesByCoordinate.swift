@@ -8,23 +8,23 @@
 import Foundation
 
 struct MessagesByCoordinate {
-    private(set) var messagesByCoordinate: [Location: MessageCoordinateGroup]
+    private(set) var groups: [Location: SameCoordinateMessageGroup]
 
-    init(groupedMessages: [Location: MessageCoordinateGroup]) {
-        self.messagesByCoordinate = groupedMessages
+    init(groups: [Location: SameCoordinateMessageGroup]) {
+        self.groups = groups
     }
 
     mutating func groupAll(for messages: [Message]) {
-        var newGroups: [Location: MessageCoordinateGroup] = [:]
+        var newGroups: [Location: SameCoordinateMessageGroup] = [:]
 
         for message in messages {
             let coordinate = message.location
-            var group = newGroups[coordinate] ?? MessageCoordinateGroup(coordinate: coordinate)
+            var group = newGroups[coordinate] ?? SameCoordinateMessageGroup(coordinate: coordinate)
             group.append(message)
             newGroups[coordinate] = group
         }
 
-        self.messagesByCoordinate = newGroups
+        self.groups = newGroups
     }
 
     mutating func update(_ messageEvent: MessageEvent) {
@@ -40,21 +40,21 @@ struct MessagesByCoordinate {
 
     private mutating func append(_ message: Message) {
         let coordinate = message.location
-        var group = messagesByCoordinate[coordinate] ?? MessageCoordinateGroup(coordinate: coordinate)
+        var group = groups[coordinate] ?? SameCoordinateMessageGroup(coordinate: coordinate)
         group.append(message)
-        messagesByCoordinate[coordinate] = group
+        groups[coordinate] = group
     }
 
     private mutating func remove(_ message: Message) {
         let coordinate = message.location
-        guard var group = messagesByCoordinate[coordinate] else { return }
+        guard var group = groups[coordinate] else { return }
 
         group.remove(message)
 
         if group.isEmpty {
-            messagesByCoordinate.removeValue(forKey: coordinate)
+            groups.removeValue(forKey: coordinate)
         } else {
-            messagesByCoordinate[coordinate] = group
+            groups[coordinate] = group
         }
     }
 }

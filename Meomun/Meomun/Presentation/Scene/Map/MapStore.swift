@@ -27,7 +27,7 @@ final class MapStore: Store {
     }
 
     struct State {
-        var messagesByCoordinate: MessagesByCoordinate = .init(groupedMessages: [:])
+        var messagesByCoordinate: MessagesByCoordinate = .init(groups: [:])
         var isShowingAddMessage: Bool = false
         var selectedPlace: Place? = nil
     }
