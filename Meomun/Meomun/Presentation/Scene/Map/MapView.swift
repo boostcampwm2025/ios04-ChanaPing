@@ -10,10 +10,17 @@ import SwiftUI
 struct MapView: View {
     @StateObject private var store = MapStore()
 
+    private let messageMarkerManager: MessageMarkerManager
+
+    init(messageMarkerManager: MessageMarkerManager) {
+        self.messageMarkerManager = messageMarkerManager
+    }
+
     var body: some View {
         NavigationStack {
             ZStack {
                 MapViewWrapper(
+                    messageMarkerManager: messageMarkerManager,
                     groupedMessages: store.state.groupedMessages,
                     onTapPlace: { place in
                         Task {
@@ -87,5 +94,6 @@ struct MapView: View {
 }
 
 #Preview {
-    MapView()
+    let messageMarkerManager = MessageMarkerManager()
+    MapView(messageMarkerManager: messageMarkerManager)
 }

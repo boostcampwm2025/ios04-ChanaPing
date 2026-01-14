@@ -35,7 +35,7 @@ struct RootView: View {
     private func contentView(for tab: MainTab) -> some View {
         switch tab {
         case .map:
-            MapView()
+            MapView(messageMarkerManager: MessageMarkerManager())
         case .record:
             EmptyView()
         case .myPage:

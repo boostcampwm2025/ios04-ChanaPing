@@ -19,28 +19,30 @@ final class MapViewController: UIViewController {
     private var locationManager = CLLocationManager()
     private var didMoveToCurrentLocation = false
 
+    private let messageMarkerManager: MessageMarkerManager
+
     // MARK: - Init
 
-    init(onTapPlace: ((Place) -> Void)? = nil) {
+    init(
+        messageMarkerManager: MessageMarkerManager,
+        onTapPlace: ((Place) -> Void)? = nil
+    ) {
+        self.messageMarkerManager = messageMarkerManager
         self.onTapPlace = onTapPlace
         super.init(nibName: nil, bundle: nil)
     }
 
     required init?(coder: NSCoder) {
         self.onTapPlace = nil
+        self.messageMarkerManager = MessageMarkerManager()
         super.init(coder: coder)
     }
 
-    // 단일 버블용 마커
-    private var singleMarkers: [BubbleGroupKey: NMFMarker] = [:]
-
     // 회전 버블용 설정들
-    private var bubbleConfigs: [BubbleGroupKey: BubbleConfiguration] = [:]
     private var bubbleRotationTimer: Timer?
     private let frameInterval: TimeInterval = 1.0 / 60.0
     private let rotationInterval: TimeInterval = 3.0
     private let animationDuration: TimeInterval = 1.0
-    private let rotatingBubbleWidth: CGFloat = 170
 
     private let naverMapView: NMFNaverMapView = {
         let naverMapView = NMFNaverMapView()
@@ -225,136 +227,11 @@ extension MapViewController: CLLocationManagerDelegate {
 extension MapViewController {
     /// 그룹화된 메시지로 마커를 업데이트합니다.
     func updateGroups(_ groups: GroupedMessage) {
-        // 1) 기존 마커 전부 제거
-        for (_, marker) in singleMarkers {
-            marker.mapView = nil
-        }
-        singleMarkers.removeAll()
-
-        for (_, config) in bubbleConfigs {
-            config.marker.mapView = nil
-        }
-        bubbleConfigs.removeAll()
-
-        // 2) 그룹별로 마커 생성
-        for (groupKey, groupMessages) in groups.messages {
-            guard let firstMessage = groupMessages.first else { continue }
-
-            let coordinate = NMGLatLng(
-                lat: firstMessage.location.latitude,
-                lng: firstMessage.location.longitude
-            )
-
-            let marker = NMFMarker(position: coordinate)
-            marker.anchor = CGPoint(x: 0.5, y: 1.0)
-            marker.zIndex = 1000
-            marker.isFlat = false
-            marker.mapView = naverMapView.mapView
-
-            // 마커 탭 핸들러 설정
-            marker.touchHandler = { [weak self] _ in
-                // 조건: .places 그룹 + 메시지 2개 이상 (회전 버블)
-                if case .places = groupKey,
-                   groupMessages.count >= 2,
-                   let place = groupMessages.first?.placeTag {
-                    self?.onTapPlace?(place)
-                }
-                return true
-            }
-
-            if groupMessages.count == 1 {
-                // 단일 메시지: 일반 버블
-                let image = renderStaticBubbleImage(for: firstMessage)
-                marker.iconImage = NMFOverlayImage(image: image)
-
-                singleMarkers[groupKey] = marker
-            } else {
-                // 여러 개: 회전 버블
-                let currentTime = Date().timeIntervalSince1970
-                let current = groupMessages[0]
-                let next = groupMessages[1 % groupMessages.count]
-
-                let image = renderStaticRotatingBubbleImage(message: current)
-                marker.iconImage = NMFOverlayImage(image: image)
-
-                let config = BubbleConfiguration(
-                    marker: marker,
-                    messages: groupMessages,
-                    currentIndex: 0,
-                    lastRotationTime: currentTime,
-                    animationStartTime: nil,
-                    animationProgress: 0,
-                    isAnimating: false,
-                    currentMessage: current,
-                    nextMessage: next
-                )
-
-                bubbleConfigs[groupKey] = config
-            }
-        }
-    }
-
-    private func renderStaticBubbleImage(
-        for message: Message,
-        showsAccentLine: Bool = true,
-        scale: CGFloat = UIScreen.main.scale
-    ) -> UIImage {
-        let bubble = MessageBubble(
-            placeName: message.placeTag?.name,
-            statusIndicator: showsAccentLine ? (message.isRecent() ? .recent : .normal) : .none,
-            layout: showsAccentLine ? .flexible : .fixedWidth(rotatingBubbleWidth)
-        ) {
-            BubbleText(text: message.content)
-        }
-
-        let renderer = ImageRenderer(content: bubble.padding(4))
-        renderer.scale = scale
-        renderer.isOpaque = false
-
-        return renderer.uiImage ?? UIImage()
-    }
-
-    private func renderRotatingBubbleImage(
-        current: Message,
-        next: Message,
-        progress: Double,
-        scale: CGFloat = UIScreen.main.scale
-    ) -> UIImage {
-        let bubble = MessageBubble(
-            placeName: current.placeTag?.name,
-            statusIndicator: .none,
-            layout: .fixedWidth(rotatingBubbleWidth)
-        ) {
-            RotatingTextStack(
-                currentText: current.content,
-                nextText: next.content,
-                progress: progress
-            )
-        }
-
-        let renderer = ImageRenderer(content: bubble.padding(4))
-        renderer.scale = scale
-        renderer.isOpaque = false
-
-        return renderer.uiImage ?? UIImage()
-    }
-
-    private func renderStaticRotatingBubbleImage(
-        message: Message,
-        scale: CGFloat = UIScreen.main.scale
-    ) -> UIImage {
-        let bubble = MessageBubble(
-            placeName: message.placeTag?.name,
-            statusIndicator: .none,
-            layout: .fixedWidth(rotatingBubbleWidth)
-        ) {
-            BubbleText(text: message.content)
-        }
-
-        let renderer = ImageRenderer(content: bubble.padding(4))
-        renderer.scale = scale
-        renderer.isOpaque = false
-        return renderer.uiImage ?? UIImage()
+        messageMarkerManager.updateGroups(
+            groups,
+            mapView: naverMapView.mapView,
+            onTapPlace: onTapPlace
+        )
     }
 }
 
@@ -384,7 +261,7 @@ extension MapViewController {
     private func updateMarkers() {
         let currentTime = Date().timeIntervalSince1970
 
-        for (_, config) in bubbleConfigs {
+        for (_, config) in messageMarkerManager.bubbleConfigs {
             guard config.messages.count > 1 else { continue }
 
             if config.isAnimating {
@@ -419,7 +296,7 @@ extension MapViewController {
         let progress = min(elapsed / animationDuration, 1.0)
         config.animationProgress = progress
 
-        let image = renderRotatingBubbleImage(
+        let image = messageMarkerManager.renderRotatingBubbleImage(
             current: config.currentMessage,
             next: config.nextMessage,
             progress: progress
@@ -434,7 +311,7 @@ extension MapViewController {
             config.animationStartTime = nil
             config.lastRotationTime = currentTime
 
-            let finalImage = renderStaticRotatingBubbleImage(message: config.nextMessage)
+            let finalImage = messageMarkerManager.renderStaticRotatingBubbleImage(message: config.nextMessage)
             config.marker.iconImage = NMFOverlayImage(image: finalImage)
 
             let nextNextIndex = (nextIndex + 1) % config.messages.count
@@ -450,16 +327,23 @@ struct MapViewWrapper: UIViewControllerRepresentable {
     private let groupedMessages: GroupedMessage
     private let onTapPlace: ((Place) -> Void)?
 
+    private let messageMarkerManager: MessageMarkerManager
+
     init(
+        messageMarkerManager: MessageMarkerManager,
         groupedMessages: GroupedMessage,
         onTapPlace: ((Place) -> Void)? = nil
     ) {
+        self.messageMarkerManager = messageMarkerManager
         self.groupedMessages = groupedMessages
         self.onTapPlace = onTapPlace
     }
 
     func makeUIViewController(context: Context) -> MapViewController {
-        let viewController = MapViewController(onTapPlace: onTapPlace)
+        let viewController = MapViewController(
+            messageMarkerManager: messageMarkerManager,
+            onTapPlace: onTapPlace
+        )
         viewController.updateGroups(groupedMessages)
         return viewController
     }
