@@ -16,4 +16,22 @@ enum AppConfig {
         }
         return key
     }
+
+    static var naverClientId: String {
+        guard let key = Bundle.main.object(
+            forInfoDictionaryKey: "NAVER_CLIENT_ID"
+        ) as? String else {
+            fatalError("NAVER_CLIENT_ID not found")
+        }
+        return key
+    }
+
+    static var naverClientSecret: String {
+        guard let key = Bundle.main.object(
+            forInfoDictionaryKey: "NAVER_CLIENT_SECRET"
+        ) as? String else {
+            fatalError("NAVER_CLIENT_SECRET not found")
+        }
+        return key
+    }
 }
