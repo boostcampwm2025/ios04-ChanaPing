@@ -10,19 +10,17 @@ import SwiftUI
 
 struct SpaceView: View {
     @EnvironmentObject private var locationProvider: LocationProvider
-    @StateObject private var store = SpaceViewStore()
+    @StateObject private var store: SpaceViewStore
     @State private var domeEnvironment: DomeEnvironment
-
-    @State private var isShowingComposer = false
-    @State private var composerLocation: Coordinate? = nil
 
     private let rotationCamera = RotationCamera(
         position: .init(x: 0, y: 0.7, z: 0),
         rotateSensitivity: 0.003
     )
 
-    init(environment: DomeEnvironment) {
+    init(environment: DomeEnvironment, store: SpaceViewStore) {
         self.domeEnvironment = environment
+        _store = StateObject(wrappedValue: store)
     }
 
     var body: some View {
@@ -54,40 +52,35 @@ struct SpaceView: View {
                         Spacer()
 
                         WriteButton {   // TODO: - 위치 조정 필요
-                            Task { await openComposerWithFreshLocation() }
+                            Task { await store.send(intent: .tapWriteButton) }
                         }
                     }
                     .padding(.trailing, 24)
                     .padding(.bottom, 96)
                 }
             }
-            .navigationDestination(isPresented: $isShowingComposer) {
-                if let coordinate = composerLocation {
+            .navigationDestination(
+                isPresented: Binding(
+                    get: { store.state.isShowingAddMessage },
+                    set: { isPresented in
+                        if !isPresented {
+                            Task { await store.send(intent: .dismissAddMessage) }
+                        }
+                    }
+                )
+            ) {
+                if let coordinate = store.state.userLocation {
                     MessageComposerView(userLocation: coordinate)
                 }
             }
         }
         .task {
-            locationProvider.requestAuthorizationIfNeeded()
             await store.send(intent: .onAppear)
         }
     }
 }
 
 extension SpaceView {
-    @MainActor
-    private func openComposerWithFreshLocation() async {
-        do {
-            // 작성 버튼 탭 시점 최신 좌표 one-shot
-            let coordinate = try await locationProvider.requestCurrentOnce()
-            AppLog.debug("Space write: got location: \(coordinate)", category: .location)
-            composerLocation = coordinate
-            isShowingComposer = true
-        } catch {
-            AppLog.error("Space write: failed to get location", category: .location, error: error)
-        }
-    }
-
     private func configureSpace(content: RealityViewCameraContent) {
         Task {
             do {
@@ -145,6 +138,12 @@ extension SpaceView {
 
 #Preview {
     NavigationStack {
-        SpaceView(environment: .init(weather: .sunny, dayPart: .afternoon))
+        // Preview용 더미 Provider 주입
+        let provider = LocationProvider()
+        SpaceView(
+            environment: .init(weather: .sunny, dayPart: .afternoon),
+            store: SpaceViewStore(locationProvider: provider)
+        )
+        .environmentObject(provider)
     }
 }

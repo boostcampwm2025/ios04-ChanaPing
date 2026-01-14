@@ -8,6 +8,8 @@
 import SwiftUI
 
 struct MainTabShellView: View {
+    @EnvironmentObject private var locationProvider: LocationProvider
+
     let userLocation: Coordinate
     @StateObject private var store = MainTabStore()
 
@@ -48,7 +50,8 @@ struct MainTabShellView: View {
                 environment: DomeEnvironment(
                     weather: .sunny,
                     dayPart: .daybreak
-                )
+                ),
+                store: SpaceViewStore(locationProvider: locationProvider)
             )
         }
     }
