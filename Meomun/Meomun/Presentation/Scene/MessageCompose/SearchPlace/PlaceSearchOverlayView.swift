@@ -101,10 +101,10 @@ extension PlaceSearchOverlayView {
                 emptyView(text: message)
                 Spacer()
 
-            case .loaded:
+            case .loaded(let results):
                 ScrollView {
                     LazyVStack(alignment: .leading, spacing: 8) {
-                        ForEach(store.state.results, id: \.self) { place in
+                        ForEach(results, id: \.self) { place in
                             Button {
                                 Task { await store.send(intent: .tapResult(place)) }
                             } label: {
