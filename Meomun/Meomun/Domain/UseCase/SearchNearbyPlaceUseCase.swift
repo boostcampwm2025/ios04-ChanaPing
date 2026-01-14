@@ -5,7 +5,7 @@
 //  Created by 지연 on 1/14/26.
 //
 
-protocol SearchNearbyPlaceUseCaseProtocol {
+protocol SearchNearbyPlaceUseCase {
     func execute(
         query: String,
         userLocation: Coordinate,
@@ -13,7 +13,7 @@ protocol SearchNearbyPlaceUseCaseProtocol {
     ) async throws -> [Place]
 }
 
-final class SearchNearbyPlaceUseCase: SearchNearbyPlaceUseCaseProtocol {
+final class SearchNearbyPlaceUseCaseImpl: SearchNearbyPlaceUseCase {
     private let placeRepository: PlaceRepository
 
     init(

@@ -30,7 +30,7 @@ struct MessageComposerView: View {
             if store.state.isPlaceSearchPresented {
                 PlaceSearchOverlayView(
                     store: PlaceSearchStore(
-                        searchPlaces: SearchNearbyPlaceUseCase(
+                        searchPlaces: SearchNearbyPlaceUseCaseImpl(
                             placeRepository: NaverPlaceSearchRepositoryImpl(
                                 network: NetworkClientImpl()
                             )

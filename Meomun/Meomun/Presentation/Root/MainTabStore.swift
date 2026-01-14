@@ -55,7 +55,7 @@ final class MainTabStore: Store {
         switch action {
         case .setSelectedTab(let tab):
             newState.selectedTab = tab
-            newState.isTabBarHidden = false
+
         case .setTabBarHidden(let isHidden):
             newState.isTabBarHidden = isHidden
         }

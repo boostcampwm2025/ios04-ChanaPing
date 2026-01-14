@@ -60,7 +60,6 @@ struct MapView: View {
             ) {
                 MessageComposerView(userLocation: store.state.userLocation)
                     .onAppear { setTabBarHidden(true) }
-                    .onDisappear { setTabBarHidden(false) }
             }
             .task {
                 locationProvider.requestAuthorizationIfNeeded()
