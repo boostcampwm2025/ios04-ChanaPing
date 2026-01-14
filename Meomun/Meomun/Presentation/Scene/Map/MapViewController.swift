@@ -11,15 +11,26 @@ import UIKit
 
 final class MapViewController: UIViewController {
 
-    // 마커 탭 콜백 (장소 태그가 있는 회전 버블 탭 시)
+    // MARK: - Properties
+
+    private var appLifecycleObservers: [NSObjectProtocol] = []
+    private var didMoveToCurrentLocation = false
+
+    // MARK: - Animation Properties
+
+    private var bubbleRotationTimer: Timer?
+    private let frameInterval: TimeInterval = 1.0 / 60.0
+    private let rotationInterval: TimeInterval = 3.0
+    private let animationDuration: TimeInterval = 1.0
+
+    // MARK: - Callback
+
     private let onTapPlace: ((Place) -> Void)?
     private let onTapNoPlace: (([Message]) -> Void)?
 
-    private var appLifecycleObservers: [NSObjectProtocol] = []
+    // MARK: - Dependencies
 
     private var locationManager = CLLocationManager()
-    private var didMoveToCurrentLocation = false
-
     private let messageMarkerManager: MessageMarkerManager
 
     // MARK: - Init
@@ -41,12 +52,6 @@ final class MapViewController: UIViewController {
         self.onTapNoPlace = nil
         super.init(coder: coder)
     }
-
-    // 회전 버블용 설정들
-    private var bubbleRotationTimer: Timer?
-    private let frameInterval: TimeInterval = 1.0 / 60.0
-    private let rotationInterval: TimeInterval = 3.0
-    private let animationDuration: TimeInterval = 1.0
 
     private let naverMapView: NMFNaverMapView = {
         let naverMapView = NMFNaverMapView()
