@@ -111,12 +111,20 @@ extension PlaceSearchOverlayView {
                                 HStack {
                                     Image(systemName: "mappin.and.ellipse")
                                         .font(.system(size: 14, weight: .semibold))
-                                    Text(place.name)
-                                        .font(.system(size: 14, weight: .medium))
+                                        .padding(.trailing, 1)
+
+                                    VStack(alignment: .leading) {
+                                        Text(place.name)
+                                            .font(.system(size: 14, weight: .medium))
+                                            .padding(.bottom, 1)
+                                        Text(place.address ?? "")
+                                            .font(.system(size: 11, weight: .thin))
+                                            .foregroundStyle(Color.gray)
+                                    }
                                     Spacer()
                                 }
                                 .foregroundStyle(Color.meomunPrimaryColor)
-                                .padding(.vertical, 10)
+                                .padding(.vertical, 5)
                                 .padding(.horizontal, 12)
                                 .background(Color.white.opacity(0.08))
                                 .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
@@ -141,11 +149,24 @@ extension PlaceSearchOverlayView {
 
 #Preview {
     NavigationStack {
-//        PlaceSearchOverlayView { selected in
-//            print(selected)
-//        } onDismiss: {
-//            print("dismiss")
-//        }
-
+        PlaceSearchOverlayView(
+            store: PlaceSearchStore(
+                searchPlaces: SearchNearbyPlaceUseCase(
+                    placeRepository: NaverPlaceSearchRepositoryImpl(
+                        network: NetworkClientImpl()
+                    )
+                ),
+                userLocation: .init(
+                    latitude: 37.5665,
+                    longitude: 126.9780
+                ),
+                onSelect: { selected in
+                    print("selected: \(selected)")
+                },
+                onDismiss: {
+                    print("tap dismiss")
+                }
+            )
+        )
     }
 }

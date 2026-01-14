@@ -40,7 +40,8 @@ struct MessageComposerView: View {
                         },
                         onDismiss: {
                             Task { await store.send(intent: .dismissPlaceSearch) }
-                        })
+                        }
+                    )
                 )
                 .transition(.opacity.combined(with: .scale(scale: 0.98)))
                 .zIndex(999)
