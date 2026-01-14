@@ -141,8 +141,8 @@ extension SpaceView {
 extension SpaceView {
     private enum BubbleSizingTuning {
         static let baseBubbleScale: Float = 0.10        // 버블 스케일 표준
-        static let textScale: Float = 0.20              // 텍스트 엔티티 스케일
-        static let paddingX: Float = 0.03               // 텍스트 좌우 여백
+        static let textScale: Float = 0.50              // 텍스트 엔티티 스케일
+        static let paddingX: Float = 0.10               // 텍스트 좌우 여백
         static let paddingY: Float = 0.02               // 텍스트 상하 여백
         static let minUniform: Float = 0.85
         static let maxUniform: Float = 2.2
