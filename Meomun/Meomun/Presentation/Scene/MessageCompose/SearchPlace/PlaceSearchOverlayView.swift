@@ -43,9 +43,7 @@ struct PlaceSearchOverlayView: View {
                 isFocused = false
             }
             .onAppear {
-                Task {
-                    isFocused = true
-                }
+                isFocused = true
             }
         }
     }
