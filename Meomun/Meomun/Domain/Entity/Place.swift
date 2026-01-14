@@ -10,3 +10,9 @@ struct Place: Identifiable, Sendable {
     let name: String
     let location: Location
 }
+
+extension Place: Hashable {
+    func hash(into hasher: inout Hasher) {
+        hasher.combine(id)
+    }
+}
