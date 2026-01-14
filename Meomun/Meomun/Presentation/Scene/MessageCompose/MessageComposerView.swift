@@ -26,10 +26,14 @@ struct MessageComposerView: View {
             if store.state.isPlaceSearchPresented {
                 PlaceSearchOverlayView(
                     store: PlaceSearchStore(
-                        searchPlaces: SearchPlaceUseCase(
-                            repository: NaverPlaceSearchRepositoryImpl(
+                        searchPlaces: SearchNearbyPlaceUseCase(
+                            placeRepository: NaverPlaceSearchRepositoryImpl(
                                 network: NetworkClientImpl()
                             )
+                        ),
+                        userLocation: .init(
+                            latitude: 37.5665,
+                            longitude: 126.9780
                         ),
                         onSelect: { selected in
                             Task { await store.send(intent: .selectPlace(selected.name)) }

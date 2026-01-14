@@ -47,6 +47,8 @@ final class NetworkClientImpl: NetworkClient {
                 throw NetworkError.decodingError(error)
             }
 
+        } catch let networkError as NetworkError {
+            throw networkError
         } catch {
             throw NetworkError.transportError(error)
         }

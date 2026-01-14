@@ -6,6 +6,7 @@
 //
 
 import Foundation
+
 final class NaverPlaceSearchRepositoryImpl: PlaceRepository {
     private let network: NetworkClient
     private let clientId: String
@@ -21,7 +22,7 @@ final class NaverPlaceSearchRepositoryImpl: PlaceRepository {
         self.clientSecret = clientSecret
     }
 
-    func searchPlace(query: String, near: Coordinate) async throws -> [Place] {
+    func searchPlace(query: String) async throws -> [NaverLocalItemDTO] {
         let endpoint = NaverLocalSearchEndpoint(
             query: query,
             clientId: clientId,
@@ -33,6 +34,6 @@ final class NaverPlaceSearchRepositoryImpl: PlaceRepository {
             responseType: NaverLocalSearchResponseDTO.self
         )
 
-        return dto.items.map { $0.toPlace() }
+        return dto.items
     }
 }

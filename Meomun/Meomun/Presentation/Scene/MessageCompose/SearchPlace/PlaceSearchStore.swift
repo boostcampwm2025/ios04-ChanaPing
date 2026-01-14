@@ -41,16 +41,20 @@ final class PlaceSearchStore: Store {
 
     private var searchTask: Task<Void, Never>?
 
-    private let searchPlaces: SearchPlaceUseCaseProtocol
+    private let searchNearbyPlaces: SearchNearbyPlaceUseCaseProtocol
+    private let userLocation: Coordinate
+
     private let onSelect: (Place) -> Void
     private let onDismiss: () -> Void
 
     init(
-        searchPlaces: SearchPlaceUseCaseProtocol,
+        searchPlaces: SearchNearbyPlaceUseCaseProtocol,
+        userLocation: Coordinate,
         onSelect: @escaping (Place) -> Void,
         onDismiss: @escaping () -> Void
     ) {
-        self.searchPlaces = searchPlaces
+        self.searchNearbyPlaces = searchPlaces
+        self.userLocation = userLocation
         self.onSelect = onSelect
         self.onDismiss = onDismiss
     }
@@ -101,10 +105,11 @@ final class PlaceSearchStore: Store {
         }
 
         do {
-            // TODO: near 현재 위치로 교체
-            let results = try await searchPlaces.execute(
+            // TODO: 사용자 위치 기준 반경 60m 이내 검색 결과만 표시하도록 필터링 로직 추가
+            let results = try await searchNearbyPlaces.execute(
                 query: query,
-                near: Coordinate(latitude: 0.0, longitude: 0.0)
+                userLocation: userLocation,
+                radiusMeters: 60
             )
 
             if Task.isCancelled { return }
@@ -132,10 +137,8 @@ final class PlaceSearchStore: Store {
     private func scheduleSearch(for rawQuery: String, immediate: Bool = false) {
         let query = rawQuery.trimmingCharacters(in: .whitespacesAndNewlines)
 
-        // 이전 검색 취소
         searchTask?.cancel()
 
-        // 빈 값이면 초기화
         guard !query.isEmpty else {
             Task { @MainActor in
                 self.state.phase = .idle
