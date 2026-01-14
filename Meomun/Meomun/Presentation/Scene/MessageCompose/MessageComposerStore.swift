@@ -16,6 +16,12 @@ final class MessageComposerStore: Store {
         var suggestPlaces: [String] = [
             "스타벅스 파주가람점", "ONUTE", "콰이어트라이트", "메가MGC커피 파주별하람마을점"
         ]
+
+        var isConfirmEnabled: Bool {
+            message
+                .trimmingCharacters(in: .whitespacesAndNewlines)
+                .isEmpty == false
+        }
     }
 
     enum Intent {

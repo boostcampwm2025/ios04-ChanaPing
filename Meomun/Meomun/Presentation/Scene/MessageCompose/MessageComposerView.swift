@@ -100,6 +100,8 @@ extension MessageComposerView {
             ConfirmButton(action: {
                 Task { await store.send(intent: .tapConfirm)}
             })
+            .disabled(!store.state.isConfirmEnabled)
+            .opacity(store.state.isConfirmEnabled ? 1.0 : 0.4)
 
             Spacer(minLength: 0)
         }
