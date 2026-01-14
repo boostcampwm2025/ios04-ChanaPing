@@ -13,6 +13,7 @@ final class MapViewController: UIViewController {
 
     // 마커 탭 콜백 (장소 태그가 있는 회전 버블 탭 시)
     private let onTapPlace: ((Place) -> Void)?
+    private let onTapNoPlace: (([Message]) -> Void)?
 
     private var appLifecycleObservers: [NSObjectProtocol] = []
 
@@ -25,16 +26,19 @@ final class MapViewController: UIViewController {
 
     init(
         messageMarkerManager: MessageMarkerManager,
-        onTapPlace: ((Place) -> Void)? = nil
+        onTapPlace: ((Place) -> Void)? = nil,
+        onTapNoPlace: (([Message]) -> Void)? = nil
     ) {
         self.messageMarkerManager = messageMarkerManager
         self.onTapPlace = onTapPlace
+        self.onTapNoPlace = onTapNoPlace
         super.init(nibName: nil, bundle: nil)
     }
 
     required init?(coder: NSCoder) {
-        self.onTapPlace = nil
         self.messageMarkerManager = MessageMarkerManager()
+        self.onTapPlace = nil
+        self.onTapNoPlace = nil
         super.init(coder: coder)
     }
 
@@ -226,11 +230,12 @@ extension MapViewController: CLLocationManagerDelegate {
 
 extension MapViewController {
     /// 그룹화된 메시지로 마커를 업데이트합니다.
-    func updateGroups(_ groups: GroupedMessage) {
-        messageMarkerManager.updateGroups(
-            groups,
+    func updateGroups(_ groups: MessagesByCoordinate) {
+        messageMarkerManager.updateMarkers(
+            groups: groups,
             mapView: naverMapView.mapView,
-            onTapPlace: onTapPlace
+            onTapPlace: onTapPlace,
+            onTapNoPlace: onTapNoPlace
         )
     }
 }
@@ -324,18 +329,18 @@ extension MapViewController {
 // MARK: - MapViewWrapper
 
 struct MapViewWrapper: UIViewControllerRepresentable {
-    private let groupedMessages: GroupedMessage
+    private let messagesByCoordinate: MessagesByCoordinate
     private let onTapPlace: ((Place) -> Void)?
 
     private let messageMarkerManager: MessageMarkerManager
 
     init(
         messageMarkerManager: MessageMarkerManager,
-        groupedMessages: GroupedMessage,
+        groupedMessages: MessagesByCoordinate,
         onTapPlace: ((Place) -> Void)? = nil
     ) {
         self.messageMarkerManager = messageMarkerManager
-        self.groupedMessages = groupedMessages
+        self.messagesByCoordinate = groupedMessages
         self.onTapPlace = onTapPlace
     }
 
@@ -344,11 +349,11 @@ struct MapViewWrapper: UIViewControllerRepresentable {
             messageMarkerManager: messageMarkerManager,
             onTapPlace: onTapPlace
         )
-        viewController.updateGroups(groupedMessages)
+        viewController.updateGroups(messagesByCoordinate)
         return viewController
     }
 
     func updateUIViewController(_ uiViewController: MapViewController, context: Context) {
-        uiViewController.updateGroups(groupedMessages)
+        uiViewController.updateGroups(messagesByCoordinate)
     }
 }

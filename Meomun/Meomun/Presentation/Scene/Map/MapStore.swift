@@ -27,7 +27,7 @@ final class MapStore: Store {
     }
 
     struct State {
-        var groupedMessages: GroupedMessage = .init(messages: [:])
+        var messagesByCoordinate: MessagesByCoordinate = .init(groupedMessages: [:])
         var isShowingAddMessage: Bool = false
         var selectedPlace: Place? = nil
     }
@@ -80,13 +80,13 @@ final class MapStore: Store {
 
         switch action {
         case .groupMessages(let messages):
-            newState.groupedMessages = newState.groupedMessages.groupAll(for: messages)
+            newState.messagesByCoordinate.groupAll(for: messages)
 
         case .setShowAddMessage(let isShown):
             newState.isShowingAddMessage = isShown
 
-        case .updateMessage(event: let event):
-            newState.groupedMessages = newState.groupedMessages.update(messageEvent: event)
+        case .updateMessage(let event):
+            newState.messagesByCoordinate.update(event)
 
         case .setSelectedPlace(let place):
             newState.selectedPlace = place
