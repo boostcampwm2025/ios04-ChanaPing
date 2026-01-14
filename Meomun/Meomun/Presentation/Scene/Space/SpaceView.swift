@@ -49,7 +49,7 @@ struct SpaceView: View {
         .ignoresSafeArea()
         .overlay(alignment: .bottomTrailing) {
             NavigationLink {
-                MessageComposeView()
+                MessageComposerView()
             } label: {
                 WriteButton { }
                     .disabled(true)
@@ -70,14 +70,21 @@ extension SpaceView {
                 // 2. 카메라 추가
                 rotationCamera.addToScene(content)
             } catch {
-                print("돔 로드 실패: \(error)")
+                AppLog.error(
+                    "Failed to load dome entity",
+                    category: .space,
+                    error: error
+                )
             }
         }
     }
 
     private func configureDomeSurface(domeEntity: Entity) {
         guard let surfaceEntity = domeEntity.findEntity(named: "Dome_01") else {
-            print("Dome_01을 찾을 수 없음")
+            AppLog.warn(
+                "Dome surface entity 'Dome_01' not found",
+                category: .resource
+            )
             return
         }
 
@@ -97,7 +104,11 @@ extension SpaceView {
 
                 surfaceEntity.components[ModelComponent.self]?.materials = [material]
             } catch {
-                print("material을 찾을 수 없음: \(error)")
+                AppLog.error(
+                    "Failed to configure dome material",
+                    category: .resource,
+                    error: error
+                )
             }
         }
     }

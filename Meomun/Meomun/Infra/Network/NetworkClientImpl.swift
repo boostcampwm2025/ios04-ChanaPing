@@ -7,7 +7,7 @@
 
 import Foundation
 
-final class NetworkClientImpl: NetworkClient {
+final class NetworkClientImpl: NetworkClient, @unchecked Sendable {
 
     private let session: URLSession
     private let decoder: JSONDecoder
@@ -34,6 +34,8 @@ final class NetworkClientImpl: NetworkClient {
                 throw NetworkError.unknown
             }
 
+            AppLog.debug("Request: \(request.url?.absoluteString ?? "")", category: .network)
+
             guard (200..<300).contains(httpResponse.statusCode) else {
                 throw NetworkError.serverError(
                     statusCode: httpResponse.statusCode,
@@ -42,11 +44,14 @@ final class NetworkClientImpl: NetworkClient {
             }
 
             do {
-                return try decoder.decode(T.self, from: data)
+                let decoded = try decoder.decode(T.self, from: data)
+                return decoded
             } catch {
                 throw NetworkError.decodingError(error)
             }
 
+        } catch let networkError as NetworkError {
+            throw networkError
         } catch {
             throw NetworkError.transportError(error)
         }

@@ -5,14 +5,14 @@
 //  Created by Hayeon Park on 1/8/26.
 //
 
-protocol NetworkClient {
+protocol NetworkClient: Sendable {
     func request<T: Sendable & Decodable>(
         endpoint: Endpoint,
         responseType: T.Type
     ) async throws -> T
 }
 
-final class MockNetworkClient: NetworkClient {
+final class MockNetworkClient: NetworkClient, @unchecked Sendable {
 
     var result: Any?
 
