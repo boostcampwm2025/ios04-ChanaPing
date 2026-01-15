@@ -13,6 +13,9 @@ struct RootView: View {
 
     var body: some View {
         Group {
+            #if DEBUG
+            MainTabShellView(userLocation: .init(latitude: 37.5665, longitude: 126.9780))
+            #endif
             if let userLocation {
                 MainTabShellView(userLocation: userLocation)
             } else {
