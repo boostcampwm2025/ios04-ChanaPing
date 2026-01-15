@@ -14,14 +14,12 @@ struct PlaceDTO: Decodable, Sendable {
     let name: String
     let latitude: Double
     let longitude: Double
-    let createdAt: Date
 
     enum CodingKeys: String, CodingKey {
         case placeID = "place_id"
         case name
         case latitude
         case longitude
-        case createdAt = "created_at"
     }
 }
 
@@ -36,7 +34,6 @@ struct PlaceMessageResponseDTO: Decodable, Sendable {
     let longitude: Double
     let expiresAt: Date
     let deletedAt: Date?
-    let placeID: String?
     let place: PlaceDTO?
 
     enum CodingKeys: String, CodingKey {
@@ -48,7 +45,6 @@ struct PlaceMessageResponseDTO: Decodable, Sendable {
         case longitude
         case expiresAt = "expires_at"
         case deletedAt = "deleted_at"
-        case placeID = "place_id"
         case place
     }
 }
