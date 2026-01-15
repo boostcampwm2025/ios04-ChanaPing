@@ -181,7 +181,10 @@ extension MessageComposerView {
                 ),
                 createMessage: CreateMessageUseCaseImpl(
                     messageRepository: MessageRepositoryImpl()
-                )
+                ),
+                onClose: {
+                    print("close")
+                }
             )
         )
     }

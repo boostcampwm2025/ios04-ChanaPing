@@ -66,13 +66,16 @@ final class MessageComposerStore: Store {
     @Published var state: State
 
     private let createMessage: CreateMessageUseCase
+    private let onClose: () -> Void
 
     init(
         userLocation: Coordinate,
         createMessage: CreateMessageUseCase
+        onClose: @escaping () -> Void
     ) {
         self.state = State(userLocation: userLocation)
         self.createMessage = createMessage
+        self.onClose = onClose
         AppLog.debug("userLocation: \(userLocation)", category: .location)
     }
 
@@ -187,7 +190,7 @@ final class MessageComposerStore: Store {
             newState.toastMessage = message
 
         case .close:
-            break
+            onClose()
         }
         return newState
     }

@@ -86,7 +86,10 @@ struct SpaceView: View {
                             userLocation: coordinate,
                             createMessage: CreateMessageUseCaseImpl(
                                 messageRepository: MessageRepositoryImpl()
-                            )
+                            ),
+                            onClose: {
+                                Task { await store.send(intent: .dismissAddMessage) }
+                            }
                         )
                     )
                 }
@@ -97,7 +100,6 @@ struct SpaceView: View {
         }
         .onChange(of: store.state.messages.map(\.id)) {
             let snapshot = store.state.messages
-            print("onchange")
             syncIfPossible(messages: snapshot)
         }
     }
