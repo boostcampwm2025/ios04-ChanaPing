@@ -9,20 +9,29 @@ import SwiftUI
 
 struct RootView: View {
     @StateObject private var locationProvider = LocationProvider()
-    @State private var userLocation: Coordinate? = nil
+    @State private var userLocation: Coordinate?
 
     var body: some View {
         Group {
             #if DEBUG
             MainTabShellView(userLocation: .init(latitude: 37.5665, longitude: 126.9780))
-            #endif
+                .task {
+                    await SupabaseAuthBootstrapper.signInAnonymouslyIfNeeded()
+                    await SupabaseAuthBootstrapper.logCurrentAccessToken()
+                }
+            #else
             if let userLocation {
                 MainTabShellView(userLocation: userLocation)
+                    .task {
+                        await SupabaseAuthBootstrapper.signInAnonymouslyIfNeeded()
+                        await SupabaseAuthBootstrapper.logCurrentAccessToken()
+                    }
             } else {
                 LocationGateView { coordinate in
                     self.userLocation = coordinate
                 }
             }
+            #endif
         }
         .environmentObject(locationProvider)
         .ignoresSafeArea(.keyboard)
