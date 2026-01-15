@@ -14,6 +14,7 @@
 		16EFC1F02F1553880010465C /* PostgREST in Frameworks */ = {isa = PBXBuildFile; productRef = 16EFC1EF2F1553880010465C /* PostgREST */; };
 		16EFC1F22F1553880010465C /* Realtime in Frameworks */ = {isa = PBXBuildFile; productRef = 16EFC1F12F1553880010465C /* Realtime */; };
 		16EFC1F42F1553880010465C /* Storage in Frameworks */ = {isa = PBXBuildFile; productRef = 16EFC1F32F1553880010465C /* Storage */; };
+		16EFC2B02F18378F0010465C /* Supabase in Frameworks */ = {isa = PBXBuildFile; productRef = 16EFC2AF2F18378F0010465C /* Supabase */; };
 		531A22FE2EF9367C0014BE96 /* Secrets.example.xcconfig in Resources */ = {isa = PBXBuildFile; fileRef = 531A22FD2EF9367C0014BE96 /* Secrets.example.xcconfig */; };
 		531A23002EF936BA0014BE96 /* Config.xcconfig in Resources */ = {isa = PBXBuildFile; fileRef = 531A22FF2EF936BA0014BE96 /* Config.xcconfig */; };
 		7866C0112F0EDCCC00C69ADE /* SeoulCityHall.gpx in Resources */ = {isa = PBXBuildFile; fileRef = 7866C0102F0EDCCC00C69ADE /* SeoulCityHall.gpx */; };
@@ -55,6 +56,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				16EFC2B02F18378F0010465C /* Supabase in Frameworks */,
 				16EFC1F42F1553880010465C /* Storage in Frameworks */,
 				16EFC1F02F1553880010465C /* PostgREST in Frameworks */,
 				16EFC1EE2F1553880010465C /* Functions in Frameworks */,
@@ -77,6 +79,7 @@
 				1628F46C2EF53602005E6C42 /* Meomun */,
 				1628F46B2EF53602005E6C42 /* Products */,
 				16EFC15C2F1093210010465C /* meomun.icon */,
+				16EFC2AE2F18378F0010465C /* Frameworks */,
 			);
 			sourceTree = "<group>";
 		};
@@ -86,6 +89,13 @@
 				1628F46A2EF53602005E6C42 /* Meomun.app */,
 			);
 			name = Products;
+			sourceTree = "<group>";
+		};
+		16EFC2AE2F18378F0010465C /* Frameworks */ = {
+			isa = PBXGroup;
+			children = (
+			);
+			name = Frameworks;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -115,6 +125,7 @@
 				16EFC1EF2F1553880010465C /* PostgREST */,
 				16EFC1F12F1553880010465C /* Realtime */,
 				16EFC1F32F1553880010465C /* Storage */,
+				16EFC2AF2F18378F0010465C /* Supabase */,
 			);
 			productName = Meomun;
 			productReference = 1628F46A2EF53602005E6C42 /* Meomun.app */;
@@ -495,6 +506,11 @@
 			isa = XCSwiftPackageProductDependency;
 			package = 16EFC1EA2F1553880010465C /* XCRemoteSwiftPackageReference "supabase-swift" */;
 			productName = Storage;
+		};
+		16EFC2AF2F18378F0010465C /* Supabase */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 16EFC1EA2F1553880010465C /* XCRemoteSwiftPackageReference "supabase-swift" */;
+			productName = Supabase;
 		};
 /* End XCSwiftPackageProductDependency section */
 	};

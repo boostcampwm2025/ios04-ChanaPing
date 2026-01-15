@@ -5,9 +5,17 @@
 //  Created by 지연 on 1/12/26.
 //
 
+import Foundation
 import Combine
+import Supabase
 
 final class MessageComposerStore: Store {
+    struct AlertState: Identifiable, Equatable {
+        let id: UUID = UUID()
+        let title: String
+        let message: String
+    }
+
     struct State: Equatable {
         var userLocation: Coordinate
         var message: String = ""
@@ -17,6 +25,15 @@ final class MessageComposerStore: Store {
         var suggestPlaces: [String] = [
             "스타벅스 파주가람점", "ONUTE", "콰이어트라이트", "메가MGC커피 파주별하람마을점"
         ]
+        var isConfirmLoading: Bool = false
+        var alert: AlertState?
+
+        var isConfirmEnabled: Bool {
+            message
+                .trimmingCharacters(in: .whitespacesAndNewlines)
+                .isEmpty == false
+            && isConfirmLoading == false
+        }
     }
 
     enum Intent {
@@ -30,6 +47,7 @@ final class MessageComposerStore: Store {
         case selectSuggestedPlace(String)
 
         case tapConfirm
+        case dismissAlert
     }
 
     enum Action {
@@ -39,13 +57,22 @@ final class MessageComposerStore: Store {
         case updatePlace(String)
         case clearPlace
 
+        case setConfirmLoading(Bool)
+        case presentAlert(AlertState?)
+
         case close
     }
 
     @Published var state: State
 
-    init(userLocation: Coordinate) {
+    private let createMessage: CreateMessageUseCase
+
+    init(
+        userLocation: Coordinate,
+        createMessage: CreateMessageUseCase
+    ) {
         self.state = State(userLocation: userLocation)
+        self.createMessage = createMessage
         AppLog.debug("userLocation: \(userLocation)", category: .location)
     }
 
@@ -71,11 +98,63 @@ final class MessageComposerStore: Store {
             case .selectSuggestedPlace(let place):
                 continuation.yield(.updatePlace(place))
 
-            case .tapConfirm:
-                // TODO: 메시지 생성 API 호출
-                continuation.yield(.close)
-            }
+            case .dismissAlert:
+                continuation.yield(.presentAlert(nil))
 
+            case .tapConfirm:
+                if state.placeText != "" {
+                    // TODO: 1차 검증) 장소 태그 존재 시, 현재 위치 기준으로 거리 검증
+                }
+
+                // 메시지 작성 API  호출
+                Task {
+                    continuation.yield(.setConfirmLoading(true))
+                    defer {
+                        continuation.yield(.setConfirmLoading(false))
+                        continuation.finish()
+                    }
+
+                    do {
+                        _ = try await createMessage.execute(
+                            CreateMessageRequestDTO(
+                                content: state.message,
+                                latitude: state.userLocation.latitude,
+                                longitude: state.userLocation.longitude,
+                                place: nil
+                            )
+                        )
+                    } catch let error as CreateMessageError {
+                        switch error {
+                        case .unauthorized:
+                            continuation.yield(.presentAlert(.init(
+                                title: "인증이 필요해요.",
+                                message: "익명 로그인(세션)이 없어서 메시지를 보낼 수 없어요."
+                            )))
+                        case .blocked:
+                            continuation.yield(.presentAlert(.init(
+                                title: "메시지를 등록할 수 없어요.",
+                                message: "내용이 정책에 의해 거부되었어요."
+                            )))
+                        case .unknown:
+                            continuation.yield(.presentAlert(.init(
+                                title: "메시지를 등록할 수 없어요.",
+                                message: "정책 판단을 확정할 수 없어 등록할 수 없어요."
+                            )))
+                        case .http(let code, let rawBody):
+                            continuation.yield(.presentAlert(.init(
+                                title: "요청 실패 (\(code))",
+                                message: rawBody.isEmpty ? "잠시 후 다시 시도해 주세요." : rawBody
+                            )))
+                        }
+                    } catch {
+                        continuation.yield(.presentAlert(.init(
+                            title: "네트워크에 연결할 수 없어요.",
+                            message: "네트워크 상태를 확인하고 다시 시도해 주세요."
+                        )))
+                    }
+                }
+                return
+            }
             continuation.finish()
         }
     }
@@ -94,6 +173,12 @@ final class MessageComposerStore: Store {
 
         case .clearPlace:
             newState.placeText = ""
+
+        case .setConfirmLoading(let isLoading):
+            newState.isConfirmLoading = isLoading
+
+        case .presentAlert(let alertState):
+            newState.alert = alertState
 
         case .close:
             break

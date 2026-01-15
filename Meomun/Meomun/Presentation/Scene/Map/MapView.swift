@@ -74,8 +74,15 @@ struct MapView: View {
                     }
                 )
             ) {
-                MessageComposerView(userLocation: store.state.userLocation)
-                    .onAppear { setTabBarHidden(true) }
+                MessageComposerView(
+                    store: MessageComposerStore(
+                        userLocation: store.state.userLocation,
+                        createMessage: CreateMessageUseCaseImpl(
+                            messageRepository: MessageRepositoryImpl()
+                        )
+                    )
+                )
+                .onAppear { setTabBarHidden(true) }
             }
             .navigationDestination(
                 isPresented: Binding(

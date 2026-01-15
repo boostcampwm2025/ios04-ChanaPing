@@ -79,7 +79,14 @@ struct SpaceView: View {
                 )
             ) {
                 if let coordinate = store.state.userLocation {
-                    MessageComposerView(userLocation: coordinate)
+                    MessageComposerView(
+                        store: MessageComposerStore(
+                            userLocation: coordinate,
+                            createMessage: CreateMessageUseCaseImpl(
+                                messageRepository: MessageRepositoryImpl()
+                            )
+                        )
+                    )
                 }
             }
         }
