@@ -147,12 +147,10 @@ extension SpaceView {
         static let maxUniform: Float = 2.2                          // 버블 최대 크기 제한
         static let textContainerWidth: Float = 0.55                 // 텍스트 최대 넓이
         static let textContainerHeight: Float = 0.18                // 텍스트 최대 높이
-        static let textForwardPadding: Float = 0.01                 // 텍스트를 버블 표면보다 앞(z+)으로 띄우는 패딩
-        static let statusLineHeight: Float = 0.006                  // 상태 라인 두께(y)
-        static let statusLineDepth: Float = 0.0015                  // 상태 라인 두께(z)
-        static let statusLineTopPadding: Float = 0.03               // 텍스트 상단과 라인 사이 여백
-        static let statusLineForwardPadding: Float = 0.002          // 텍스트보다 약간 앞(z+)으로
-        static let statusLineWidthMultiplier: Float = 0.90          // 텍스트 폭 대비 라인 폭
+        static let statusLineHeight: Float = 0.006                  // 상태 라인 두께
+        static let statusLineWidthRatioToBubble: Float = 0.20       // 버블 폭 대비 라인 폭 비율
+        static let statusLineTopInsetRatioToBubble: Float = 0.20    // 버블 상단에서 아래로 내릴 비율
+        static let entityForwardPadding: Float = 0.01               // 텍스트보다 약간 앞(z+)으로
         static let recentThresholdSeconds: TimeInterval = 20 * 60
     }
 
@@ -242,9 +240,9 @@ extension SpaceView {
         // 텍스트를 버블 앞쪽으로 배치
         placeTextInFrontOfBubble(textEntity, bubbleEntity: bubbleBubbleEntity)
 
-        // 최근/일반 메시지 상태 라인 추가 (버블 내부 + 텍스트 위)
+        // 최근/일반 메시지 상태 라인 추가 (버블 내부)
         let isRecent = isRecentMessage(message)
-        attachStatusLine(to: bubbleRootEntity, textEntity: textEntity, isRecent: isRecent)
+        attachStatusLine(to: bubbleRootEntity, bubbleEntity: bubbleBubbleEntity, isRecent: isRecent)
 
         // 씬에 추가
         root.addChild(bubbleRootEntity)
@@ -352,12 +350,11 @@ extension SpaceView {
     }
 
     private func placeTextInFrontOfBubble(_ textEntity: ModelEntity, bubbleEntity: Entity) {
-        // bubbleModel의 로컬 bounds (대부분 ModelEntity 포함한 하위 구조라 recursive bounds가 더 안전)
         let bounds = bubbleEntity.visualBounds(relativeTo: nil)
         let extents = bounds.extents
 
         // 모델의 ‘두께(깊이)’ 절반 정도 + 패딩만큼 앞으로
-        let frontOffset = (extents.z * 0.5) + BubbleSizingTuning.textForwardPadding
+        let frontOffset = (extents.z * 0.5) + BubbleSizingTuning.entityForwardPadding
 
         textEntity.position += SIMD3<Float>(0, 0, frontOffset)
     }
@@ -368,7 +365,7 @@ extension SpaceView {
 
     private func attachStatusLine(
         to bubbleRootEntity: Entity,
-        textEntity: ModelEntity,
+        bubbleEntity: Entity,
         isRecent: Bool
     ) {
         // 최근/일반 전환 대응
@@ -376,27 +373,25 @@ extension SpaceView {
             child.removeFromParent()
         }
 
-        // 텍스트 bounds를 기준으로 라인 폭/위치 계산
-        let textBounds = textEntity.visualBounds(relativeTo: nil)
-        let textExtents = textBounds.extents
+        // 버블 bounds를 기준으로 라인 폭/위치 계산
+        let bubbleBounds = bubbleEntity.visualBounds(relativeTo: nil)
+        let bubbleExtents = bubbleBounds.extents
 
-        let lineWidth = textExtents.x * BubbleSizingTuning.statusLineWidthMultiplier
+        let lineWidth = bubbleExtents.x * BubbleSizingTuning.statusLineWidthRatioToBubble
         let lineEntity = makeStatusLineEntity(isRecent: isRecent, width: lineWidth)
 
-        let lineY = (textExtents.y * 0.5) + BubbleSizingTuning.statusLineTopPadding
-        let lineZ = textEntity.position.z + BubbleSizingTuning.statusLineForwardPadding
+        let lineY = (bubbleExtents.y * 0.5) - (bubbleExtents.y * BubbleSizingTuning.statusLineTopInsetRatioToBubble)
+        let lineZ = (bubbleExtents.z * 0.5) + BubbleSizingTuning.entityForwardPadding
 
         lineEntity.position = SIMD3<Float>(0, lineY, lineZ)
         bubbleRootEntity.addChild(lineEntity)
     }
 
     private func makeStatusLineEntity(isRecent: Bool, width: Float) -> ModelEntity {
-        let mesh = MeshResource.generateBox(
-            size: [
-                max(width, 0.001),
-                BubbleSizingTuning.statusLineHeight,
-                BubbleSizingTuning.statusLineDepth
-            ]
+        let mesh = MeshResource.generatePlane(
+            width: max(width, 0.001),
+            height: BubbleSizingTuning.statusLineHeight,
+            cornerRadius: BubbleSizingTuning.statusLineHeight * 0.5
         )
 
         let tint: UIColor = isRecent ? .orange : .blue
