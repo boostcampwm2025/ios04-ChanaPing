@@ -41,8 +41,10 @@ struct RootView: View {
         switch tab {
         case .map:
             MapView(
-                messageMarkerManager: MessageMarkerManager(imageRenderer: .init()),
-                rotationAnimator: MessageRotationAnimator()
+                messageMarkerManager: .init(
+                    rotationAnimator: .init(),
+                    bubbleImageRenderer: .init()
+                )
             )
         case .record:
             EmptyView()

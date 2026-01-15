@@ -12,14 +12,11 @@ struct MapView: View {
     @StateObject private var store = MapStore()
 
     private let messageMarkerManager: MessageMarkerManager
-    private let rotationAnimator: MessageRotationAnimator
 
     init(
-        messageMarkerManager: MessageMarkerManager,
-        rotationAnimator: MessageRotationAnimator
+        messageMarkerManager: MessageMarkerManager
     ) {
         self.messageMarkerManager = messageMarkerManager
-        self.rotationAnimator = rotationAnimator
     }
 
     var body: some View {
@@ -27,7 +24,6 @@ struct MapView: View {
             ZStack {
                 MapViewWrapper(
                     markerManager: messageMarkerManager,
-                    rotationAnimator: rotationAnimator,
                     messageContainer: store.state.messageGroupContainer,
                     onTapPlace: { place in
                         Task {
@@ -107,8 +103,12 @@ struct MapView: View {
 }
 
 #Preview {
-    let bubbleImageRenderer = BubbleImageRenderer()
-    let messageMarkerManager = MessageMarkerManager(imageRenderer: bubbleImageRenderer)
     let rotationAnimator = MessageRotationAnimator()
-    MapView(messageMarkerManager: messageMarkerManager, rotationAnimator: rotationAnimator)
+    let bubbleImageRenderer = BubbleImageRenderer()
+    let messageMarkerManager = MessageMarkerManager(
+        rotationAnimator: rotationAnimator,
+        bubbleImageRenderer: bubbleImageRenderer
+    )
+
+    MapView(messageMarkerManager: messageMarkerManager)
 }

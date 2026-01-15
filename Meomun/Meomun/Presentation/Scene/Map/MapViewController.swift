@@ -32,26 +32,22 @@ final class MapViewController: UIViewController {
 
     private var locationManager = CLLocationManager()
     private let messageMarkerManager: MessageMarkerManager
-    private let rotationAnimator: MessageRotationAnimator
 
     // MARK: - Init
 
     init(
         messageMarkerManager: MessageMarkerManager,
-        rotationAnimator: MessageRotationAnimator,
         onTapPlace: ((Place) -> Void)? = nil,
         onTapNoPlace: (([Message]) -> Void)? = nil
     ) {
         self.messageMarkerManager = messageMarkerManager
-        self.rotationAnimator = rotationAnimator
         self.onTapPlace = onTapPlace
         self.onTapNoPlace = onTapNoPlace
         super.init(nibName: nil, bundle: nil)
     }
 
     required init?(coder: NSCoder) {
-        self.messageMarkerManager = MessageMarkerManager(imageRenderer: .init())
-        self.rotationAnimator = MessageRotationAnimator()
+        self.messageMarkerManager = .init(rotationAnimator: .init(), bubbleImageRenderer: .init())
         self.onTapPlace = nil
         self.onTapNoPlace = nil
         super.init(coder: coder)
@@ -253,7 +249,7 @@ extension MapViewController {
     }
 }
 
-// MARK: - Animation
+// MARK: - Animation Timer
 
 extension MapViewController {
     private func startBubbleRotationTimer() {
@@ -263,7 +259,8 @@ extension MapViewController {
             withTimeInterval: frameInterval,
             repeats: true
         ) { [weak self] _ in
-            self?.updateMarkers()
+            // TODO: Actor isolaction 경고 해결
+            self?.messageMarkerManager.updateAnimations()
         }
 
         if let timer = bubbleRotationTimer {
@@ -275,30 +272,6 @@ extension MapViewController {
         bubbleRotationTimer?.invalidate()
         bubbleRotationTimer = nil
     }
-
-    private func updateMarkers() {
-        let currentTime = Date().timeIntervalSince1970
-
-        for (groupKey, state) in messageMarkerManager.bubbleAnimationState {
-            guard state.messages.count > 1 else { continue }
-            guard let marker = messageMarkerManager.getMarker(for: groupKey) else { continue }
-
-            if state.isAnimating {
-                rotationAnimator.updateAnimation(for: state, currentTime: currentTime)
-
-                let image = messageMarkerManager.bubbleImageRenderer.renderRotatingBubble(
-                    current: state.currentMessage,
-                    next: state.nextMessage,
-                    progress: state.animationProgress
-                )
-                marker.iconImage = NMFOverlayImage(image: image)
-            } else {
-                if rotationAnimator.shouldStartAnimation(for: state, currentTime: currentTime) {
-                    state.startAnimation(at: currentTime)
-                }
-            }
-        }
-    }
 }
 
 // MARK: - MapViewWrapper
@@ -309,17 +282,14 @@ struct MapViewWrapper: UIViewControllerRepresentable {
     private let onTapNoPlace: (([Message]) -> Void)?
 
     private let messageMarkerManager: MessageMarkerManager
-    private let rotationAnimator: MessageRotationAnimator
 
     init(
         markerManager: MessageMarkerManager,
-        rotationAnimator: MessageRotationAnimator,
         messageContainer: MessageGroupContainer,
         onTapPlace: ((Place) -> Void)? = nil,
         onTapNoPlace: (([Message]) -> Void)? = nil
     ) {
         self.messageMarkerManager = markerManager
-        self.rotationAnimator = rotationAnimator
         self.messageGroupContainer = messageContainer
         self.onTapPlace = onTapPlace
         self.onTapNoPlace = onTapNoPlace
@@ -328,7 +298,6 @@ struct MapViewWrapper: UIViewControllerRepresentable {
     func makeUIViewController(context: Context) -> MapViewController {
         let viewController = MapViewController(
             messageMarkerManager: messageMarkerManager,
-            rotationAnimator: rotationAnimator,
             onTapPlace: onTapPlace,
             onTapNoPlace: onTapNoPlace
         )

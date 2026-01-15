@@ -21,10 +21,15 @@ final class MessageMarkerManager {
     /// 회전 버블용 마커 (AnimationState와 별도로 관리)
     private(set) var bubbleMarkers: [MarkerGroupKey: NMFMarker] = [:]
 
-    let bubbleImageRenderer: BubbleImageRenderer
+    private let rotationAnimator: MessageRotationAnimator
+    private let bubbleImageRenderer: BubbleImageRenderer
 
-    init(imageRenderer: BubbleImageRenderer) {
-        self.bubbleImageRenderer = imageRenderer
+    init(
+        rotationAnimator: MessageRotationAnimator,
+        bubbleImageRenderer: BubbleImageRenderer
+    ) {
+        self.rotationAnimator = rotationAnimator
+        self.bubbleImageRenderer = bubbleImageRenderer
     }
 
     /// 모든 마커를 지도에서 제거합니다.
@@ -156,5 +161,34 @@ extension MessageMarkerManager {
     /// 그룹 키로 마커를 가져옵니다.
     func getMarker(for groupKey: MarkerGroupKey) -> NMFMarker? {
         return bubbleMarkers[groupKey]
+    }
+}
+
+// MARK: - Update Marker for Animation
+
+extension MessageMarkerManager {
+    /// 애니메이션 상태를 업데이트합니다. (매 프레임 호출)
+    func updateAnimations() {
+        let currentTime = Date().timeIntervalSince1970
+
+        for (groupKey, state) in bubbleAnimationState {
+            guard state.messages.count > 1 else { continue }
+            guard let marker = getMarker(for: groupKey) else { continue }
+
+            if state.isAnimating {
+                rotationAnimator.updateAnimation(for: state, currentTime: currentTime)
+
+                let image = bubbleImageRenderer.renderRotatingBubble(
+                    current: state.currentMessage,
+                    next: state.nextMessage,
+                    progress: state.animationProgress
+                )
+                marker.iconImage = NMFOverlayImage(image: image)
+            } else {
+                if rotationAnimator.shouldStartAnimation(for: state, currentTime: currentTime) {
+                    state.startAnimation(at: currentTime)
+                }
+            }
+        }
     }
 }
