@@ -17,12 +17,12 @@ final class MessageRepositoryImpl: MessageRepository {
 
     func moderateMessage(text: String) async throws -> TextModerationResponse {
         let response: TextModerationResponse = try await supabase.functions
-          .invoke(
-            "text-moderation",
-            options: FunctionInvokeOptions(
-              body: ["text": text]
+            .invoke(
+                "text-moderation",
+                options: FunctionInvokeOptions(
+                    body: ["text": text]
+                )
             )
-          )
 
         return response
     }
