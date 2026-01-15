@@ -65,16 +65,17 @@ final class MessageComposerStore: Store {
 
     @Published var state: State
 
-    private let createMessage: CreateMessageUseCase
+    private let createMessageUseCase: CreateMessageUseCase
+
     private let onClose: () -> Void
 
     init(
         userLocation: Coordinate,
-        createMessage: CreateMessageUseCase
+        createMessage: CreateMessageUseCase,
         onClose: @escaping () -> Void
     ) {
         self.state = State(userLocation: userLocation)
-        self.createMessage = createMessage
+        self.createMessageUseCase = createMessage
         self.onClose = onClose
         AppLog.debug("userLocation: \(userLocation)", category: .location)
     }
@@ -111,54 +112,7 @@ final class MessageComposerStore: Store {
                 if state.placeText != "" {
                     // TODO: 1차 검증) 장소 태그 존재 시, 현재 위치 기준으로 거리 검증
                 }
-
-                // 메시지 작성 API  호출
-                Task {
-                    continuation.yield(.setConfirmLoading(true))
-                    defer {
-                        continuation.yield(.setConfirmLoading(false))
-                        continuation.finish()
-                    }
-
-                    do {
-                        _ = try await createMessage.execute(
-                            CreateMessageRequestDTO(
-                                content: state.message,
-                                latitude: state.userLocation.latitude,
-                                longitude: state.userLocation.longitude,
-                                place: nil
-                            )
-                        )
-                    } catch let error as CreateMessageError {
-                        switch error {
-                        case .unauthorized:
-                            continuation.yield(.presentAlert(.init(
-                                title: "인증이 필요해요.",
-                                message: "익명 로그인(세션)이 없어서 메시지를 보낼 수 없어요."
-                            )))
-                        case .blocked:
-                            continuation.yield(.presentAlert(.init(
-                                title: "메시지를 등록할 수 없어요.",
-                                message: "내용이 정책에 의해 거부되었어요."
-                            )))
-                        case .unknown:
-                            continuation.yield(.presentAlert(.init(
-                                title: "메시지를 등록할 수 없어요.",
-                                message: "정책 판단을 확정할 수 없어 등록할 수 없어요."
-                            )))
-                        case .http(let code, let rawBody):
-                            continuation.yield(.presentAlert(.init(
-                                title: "요청 실패 (\(code))",
-                                message: rawBody.isEmpty ? "잠시 후 다시 시도해 주세요." : rawBody
-                            )))
-                        }
-                    } catch {
-                        continuation.yield(.presentAlert(.init(
-                            title: "네트워크에 연결할 수 없어요.",
-                            message: "네트워크 상태를 확인하고 다시 시도해 주세요."
-                        )))
-                    }
-                }
+                createMessage(continuation: continuation)
                 return
             }
             continuation.finish()
@@ -194,4 +148,71 @@ final class MessageComposerStore: Store {
         }
         return newState
     }
+}
+
+extension MessageComposerStore {
+    private func createMessage(continuation: AsyncStream<Action>.Continuation) {
+        Task {
+            continuation.yield(.setConfirmLoading(true))
+            defer {
+                continuation.yield(.setConfirmLoading(false))
+                continuation.finish()
+            }
+
+            do {
+                try await createMessageUseCase.execute(makeCreateMessageRequest())
+
+                continuation.yield(.showToast("메시지가 등록되었어요."))
+                try await Task.sleep(nanoseconds: 700_000_000)
+                continuation.yield(.close)
+
+            } catch let error as CreateMessageError {
+                continuation.yield(mapCreateMessageErrorToAlertAction(error))
+
+            } catch {
+                continuation.yield(.presentAlert(.init(
+                    title: "네트워크에 연결할 수 없어요.",
+                    message: "네트워크 상태를 확인하고 다시 시도해 주세요."
+                )))
+            }
+        }
+    }
+
+    private func makeCreateMessageRequest() -> CreateMessageRequestDTO {
+        CreateMessageRequestDTO(
+            content: state.message,
+            latitude: state.userLocation.latitude,
+            longitude: state.userLocation.longitude,
+            place: nil
+        )
+    }
+
+    private func mapCreateMessageErrorToAlertAction(_ error: CreateMessageError) -> Action {
+        switch error {
+        case .unauthorized:
+            return .presentAlert(.init(
+                title: "인증이 필요해요.",
+                message: "익명 로그인(세션)이 없어서 메시지를 보낼 수 없어요."
+            ))
+
+        case .blocked:
+            return .presentAlert(.init(
+                title: "메시지를 등록할 수 없어요.",
+                message: "내용이 정책에 의해 거부되었어요."
+            ))
+
+        case .unknown:
+            return .presentAlert(.init(
+                title: "메시지를 등록할 수 없어요.",
+                message: "정책 판단을 확정할 수 없어 등록할 수 없어요."
+            ))
+
+        case .http(let code, let rawBody):
+            return .presentAlert(.init(
+                title: "요청 실패 (\(code))",
+                message: rawBody.isEmpty ? "잠시 후 다시 시도해 주세요." : rawBody
+            ))
+        }
+    }
+
 }
