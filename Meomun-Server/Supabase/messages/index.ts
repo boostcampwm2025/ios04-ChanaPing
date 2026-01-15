@@ -60,9 +60,6 @@ function getTestAuthorId(): string {
 }
 
 Deno.serve(async (req: Request) => {
-  console.log("[Index.ts] hit!");
-  console.log("[Index.ts] Auth", req.headers.get('Authorization'));
-
   if (req.method !== "POST") return methodNotAllowed();
 
   // 0) 인증 단계 제거: 개발용 고정 author_id 사용
