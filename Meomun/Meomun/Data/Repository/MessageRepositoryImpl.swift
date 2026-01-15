@@ -55,3 +55,35 @@ final class MessageRepositoryImpl: MessageRepository {
         return []
     }
 }
+
+// MARK: - Mapping
+
+extension MessageRepositoryImpl {
+    private func toDomainMessages(_ rows: [MessageDTO]) -> [Message] {
+        let now = Date()
+
+        return rows
+            .filter { $0.deletedAt == nil && $0.expiresAt > now }
+            .map { row in
+                let coordinate = Coordinate(latitude: row.latitude, longitude: row.longitude)
+
+                let placeTag: Place? = row.place.map { place in
+                    Place(
+                        id: PlaceID(value: place.placeID),
+                        name: place.name,
+                        coordinate: Coordinate(latitude: place.latitude, longitude: place.longitude),
+                        address: ""
+                    )
+                }
+
+                return Message(
+                    id: MessageID(value: row.id),
+                    authorID: UserID(value: row.authorID),
+                    createdAt: row.createdAt,
+                    content: row.content,
+                    coordinate: coordinate,
+                    placeTag: placeTag
+                )
+            }
+    }
+}
