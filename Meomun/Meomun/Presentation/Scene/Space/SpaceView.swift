@@ -81,10 +81,7 @@ struct SpaceView: View {
                 if let coordinate = store.state.userLocation {
                     MessageComposerView(
                         store: MessageComposerStore(
-                            userLocation: .init(
-                                latitude: 37.5665,
-                                longitude: 126.9780
-                            ),
+                            userLocation: coordinate,
                             createMessage: CreateMessageUseCaseImpl(
                                 messageRepository: MessageRepositoryImpl()
                             )

@@ -76,10 +76,7 @@ struct MapView: View {
             ) {
                 MessageComposerView(
                     store: MessageComposerStore(
-                        userLocation: .init(
-                            latitude: 37.5665,
-                            longitude: 126.9780
-                        ),
+                        userLocation: store.state.userLocation,
                         createMessage: CreateMessageUseCaseImpl(
                             messageRepository: MessageRepositoryImpl()
                         )
