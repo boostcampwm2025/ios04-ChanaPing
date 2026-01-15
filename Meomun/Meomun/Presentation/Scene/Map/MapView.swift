@@ -137,5 +137,8 @@ struct MapView: View {
         bubbleImageRenderer: bubbleImageRenderer
     )
 
-    MapView(messageMarkerManager: messageMarkerManager)
+    MapView(
+        userLocation: .init(latitude: 37.5665, longitude: 126.9780),
+        messageMarkerManager: messageMarkerManager
+    )
 }

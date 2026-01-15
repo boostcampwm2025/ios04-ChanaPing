@@ -41,11 +41,13 @@ struct MainTabShellView: View {
     private func contentView(for tab: MainTab) -> some View {
         switch tab {
         case .map:
-//            MapView(userLocation: userLocation, messageMarkerManager: MessageMarkerManager())
             MapView(
-                userLocation: .init(latitude: 37.5665, longitude: 126.9780),
-                messageMarkerManager: MessageMarkerManager()
-            )    // 임시 값
+                userLocation: userLocation,
+                messageMarkerManager: MessageMarkerManager(
+                    rotationAnimator: .init(),
+                    bubbleImageRenderer: .init()
+                )
+            )
 
         case .record:
             EmptyView()
