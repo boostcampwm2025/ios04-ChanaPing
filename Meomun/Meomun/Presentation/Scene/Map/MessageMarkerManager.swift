@@ -40,7 +40,7 @@ final class MessageMarkerManager {
     private var markers: [MarkerGroupKey: NMFMarker] = [:]
 
     /// 마커 별 회전 애니메이션 상태 (2개 이상 메시지가 있는 마커만 해당)
-    private var animationStates: [MarkerGroupKey: AnimationState] = [:]
+    private var animationStates: [MarkerGroupKey: BubbleAnimationState] = [:]
 
     /// 한 마커에 표시할 최대 메시지 수 (기본값: 10)
     private let displayLimit: Int
@@ -301,7 +301,7 @@ extension MessageMarkerManager {
                 return Array((source ?? []).suffix(self.displayLimit))
             }
 
-            animationStates[key] = AnimationState(
+            animationStates[key] = BubbleAnimationState(
                 messagesProvider: messagesProvider,
                 lastRotationTime: Date().timeIntervalSince1970
             )

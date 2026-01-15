@@ -21,7 +21,7 @@ final class MessageRotationAnimator {
     }
 
     /// 애니메이션 시작 여부를 판단합니다.
-    func shouldStartAnimation(for state: AnimationState, currentTime: TimeInterval) -> Bool {
+    func shouldStartAnimation(for state: BubbleAnimationState, currentTime: TimeInterval) -> Bool {
         guard state.messages.count > 1 else { return false }
         guard !state.isAnimating else { return false }
         return currentTime - state.lastRotationTime >= rotationInterval
@@ -34,7 +34,7 @@ final class MessageRotationAnimator {
     }
 
     /// 애니메이션 상태를 업데이트합니다.
-    func updateAnimation(for state: inout AnimationState, currentTime: TimeInterval) {
+    func updateAnimation(for state: inout BubbleAnimationState, currentTime: TimeInterval) {
         guard let startTime = state.animationStartTime else {
             state.isAnimating = false
             return

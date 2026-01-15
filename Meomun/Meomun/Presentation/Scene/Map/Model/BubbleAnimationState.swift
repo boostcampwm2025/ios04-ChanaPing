@@ -1,5 +1,5 @@
 //
-//  AnimationState.swift
+//  BubbleAnimationState.swift
 //  Meomun
 //
 //  Created by MinwooJe on 1/14/26.
@@ -8,7 +8,7 @@
 import Foundation
 
 /// 버블 애니메이션 상태
-struct AnimationState {
+struct BubbleAnimationState {
     private let messagesProvider: () -> [Message]       // 데이터 중복 방지를 위해 클로저를 저장
 
     var currentIndex: Int
