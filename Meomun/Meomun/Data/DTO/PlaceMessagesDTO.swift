@@ -52,3 +52,32 @@ struct MessageDTO: Decodable, Sendable {
         case place
     }
 }
+
+// MARK: - Mapping
+
+extension PlaceDTO {
+    func toDomain() -> Place {
+        Place(
+            id: PlaceID(value: placeID),
+            name: name,
+            coordinate: Coordinate(latitude: latitude, longitude: longitude),
+            address: ""
+        )
+    }
+}
+
+extension MessageDTO {
+    func toDomain() -> Message {
+        let coordinate = Coordinate(latitude: latitude, longitude: longitude)
+        let placeTag = place?.toDomain()
+
+        return Message(
+            id: MessageID(value: id),
+            authorID: UserID(value: authorID),
+            createdAt: createdAt,
+            content: content,
+            coordinate: coordinate,
+            placeTag: placeTag
+        )
+    }
+}

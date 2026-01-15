@@ -52,90 +52,39 @@ final class MessageRepositoryImpl: MessageRepository {
     }
 
     func getPlaceMessages(placeID: PlaceID, limit: Int?) async throws -> [Message] {
-        var query = supabase
-            .from("messages")
-            .select(
-                """
-                id,
-                author_id,
-                created_at,
-                content,
-                latitude,
-                longitude,
-                expires_at,
-                deleted_at,
-                place_id,
-                place:place_id(
-                    place_id,
-                    name,
-                    latitude,
-                    longitude,
-                    created_at
-                )
-                """
-            )
-            .eq("place_id", value: placeID.value)
-            .order("created_at", ascending: false)
-
-        if let limit {
-            query = query.limit(limit)
-        }
-
         AppLog.debug(
-            "getPlaceMessages request: placeID=\(placeID.value)",
+            "getPlaceMessages RPC request: placeID=\(placeID.value), limit=\(limit.map(String.init) ?? "nil")",
             category: .repository
         )
 
         do {
-            let rows: [MessageDTO] = try await query.execute().value
-            let messages = toDomainMessages(rows)
+            var params: [String: AnyJSON] = ["p_place_id": .string(placeID.value)]
+
+            if let limit {
+                params["p_limit"] = .double(Double(limit))
+            }
+
+            let response: [MessageDTO] = try await supabase
+                .rpc("get_place_messages", params: params)
+                .execute()
+                .value
+
+            let messages = response.map { $0.toDomain() }
 
             AppLog.debug(
-                "getPlaceMessages success: rows=\(rows.count), messages=\(messages.count)",
+                "getPlaceMessages RPC success: rows=\(response.count), messages=\(messages.count)",
                 category: .repository
             )
 
             return messages
         } catch {
             AppLog.error(
-                "getPlaceMessages failed: placeID=\(placeID.value)",
+                "getPlaceMessages RPC failed: placeID=\(placeID.value)",
                 category: .repository,
                 error: error
             )
 
             throw error
         }
-    }
-}
-
-// MARK: - Mapping
-
-extension MessageRepositoryImpl {
-    private func toDomainMessages(_ rows: [MessageDTO]) -> [Message] {
-        let now = Date()
-
-        return rows
-            .filter { $0.deletedAt == nil && $0.expiresAt > now }
-            .map { row in
-                let coordinate = Coordinate(latitude: row.latitude, longitude: row.longitude)
-
-                let placeTag: Place? = row.place.map { place in
-                    Place(
-                        id: PlaceID(value: place.placeID),
-                        name: place.name,
-                        coordinate: Coordinate(latitude: place.latitude, longitude: place.longitude),
-                        address: ""
-                    )
-                }
-
-                return Message(
-                    id: MessageID(value: row.id),
-                    authorID: UserID(value: row.authorID),
-                    createdAt: row.createdAt,
-                    content: row.content,
-                    coordinate: coordinate,
-                    placeTag: placeTag
-                )
-            }
     }
 }
