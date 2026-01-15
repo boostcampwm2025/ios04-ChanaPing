@@ -64,7 +64,7 @@ final class MessageRepositoryImpl: MessageRepository {
                 params["p_limit"] = .double(Double(limit))
             }
 
-            let response: [MessageDTO] = try await supabase
+            let response: [PlaceMessageResponseDTO] = try await supabase
                 .rpc("get_place_messages", params: params)
                 .execute()
                 .value

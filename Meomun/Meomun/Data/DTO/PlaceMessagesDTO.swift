@@ -27,7 +27,7 @@ struct PlaceDTO: Decodable, Sendable {
 
 // MARK: - Message
 
-struct MessageDTO: Decodable, Sendable {
+struct PlaceMessageResponseDTO: Decodable, Sendable {
     let id: UUID
     let authorID: UUID
     let createdAt: Date
@@ -66,7 +66,7 @@ extension PlaceDTO {
     }
 }
 
-extension MessageDTO {
+extension PlaceMessageResponseDTO {
     func toDomain() -> Message {
         let coordinate = Coordinate(latitude: latitude, longitude: longitude)
         let placeTag = place?.toDomain()
