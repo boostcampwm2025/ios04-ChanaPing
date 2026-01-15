@@ -6,6 +6,14 @@
 //
 
 import Combine
+import Foundation
+
+// 더미 데이터 모델
+struct SpaceMessage: Identifiable, Equatable {
+    let id: UUID
+    let text: String
+    let createdAt: Date
+}
 
 final class SpaceStore: Store {
 
@@ -25,6 +33,7 @@ final class SpaceStore: Store {
     struct State {
         var isLoading: Bool = false
         var errorMessage: String = ""
+        var messages: [SpaceMessage] = []
         var userLocation: Coordinate? = nil     // TODO: - 지도 > 공간 진입 시점 좌표 넘겨주고, 옵셔널 지우기
         var isShowingAddMessage: Bool = false
     }

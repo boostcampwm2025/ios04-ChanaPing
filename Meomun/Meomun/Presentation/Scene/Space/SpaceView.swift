@@ -487,6 +487,7 @@ private struct BubblePlacer {
 #Preview {
     NavigationStack {
         SpaceView(
+            store: .init(locationProvider: .init()),
             domeEnvironment: .init(weather: .sunny, dayPart: .afternoon),
             place: .init(id: .init(value: .init()), name: "광화문", coordinate: .init(latitude: 0, longitude: 0))
         )
