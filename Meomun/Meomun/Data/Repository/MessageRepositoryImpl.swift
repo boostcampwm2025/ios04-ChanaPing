@@ -52,7 +52,59 @@ final class MessageRepositoryImpl: MessageRepository {
     }
 
     func getPlaceMessages(placeID: PlaceID, limit: Int?) async throws -> [Message] {
-        return []
+        var query = supabase
+            .from("messages")
+            .select(
+                """
+                id,
+                author_id,
+                created_at,
+                content,
+                latitude,
+                longitude,
+                expires_at,
+                deleted_at,
+                place_id,
+                place:place_id(
+                    place_id,
+                    name,
+                    latitude,
+                    longitude,
+                    created_at
+                )
+                """
+            )
+            .eq("place_id", value: placeID.value)
+            .order("created_at", ascending: false)
+
+        if let limit {
+            query = query.limit(limit)
+        }
+
+        AppLog.debug(
+            "getPlaceMessages request: placeID=\(placeID.value)",
+            category: .repository
+        )
+
+        do {
+            let rows: [MessageDTO] = try await query.execute().value
+            let messages = toDomainMessages(rows)
+
+            AppLog.debug(
+                "getPlaceMessages success: rows=\(rows.count), messages=\(messages.count)",
+                category: .repository
+            )
+
+            return messages
+        } catch {
+            AppLog.error(
+                "getPlaceMessages failed: placeID=\(placeID.value)",
+                category: .repository,
+                error: error
+            )
+
+            throw error
+        }
     }
 }
 
