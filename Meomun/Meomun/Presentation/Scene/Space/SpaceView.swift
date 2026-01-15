@@ -18,6 +18,8 @@ struct SpaceView: View {
 
     @State private var messageBubbleRootByID: [UUID: Entity] = [:]
 
+    @State private var syncTask: Task<Void, Never>?
+
     private let rotationCamera = RotationCamera(
         position: .init(x: 0, y: 0.7, z: 0),    // 카메라 시작 위치 (돔 중심에서 약간 위)
         rotateSensitivity: 0.003                // 회전 민감도 (값이 클수록 더 빠르게 회전)
@@ -47,10 +49,10 @@ struct SpaceView: View {
         )
         .task {
             await store.send(intent: .onAppear)
-            syncIfPossible()
         }
         .onChange(of: store.state.messages.map(\.id)) {
-            syncIfPossible()
+            let snapshot = store.state.messages
+            syncIfPossible(messages: snapshot)
         }
         .ignoresSafeArea()
         .overlay(alignment: .bottomTrailing) {
@@ -90,9 +92,11 @@ extension SpaceView {
                 // 메시지 버블 로드
                 let messageEntity = try await Entity(named: "Message.usdz")
                 messageEntity.name = "MessageBubble"
+
                 await MainActor.run {
                     messageBubbleTemplateEntity = messageEntity
-                    syncIfPossible()
+                    let snapshot = store.state.messages
+                    syncIfPossible(messages: snapshot)
                 }
 
                 // 카메라 추가
@@ -146,12 +150,15 @@ extension SpaceView {
         static let textForwardPadding: Float = 0.01     // 텍스트를 버블 표면보다 앞(z+)으로 띄우는 패딩
     }
 
-    private func syncIfPossible() {
+    private func syncIfPossible(messages: [SpaceMessage]) {
         guard let root = spaceRootEntity else { return }
         guard messageBubbleTemplateEntity != nil else { return }
 
-        Task { @MainActor in
-            syncMessageBubbles(to: root, messages: store.state.messages)
+        syncTask?.cancel()
+
+        syncTask = Task { @MainActor in
+            guard !Task.isCancelled else { return }
+            syncMessageBubbles(to: root, messages: messages)
         }
     }
 
