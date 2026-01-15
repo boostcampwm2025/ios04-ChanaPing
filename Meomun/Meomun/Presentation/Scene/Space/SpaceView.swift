@@ -19,14 +19,16 @@ struct SpaceView: View {
     @State private var messageBubbleRootByID: [UUID: Entity] = [:]
 
     @State private var syncTask: Task<Void, Never>?
+    private let place: Place
 
     private let rotationCamera = RotationCamera(
         position: .init(x: 0, y: 0.7, z: 0),    // 카메라 시작 위치 (돔 중심에서 약간 위)
         rotateSensitivity: 0.003                // 회전 민감도 (값이 클수록 더 빠르게 회전)
     )
 
-    init(environment: DomeEnvironment) {
-        self.domeEnvironment = environment
+    init(domeEnvironment: DomeEnvironment, place: Place) {
+        self.domeEnvironment = domeEnvironment
+        self.place = place
     }
 
     var body: some View {
@@ -57,7 +59,7 @@ struct SpaceView: View {
         .ignoresSafeArea()
         .overlay(alignment: .bottomTrailing) {
             NavigationLink {
-                MessageComposeView()
+                MessageComposerView()
             } label: {
                 WriteButton { }
                     .disabled(true)
@@ -102,14 +104,21 @@ extension SpaceView {
                 // 카메라 추가
                 rotationCamera.addToScene(content)
             } catch {
-                print("돔 로드 실패: \(error)")
+                AppLog.error(
+                    "Failed to load dome entity",
+                    category: .space,
+                    error: error
+                )
             }
         }
     }
 
     private func configureDomeSurface(domeEntity: Entity) {
         guard let surfaceEntity = domeEntity.findEntity(named: "Dome_01") else {
-            print("Dome_01을 찾을 수 없음")
+            AppLog.warn(
+                "Dome surface entity 'Dome_01' not found",
+                category: .resource
+            )
             return
         }
 
@@ -129,7 +138,11 @@ extension SpaceView {
 
                 surfaceEntity.components[ModelComponent.self]?.materials = [material]
             } catch {
-                print("material을 찾을 수 없음: \(error)")
+                AppLog.error(
+                    "Failed to configure dome material",
+                    category: .resource,
+                    error: error
+                )
             }
         }
     }
@@ -448,6 +461,9 @@ private struct BubblePlacer {
 
 #Preview {
     NavigationStack {
-        SpaceView(environment: .init(weather: .sunny, dayPart: .afternoon))
+        SpaceView(
+            domeEnvironment: .init(weather: .sunny, dayPart: .afternoon),
+            place: .init(id: .init(value: .init()), name: "광화문", coordinate: .init(latitude: 0, longitude: 0))
+        )
     }
 }

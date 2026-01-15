@@ -2,11 +2,13 @@
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
 <dict>
-	<key>NMFNcpKeyId</key>
-	<string>$(NMF_NCP_KEY_ID)</string>
 	<key>NAVER_API_KEY</key>
 	<string>$(NAVER_API_KEY)</string>
-	<key>NSLocationWhenInUseUsageDescription</key>
-	<string>위치 정보를 사용하시겠습니까?</string>
+	<key>NAVER_CLIENT_ID</key>
+	<string>$(NAVER_CLIENT_ID)</string>
+	<key>NAVER_CLIENT_SECRET</key>
+	<string>$(NAVER_CLIENT_SECRET)</string>
+	<key>NMFNcpKeyId</key>
+	<string>$(NMF_NCP_KEY_ID)</string>
 </dict>
 </plist>
