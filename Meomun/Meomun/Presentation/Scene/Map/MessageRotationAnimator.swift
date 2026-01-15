@@ -34,7 +34,7 @@ final class MessageRotationAnimator {
     }
 
     /// 애니메이션 상태를 업데이트합니다.
-    func updateAnimation(for state: AnimationState, currentTime: TimeInterval) {
+    func updateAnimation(for state: inout AnimationState, currentTime: TimeInterval) {
         guard let startTime = state.animationStartTime else {
             state.isAnimating = false
             return

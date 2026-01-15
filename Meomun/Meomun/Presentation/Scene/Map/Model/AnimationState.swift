@@ -7,33 +7,41 @@
 
 import Foundation
 
-/// 회전 버블 애니메이션 상태를 관리하는 클래스
-final class AnimationState {
-    let messages: [Message]
+/// 버블 애니메이션 상태
+struct AnimationState {
+    private let messagesProvider: () -> [Message]       // 데이터 중복 방지를 위해 클로저를 저장
+
     var currentIndex: Int
     var lastRotationTime: TimeInterval
     var animationStartTime: TimeInterval?
     var animationProgress: Double
     var isAnimating: Bool
 
-    var currentMessage: Message {
-        return messages[currentIndex]
+    var messages: [Message] {
+        messagesProvider()
     }
 
-    var nextMessage: Message {
+    var currentMessage: Message? {
+        guard !messages.isEmpty else { return nil }
+        let safeIndex = currentIndex % messages.count
+        return messages[safeIndex]
+    }
+
+    var nextMessage: Message? {
+        guard messages.count > 1 else { return nil }
         let nextIndex = (currentIndex + 1) % messages.count
         return messages[nextIndex]
     }
 
     init(
-        messages: [Message],
+        messagesProvider: @escaping () -> [Message],
         currentIndex: Int = 0,
         lastRotationTime: TimeInterval,
         animationStartTime: TimeInterval? = nil,
         animationProgress: Double = 0.0,
         isAnimating: Bool = false
     ) {
-        self.messages = messages
+        self.messagesProvider = messagesProvider
         self.currentIndex = currentIndex
         self.lastRotationTime = lastRotationTime
         self.animationStartTime = animationStartTime
@@ -42,7 +50,7 @@ final class AnimationState {
     }
 
     /// 다음 메시지로 전환 (애니메이션 완료 시 호출)
-    func advanceToNext(at currentTime: TimeInterval) {
+    mutating func advanceToNext(at currentTime: TimeInterval) {
         guard !messages.isEmpty else { return }
 
         let nextIndex = (currentIndex + 1) % messages.count
@@ -54,7 +62,7 @@ final class AnimationState {
     }
 
     /// 애니메이션 시작 상태로 전환
-    func startAnimation(at currentTime: TimeInterval) {
+    mutating func startAnimation(at currentTime: TimeInterval) {
         guard !isAnimating else { return }
 
         isAnimating = true

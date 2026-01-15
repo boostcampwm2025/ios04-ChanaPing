@@ -148,8 +148,10 @@ extension MessageMarkerManager {
         let image = bubbleImageRenderer.renderSingleBubble(message: current, showsAccentLine: false)
         marker.iconImage = NMFOverlayImage(image: image)
 
+        // messages를 캡처하여 messagesProvider로 제공
+        let capturedMessages = messages
         let state = AnimationState(
-            messages: messages,
+            messagesProvider: { capturedMessages },
             currentIndex: 0,
             lastRotationTime: currentTime
         )
@@ -164,31 +166,37 @@ extension MessageMarkerManager {
     }
 }
 
-// MARK: - Update Marker for Animation
+// MARK: - 마커 애니메이션 적용
 
 extension MessageMarkerManager {
     /// 애니메이션 상태를 업데이트합니다. (매 프레임 호출)
     func updateAnimations() {
         let currentTime = Date().timeIntervalSince1970
 
-        for (groupKey, state) in bubbleAnimationState {
+        for groupKey in bubbleAnimationState.keys {
+            guard var state = bubbleAnimationState[groupKey] else { continue }
             guard state.messages.count > 1 else { continue }
-            guard let marker = getMarker(for: groupKey) else { continue }
+            guard let marker = bubbleMarkers[groupKey] else { continue }
 
             if state.isAnimating {
-                rotationAnimator.updateAnimation(for: state, currentTime: currentTime)
+                rotationAnimator.updateAnimation(for: &state, currentTime: currentTime)
 
-                let image = bubbleImageRenderer.renderRotatingBubble(
-                    current: state.currentMessage,
-                    next: state.nextMessage,
-                    progress: state.animationProgress
-                )
-                marker.iconImage = NMFOverlayImage(image: image)
+                if let current = state.currentMessage,
+                    let next = state.nextMessage {
+                    let image = bubbleImageRenderer.renderRotatingBubble(
+                        current: current,
+                        next: next,
+                        progress: state.animationProgress
+                    )
+                    marker.iconImage = NMFOverlayImage(image: image)
+                }
             } else {
                 if rotationAnimator.shouldStartAnimation(for: state, currentTime: currentTime) {
                     state.startAnimation(at: currentTime)
                 }
             }
+
+            bubbleAnimationState[groupKey] = state
         }
     }
 }
