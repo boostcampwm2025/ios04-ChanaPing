@@ -11,12 +11,7 @@ import Supabase
 final class MessageRepositoryImpl: MessageRepository {
     private let supabase: SupabaseClient
 
-    init(
-        supabase: SupabaseClient = SupabaseClient(
-            supabaseURL: AppConfig.supabaseURL,
-            supabaseKey: AppConfig.supabaseKey
-        )
-    ) {
+    init(supabase: SupabaseClient = SupabaseService.shared.client) {
         self.supabase = supabase
     }
 
