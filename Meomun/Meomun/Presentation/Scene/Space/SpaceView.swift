@@ -10,16 +10,20 @@ import SwiftUI
 
 struct SpaceView: View {
 
-    @StateObject private var store = SpaceViewStore()
+    @StateObject private var store: SpaceViewStore
     @State private var domeEnvironment: DomeEnvironment
+    private var placeID: PlaceID
 
     private let rotationCamera = RotationCamera(
         position: .init(x: 0, y: 0.7, z: 0),
         rotateSensitivity: 0.003
     )
 
-    init(environment: DomeEnvironment) {
+    init(placeID: PlaceID, environment: DomeEnvironment, store: SpaceViewStore) {
+        // TODO: - placeID 받아오기
+        self.placeID = .init(value: "광화문")
         self.domeEnvironment = environment
+        self._store = .init(wrappedValue: store)
     }
 
     var body: some View {
@@ -41,7 +45,7 @@ struct SpaceView: View {
                 }
         )
         .task {
-            await store.send(intent: .onAppear)
+            await store.send(intent: .onAppear(placeID: placeID))
         }
         .ignoresSafeArea()
         .overlay(alignment: .bottomTrailing) {
@@ -119,6 +123,19 @@ extension SpaceView {
 
 #Preview {
     NavigationStack {
-        SpaceView(environment: .init(weather: .sunny, dayPart: .afternoon))
+        SpaceView(
+            placeID: .init(
+                value: "광화문"
+            ),
+            environment: .init(
+                weather: .sunny,
+                dayPart: .afternoon
+            ),
+            store: .init(
+                fetchPlaceMessagesUseCase: FetchPlaceMessagesUseCaseImpl(
+                    messageRepository: MessageRepositoryImpl()
+                )
+            )
+        )
     }
 }
