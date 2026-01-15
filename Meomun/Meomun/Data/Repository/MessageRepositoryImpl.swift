@@ -8,33 +8,31 @@
 import Foundation
 import Supabase
 
-struct CreateMessageRequest: Sendable {
-    let text: String
-    let placeID: PlaceID?
-    let coordinate: Coordinate?
-}
-
 final class MessageRepositoryImpl: MessageRepository {
-    private let supabase: SupabaseClient
+    private let supabaseClient: SupabaseClient
 
-    init(supabase: SupabaseClient = SupabaseService.shared.client) {
-        self.supabase = supabase
+    init(supabaseClient: SupabaseClient = SupabaseService.shared.client) {
+        self.supabaseClient = supabaseClient
     }
 
     func createMessage(_ request: CreateMessageRequestDTO) async throws {
+        let session = try await supabaseClient.auth.session
+
+        let authHeader = "Bearer \(session.accessToken)"
+
         do {
-            _ = try await supabase.functions.invoke(
+            _ = try await supabaseClient.functions.invoke(
                 "messages",
                 options: FunctionInvokeOptions(
                     method: .post,
+                    headers: ["Authorization": authHeader],
                     body: request
                 ),
                 decode: { _, response in
                     if (200...299).contains(response.statusCode) { return () }
+                    throw NSError(domain: "EdgeFunction", code: response.statusCode)
                 }
             )
-
-            return
         } catch FunctionsError.httpError(let code, let data) {
             let raw = String(data: data, encoding: .utf8) ?? ""
 
@@ -44,15 +42,7 @@ final class MessageRepositoryImpl: MessageRepository {
 
             if code == 422 {
                 if let dto = try? JSONDecoder().decode(CreateMessageErrorResponseDTO.self, from: data) {
-                    // code: CONTENT_BLOCKED / CONTENT_UNKNOWN
-                    switch dto.code {
-                    case "CONTENT_BLOCKED":
-                        throw CreateMessageError.blocked(details: dto)
-                    case "CONTENT_UNKNOWN":
-                        throw CreateMessageError.unknown(details: dto)
-                    default:
-                        throw CreateMessageError.http(code: code, rawBody: raw)
-                    }
+                    throw CreateMessageError.blocked(details: dto)
                 } else {
                     throw CreateMessageError.http(code: code, rawBody: raw)
                 }
