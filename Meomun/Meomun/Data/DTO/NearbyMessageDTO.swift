@@ -17,13 +17,6 @@ struct NearbyMessageResponseDTO: Decodable, Identifiable {
     let place: PlaceDTO?
 }
 
-struct PlaceDTO: Decodable {
-    let placeId: String
-    let name: String
-    let latitude: Double
-    let longitude: Double
-}
-
 extension NearbyMessageResponseDTO {
     func toDomain() -> Message {
         return Message(

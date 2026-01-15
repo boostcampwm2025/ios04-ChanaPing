@@ -80,7 +80,7 @@ final class MessageRepositoryImpl: MessageRepository {
             params["p_limit"] = .double(Double(limit))
         }
 
-        let response = try await supabase
+        let response = try await supabaseClient
             .rpc("get_nearby_messages", params: params)
             .execute()
 
