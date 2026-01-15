@@ -12,6 +12,7 @@ import Foundation
 struct SpaceMessage: Identifiable, Equatable {
     let id: UUID
     let text: String
+    let createdAt: Date
 }
 
 final class SpaceViewStore: Store {
@@ -58,18 +59,31 @@ final class SpaceViewStore: Store {
     }
 
     private func loadDummyMessages() -> [SpaceMessage] {
-        [
-            "조용함",
-            "커피 맛있다",
-            "분위기 좋다",
-            "햇살이 좋아",
-            "좌석 편하다",
-            "음악이 좋다",
-            "집중 잘 된다",
-            "향이 좋다",
-            "라떼가 최고 라떼가 최고 라떼가 최고 라떼가 최고 라떼가 최고 라떼가 최고 라떼가 최고 라떼가 최고 라떼가 최고",
-            "여유롭다여유롭다여유롭다여유롭다여유롭다여유롭다여유롭다여유롭다여유롭다여유롭다"
-        ].map { SpaceMessage(id: UUID(), text: $0) }
+        let now = Date()
+
+        // 최근(20분 이내) + 일반(20분 이상) 메시지가 섞이도록 구성
+        let samples: [(text: String, minutesAgo: Int)] = [
+            ("조용함", 2),
+            ("커피 맛있다", 7),
+            ("분위기 좋다", 12),
+            ("햇살이 좋아", 19),
+
+            ("좌석 편하다", 25),
+            ("음악이 좋다", 40),
+            ("집중 잘 된다", 65),
+            ("향이 좋다", 120),
+
+            ("라떼가 최고 라떼가 최고 라떼가 최고 라떼가 최고 라떼가 최고 라떼가 최고 라떼가 최고 라떼가 최고 라떼가 최고", 5),
+            ("여유롭다여유롭다여유롭다여유롭다여유롭다여유롭다여유롭다여유롭다여유롭다여유롭다", 90)
+        ]
+
+        return samples.map { sample in
+            SpaceMessage(
+                id: UUID(),
+                text: sample.text,
+                createdAt: Calendar.current.date(byAdding: .minute, value: -sample.minutesAgo, to: now) ?? now
+            )
+        }
     }
 
 }

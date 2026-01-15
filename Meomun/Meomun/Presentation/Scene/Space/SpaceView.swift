@@ -139,15 +139,21 @@ extension SpaceView {
 
 extension SpaceView {
     private enum BubbleSizingTuning {
-        static let baseBubbleScale: Float = 0.10        // 버블 스케일 표준
-        static let textScale: Float = 0.50              // 텍스트 엔티티 스케일
-        static let paddingX: Float = 0.10               // 텍스트 좌우 여백
-        static let paddingY: Float = 0.02               // 텍스트 상하 여백
-        static let minUniform: Float = 0.85             // 버블 최소 크기 제한
-        static let maxUniform: Float = 2.2              // 버블 최대 크기 제한
-        static let textContainerWidth: Float = 0.55     // 텍스트 최대 넓이
-        static let textContainerHeight: Float = 0.18    // 텍스트 최대 높이
-        static let textForwardPadding: Float = 0.01     // 텍스트를 버블 표면보다 앞(z+)으로 띄우는 패딩
+        static let baseBubbleScale: Float = 0.10                    // 버블 스케일 표준
+        static let textScale: Float = 0.50                          // 텍스트 엔티티 스케일
+        static let paddingX: Float = 0.10                           // 텍스트 좌우 여백
+        static let paddingY: Float = 0.02                           // 텍스트 상하 여백
+        static let minUniform: Float = 0.85                         // 버블 최소 크기 제한
+        static let maxUniform: Float = 2.2                          // 버블 최대 크기 제한
+        static let textContainerWidth: Float = 0.55                 // 텍스트 최대 넓이
+        static let textContainerHeight: Float = 0.18                // 텍스트 최대 높이
+        static let textForwardPadding: Float = 0.01                 // 텍스트를 버블 표면보다 앞(z+)으로 띄우는 패딩
+        static let statusLineHeight: Float = 0.006                  // 상태 라인 두께(y)
+        static let statusLineDepth: Float = 0.0015                  // 상태 라인 두께(z)
+        static let statusLineTopPadding: Float = 0.03               // 텍스트 상단과 라인 사이 여백
+        static let statusLineForwardPadding: Float = 0.002          // 텍스트보다 약간 앞(z+)으로
+        static let statusLineWidthMultiplier: Float = 0.90          // 텍스트 폭 대비 라인 폭
+        static let recentThresholdSeconds: TimeInterval = 20 * 60
     }
 
     private func syncIfPossible(messages: [SpaceMessage]) {
@@ -235,6 +241,10 @@ extension SpaceView {
 
         // 텍스트를 버블 앞쪽으로 배치
         placeTextInFrontOfBubble(textEntity, bubbleEntity: bubbleBubbleEntity)
+
+        // 최근/일반 메시지 상태 라인 추가 (버블 내부 + 텍스트 위)
+        let isRecent = isRecentMessage(message)
+        attachStatusLine(to: bubbleRootEntity, textEntity: textEntity, isRecent: isRecent)
 
         // 씬에 추가
         root.addChild(bubbleRootEntity)
@@ -350,6 +360,54 @@ extension SpaceView {
         let frontOffset = (extents.z * 0.5) + BubbleSizingTuning.textForwardPadding
 
         textEntity.position += SIMD3<Float>(0, 0, frontOffset)
+    }
+
+    private func isRecentMessage(_ message: SpaceMessage, now: Date = .now) -> Bool {
+        now.timeIntervalSince(message.createdAt) < BubbleSizingTuning.recentThresholdSeconds
+    }
+
+    private func attachStatusLine(
+        to bubbleRootEntity: Entity,
+        textEntity: ModelEntity,
+        isRecent: Bool
+    ) {
+        // 최근/일반 전환 대응
+        for child in bubbleRootEntity.children where child.name == "StatusLine" {
+            child.removeFromParent()
+        }
+
+        // 텍스트 bounds를 기준으로 라인 폭/위치 계산
+        let textBounds = textEntity.visualBounds(relativeTo: nil)
+        let textExtents = textBounds.extents
+
+        let lineWidth = textExtents.x * BubbleSizingTuning.statusLineWidthMultiplier
+        let lineEntity = makeStatusLineEntity(isRecent: isRecent, width: lineWidth)
+
+        let lineY = (textExtents.y * 0.5) + BubbleSizingTuning.statusLineTopPadding
+        let lineZ = textEntity.position.z + BubbleSizingTuning.statusLineForwardPadding
+
+        lineEntity.position = SIMD3<Float>(0, lineY, lineZ)
+        bubbleRootEntity.addChild(lineEntity)
+    }
+
+    private func makeStatusLineEntity(isRecent: Bool, width: Float) -> ModelEntity {
+        let mesh = MeshResource.generateBox(
+            size: [
+                max(width, 0.001),
+                BubbleSizingTuning.statusLineHeight,
+                BubbleSizingTuning.statusLineDepth
+            ]
+        )
+
+        let tint: UIColor = isRecent ? .orange : .blue
+        var material = SimpleMaterial()
+        material.color = .init(tint: tint, texture: nil)
+        material.roughness = .float(0.1)
+        material.metallic = .float(0.0)
+
+        let entity = ModelEntity(mesh: mesh, materials: [material])
+        entity.name = "StatusLine"
+        return entity
     }
 }
 
