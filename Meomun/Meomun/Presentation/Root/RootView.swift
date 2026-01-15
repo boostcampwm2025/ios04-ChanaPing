@@ -22,6 +22,7 @@ struct RootView: View {
             }
         }
         .environmentObject(locationProvider)
+        .ignoresSafeArea(.keyboard)
     }
 }
 

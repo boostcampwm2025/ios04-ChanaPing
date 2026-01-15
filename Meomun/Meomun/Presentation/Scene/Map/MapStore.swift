@@ -16,18 +16,23 @@ final class MapStore: Store {
         case tapWriteButton
         case dismissAddMessage
         case updateMessages([Message])
+        case tapPlaceMarker(Place)
+        case dismissSpaceView
     }
 
     enum Action {
-        case setMessages([Message])
         case setUserLocation(Coordinate)
         case setShowAddMessage(Bool)
+        case groupMessages([Message])
+        case updateMessage(event: MessageEvent)
+        case setSelectedPlace(Place?)
     }
 
     struct State {
-        var messages: [Message] = []
+        var messageGroupContainer: MessageGroupContainer = .init(groups: [:])
         var userLocation: Coordinate
         var isShowingAddMessage: Bool = false
+        var selectedPlace: Place? = nil
     }
 
     @Published var state: State
@@ -43,7 +48,9 @@ final class MapStore: Store {
             switch intent {
             case .onAppear:
                 // TODO: - api 호출 (messageStreamTask 프로퍼티 사용)
-                continuation.yield(.setMessages(getDummyMessages()))
+                let messages = getDummyMessages()
+
+                continuation.yield(.groupMessages(messages))
                 continuation.finish()
 
             case .onDisappear:
@@ -65,7 +72,15 @@ final class MapStore: Store {
                 continuation.finish()
 
             case .updateMessages(let messages):
-                continuation.yield(.setMessages(messages))
+                continuation.yield(.groupMessages(messages))
+                continuation.finish()
+
+            case .tapPlaceMarker(let place):
+                continuation.yield(.setSelectedPlace(place))
+                continuation.finish()
+
+            case .dismissSpaceView:
+                continuation.yield(.setSelectedPlace(nil))
                 continuation.finish()
             }
         }
@@ -75,12 +90,20 @@ final class MapStore: Store {
         var newState = state
 
         switch action {
-        case .setMessages(let messages):
-            newState.messages = messages
         case .setUserLocation(let location):
             newState.userLocation = location
+
+        case .groupMessages(let messages):
+            newState.messageGroupContainer.groupAll(for: messages)
+
         case .setShowAddMessage(let isShown):
             newState.isShowingAddMessage = isShown
+
+        case .updateMessage(let event):
+            newState.messageGroupContainer.update(event)
+
+        case .setSelectedPlace(let place):
+            newState.selectedPlace = place
         }
 
         return newState

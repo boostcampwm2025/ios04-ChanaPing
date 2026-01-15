@@ -13,14 +13,17 @@ struct SpaceView: View {
     @StateObject private var store: SpaceStore
     @State private var domeEnvironment: DomeEnvironment
 
+    private let place: Place
+
     private let rotationCamera = RotationCamera(
         position: .init(x: 0, y: 0.7, z: 0),
         rotateSensitivity: 0.003
     )
 
-    init(environment: DomeEnvironment, store: SpaceStore) {
-        self.domeEnvironment = environment
+    init(store: SpaceStore, domeEnvironment: DomeEnvironment, place: Place) {
         _store = StateObject(wrappedValue: store)
+        self.domeEnvironment = domeEnvironment
+        self.place = place
     }
 
     var body: some View {
@@ -133,17 +136,5 @@ extension SpaceView {
                 )
             }
         }
-    }
-}
-
-#Preview {
-    NavigationStack {
-        // Preview용 더미 Provider 주입
-        let provider = LocationProvider()
-        SpaceView(
-            environment: .init(weather: .sunny, dayPart: .afternoon),
-            store: SpaceStore(locationProvider: provider)
-        )
-        .environmentObject(provider)
     }
 }

@@ -16,14 +16,30 @@ struct MapView: View {
         _store = StateObject(wrappedValue: MapStore(userLocation: userLocation))
     }
 
+    private let messageMarkerManager: MessageMarkerManager
+
+    init(messageMarkerManager: MessageMarkerManager) {
+        self.messageMarkerManager = messageMarkerManager
+    }
+
     var body: some View {
         NavigationStack {
             ZStack {
                 MapViewWrapper(
-                    messages: store.state.messages,
-                    userLocation: store.state.userLocation
+                    userLocation: store.state.userLocation,
+                    markerManager: messageMarkerManager,
+                    messageContainer: store.state.messageGroupContainer,
+                    onTapPlace: { place in
+                        Task {
+                            await store.send(intent: .tapPlaceMarker(place))
+                        }
+                    },
+                    onTapNoPlace: { messages in
+                        // TODO: NoPlace 2개 이상 터치 시 UI(스택 펼치기 등) 연결 예정
+                        print("NoPlace messages tapped: \(messages.count)")
+                    }
                 )
-                    .ignoresSafeArea()
+                .ignoresSafeArea()
 
                 VStack {
                     FloatingNavigationBar(
@@ -60,6 +76,22 @@ struct MapView: View {
             ) {
                 MessageComposerView(userLocation: store.state.userLocation)
                     .onAppear { setTabBarHidden(true) }
+            }
+            .navigationDestination(
+                isPresented: Binding(
+                    get: { store.state.selectedPlace != nil },
+                    set: { isPresented in
+                        if !isPresented {
+                            Task {
+                                await store.send(intent: .dismissSpaceView)
+                            }
+                        }
+                    }
+                )
+            ) {
+                if let place = store.state.selectedPlace {
+                    SpaceView(domeEnvironment: .init(weather: .sunny, dayPart: .afternoon), place: place)
+                }
             }
             .task {
                 locationProvider.requestAuthorizationIfNeeded()
