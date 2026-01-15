@@ -71,7 +71,22 @@ final class MessageRepositoryImpl: MessageRepository {
     }
 
     func getNearbyMessages(location: Coordinate, limit: Int?) async throws -> [Message] {
-        return []
+        var params: [String: AnyJSON] = [
+            "p_lat": .double(location.latitude),
+            "p_lon": .double(location.longitude)
+        ]
+
+        if let limit {
+            params["p_limit"] = .double(Double(limit))
+        }
+
+        let response = try await supabaseClient
+            .rpc("get_nearby_messages", params: params)
+            .execute()
+
+        let dtos = try JSONDecoders.iso8601.decode([NearbyMessageResponseDTO].self, from: response.data)
+
+        return dtos.map { $0.toDomain() }
     }
 
     func getPlaceMessages(placeID: PlaceID, limit: Int?) async throws -> [Message] {
