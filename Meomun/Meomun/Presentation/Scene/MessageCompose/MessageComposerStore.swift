@@ -17,6 +17,7 @@ final class MessageComposerStore: Store {
     }
 
     struct State: Equatable {
+        var userLocation: Coordinate
         var message: String = ""
         var placeText: String = ""
         var isPlaceSearchPresented: Bool = false
@@ -62,7 +63,12 @@ final class MessageComposerStore: Store {
         case close
     }
 
-    @Published var state: State = .init()
+    @Published var state: State
+
+    init(userLocation: Coordinate) {
+        self.state = State(userLocation: userLocation)
+        AppLog.debug("userLocation: \(userLocation)", category: .location)
+    }
 
     private let createMessage: CreateMessageUseCase
 

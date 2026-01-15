@@ -35,10 +35,7 @@ struct MessageComposerView: View {
                                 network: NetworkClientImpl()
                             )
                         ),
-                        userLocation: .init(
-                            latitude: 37.5665,
-                            longitude: 126.9780
-                        ),
+                        userLocation: store.state.userLocation,
                         onSelect: { selected in
                             Task { await store.send(intent: .selectPlace(selected.name)) }
                         },
@@ -169,6 +166,10 @@ extension MessageComposerView {
     NavigationStack {
         MessageComposerView(
             store: MessageComposerStore(
+                userLocation: .init(
+                    latitude: 37.5665,
+                    longitude: 126.9780
+                ),
                 createMessage: CreateMessageUseCaseImpl(
                     messageRepository: MessageRepositoryImpl()
                 )

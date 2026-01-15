@@ -9,13 +9,37 @@ import SwiftUI
 
 struct MapView: View {
     @Environment(\.setTabBarHidden) private var setTabBarHidden
-    @StateObject private var store = MapStore()
+    @EnvironmentObject private var locationProvider: LocationProvider
+    @StateObject private var store: MapStore
+
+    private let messageMarkerManager: MessageMarkerManager
+
+    init(
+        userLocation: Coordinate,
+        messageMarkerManager: MessageMarkerManager
+    ) {
+        _store = StateObject(wrappedValue: MapStore(userLocation: userLocation))
+        self.messageMarkerManager = messageMarkerManager
+    }
 
     var body: some View {
         NavigationStack {
             ZStack {
-                MapViewWrapper(messages: store.state.messages)
-                    .ignoresSafeArea()
+                MapViewWrapper(
+                    userLocation: store.state.userLocation,
+                    markerManager: messageMarkerManager,
+                    messageContainer: store.state.messageGroupContainer,
+                    onTapPlace: { place in
+                        Task {
+                            await store.send(intent: .tapPlaceMarker(place))
+                        }
+                    },
+                    onTapNoPlace: { messages in
+                        // TODO: NoPlace 2개 이상 터치 시 UI(스택 펼치기 등) 연결 예정
+                        print("NoPlace messages tapped: \(messages.count)")
+                    }
+                )
+                .ignoresSafeArea()
 
                 VStack {
                     FloatingNavigationBar(
@@ -52,26 +76,58 @@ struct MapView: View {
             ) {
                 MessageComposerView(
                     store: MessageComposerStore(
+                        userLocation: .init(
+                            latitude: 37.5665,
+                            longitude: 126.9780
+                        ),
                         createMessage: CreateMessageUseCaseImpl(
                             messageRepository: MessageRepositoryImpl()
                         )
                     )
                 )
-                    .onAppear { setTabBarHidden(true) }
+                .onAppear { setTabBarHidden(true) }
+            }
+            .navigationDestination(
+                isPresented: Binding(
+                    get: { store.state.selectedPlace != nil },
+                    set: { isPresented in
+                        if !isPresented {
+                            Task {
+                                await store.send(intent: .dismissSpaceView)
+                            }
+                        }
+                    }
+                )
+            ) {
+                if let place = store.state.selectedPlace {
+                    SpaceView(
+                        store: SpaceStore(locationProvider: locationProvider),
+                        domeEnvironment: .init(
+                            weather: .sunny,
+                            dayPart: .afternoon
+                        ),
+                        place: place
+                    )
+                }
             }
             .task {
+                locationProvider.requestAuthorizationIfNeeded()
+                locationProvider.startContinuous()
                 await store.send(intent: .onAppear)
             }
             .onAppear { setTabBarHidden(false) }
             .onDisappear {
+                locationProvider.stopContinuous()
                 Task {
                     await store.send(intent: .onDisappear)
                 }
             }
+            .onChange(of: locationProvider.current) { _, newValue in
+                guard let newValue else { return }
+                Task {
+                    await store.send(intent: .updateUserLocation(newValue))
+                }
+            }
         }
     }
-}
-
-#Preview {
-    MapView()
 }
