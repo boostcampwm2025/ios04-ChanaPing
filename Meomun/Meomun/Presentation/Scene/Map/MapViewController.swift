@@ -297,7 +297,6 @@ extension MapViewController {
 
 struct MapViewWrapper: UIViewControllerRepresentable {
     private let userLocation: Coordinate?
-  
     private let messageGroupContainer: MessageGroupContainer
     private let onTapPlace: ((Place) -> Void)?
     private let onTapNoPlace: (([Message]) -> Void)?
@@ -305,7 +304,7 @@ struct MapViewWrapper: UIViewControllerRepresentable {
     private let messageMarkerManager: MessageMarkerManager
 
     init(
-        userLocation: Coordinate?
+        userLocation: Coordinate?,
         markerManager: MessageMarkerManager,
         messageContainer: MessageGroupContainer,
         onTapPlace: ((Place) -> Void)? = nil,

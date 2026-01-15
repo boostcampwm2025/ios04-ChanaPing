@@ -12,13 +12,13 @@ struct MapView: View {
     @EnvironmentObject private var locationProvider: LocationProvider
     @StateObject private var store: MapStore
 
-    init(userLocation: Coordinate) {
-        _store = StateObject(wrappedValue: MapStore(userLocation: userLocation))
-    }
-
     private let messageMarkerManager: MessageMarkerManager
 
-    init(messageMarkerManager: MessageMarkerManager) {
+    init(
+        userLocation: Coordinate,
+        messageMarkerManager: MessageMarkerManager
+    ) {
+        _store = StateObject(wrappedValue: MapStore(userLocation: userLocation))
         self.messageMarkerManager = messageMarkerManager
     }
 
@@ -90,7 +90,14 @@ struct MapView: View {
                 )
             ) {
                 if let place = store.state.selectedPlace {
-                    SpaceView(domeEnvironment: .init(weather: .sunny, dayPart: .afternoon), place: place)
+                    SpaceView(
+                        store: SpaceStore(locationProvider: locationProvider),
+                        domeEnvironment: .init(
+                            weather: .sunny,
+                            dayPart: .afternoon
+                        ),
+                        place: place
+                    )
                 }
             }
             .task {

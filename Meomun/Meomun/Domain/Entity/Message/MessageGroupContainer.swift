@@ -10,10 +10,6 @@ import Foundation
 struct MessageGroupContainer {
     private(set) var groups: [Coordinate: SameCoordinateMessageGroup]
 
-    init(groups: [Coordinate: SameCoordinateMessageGroup]) {
-        self.groups = groups
-    }
-
     mutating func groupAll(for messages: [Message]) {
         var newGroups: [Coordinate: SameCoordinateMessageGroup] = [:]
 

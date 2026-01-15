@@ -41,17 +41,30 @@ struct MainTabShellView: View {
     private func contentView(for tab: MainTab) -> some View {
         switch tab {
         case .map:
-//            MapView(userLocation: userLocation)
-            MapView(userLocation: .init(latitude: 37.5665, longitude: 126.9780))    // 임시 값
+//            MapView(userLocation: userLocation, messageMarkerManager: MessageMarkerManager())
+            MapView(
+                userLocation: .init(latitude: 37.5665, longitude: 126.9780),
+                messageMarkerManager: MessageMarkerManager()
+            )    // 임시 값
+
         case .record:
             EmptyView()
+
         case .myPage:
             SpaceView(
-                environment: DomeEnvironment(
+                store: SpaceStore(locationProvider: locationProvider),
+                domeEnvironment: DomeEnvironment(
                     weather: .sunny,
                     dayPart: .daybreak
                 ),
-                store: SpaceStore(locationProvider: locationProvider)
+                place: Place(
+                    id: PlaceID(value: ""),
+                    name: "",
+                    coordinate: Coordinate(
+                        latitude: 0.0,
+                        longitude: 0.0
+                    )
+                )
             )
         }
     }
