@@ -12,6 +12,7 @@ final class MapStore: Store {
     enum Intent {
         case onAppear
         case onDisappear
+        case updateUserLocation(Coordinate)
         case tapWriteButton
         case dismissAddMessage
         case updateMessages([Message])
@@ -20,6 +21,7 @@ final class MapStore: Store {
     }
 
     enum Action {
+        case setUserLocation(Coordinate)
         case setShowAddMessage(Bool)
         case groupMessages([Message])
         case updateMessage(event: MessageEvent)
@@ -28,13 +30,18 @@ final class MapStore: Store {
 
     struct State {
         var messageGroupContainer: MessageGroupContainer = .init(groups: [:])
+        var userLocation: Coordinate
         var isShowingAddMessage: Bool = false
         var selectedPlace: Place? = nil
     }
 
-    @Published var state: State = .init()
+    @Published var state: State
 
     private var messageStreamTask: Task<Void, Never>?
+
+    init(userLocation: Coordinate) {
+        self.state = State(userLocation: userLocation)
+    }
 
     func action(intent: Intent) -> AsyncStream<Action> {
         AsyncStream { continuation in
@@ -50,6 +57,10 @@ final class MapStore: Store {
                 // 화면 내려갈 때 실시간 작업 정리
                 messageStreamTask?.cancel()
                 messageStreamTask = nil
+                continuation.finish()
+
+            case .updateUserLocation(let location):
+                continuation.yield(.setUserLocation(location))
                 continuation.finish()
 
             case .tapWriteButton:
@@ -79,6 +90,9 @@ final class MapStore: Store {
         var newState = state
 
         switch action {
+        case .setUserLocation(let location):
+            newState.userLocation = location
+
         case .groupMessages(let messages):
             newState.messageGroupContainer.groupAll(for: messages)
 

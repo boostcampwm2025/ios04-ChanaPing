@@ -86,10 +86,8 @@ final class MapViewController: UIViewController {
 
     override func viewDidLoad() {
         super.viewDidLoad()
-        configureLocationManager()
         configureSubviews()
         configureLayout()
-        requestLocationAuthorizationIfNeeded()
 
         naverMapView.mapView.contentInset = UIEdgeInsets(
             top: 0,
@@ -177,61 +175,21 @@ extension MapViewController {
     }
 }
 
-// MARK: - CLLocationManagerDelegate
+// MARK: - UserLocation
 
-extension MapViewController: CLLocationManagerDelegate {
-    private func configureLocationManager() {
-        locationManager.delegate = self
-        locationManager.desiredAccuracy = kCLLocationAccuracyBest
-    }
+extension MapViewController {
+    func updateUserLocation(_ coordinate: Coordinate?) {
+        guard let coordinate else { return }
 
-    private func requestLocationAuthorizationIfNeeded() {
-        let status = locationManager.authorizationStatus
-
-        switch status {
-        case .notDetermined:
-            locationManager.requestWhenInUseAuthorization()
-        case .authorizedWhenInUse, .authorizedAlways:
-            startUpdatingLocationIfNeeded()
-        case .denied, .restricted:
-            AppLog.error("위치 권한이 거부/제한되어 있어 현재 위치로 이동할 수 없습니다.", category: .permission)
-        @unknown default:
-            break
-        }
-    }
-
-    private func startUpdatingLocationIfNeeded() {
-        locationManager.startUpdatingLocation()
         naverMapView.mapView.positionMode = .direction
-    }
 
-    func locationManagerDidChangeAuthorization(_ manager: CLLocationManager) {
-        requestLocationAuthorizationIfNeeded()
-    }
-
-    func locationManager(_ manager: CLLocationManager, didUpdateLocations locations: [CLLocation]) {
-        guard let currentLocation = locations.last else { return }
         guard didMoveToCurrentLocation == false else { return }
-
         didMoveToCurrentLocation = true
 
-        let latLng = NMGLatLng(
-            lat: currentLocation.coordinate.latitude,
-            lng: currentLocation.coordinate.longitude
-        )
-
-        // 현재 위치로 카메라 이동
+        let latLng = NMGLatLng(lat: coordinate.latitude, lng: coordinate.longitude)
         let cameraUpdate = NMFCameraUpdate(scrollTo: latLng)
         cameraUpdate.animation = .easeIn
         naverMapView.mapView.moveCamera(cameraUpdate)
-    }
-
-    func locationManager(_ manager: CLLocationManager, didFailWithError error: Error) {
-        AppLog.error(
-            "위치 업데이트 실패",
-            category: .location,
-            error: error
-        )
     }
 }
 
@@ -338,6 +296,7 @@ extension MapViewController {
 // MARK: - MapViewWrapper
 
 struct MapViewWrapper: UIViewControllerRepresentable {
+    private let userLocation: Coordinate?
     private let messageGroupContainer: MessageGroupContainer
     private let onTapPlace: ((Place) -> Void)?
     private let onTapNoPlace: (([Message]) -> Void)?
@@ -345,11 +304,13 @@ struct MapViewWrapper: UIViewControllerRepresentable {
     private let messageMarkerManager: MessageMarkerManager
 
     init(
+        userLocation: Coordinate?,
         markerManager: MessageMarkerManager,
         messageContainer: MessageGroupContainer,
         onTapPlace: ((Place) -> Void)? = nil,
         onTapNoPlace: (([Message]) -> Void)? = nil
     ) {
+        self.userLocation = userLocation
         self.messageMarkerManager = markerManager
         self.messageGroupContainer = messageContainer
         self.onTapPlace = onTapPlace
@@ -363,10 +324,12 @@ struct MapViewWrapper: UIViewControllerRepresentable {
             onTapNoPlace: onTapNoPlace
         )
         viewController.updateGroups(messageGroupContainer)
+        viewController.updateUserLocation(userLocation)
         return viewController
     }
 
     func updateUIViewController(_ uiViewController: MapViewController, context: Context) {
         uiViewController.updateGroups(messageGroupContainer)
+        uiViewController.updateUserLocation(userLocation)
     }
 }

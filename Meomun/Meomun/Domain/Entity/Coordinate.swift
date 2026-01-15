@@ -7,7 +7,7 @@
 
 import Foundation
 
-struct Coordinate: Sendable {
+struct Coordinate: Sendable, Equatable, Hashable {
     let latitude: Double
     let longitude: Double
 
@@ -39,16 +39,12 @@ struct Coordinate: Sendable {
 
         return earthRadiusMeters * centralAngle
     }
-}
 
-extension Coordinate: Equatable {
     static func == (lhs: Coordinate, rhs: Coordinate) -> Bool {
         lhs.normalizedLatitude == rhs.normalizedLatitude &&
         lhs.normalizedLongitude == rhs.normalizedLongitude
     }
-}
 
-extension Coordinate: Hashable {
     func hash(into hasher: inout Hasher) {
         hasher.combine(normalizedLatitude)
         hasher.combine(normalizedLongitude)

@@ -9,8 +9,8 @@ import RealityKit
 import SwiftUI
 
 struct SpaceView: View {
-
-    @StateObject private var store = SpaceViewStore()
+    @EnvironmentObject private var locationProvider: LocationProvider
+    @StateObject private var store: SpaceStore
     @State private var domeEnvironment: DomeEnvironment
 
     @State private var spaceRootEntity: Entity?
@@ -26,44 +26,69 @@ struct SpaceView: View {
         rotateSensitivity: 0.003                // 회전 민감도 (값이 클수록 더 빠르게 회전)
     )
 
-    init(domeEnvironment: DomeEnvironment, place: Place) {
+    init(store: SpaceStore, domeEnvironment: DomeEnvironment, place: Place) {
+        _store = StateObject(wrappedValue: store)
         self.domeEnvironment = domeEnvironment
         self.place = place
     }
 
     var body: some View {
-        RealityView { content in
-            // 가상 카메라 모드 설정 (AR이 아닌 3D 공간)
-            content.camera = .virtual
-            configureSpace(content: content)
+        NavigationStack {
+            ZStack {
+                RealityView { content in
+                    // 가상 카메라 모드 설정 (AR이 아닌 3D 공간)
+                    content.camera = .virtual
+                    configureSpace(content: content)
+                }
+                .gesture(
+                    DragGesture()
+                        .onChanged { value in
+                            rotationCamera.handleDrag(
+                                translationX: Float(value.translation.width),
+                                translationY: Float(value.translation.height)
+                            )
+                        }
+                        .onEnded { _ in
+                            rotationCamera.endDrag()
+                        }
+                )
+                .ignoresSafeArea()
+
+                VStack {
+                    Spacer()
+
+                    HStack {
+                        Spacer()
+
+                        WriteButton {   // TODO: - 위치 조정 필요
+                            Task { await store.send(intent: .tapWriteButton) }
+                        }
+                    }
+                    .padding(.trailing, 24)
+                    .padding(.bottom, 96)
+                }
+            }
+            .navigationDestination(
+                isPresented: Binding(
+                    get: { store.state.isShowingAddMessage },
+                    set: { isPresented in
+                        if !isPresented {
+                            Task { await store.send(intent: .dismissAddMessage) }
+                        }
+                    }
+                )
+            ) {
+                if let coordinate = store.state.userLocation {
+                    MessageComposerView(userLocation: coordinate)
+                }
+            }
         }
-        .gesture(
-            DragGesture()
-                .onChanged { value in
-                    rotationCamera.handleDrag(
-                        translationX: Float(value.translation.width),
-                        translationY: Float(value.translation.height)
-                    )
-                }
-                .onEnded { _ in
-                    rotationCamera.endDrag()
-                }
-        )
         .task {
             await store.send(intent: .onAppear)
         }
         .onChange(of: store.state.messages.map(\.id)) {
             let snapshot = store.state.messages
             syncIfPossible(messages: snapshot)
-        }
-        .ignoresSafeArea()
-        .overlay(alignment: .bottomTrailing) {
-            NavigationLink {
-                MessageComposerView()
-            } label: {
-                WriteButton { }
-                    .disabled(true)
-            }
         }
     }
 }
@@ -462,6 +487,7 @@ private struct BubblePlacer {
 #Preview {
     NavigationStack {
         SpaceView(
+            store: .init(locationProvider: .init()),
             domeEnvironment: .init(weather: .sunny, dayPart: .afternoon),
             place: .init(id: .init(value: .init()), name: "광화문", coordinate: .init(latitude: 0, longitude: 0))
         )
