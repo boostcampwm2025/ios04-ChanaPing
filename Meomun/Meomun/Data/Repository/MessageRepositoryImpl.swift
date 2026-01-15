@@ -8,6 +8,12 @@
 import Foundation
 import Supabase
 
+struct CreateMessageRequest: Sendable {
+    let text: String
+    let placeID: PlaceID?
+    let coordinate: Coordinate?
+}
+
 final class MessageRepositoryImpl: MessageRepository {
     private let supabase: SupabaseClient
 
@@ -15,20 +21,47 @@ final class MessageRepositoryImpl: MessageRepository {
         self.supabase = supabase
     }
 
-    func moderateMessage(text: String) async throws -> TextModerationResponse {
-        let response: TextModerationResponse = try await supabase.functions
-          .invoke(
-            "text-moderation",
-            options: FunctionInvokeOptions(
-              body: ["text": text]
+    func createMessage(_ request: CreateMessageRequestDTO) async throws {
+        do {
+            _ = try await supabase.functions.invoke(
+                "messages",
+                options: FunctionInvokeOptions(
+                    method: .post,
+                    body: request
+                ),
+                decode: { _, response in
+                    if (200...299).contains(response.statusCode) { return () }
+                }
             )
-          )
 
-        return response
-    }
+            return
+        } catch FunctionsError.httpError(let code, let data) {
+            let raw = String(data: data, encoding: .utf8) ?? ""
 
-    func createMessage(_ request: CreateMessageRequest) async throws {
-        return
+            if code == 401 {
+                throw CreateMessageError.unauthorized
+            }
+
+            if code == 422 {
+                if let dto = try? JSONDecoder().decode(CreateMessageErrorResponseDTO.self, from: data) {
+                    // code: CONTENT_BLOCKED / CONTENT_UNKNOWN
+                    switch dto.code {
+                    case "CONTENT_BLOCKED":
+                        throw CreateMessageError.blocked(details: dto)
+                    case "CONTENT_UNKNOWN":
+                        throw CreateMessageError.unknown(details: dto)
+                    default:
+                        throw CreateMessageError.http(code: code, rawBody: raw)
+                    }
+                } else {
+                    throw CreateMessageError.http(code: code, rawBody: raw)
+                }
+            }
+
+            throw CreateMessageError.http(code: code, rawBody: raw)
+        } catch {
+            throw error
+        }
     }
 
     func deleteMessage(messageID: MessageID) async throws {

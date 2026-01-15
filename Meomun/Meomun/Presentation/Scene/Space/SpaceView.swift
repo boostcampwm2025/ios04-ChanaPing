@@ -48,7 +48,7 @@ struct SpaceView: View {
             NavigationLink {
                 MessageComposerView(
                     store: MessageComposerStore(
-                        moderateMessage: TextModerationUseCaseImpl(
+                        createMessage: CreateMessageUseCaseImpl(
                             messageRepository: MessageRepositoryImpl()
                         )
                     )

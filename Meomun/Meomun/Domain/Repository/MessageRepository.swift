@@ -7,15 +7,8 @@
 
 import Foundation
 
-struct CreateMessageRequest: Sendable {
-    let text: String
-    let placeID: PlaceID?
-    let coordinate: Coordinate?
-}
-
 protocol MessageRepository: Sendable {
-    func moderateMessage(text: String) async throws -> TextModerationResponse
-    func createMessage(_ request: CreateMessageRequest) async throws
+    func createMessage(_ request: CreateMessageRequestDTO) async throws
     func deleteMessage(messageID: MessageID) async throws
 
     func reportMessage(messageID: MessageID) async throws -> MessageID

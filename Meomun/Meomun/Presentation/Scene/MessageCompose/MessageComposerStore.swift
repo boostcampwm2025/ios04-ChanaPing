@@ -63,12 +63,12 @@ final class MessageComposerStore: Store {
 
     @Published var state: State = .init()
 
-    private let moderateMessage: TextModerationUseCase
+    private let createMessage: CreateMessageUseCase
 
     init(
-        moderateMessage: TextModerationUseCase
+        createMessage: CreateMessageUseCase
     ) {
-        self.moderateMessage = moderateMessage
+        self.createMessage = createMessage
     }
 
     func action(intent: Intent) -> AsyncStream<Action> {
@@ -123,33 +123,17 @@ final class MessageComposerStore: Store {
                     }
 
                     do {
-                        let response = try await moderateMessage.execute(text: trimmedMessage)
-
-                        switch response.decision {
-                        case .ALLOW:
-                            // TODO: 메시지 생성 API 호출
-                            continuation.yield(.close)
-
-                        case .REVIEW, .BLOCK:
-                            continuation.yield(
-                                .presentAlert(
-                                    .init(
-                                        title: "메시지를 남길 수 없어요.",
-                                        message: response.reason
-                                    )
-                                )
+                        let response: () = try await createMessage.execute(
+                            CreateMessageRequestDTO(
+                                content: state.message,
+                                coordinate: CoordinateDTO(
+                                    latitude: 38.2211,
+                                    longitude: 122.9282
+                                ),
+                                placeTag: nil
                             )
+                        )
 
-                        case .UNKNOWN:
-                            continuation.yield(
-                                .presentAlert(
-                                    .init(
-                                        title: "검증 결과를 확인할 수 없어요.",
-                                        message: "잠시 후 다시 시도해 주세요."
-                                    )
-                                )
-                            )
-                        }
                     } catch {
                         continuation.yield(
                             .presentAlert(

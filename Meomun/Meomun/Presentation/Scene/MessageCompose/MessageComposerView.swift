@@ -169,7 +169,7 @@ extension MessageComposerView {
     NavigationStack {
         MessageComposerView(
             store: MessageComposerStore(
-                moderateMessage: TextModerationUseCaseImpl(
+                createMessage: CreateMessageUseCaseImpl(
                     messageRepository: MessageRepositoryImpl()
                 )
             )
