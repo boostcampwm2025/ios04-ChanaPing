@@ -23,11 +23,11 @@ final class BubbleImageRenderer {
     /// - Parameters:
     ///   - message: 렌더링할 메시지
     ///   - showsAccentLine: 좌측 상태 라인 표시 여부
-    ///   - scale: 렌더링 스케일 (기본값: 화면 스케일)
+    ///   - scale: 렌더링 스케일 (nil이면 화면 스케일 사용)
     func renderSingleBubble(
         message: Message,
         showsAccentLine: Bool,
-        scale: CGFloat = UIScreen.main.scale
+        scale: CGFloat? = nil
     ) -> UIImage {
         let bubble = MessageBubble(
             placeName: message.placeTag?.name,
@@ -37,7 +37,7 @@ final class BubbleImageRenderer {
             BubbleText(text: message.content)
         }
 
-        return render(view: bubble.padding(4), scale: scale)
+        return render(view: bubble.padding(4), scale: scale ?? UIScreen.main.scale)
     }
 
     /// 애니메이션 진행도에 따른 회전 버블의 이미지를 렌더링합니다.
@@ -45,12 +45,12 @@ final class BubbleImageRenderer {
     ///   - current: 현재 표시 중인 메시지
     ///   - next: 다음에 표시될 메시지
     ///   - progress: 애니메이션 진행률 (0.0 ~ 1.0)
-    ///   - scale: 렌더링 스케일 (기본값: 화면 스케일)
+    ///   - scale: 렌더링 스케일 (nil이면 화면 스케일 사용)
     func renderRotatingBubble(
         current: Message,
         next: Message,
         progress: Double,
-        scale: CGFloat = UIScreen.main.scale
+        scale: CGFloat? = nil
     ) -> UIImage {
         let bubble = MessageBubble(
             placeName: current.placeTag?.name,
@@ -64,16 +64,16 @@ final class BubbleImageRenderer {
             )
         }
 
-        return render(view: bubble.padding(4), scale: scale)
+        return render(view: bubble.padding(4), scale: scale ?? UIScreen.main.scale)
     }
 
     /// 스택 버블 이미지를 렌더링합니다.
     /// - Parameters:
     ///   - messages: 렌더링 할 메시지들
-    ///   - scale: 렌더링 스케일 (기본값: 화면 스케일)
+    ///   - scale: 렌더링 스케일 (nil이면 화면 스케일 사용)
     func renderStackBubble(
         messages: [Message],
-        scale: CGFloat = UIScreen.main.scale
+        scale: CGFloat? = nil
     ) -> UIImage {
         // TODO: MessageStackBubble 구현 후 교체
         guard let first = messages.first else { return UIImage() }
