@@ -11,4 +11,25 @@ struct PlaceDTO: Codable, Equatable {
     let latitude: Double
     let longitude: Double
     let address: String?
+
+    enum CodingKeys: String, CodingKey {
+        case placeId = "place_id"
+        case name
+        case latitude
+        case longitude
+        case address
+    }
+}
+
+// MARK: - Mapping
+
+extension PlaceDTO {
+    func toDomain() -> Place {
+        Place(
+            id: PlaceID(value: placeId),
+            name: name,
+            coordinate: Coordinate(latitude: latitude, longitude: longitude),
+            address: ""
+        )
+    }
 }

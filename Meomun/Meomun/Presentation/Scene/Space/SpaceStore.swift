@@ -8,34 +8,30 @@
 import Combine
 import Foundation
 
-// 더미 데이터 모델
-struct SpaceMessage: Identifiable, Equatable {
-    let id: UUID
-    let text: String
-    let createdAt: Date
-}
-
 final class SpaceStore: Store {
 
     enum Intent {
-        case onAppear
+        case onAppear(placeID: PlaceID)
         case tapWriteButton
         case dismissAddMessage
     }
 
     enum Action {
         case setLoading(Bool)
+        case setMessages([Message])
         case setError(String)
         case setUserLocation(Coordinate)
         case setShowAddMessage(Bool)
+        case setCurrentPlaceID(PlaceID)
     }
 
     struct State {
         var isLoading: Bool = false
         var errorMessage: String = ""
-        var messages: [SpaceMessage] = []
+        var messages: [Message] = []
         var userLocation: Coordinate? = nil     // TODO: - 지도 > 공간 진입 시점 좌표 넘겨주고, 옵셔널 지우기
         var isShowingAddMessage: Bool = false
+        var currentPlaceID: PlaceID?
     }
 
     @Published var state: State
@@ -43,17 +39,26 @@ final class SpaceStore: Store {
     private let locationProvider: LocationProvider
     private var oneShotTask: Task<Void, Never>?
 
-    init(locationProvider: LocationProvider) {
+    private let fetchPlaceMessagesUseCase: FetchPlaceMessagesUseCase
+
+    private var fetchMessagesTask: Task<Void, Never>?
+
+    init(
+        locationProvider: LocationProvider,
+        fetchPlaceMessagesUseCase: FetchPlaceMessagesUseCase
+    ) {
         self.locationProvider = locationProvider
         self.state = State()
+        self.fetchPlaceMessagesUseCase = fetchPlaceMessagesUseCase
     }
 
     func action(intent: Intent) -> AsyncStream<Action> {
         AsyncStream { continuation in
             switch intent {
-            case .onAppear:
-                // TODO: 서버에서 메시지 데이터 fetch
-                continuation.finish()
+            case .onAppear(let placeID):
+                continuation.yield(.setCurrentPlaceID(placeID))
+                fetchMessages(for: placeID, continuation: continuation)
+
             case .tapWriteButton:
                 oneShotTask?.cancel()
                 oneShotTask = nil
@@ -63,6 +68,7 @@ final class SpaceStore: Store {
 
                 oneShotTask = Task { [weak self] in
                     guard let self else { return }
+
                     do {
                         let coordinate = try await self.locationProvider.requestCurrentOnce()
                         AppLog.debug("Space write: got location: \(coordinate)", category: .location)
@@ -100,6 +106,10 @@ final class SpaceStore: Store {
         switch action {
         case .setLoading(let isLoading):
             newState.isLoading = isLoading
+
+        case .setMessages(let messages):
+            newState.messages = messages
+
         case .setError(let message):
             newState.errorMessage = message
 
@@ -108,9 +118,41 @@ final class SpaceStore: Store {
 
         case .setShowAddMessage(let isShown):
             newState.isShowingAddMessage = isShown
+
+        case .setCurrentPlaceID(let placeID):
+            newState.currentPlaceID = placeID
         }
 
         return newState
     }
 
+    private func fetchMessages(
+        for placeID: PlaceID,
+        continuation: AsyncStream<Action>.Continuation
+    ) {
+        fetchMessagesTask?.cancel()
+        continuation.yield(.setLoading(true))
+
+        fetchMessagesTask = Task {
+            defer {
+                continuation.yield(.setLoading(false))
+                continuation.finish()
+            }
+
+            do {
+                let messages = try await fetchPlaceMessagesUseCase.execute(placeID: placeID)
+
+                guard !Task.isCancelled else { return }
+
+                continuation.yield(.setMessages(messages))
+                continuation.yield(.setError(""))
+            } catch is CancellationError {
+                return
+            } catch {
+                guard !Task.isCancelled else { return }
+
+                continuation.yield(.setError(error.localizedDescription))
+            }
+        }
+    }
 }

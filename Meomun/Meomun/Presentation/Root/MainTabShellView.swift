@@ -54,13 +54,20 @@ struct MainTabShellView: View {
 
         case .myPage:
             SpaceView(
-                store: SpaceStore(locationProvider: locationProvider),
+                store: SpaceStore(
+                    locationProvider: locationProvider,
+                    fetchPlaceMessagesUseCase: FetchPlaceMessagesUseCaseImpl(
+                        messageRepository: MessageRepositoryImpl()
+                    )
+                ),
                 domeEnvironment: DomeEnvironment(
                     weather: .sunny,
                     dayPart: .daybreak
                 ),
                 place: Place(
-                    id: PlaceID(value: ""),
+                    id: PlaceID(
+                        value: ""
+                    ),
                     name: "",
                     coordinate: Coordinate(
                         latitude: 0.0,

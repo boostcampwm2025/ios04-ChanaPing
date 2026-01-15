@@ -90,6 +90,39 @@ final class MessageRepositoryImpl: MessageRepository {
     }
 
     func getPlaceMessages(placeID: PlaceID, limit: Int?) async throws -> [Message] {
-        return []
+        AppLog.debug(
+            "getPlaceMessages RPC request: placeID=\(placeID.value), limit=\(limit.map(String.init) ?? "nil")",
+            category: .repository
+        )
+
+        do {
+            var params: [String: AnyJSON] = ["p_place_id": .string("bcdbf174-ee39-44dc-a77b-cb2034ff8d0d")]
+
+            if let limit {
+                params["p_limit"] = .double(Double(limit))
+            }
+
+            let response: [PlaceMessageResponseDTO] = try await supabaseClient
+                .rpc("get_place_messages", params: params)
+                .execute()
+                .value
+
+            let messages = response.map { $0.toDomain() }
+
+            AppLog.debug(
+                "getPlaceMessages RPC success: rows=\(response.count), messages=\(messages.count)",
+                category: .repository
+            )
+
+            return messages
+        } catch {
+            AppLog.error(
+                "getPlaceMessages RPC failed: placeID=\(placeID.value)",
+                category: .repository,
+                error: error
+            )
+
+            throw error
+        }
     }
 }

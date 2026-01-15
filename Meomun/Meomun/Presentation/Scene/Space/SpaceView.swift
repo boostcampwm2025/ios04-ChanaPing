@@ -9,6 +9,7 @@ import RealityKit
 import SwiftUI
 
 struct SpaceView: View {
+
     @EnvironmentObject private var locationProvider: LocationProvider
     @StateObject private var store: SpaceStore
     @State private var domeEnvironment: DomeEnvironment
@@ -16,9 +17,10 @@ struct SpaceView: View {
     @State private var spaceRootEntity: Entity?
     @State private var messageBubbleTemplateEntity: Entity?
 
-    @State private var messageBubbleRootByID: [UUID: Entity] = [:]
+    @State private var messageBubbleRootByID: [MessageID: Entity] = [:]
 
     @State private var syncTask: Task<Void, Never>?
+
     private let place: Place
 
     private let rotationCamera = RotationCamera(
@@ -91,10 +93,11 @@ struct SpaceView: View {
             }
         }
         .task {
-            await store.send(intent: .onAppear)
+            await store.send(intent: .onAppear(placeID: place.id))
         }
         .onChange(of: store.state.messages.map(\.id)) {
             let snapshot = store.state.messages
+            print("onchange")
             syncIfPossible(messages: snapshot)
         }
     }
@@ -199,7 +202,7 @@ extension SpaceView {
         static let recentThresholdSeconds: TimeInterval = 20 * 60
     }
 
-    private func syncIfPossible(messages: [SpaceMessage]) {
+    private func syncIfPossible(messages: [Message]) {
         guard let root = spaceRootEntity else { return }
         guard messageBubbleTemplateEntity != nil else { return }
 
@@ -211,7 +214,7 @@ extension SpaceView {
         }
     }
 
-    private func syncMessageBubbles(to root: Entity, messages: [SpaceMessage]) {
+    private func syncMessageBubbles(to root: Entity, messages: [Message]) {
         guard let messageBubbleTemplateEntity = messageBubbleTemplateEntity else { return }
 
         let incomingMessageIDSet = Set(messages.map(\.id))
@@ -234,17 +237,17 @@ extension SpaceView {
         }
     }
 
-    private func removeMessageBubble(messageID: UUID) {
+    private func removeMessageBubble(messageID: MessageID) {
         guard let bubbleRootEntity = messageBubbleRootByID[messageID] else { return }
         bubbleRootEntity.removeFromParent()
         messageBubbleRootByID[messageID] = nil
     }
 
-    private func addMessageBubble(to root: Entity, message: SpaceMessage, messageBubbleTemplateEntity: Entity) {
+    private func addMessageBubble(to root: Entity, message: Message, messageBubbleTemplateEntity: Entity) {
         let bubblePlacer = BubblePlacer()
 
         // 텍스트 가공 및 생성
-        let processedText = arrangeText(message.text)
+        let processedText = arrangeText(message.content)
         let textEntity = makeTextEntity(processedText)
 
         // 중앙 정렬 보정
@@ -252,7 +255,7 @@ extension SpaceView {
 
         // 버블 루트 (전체 billboard 대상)
         let bubbleRootEntity = Entity()
-        bubbleRootEntity.name = "MessageBubble-\(message.id.uuidString)"
+        bubbleRootEntity.name = "MessageBubble-\(message.id.value.uuidString)"
         bubbleRootEntity.components.set(BillboardComponent())
 
         // 버블 랜덤 배치
@@ -266,7 +269,7 @@ extension SpaceView {
 
         // messageBubbleTemplateEntity 복제
         let bubbleBubbleEntity = messageBubbleTemplateEntity.clone(recursive: true)
-        bubbleBubbleEntity.name = "MessageModel-\(message.id.uuidString)"
+        bubbleBubbleEntity.name = "MessageModel-\(message.id.value.uuidString)"
 
         // 텍스트에 맞는 uniform 배율 계산
         let multiplier = uniformMultiplierToFitText(
@@ -404,7 +407,7 @@ extension SpaceView {
         textEntity.position += SIMD3<Float>(0, 0, frontOffset)
     }
 
-    private func isRecentMessage(_ message: SpaceMessage, now: Date = .now) -> Bool {
+    private func isRecentMessage(_ message: Message, now: Date = .now) -> Bool {
         now.timeIntervalSince(message.createdAt) < BubbleSizingTuning.recentThresholdSeconds
     }
 
@@ -494,9 +497,26 @@ private struct BubblePlacer {
 #Preview {
     NavigationStack {
         SpaceView(
-            store: .init(locationProvider: .init()),
-            domeEnvironment: .init(weather: .sunny, dayPart: .afternoon),
-            place: .init(id: .init(value: .init()), name: "광화문", coordinate: .init(latitude: 0, longitude: 0))
+            store: .init(
+                locationProvider: .init(),
+                fetchPlaceMessagesUseCase: FetchPlaceMessagesUseCaseImpl(
+                    messageRepository: MessageRepositoryImpl()
+                )
+            ),
+            domeEnvironment: .init(
+                weather: .sunny,
+                dayPart: .afternoon
+            ),
+            place: .init(
+                id: .init(
+                    value: .init()
+                ),
+                name: "광화문",
+                coordinate: .init(
+                    latitude: 0,
+                    longitude: 0
+                )
+            )
         )
     }
 }

@@ -98,7 +98,12 @@ struct MapView: View {
             ) {
                 if let place = store.state.selectedPlace {
                     SpaceView(
-                        store: SpaceStore(locationProvider: locationProvider),
+                        store: SpaceStore(
+                            locationProvider: locationProvider,
+                            fetchPlaceMessagesUseCase: FetchPlaceMessagesUseCaseImpl(
+                                messageRepository: MessageRepositoryImpl()
+                            )
+                        ),
                         domeEnvironment: .init(
                             weather: .sunny,
                             dayPart: .afternoon
