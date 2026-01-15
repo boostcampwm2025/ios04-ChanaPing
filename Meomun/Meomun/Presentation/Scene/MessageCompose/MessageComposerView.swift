@@ -100,10 +100,6 @@ extension MessageComposerView {
                 }
             }
 
-            PlaceTagSlider(places: store.state.suggestPlaces) { selected in
-                Task { await store.send(intent: .selectSuggestedPlace(selected))}
-            }
-
             Spacer(minLength: 0)
 
             ConfirmButton(action: {
