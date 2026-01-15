@@ -5,7 +5,6 @@
 //  Created by MinwooJe on 1/14/26.
 //
 
-import SwiftUI
 import UIKit
 
 import NMapsMap
@@ -22,11 +21,10 @@ final class MessageMarkerManager {
     /// 회전 버블용 마커 (AnimationState와 별도로 관리)
     private(set) var bubbleMarkers: [MarkerGroupKey: NMFMarker] = [:]
 
-    /// 회전 버블 고정 너비
-    private let rotatingBubbleWidth: CGFloat
+    let bubbleImageRenderer: BubbleImageRenderer
 
-    init(rotatingBubbleWidth: CGFloat = 170) {
-        self.rotatingBubbleWidth = rotatingBubbleWidth
+    init(imageRenderer: BubbleImageRenderer) {
+        self.bubbleImageRenderer = imageRenderer
     }
 
     /// 모든 마커를 지도에서 제거합니다.
@@ -116,7 +114,7 @@ extension MessageMarkerManager {
         }
 
         if messages.count == 1 {
-            let image = renderStaticBubbleImage(for: messages[0], showsAccentLine: true)
+            let image = bubbleImageRenderer.renderSingleBubble(message: messages[0], showsAccentLine: true)
             marker.iconImage = NMFOverlayImage(image: image)
             singleMarkers[groupKey] = marker
         } else {
@@ -142,7 +140,7 @@ extension MessageMarkerManager {
         guard let current = messages.first else { return }
 
         let currentTime = Date().timeIntervalSince1970
-        let image = renderStaticBubbleImage(for: current, showsAccentLine: false)
+        let image = bubbleImageRenderer.renderSingleBubble(message: current, showsAccentLine: false)
         marker.iconImage = NMFOverlayImage(image: image)
 
         let state = AnimationState(
@@ -158,54 +156,5 @@ extension MessageMarkerManager {
     /// 그룹 키로 마커를 가져옵니다.
     func getMarker(for groupKey: MarkerGroupKey) -> NMFMarker? {
         return bubbleMarkers[groupKey]
-    }
-}
-
-// MARK: - Rendering
-
-extension MessageMarkerManager {
-    func renderStaticBubbleImage(
-        for message: Message,
-        showsAccentLine: Bool = true,
-        scale: CGFloat = UIScreen.main.scale
-    ) -> UIImage {
-        let bubble = MessageBubble(
-            placeName: message.placeTag?.name,
-            statusIndicator: showsAccentLine ? (message.isRecent() ? .recent : .normal) : .none,
-            layout: showsAccentLine ? .flexible : .fixedWidth(rotatingBubbleWidth)
-        ) {
-            BubbleText(text: message.content)
-        }
-
-        let renderer = ImageRenderer(content: bubble.padding(4))
-        renderer.scale = scale
-        renderer.isOpaque = false
-
-        return renderer.uiImage ?? UIImage()
-    }
-
-    func renderRotatingBubbleImage(
-        current: Message,
-        next: Message,
-        progress: Double,
-        scale: CGFloat = UIScreen.main.scale
-    ) -> UIImage {
-        let bubble = MessageBubble(
-            placeName: current.placeTag?.name,
-            statusIndicator: .none,
-            layout: .fixedWidth(rotatingBubbleWidth)
-        ) {
-            RotatingTextStack(
-                currentText: current.content,
-                nextText: next.content,
-                progress: progress
-            )
-        }
-
-        let renderer = ImageRenderer(content: bubble.padding(4))
-        renderer.scale = scale
-        renderer.isOpaque = false
-
-        return renderer.uiImage ?? UIImage()
     }
 }

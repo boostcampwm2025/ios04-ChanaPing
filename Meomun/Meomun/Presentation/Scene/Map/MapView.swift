@@ -107,7 +107,8 @@ struct MapView: View {
 }
 
 #Preview {
-    let messageMarkerManager = MessageMarkerManager()
+    let bubbleImageRenderer = BubbleImageRenderer()
+    let messageMarkerManager = MessageMarkerManager(imageRenderer: bubbleImageRenderer)
     let rotationAnimator = MessageRotationAnimator()
     MapView(messageMarkerManager: messageMarkerManager, rotationAnimator: rotationAnimator)
 }

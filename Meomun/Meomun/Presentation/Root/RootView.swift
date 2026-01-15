@@ -40,7 +40,10 @@ struct RootView: View {
     private func contentView(for tab: MainTab) -> some View {
         switch tab {
         case .map:
-            MapView(messageMarkerManager: MessageMarkerManager(), rotationAnimator: MessageRotationAnimator())
+            MapView(
+                messageMarkerManager: MessageMarkerManager(imageRenderer: .init()),
+                rotationAnimator: MessageRotationAnimator()
+            )
         case .record:
             EmptyView()
         case .myPage:

@@ -50,7 +50,7 @@ final class MapViewController: UIViewController {
     }
 
     required init?(coder: NSCoder) {
-        self.messageMarkerManager = MessageMarkerManager()
+        self.messageMarkerManager = MessageMarkerManager(imageRenderer: .init())
         self.rotationAnimator = MessageRotationAnimator()
         self.onTapPlace = nil
         self.onTapNoPlace = nil
@@ -286,7 +286,7 @@ extension MapViewController {
             if state.isAnimating {
                 rotationAnimator.updateAnimation(for: state, currentTime: currentTime)
 
-                let image = messageMarkerManager.renderRotatingBubbleImage(
+                let image = messageMarkerManager.bubbleImageRenderer.renderRotatingBubble(
                     current: state.currentMessage,
                     next: state.nextMessage,
                     progress: state.animationProgress
