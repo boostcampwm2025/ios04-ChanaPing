@@ -24,7 +24,7 @@ struct MapView: View {
             ZStack {
                 MapViewWrapper(
                     markerManager: messageMarkerManager,
-                    messageContainer: store.state.messageGroupContainer,
+                    messages: store.state.messages,
                     onTapPlace: { place in
                         Task {
                             await store.send(intent: .tapPlaceMarker(place))

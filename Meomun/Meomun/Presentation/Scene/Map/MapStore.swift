@@ -21,15 +21,14 @@ final class MapStore: Store {
 
     enum Action {
         case setShowAddMessage(Bool)
-        case groupMessages([Message])
-        case updateMessage(event: MessageEvent)
+        case setMessages([Message])
         case setSelectedPlace(Place?)
     }
 
     struct State {
-        var messageGroupContainer: MessageGroupContainer = .init(groups: [:])
+        var messages: [Message] = []
         var isShowingAddMessage: Bool = false
-        var selectedPlace: Place? = nil
+        var selectedPlace: Place?
     }
 
     @Published var state: State = .init()
@@ -43,7 +42,7 @@ final class MapStore: Store {
                 // TODO: - api 호출 (messageStreamTask 프로퍼티 사용)
                 let messages = getDummyMessages()
 
-                continuation.yield(.groupMessages(messages))
+                continuation.yield(.setMessages(messages))
                 continuation.finish()
 
             case .onDisappear:
@@ -61,7 +60,7 @@ final class MapStore: Store {
                 continuation.finish()
 
             case .updateMessages(let messages):
-                continuation.yield(.groupMessages(messages))
+                continuation.yield(.setMessages(messages))
                 continuation.finish()
 
             case .tapPlaceMarker(let place):
@@ -79,14 +78,11 @@ final class MapStore: Store {
         var newState = state
 
         switch action {
-        case .groupMessages(let messages):
-            newState.messageGroupContainer.groupAll(for: messages)
+        case .setMessages(let messages):
+            newState.messages = messages
 
         case .setShowAddMessage(let isShown):
             newState.isShowingAddMessage = isShown
-
-        case .updateMessage(let event):
-            newState.messageGroupContainer.update(event)
 
         case .setSelectedPlace(let place):
             newState.selectedPlace = place

@@ -238,10 +238,20 @@ extension MapViewController: CLLocationManagerDelegate {
 // MARK: - Messages
 
 extension MapViewController {
-    /// 그룹화된 메시지로 마커를 업데이트합니다.
-    func updateGroups(_ groups: MessageGroupContainer) {
-        messageMarkerManager.updateMarkers(
-            messageGroupContainer: groups,
+    /// 메시지 배열로 마커를 로딩합니다.
+    func loadMessages(_ messages: [Message]) {
+        messageMarkerManager.loadMessages(
+            messages,
+            mapView: naverMapView.mapView,
+            onTapPlace: onTapPlace,
+            onTapNoPlace: onTapNoPlace
+        )
+    }
+
+    /// 실시간 이벤트를 처리합니다.
+    func handleEvent(_ event: MessageEvent) {
+        messageMarkerManager.handleEvent(
+            event,
             mapView: naverMapView.mapView,
             onTapPlace: onTapPlace,
             onTapNoPlace: onTapNoPlace
@@ -277,7 +287,7 @@ extension MapViewController {
 // MARK: - MapViewWrapper
 
 struct MapViewWrapper: UIViewControllerRepresentable {
-    private let messageGroupContainer: MessageGroupContainer
+    private let messages: [Message]
     private let onTapPlace: ((Place) -> Void)?
     private let onTapNoPlace: (([Message]) -> Void)?
 
@@ -285,12 +295,12 @@ struct MapViewWrapper: UIViewControllerRepresentable {
 
     init(
         markerManager: MessageMarkerManager,
-        messageContainer: MessageGroupContainer,
+        messages: [Message],
         onTapPlace: ((Place) -> Void)? = nil,
         onTapNoPlace: (([Message]) -> Void)? = nil
     ) {
         self.messageMarkerManager = markerManager
-        self.messageGroupContainer = messageContainer
+        self.messages = messages
         self.onTapPlace = onTapPlace
         self.onTapNoPlace = onTapNoPlace
     }
@@ -301,11 +311,11 @@ struct MapViewWrapper: UIViewControllerRepresentable {
             onTapPlace: onTapPlace,
             onTapNoPlace: onTapNoPlace
         )
-        viewController.updateGroups(messageGroupContainer)
+        viewController.loadMessages(messages)
         return viewController
     }
 
     func updateUIViewController(_ uiViewController: MapViewController, context: Context) {
-        uiViewController.updateGroups(messageGroupContainer)
+        uiViewController.loadMessages(messages)
     }
 }
