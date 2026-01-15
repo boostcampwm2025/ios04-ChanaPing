@@ -23,16 +23,15 @@ final class MapStore: Store {
     enum Action {
         case setUserLocation(Coordinate)
         case setShowAddMessage(Bool)
-        case groupMessages([Message])
-        case updateMessage(event: MessageEvent)
+        case setMessages([Message])
         case setSelectedPlace(Place?)
     }
 
     struct State {
-        var messageGroupContainer: MessageGroupContainer = .init(groups: [:])
+        var messages: [Message] = []
         var userLocation: Coordinate
         var isShowingAddMessage: Bool = false
-        var selectedPlace: Place? = nil
+        var selectedPlace: Place?
     }
 
     @Published var state: State
@@ -50,7 +49,7 @@ final class MapStore: Store {
                 // TODO: - api 호출 (messageStreamTask 프로퍼티 사용)
                 let messages = getDummyMessages()
 
-                continuation.yield(.groupMessages(messages))
+                continuation.yield(.setMessages(messages))
                 continuation.finish()
 
             case .onDisappear:
@@ -72,7 +71,7 @@ final class MapStore: Store {
                 continuation.finish()
 
             case .updateMessages(let messages):
-                continuation.yield(.groupMessages(messages))
+                continuation.yield(.setMessages(messages))
                 continuation.finish()
 
             case .tapPlaceMarker(let place):
@@ -90,17 +89,14 @@ final class MapStore: Store {
         var newState = state
 
         switch action {
+        case .setMessages(let messages):
+            newState.messages = messages
+
         case .setUserLocation(let location):
             newState.userLocation = location
 
-        case .groupMessages(let messages):
-            newState.messageGroupContainer.groupAll(for: messages)
-
         case .setShowAddMessage(let isShown):
             newState.isShowingAddMessage = isShown
-
-        case .updateMessage(let event):
-            newState.messageGroupContainer.update(event)
 
         case .setSelectedPlace(let place):
             newState.selectedPlace = place

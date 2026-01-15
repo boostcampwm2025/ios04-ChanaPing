@@ -5,9 +5,10 @@
 //  Created by hoon on 1/6/26.
 //
 
-import NMapsMap
 import SwiftUI
 import UIKit
+
+import NMapsMap
 
 final class MapViewController: UIViewController {
 
@@ -47,7 +48,7 @@ final class MapViewController: UIViewController {
     }
 
     required init?(coder: NSCoder) {
-        self.messageMarkerManager = MessageMarkerManager()
+        self.messageMarkerManager = .init(rotationAnimator: .init(), bubbleImageRenderer: .init())
         self.onTapPlace = nil
         self.onTapNoPlace = nil
         super.init(coder: coder)
@@ -196,10 +197,20 @@ extension MapViewController {
 // MARK: - Messages
 
 extension MapViewController {
-    /// 그룹화된 메시지로 마커를 업데이트합니다.
-    func updateGroups(_ groups: MessageGroupContainer) {
-        messageMarkerManager.updateMarkers(
-            messageGroupContainer: groups,
+    /// 메시지 배열로 마커를 로딩합니다.
+    func loadMessages(_ messages: [Message]) {
+        messageMarkerManager.loadMessages(
+            messages,
+            mapView: naverMapView.mapView,
+            onTapPlace: onTapPlace,
+            onTapNoPlace: onTapNoPlace
+        )
+    }
+
+    /// 실시간 이벤트를 처리합니다.
+    func handleEvent(_ event: MessageEvent) {
+        messageMarkerManager.handleEvent(
+            event,
             mapView: naverMapView.mapView,
             onTapPlace: onTapPlace,
             onTapNoPlace: onTapNoPlace
@@ -207,7 +218,7 @@ extension MapViewController {
     }
 }
 
-// MARK: - Animation
+// MARK: - Animation Timer
 
 extension MapViewController {
     private func startBubbleRotationTimer() {
@@ -217,7 +228,9 @@ extension MapViewController {
             withTimeInterval: frameInterval,
             repeats: true
         ) { [weak self] _ in
-            self?.updateMarkers()
+            Task { @MainActor [weak self] in
+                self?.messageMarkerManager.updateAnimations()
+            }
         }
 
         if let timer = bubbleRotationTimer {
@@ -229,75 +242,13 @@ extension MapViewController {
         bubbleRotationTimer?.invalidate()
         bubbleRotationTimer = nil
     }
-
-    private func updateMarkers() {
-        let currentTime = Date().timeIntervalSince1970
-
-        for (_, config) in messageMarkerManager.bubbleConfigs {
-            guard config.messages.count > 1 else { continue }
-
-            if config.isAnimating {
-                updateAnimation(for: config, currentTime: currentTime)
-            } else {
-                if currentTime - config.lastRotationTime >= rotationInterval {
-                    startAnimation(for: config, currentTime: currentTime)
-                }
-            }
-        }
-    }
-
-    private func startAnimation(for config: BubbleConfiguration, currentTime: TimeInterval) {
-        guard !config.isAnimating else { return }
-
-        config.isAnimating = true
-        config.animationStartTime = currentTime
-        config.animationProgress = 0.0
-
-        let nextIndex = (config.currentIndex + 1) % config.messages.count
-        config.nextMessage = config.messages[nextIndex]
-        config.currentMessage = config.messages[config.currentIndex]
-    }
-
-    private func updateAnimation(for config: BubbleConfiguration, currentTime: TimeInterval) {
-        guard let startTime = config.animationStartTime else {
-            config.isAnimating = false
-            return
-        }
-
-        let elapsed = currentTime - startTime
-        let progress = min(elapsed / animationDuration, 1.0)
-        config.animationProgress = progress
-
-        let image = messageMarkerManager.renderRotatingBubbleImage(
-            current: config.currentMessage,
-            next: config.nextMessage,
-            progress: progress
-        )
-        config.marker.iconImage = NMFOverlayImage(image: image)
-
-        if progress >= 1.0 {
-            let nextIndex = (config.currentIndex + 1) % config.messages.count
-            config.currentIndex = nextIndex
-            config.isAnimating = false
-            config.animationProgress = 0
-            config.animationStartTime = nil
-            config.lastRotationTime = currentTime
-
-            let finalImage = messageMarkerManager.renderStaticRotatingBubbleImage(message: config.nextMessage)
-            config.marker.iconImage = NMFOverlayImage(image: finalImage)
-
-            let nextNextIndex = (nextIndex + 1) % config.messages.count
-            config.currentMessage = config.messages[nextIndex]
-            config.nextMessage = config.messages[nextNextIndex]
-        }
-    }
 }
 
 // MARK: - MapViewWrapper
 
 struct MapViewWrapper: UIViewControllerRepresentable {
+    private let messages: [Message]
     private let userLocation: Coordinate?
-    private let messageGroupContainer: MessageGroupContainer
     private let onTapPlace: ((Place) -> Void)?
     private let onTapNoPlace: (([Message]) -> Void)?
 
@@ -306,13 +257,13 @@ struct MapViewWrapper: UIViewControllerRepresentable {
     init(
         userLocation: Coordinate?,
         markerManager: MessageMarkerManager,
-        messageContainer: MessageGroupContainer,
+        messages: [Message],
         onTapPlace: ((Place) -> Void)? = nil,
         onTapNoPlace: (([Message]) -> Void)? = nil
     ) {
         self.userLocation = userLocation
         self.messageMarkerManager = markerManager
-        self.messageGroupContainer = messageContainer
+        self.messages = messages
         self.onTapPlace = onTapPlace
         self.onTapNoPlace = onTapNoPlace
     }
@@ -323,13 +274,15 @@ struct MapViewWrapper: UIViewControllerRepresentable {
             onTapPlace: onTapPlace,
             onTapNoPlace: onTapNoPlace
         )
-        viewController.updateGroups(messageGroupContainer)
+
+        viewController.loadMessages(messages)
         viewController.updateUserLocation(userLocation)
+
         return viewController
     }
 
     func updateUIViewController(_ uiViewController: MapViewController, context: Context) {
-        uiViewController.updateGroups(messageGroupContainer)
+        uiViewController.loadMessages(messages)
         uiViewController.updateUserLocation(userLocation)
     }
 }

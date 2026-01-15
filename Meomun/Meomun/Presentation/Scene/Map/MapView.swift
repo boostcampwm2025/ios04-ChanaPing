@@ -28,7 +28,7 @@ struct MapView: View {
                 MapViewWrapper(
                     userLocation: store.state.userLocation,
                     markerManager: messageMarkerManager,
-                    messageContainer: store.state.messageGroupContainer,
+                    messages: store.state.messages,
                     onTapPlace: { place in
                         Task {
                             await store.send(intent: .tapPlaceMarker(place))
@@ -127,4 +127,18 @@ struct MapView: View {
             }
         }
     }
+}
+
+#Preview {
+    let rotationAnimator = MessageRotationAnimator()
+    let bubbleImageRenderer = BubbleImageRenderer()
+    let messageMarkerManager = MessageMarkerManager(
+        rotationAnimator: rotationAnimator,
+        bubbleImageRenderer: bubbleImageRenderer
+    )
+
+    MapView(
+        userLocation: .init(latitude: 37.5665, longitude: 126.9780),
+        messageMarkerManager: messageMarkerManager
+    )
 }
