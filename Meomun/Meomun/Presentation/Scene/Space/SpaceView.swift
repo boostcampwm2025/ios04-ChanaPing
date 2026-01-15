@@ -13,13 +13,16 @@ struct SpaceView: View {
     @StateObject private var store = SpaceViewStore()
     @State private var domeEnvironment: DomeEnvironment
 
+    private let place: Place
+
     private let rotationCamera = RotationCamera(
         position: .init(x: 0, y: 0.7, z: 0),
         rotateSensitivity: 0.003
     )
 
-    init(environment: DomeEnvironment) {
-        self.domeEnvironment = environment
+    init(domeEnvironment: DomeEnvironment, place: Place) {
+        self.domeEnvironment = domeEnvironment
+        self.place = place
     }
 
     var body: some View {
@@ -113,6 +116,9 @@ extension SpaceView {
 
 #Preview {
     NavigationStack {
-        SpaceView(environment: .init(weather: .sunny, dayPart: .afternoon))
+        SpaceView(
+            domeEnvironment: .init(weather: .sunny, dayPart: .afternoon),
+            place: .init(id: .init(value: .init()), name: "광화문", coordinate: .init(latitude: 0, longitude: 0))
+        )
     }
 }
