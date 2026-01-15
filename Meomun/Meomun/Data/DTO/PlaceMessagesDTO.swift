@@ -7,22 +7,6 @@
 
 import Foundation
 
-// MARK: - Place
-
-struct PlaceDTO: Decodable, Sendable {
-    let placeID: String
-    let name: String
-    let latitude: Double
-    let longitude: Double
-
-    enum CodingKeys: String, CodingKey {
-        case placeID = "place_id"
-        case name
-        case latitude
-        case longitude
-    }
-}
-
 // MARK: - Message
 
 struct PlaceMessageResponseDTO: Decodable, Sendable {
@@ -50,17 +34,6 @@ struct PlaceMessageResponseDTO: Decodable, Sendable {
 }
 
 // MARK: - Mapping
-
-extension PlaceDTO {
-    func toDomain() -> Place {
-        Place(
-            id: PlaceID(value: placeID),
-            name: name,
-            coordinate: Coordinate(latitude: latitude, longitude: longitude),
-            address: ""
-        )
-    }
-}
 
 extension PlaceMessageResponseDTO {
     func toDomain() -> Message {

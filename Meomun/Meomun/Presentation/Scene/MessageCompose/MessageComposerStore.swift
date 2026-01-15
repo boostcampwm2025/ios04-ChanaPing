@@ -7,6 +7,7 @@
 
 import Foundation
 import Combine
+import Supabase
 
 final class MessageComposerStore: Store {
     struct AlertState: Identifiable, Equatable {
@@ -16,6 +17,7 @@ final class MessageComposerStore: Store {
     }
 
     struct State: Equatable {
+        var userLocation: Coordinate
         var message: String = ""
         var placeText: String = ""
         var isPlaceSearchPresented: Bool = false
@@ -61,14 +63,17 @@ final class MessageComposerStore: Store {
         case close
     }
 
-    @Published var state: State = .init()
+    @Published var state: State
 
-    private let moderateMessage: TextModerationUseCase
+    private let createMessage: CreateMessageUseCase
 
     init(
-        moderateMessage: TextModerationUseCase
+        userLocation: Coordinate,
+        createMessage: CreateMessageUseCase
     ) {
-        self.moderateMessage = moderateMessage
+        self.state = State(userLocation: userLocation)
+        self.createMessage = createMessage
+        AppLog.debug("userLocation: \(userLocation)", category: .location)
     }
 
     func action(intent: Intent) -> AsyncStream<Action> {
@@ -101,7 +106,7 @@ final class MessageComposerStore: Store {
                     // TODO: 1차 검증) 장소 태그 존재 시, 현재 위치 기준으로 거리 검증
                 }
 
-                // 2차 검증) 텍스트 검증 API 호출
+                // 메시지 작성 API  호출
                 Task {
                     continuation.yield(.setConfirmLoading(true))
                     defer {
@@ -109,55 +114,43 @@ final class MessageComposerStore: Store {
                         continuation.finish()
                     }
 
-                    let trimmedMessage = state.message.trimmingCharacters(in: .whitespacesAndNewlines)
-                    guard trimmedMessage.isEmpty == false else {
-                        continuation.yield(
-                            .presentAlert(
-                                .init(
-                                    title: "메시지를 입력해주세요.",
-                                    message: "내용이 비어있으면 전송할 수 없어요."
-                                )
+                    do {
+                        _ = try await createMessage.execute(
+                            CreateMessageRequestDTO(
+                                content: state.message,
+                                latitude: state.userLocation.latitude,
+                                longitude: state.userLocation.longitude,
+                                place: nil
                             )
                         )
-                        return
-                    }
-
-                    do {
-                        let response = try await moderateMessage.execute(text: trimmedMessage)
-
-                        switch response.decision {
-                        case .ALLOW:
-                            // TODO: 메시지 생성 API 호출
-                            continuation.yield(.close)
-
-                        case .REVIEW, .BLOCK:
-                            continuation.yield(
-                                .presentAlert(
-                                    .init(
-                                        title: "메시지를 남길 수 없어요.",
-                                        message: response.reason
-                                    )
-                                )
-                            )
-
-                        case .UNKNOWN:
-                            continuation.yield(
-                                .presentAlert(
-                                    .init(
-                                        title: "검증 결과를 확인할 수 없어요.",
-                                        message: "잠시 후 다시 시도해 주세요."
-                                    )
-                                )
-                            )
+                    } catch let error as CreateMessageError {
+                        switch error {
+                        case .unauthorized:
+                            continuation.yield(.presentAlert(.init(
+                                title: "인증이 필요해요.",
+                                message: "익명 로그인(세션)이 없어서 메시지를 보낼 수 없어요."
+                            )))
+                        case .blocked:
+                            continuation.yield(.presentAlert(.init(
+                                title: "메시지를 등록할 수 없어요.",
+                                message: "내용이 정책에 의해 거부되었어요."
+                            )))
+                        case .unknown:
+                            continuation.yield(.presentAlert(.init(
+                                title: "메시지를 등록할 수 없어요.",
+                                message: "정책 판단을 확정할 수 없어 등록할 수 없어요."
+                            )))
+                        case .http(let code, let rawBody):
+                            continuation.yield(.presentAlert(.init(
+                                title: "요청 실패 (\(code))",
+                                message: rawBody.isEmpty ? "잠시 후 다시 시도해 주세요." : rawBody
+                            )))
                         }
                     } catch {
-                        continuation.yield(
-                            .presentAlert(
-                                .init(
-                                    title: "네트워크에 연결할 수 없어요.",
-                                    message: "네트워크 상태를 확인하고 다시 시도해 주세요.")
-                            )
-                        )
+                        continuation.yield(.presentAlert(.init(
+                            title: "네트워크에 연결할 수 없어요.",
+                            message: "네트워크 상태를 확인하고 다시 시도해 주세요."
+                        )))
                     }
                 }
                 return
