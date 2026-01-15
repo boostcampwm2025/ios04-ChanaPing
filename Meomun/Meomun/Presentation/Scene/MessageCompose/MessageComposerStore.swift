@@ -65,17 +65,15 @@ final class MessageComposerStore: Store {
 
     @Published var state: State
 
-    init(userLocation: Coordinate) {
-        self.state = State(userLocation: userLocation)
-        AppLog.debug("userLocation: \(userLocation)", category: .location)
-    }
-
     private let createMessage: CreateMessageUseCase
 
     init(
+        userLocation: Coordinate,
         createMessage: CreateMessageUseCase
     ) {
+        self.state = State(userLocation: userLocation)
         self.createMessage = createMessage
+        AppLog.debug("userLocation: \(userLocation)", category: .location)
     }
 
     func action(intent: Intent) -> AsyncStream<Action> {
@@ -121,8 +119,8 @@ final class MessageComposerStore: Store {
                             CreateMessageRequestDTO(
                                 content: state.message,
                                 coordinate: .init(
-                                    latitude: 38.2211,
-                                    longitude: 122.9282
+                                    latitude: state.userLocation.latitude,
+                                    longitude: state.userLocation.longitude
                                 ),
                                 placeTag: nil
                             )
