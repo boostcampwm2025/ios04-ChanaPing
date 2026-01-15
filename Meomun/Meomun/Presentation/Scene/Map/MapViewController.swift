@@ -279,21 +279,21 @@ extension MapViewController {
     private func updateMarkers() {
         let currentTime = Date().timeIntervalSince1970
 
-        for (_, config) in messageMarkerManager.bubbleConfigs {
-            guard config.messages.count > 1 else { continue }
+        for (_, state) in messageMarkerManager.bubbleAnimationState {
+            guard state.messages.count > 1 else { continue }
 
-            if config.isAnimating {
-                rotationAnimator.updateAnimation(for: config, currentTime: currentTime)
+            if state.isAnimating {
+                rotationAnimator.updateAnimation(for: state, currentTime: currentTime)
 
                 let image = messageMarkerManager.renderRotatingBubbleImage(
-                    current: config.currentMessage,
-                    next: config.nextMessage,
-                    progress: config.animationProgress
+                    current: state.currentMessage,
+                    next: state.nextMessage,
+                    progress: state.animationProgress
                 )
-                config.marker.iconImage = NMFOverlayImage(image: image)
+                state.marker.iconImage = NMFOverlayImage(image: image)
             } else {
-                if rotationAnimator.shouldStartAnimation(for: config, currentTime: currentTime) {
-                    config.startAnimation(at: currentTime)
+                if rotationAnimator.shouldStartAnimation(for: state, currentTime: currentTime) {
+                    state.startAnimation(at: currentTime)
                 }
             }
         }

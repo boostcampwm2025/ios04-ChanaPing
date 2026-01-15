@@ -1,5 +1,5 @@
 //
-//  BubbleConfiguration.swift
+//  AnimationState.swift
 //  Meomun
 //
 //  Created by MinwooJe on 1/14/26.
@@ -8,7 +8,7 @@
 import NMapsMap
 
 /// 회전 버블 애니메이션 상태를 관리하는 클래스
-final class BubbleConfiguration {
+final class AnimationState {
     let marker: NMFMarker
     let messages: [Message]
     var currentIndex: Int
