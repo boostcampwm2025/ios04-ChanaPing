@@ -1,13 +1,14 @@
 //
-//  PlaceTagDTO.swift
+//  PlaceDTO.swift
 //  Meomun
 //
 //  Created by Hayeon Park on 1/15/26.
 //
 
-struct PlaceTagDTO: Encodable, Equatable {
+struct PlaceDTO: Codable, Equatable {
     let id: String?
     let name: String?
-    let coordinate: CoordinateDTO?
+    let latitude: Double
+    let longitude: Double
     let address: String?
 }

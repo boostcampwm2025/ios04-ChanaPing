@@ -7,8 +7,9 @@
 
 struct CreateMessageRequestDTO: Encodable, Equatable {
     let content: String
-    let coordinate: CoordinateDTO
-    let placeTag: PlaceTagDTO?
+    let latitude: Double
+    let longitude: Double
+    let place: PlaceDTO?
 }
 
 struct CreateMessageErrorResponseDTO: Decodable, Equatable {

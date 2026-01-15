@@ -118,11 +118,9 @@ final class MessageComposerStore: Store {
                         _ = try await createMessage.execute(
                             CreateMessageRequestDTO(
                                 content: state.message,
-                                coordinate: .init(
-                                    latitude: state.userLocation.latitude,
-                                    longitude: state.userLocation.longitude
-                                ),
-                                placeTag: nil
+                                latitude: state.userLocation.latitude,
+                                longitude: state.userLocation.longitude,
+                                place: nil
                             )
                         )
                     } catch let error as CreateMessageError {
