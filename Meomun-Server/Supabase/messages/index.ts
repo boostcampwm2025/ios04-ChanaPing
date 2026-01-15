@@ -22,20 +22,14 @@ function validateCreateMessageBody(body: any): CreateMessageRequest | string {
   if (!body || typeof body !== "object") return "Body must be a JSON object";
   if (typeof body.content !== "string" || body.content.trim().length === 0) return "content is required";
 
-  const coord = body.coordinate;
-  if (!coord || typeof coord !== "object") return "coordinate is required";
-  if (!isFiniteNumber(coord.latitude)) return "coordinate.latitude must be a number";
-  if (!isFiniteNumber(coord.longitude)) return "coordinate.longitude must be a number";
+  if (body.latitude !== undefined && !isFiniteNumber(body.latitude)) return "coordinate.latitude must be a number";
+  if (body.latitude !== undefined && !isFiniteNumber(body.longitude)) return "coordinate.longitude must be a number";
 
-  const placeTag = body.placeTag;
-  if (placeTag !== undefined && placeTag !== null) {
-    if (typeof placeTag !== "object") return "placeTag must be an object";
-    if (placeTag.coordinate !== undefined && placeTag.coordinate !== null) {
-      const pc = placeTag.coordinate;
-      if (typeof pc !== "object") return "placeTag.coordinate must be an object";
-      if (pc.latitude !== undefined && !isFiniteNumber(pc.latitude)) return "placeTag.coordinate.latitude must be a number";
-      if (pc.longitude !== undefined && !isFiniteNumber(pc.longitude)) return "placeTag.coordinate.longitude must be a number";
-    }
+  const place = body.place;
+  if (place !== undefined && place !== null) {
+    if (typeof place !== "object") return "place must be an object";
+      if (place.latitude !== undefined && !isFiniteNumber(place.latitude)) return "place.latitude must be a number";
+      if (place.longitude !== undefined && !isFiniteNumber(place.longitude)) return "place.longitude must be a number";
   }
 
   return body as CreateMessageRequest;
