@@ -20,6 +20,6 @@ extension String {
             .lowercased()
             .trimmingCharacters(in: .whitespacesAndNewlines)
             .replacingOccurrences(of: "\\s+", with: " ", options: .regularExpression)
-            .replacingOccurrences(of: "[^0-9a-z가-힣 ]", with: "", options: .regularExpression)
+            .replacingOccurrences(of: "[^0-9a-z가-힣]", with: "", options: .regularExpression)
     }
 }
