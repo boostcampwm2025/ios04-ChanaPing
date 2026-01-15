@@ -289,15 +289,7 @@ extension MapViewController {
     }
 
     private func startAnimation(for config: BubbleConfiguration, currentTime: TimeInterval) {
-        guard !config.isAnimating else { return }
-
-        config.isAnimating = true
-        config.animationStartTime = currentTime
-        config.animationProgress = 0.0
-
-        let nextIndex = (config.currentIndex + 1) % config.messages.count
-        config.nextMessage = config.messages[nextIndex]
-        config.currentMessage = config.messages[config.currentIndex]
+        config.startAnimation(at: currentTime)
     }
 
     private func updateAnimation(for config: BubbleConfiguration, currentTime: TimeInterval) {
@@ -318,19 +310,10 @@ extension MapViewController {
         config.marker.iconImage = NMFOverlayImage(image: image)
 
         if progress >= 1.0 {
-            let nextIndex = (config.currentIndex + 1) % config.messages.count
-            config.currentIndex = nextIndex
-            config.isAnimating = false
-            config.animationProgress = 0
-            config.animationStartTime = nil
-            config.lastRotationTime = currentTime
+            config.advanceToNext(at: currentTime)
 
-            let finalImage = messageMarkerManager.renderStaticRotatingBubbleImage(message: config.nextMessage)
+            let finalImage = messageMarkerManager.renderStaticRotatingBubbleImage(message: config.currentMessage)
             config.marker.iconImage = NMFOverlayImage(image: finalImage)
-
-            let nextNextIndex = (nextIndex + 1) % config.messages.count
-            config.currentMessage = config.messages[nextIndex]
-            config.nextMessage = config.messages[nextNextIndex]
         }
     }
 }

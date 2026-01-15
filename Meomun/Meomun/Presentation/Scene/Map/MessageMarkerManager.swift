@@ -136,7 +136,6 @@ extension MessageMarkerManager {
         groupKey: MarkerGroupKey
     ) {
         guard let current = messages.first else { return }
-        let next = messages.count > 1 ? messages[1] : current
 
         let currentTime = Date().timeIntervalSince1970
         let image = renderStaticRotatingBubbleImage(message: current)
@@ -146,12 +145,7 @@ extension MessageMarkerManager {
             marker: marker,
             messages: messages,
             currentIndex: 0,
-            lastRotationTime: currentTime,
-            animationStartTime: nil,
-            animationProgress: 0,
-            isAnimating: false,
-            currentMessage: current,
-            nextMessage: next
+            lastRotationTime: currentTime
         )
 
         bubbleConfigs[groupKey] = config

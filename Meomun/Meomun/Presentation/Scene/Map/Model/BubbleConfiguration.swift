@@ -16,19 +16,24 @@ final class BubbleConfiguration {
     var animationStartTime: TimeInterval?
     var animationProgress: Double
     var isAnimating: Bool
-    var currentMessage: Message
-    var nextMessage: Message
+
+    var currentMessage: Message {
+        return messages[currentIndex]
+    }
+
+    var nextMessage: Message {
+        let nextIndex = (currentIndex + 1) % messages.count
+        return messages[nextIndex]
+    }
 
     init(
         marker: NMFMarker,
         messages: [Message],
-        currentIndex: Int,
+        currentIndex: Int = 0,
         lastRotationTime: TimeInterval,
         animationStartTime: TimeInterval? = nil,
-        animationProgress: Double,
-        isAnimating: Bool,
-        currentMessage: Message,
-        nextMessage: Message
+        animationProgress: Double = 0.0,
+        isAnimating: Bool = false
     ) {
         self.marker = marker
         self.messages = messages
@@ -37,7 +42,26 @@ final class BubbleConfiguration {
         self.animationStartTime = animationStartTime
         self.animationProgress = animationProgress
         self.isAnimating = isAnimating
-        self.currentMessage = currentMessage
-        self.nextMessage = nextMessage
+    }
+
+    /// 다음 메시지로 전환 (애니메이션 완료 시 호출)
+    func advanceToNext(at currentTime: TimeInterval) {
+        guard !messages.isEmpty else { return }
+
+        let nextIndex = (currentIndex + 1) % messages.count
+        currentIndex = nextIndex
+        isAnimating = false
+        animationProgress = 0.0
+        animationStartTime = nil
+        lastRotationTime = currentTime
+    }
+
+    /// 애니메이션 시작 상태로 전환
+    func startAnimation(at currentTime: TimeInterval) {
+        guard !isAnimating else { return }
+
+        isAnimating = true
+        animationStartTime = currentTime
+        animationProgress = 0.0
     }
 }
