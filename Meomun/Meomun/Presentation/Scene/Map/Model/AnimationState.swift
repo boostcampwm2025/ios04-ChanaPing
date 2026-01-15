@@ -5,11 +5,10 @@
 //  Created by MinwooJe on 1/14/26.
 //
 
-import NMapsMap
+import Foundation
 
 /// 회전 버블 애니메이션 상태를 관리하는 클래스
 final class AnimationState {
-    let marker: NMFMarker
     let messages: [Message]
     var currentIndex: Int
     var lastRotationTime: TimeInterval
@@ -27,7 +26,6 @@ final class AnimationState {
     }
 
     init(
-        marker: NMFMarker,
         messages: [Message],
         currentIndex: Int = 0,
         lastRotationTime: TimeInterval,
@@ -35,7 +33,6 @@ final class AnimationState {
         animationProgress: Double = 0.0,
         isAnimating: Bool = false
     ) {
-        self.marker = marker
         self.messages = messages
         self.currentIndex = currentIndex
         self.lastRotationTime = lastRotationTime

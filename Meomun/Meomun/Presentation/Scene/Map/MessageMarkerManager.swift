@@ -19,6 +19,9 @@ final class MessageMarkerManager {
     /// 회전/스택 버블용 설정 (2개 이상 메시지)
     private(set) var bubbleAnimationState: [MarkerGroupKey: AnimationState] = [:]
 
+    /// 회전 버블용 마커 (AnimationState와 별도로 관리)
+    private(set) var bubbleMarkers: [MarkerGroupKey: NMFMarker] = [:]
+
     /// 회전 버블 고정 너비
     private let rotatingBubbleWidth: CGFloat
 
@@ -33,9 +36,10 @@ final class MessageMarkerManager {
         }
         singleMarkers.removeAll()
 
-        for (_, state) in bubbleAnimationState {
-            state.marker.mapView = nil
+        for (_, marker) in bubbleMarkers {
+            marker.mapView = nil
         }
+        bubbleMarkers.removeAll()
         bubbleAnimationState.removeAll()
     }
     /// GroupedMessage를 기반으로 마커를 생성/업데이트합니다.
@@ -142,13 +146,18 @@ extension MessageMarkerManager {
         marker.iconImage = NMFOverlayImage(image: image)
 
         let state = AnimationState(
-            marker: marker,
             messages: messages,
             currentIndex: 0,
             lastRotationTime: currentTime
         )
 
         bubbleAnimationState[groupKey] = state
+        bubbleMarkers[groupKey] = marker
+    }
+
+    /// 그룹 키로 마커를 가져옵니다.
+    func getMarker(for groupKey: MarkerGroupKey) -> NMFMarker? {
+        return bubbleMarkers[groupKey]
     }
 }
 

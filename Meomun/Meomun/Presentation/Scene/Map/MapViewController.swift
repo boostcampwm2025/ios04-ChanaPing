@@ -279,8 +279,9 @@ extension MapViewController {
     private func updateMarkers() {
         let currentTime = Date().timeIntervalSince1970
 
-        for (_, state) in messageMarkerManager.bubbleAnimationState {
+        for (groupKey, state) in messageMarkerManager.bubbleAnimationState {
             guard state.messages.count > 1 else { continue }
+            guard let marker = messageMarkerManager.getMarker(for: groupKey) else { continue }
 
             if state.isAnimating {
                 rotationAnimator.updateAnimation(for: state, currentTime: currentTime)
@@ -290,7 +291,7 @@ extension MapViewController {
                     next: state.nextMessage,
                     progress: state.animationProgress
                 )
-                state.marker.iconImage = NMFOverlayImage(image: image)
+                marker.iconImage = NMFOverlayImage(image: image)
             } else {
                 if rotationAnimator.shouldStartAnimation(for: state, currentTime: currentTime) {
                     state.startAnimation(at: currentTime)
