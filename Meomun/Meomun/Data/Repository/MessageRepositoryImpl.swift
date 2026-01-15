@@ -9,26 +9,49 @@ import Foundation
 import Supabase
 
 final class MessageRepositoryImpl: MessageRepository {
-    private let supabase: SupabaseClient
+    private let supabaseClient: SupabaseClient
 
-    init(supabase: SupabaseClient = SupabaseService.shared.client) {
-        self.supabase = supabase
+    init(supabaseClient: SupabaseClient = SupabaseService.shared.client) {
+        self.supabaseClient = supabaseClient
     }
 
-    func moderateMessage(text: String) async throws -> TextModerationResponse {
-        let response: TextModerationResponse = try await supabase.functions
-          .invoke(
-            "text-moderation",
-            options: FunctionInvokeOptions(
-              body: ["text": text]
+    func createMessage(_ request: CreateMessageRequestDTO) async throws {
+        let session = try await supabaseClient.auth.session
+
+        let authHeader = "Bearer \(session.accessToken)"
+
+        do {
+            _ = try await supabaseClient.functions.invoke(
+                "messages",
+                options: FunctionInvokeOptions(
+                    method: .post,
+                    headers: ["Authorization": authHeader],
+                    body: request
+                ),
+                decode: { _, response in
+                    if (200...299).contains(response.statusCode) { return () }
+                    throw NSError(domain: "EdgeFunction", code: response.statusCode)
+                }
             )
-          )
+        } catch FunctionsError.httpError(let code, let data) {
+            let raw = String(data: data, encoding: .utf8) ?? ""
 
-        return response
-    }
+            if code == 401 {
+                throw CreateMessageError.unauthorized
+            }
 
-    func createMessage(_ request: CreateMessageRequest) async throws {
-        return
+            if code == 422 {
+                if let dto = try? JSONDecoder().decode(CreateMessageErrorResponseDTO.self, from: data) {
+                    throw CreateMessageError.blocked(details: dto)
+                } else {
+                    throw CreateMessageError.http(code: code, rawBody: raw)
+                }
+            }
+
+            throw CreateMessageError.http(code: code, rawBody: raw)
+        } catch {
+            throw error
+        }
     }
 
     func deleteMessage(messageID: MessageID) async throws {
