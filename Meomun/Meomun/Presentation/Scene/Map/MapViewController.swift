@@ -269,8 +269,9 @@ extension MapViewController {
             withTimeInterval: frameInterval,
             repeats: true
         ) { [weak self] _ in
-            // TODO: Actor isolaction 경고 해결
-            self?.messageMarkerManager.updateAnimations()
+            Task { @MainActor [weak self] in
+                self?.messageMarkerManager.updateAnimations()
+            }
         }
 
         if let timer = bubbleRotationTimer {
