@@ -8,60 +8,24 @@
 import SwiftUI
 
 struct RootView: View {
-    @StateObject private var store = MainTabStore()
+    @StateObject private var locationProvider = LocationProvider()
+    @State private var userLocation: Coordinate? = nil
 
     var body: some View {
-        ZStack {
-            contentView(for: store.state.selectedTab)
-                .environment(\.setTabBarHidden) { hidden in
-                    Task { await store.send(intent: .setTabBarHidden(hidden))}
+        Group {
+            #if DEBUG
+            MainTabShellView(userLocation: .init(latitude: 37.5665, longitude: 126.9780))
+            #endif
+            if let userLocation {
+                MainTabShellView(userLocation: userLocation)
+            } else {
+                LocationGateView { coordinate in
+                    self.userLocation = coordinate
                 }
-        }
-        .frame(maxWidth: .infinity, maxHeight: .infinity)
-        .overlay(alignment: .bottom) {
-            if !store.state.isTabBarHidden {
-                FloatingTabBar(
-                    selectedTab: store.state.selectedTab,
-                    onSelect: { tab in
-                        Task {
-                            await store.send(intent: .selectTab(tab))
-                        }
-                    }
-                )
             }
         }
+        .environmentObject(locationProvider)
         .ignoresSafeArea(.keyboard)
-        .task {
-            await store.send(intent: .onAppear)
-        }
-    }
-
-    @ViewBuilder
-    private func contentView(for tab: MainTab) -> some View {
-        switch tab {
-        case .map:
-            MapView(
-                messageMarkerManager: .init(
-                    rotationAnimator: .init(),
-                    bubbleImageRenderer: .init()
-                )
-            )
-        case .record:
-            EmptyView()
-        case .myPage:
-            EmptyView()
-        }
-    }
-}
-
-private struct SetTabBarHiddenKey: EnvironmentKey {
-    static let defaultValue: (Bool) -> Void = { _ in }
-}
-
-extension EnvironmentValues {
-    var setTabBarHidden: (Bool) -> Void {
-        get { self[SetTabBarHiddenKey.self] }
-        set { self[SetTabBarHiddenKey.self] = newValue }
     }
 }
 

@@ -9,6 +9,10 @@ import SwiftUI
 
 @main
 struct MeomunApp: App {
+    init() {
+        _ = SupabaseService.shared
+    }
+
     var body: some Scene {
         WindowGroup {
             RootView()

@@ -9,13 +9,16 @@ import SwiftUI
 
 struct MapView: View {
     @Environment(\.setTabBarHidden) private var setTabBarHidden
-    @StateObject private var store = MapStore()
+    @EnvironmentObject private var locationProvider: LocationProvider
+    @StateObject private var store: MapStore
 
     private let messageMarkerManager: MessageMarkerManager
 
     init(
+        userLocation: Coordinate,
         messageMarkerManager: MessageMarkerManager
     ) {
+        _store = StateObject(wrappedValue: MapStore(userLocation: userLocation))
         self.messageMarkerManager = messageMarkerManager
     }
 
@@ -23,6 +26,7 @@ struct MapView: View {
         NavigationStack {
             ZStack {
                 MapViewWrapper(
+                    userLocation: store.state.userLocation,
                     markerManager: messageMarkerManager,
                     messages: store.state.messages,
                     onTapPlace: { place in
@@ -70,8 +74,15 @@ struct MapView: View {
                     }
                 )
             ) {
-                MessageComposerView()
-                    .onAppear { setTabBarHidden(true) }
+                MessageComposerView(
+                    store: MessageComposerStore(
+                        userLocation: store.state.userLocation,
+                        createMessage: CreateMessageUseCaseImpl(
+                            messageRepository: MessageRepositoryImpl()
+                        )
+                    )
+                )
+                .onAppear { setTabBarHidden(true) }
             }
             .navigationDestination(
                 isPresented: Binding(
@@ -86,16 +97,32 @@ struct MapView: View {
                 )
             ) {
                 if let place = store.state.selectedPlace {
-                    SpaceView(domeEnvironment: .init(weather: .sunny, dayPart: .afternoon), place: place)
+                    SpaceView(
+                        store: SpaceStore(locationProvider: locationProvider),
+                        domeEnvironment: .init(
+                            weather: .sunny,
+                            dayPart: .afternoon
+                        ),
+                        place: place
+                    )
                 }
             }
             .task {
+                locationProvider.requestAuthorizationIfNeeded()
+                locationProvider.startContinuous()
                 await store.send(intent: .onAppear)
             }
             .onAppear { setTabBarHidden(false) }
             .onDisappear {
+                locationProvider.stopContinuous()
                 Task {
                     await store.send(intent: .onDisappear)
+                }
+            }
+            .onChange(of: locationProvider.current) { _, newValue in
+                guard let newValue else { return }
+                Task {
+                    await store.send(intent: .updateUserLocation(newValue))
                 }
             }
         }

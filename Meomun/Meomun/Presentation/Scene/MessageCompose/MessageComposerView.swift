@@ -17,7 +17,11 @@ struct MessageComposerView: View {
     @FocusState var isFocused: Bool
     @Environment(\.dismiss) private var dismiss
 
-    @StateObject private var store = MessageComposerStore()
+    @StateObject private var store: MessageComposerStore
+
+    init(store: MessageComposerStore) {
+        _store = StateObject(wrappedValue: store)
+    }
 
     var body: some View {
         ZStack {
@@ -31,10 +35,7 @@ struct MessageComposerView: View {
                                 network: NetworkClientImpl()
                             )
                         ),
-                        userLocation: .init(
-                            latitude: 37.5665,
-                            longitude: 126.9780
-                        ),
+                        userLocation: store.state.userLocation,
                         onSelect: { selected in
                             Task { await store.send(intent: .selectPlace(selected.name)) }
                         },
@@ -51,6 +52,22 @@ struct MessageComposerView: View {
 }
 
 extension MessageComposerView {
+    private var messageBinding: Binding<String> {
+        Binding(
+            get: { store.state.message },
+            set: { newValue in
+                Task { await store.send(intent: .setMessage(newValue)) }
+            }
+        )
+    }
+
+    private var alertBinding: Binding<MessageComposerStore.AlertState?> {
+        Binding(
+            get: { store.state.alert },
+            set: { _ in Task { await store.send(intent: .dismissAlert) } }
+        )
+    }
+
     private var content: some View {
         VStack(alignment: .center, spacing: 12) {
             Spacer()
@@ -60,15 +77,7 @@ extension MessageComposerView {
                 .foregroundStyle(Color.meomunSecondaryColor)
                 .frame(maxWidth: .infinity, alignment: .leading)
 
-            MessageTextEditor(text: Binding(
-                get: {
-                    store.state.message
-                }, set: { newValue in
-                    Task {
-                        await store.send(intent: .setMessage(newValue))
-                    }
-                }
-            ))
+            MessageTextEditor(text: messageBinding)
             .focused($isFocused)
 
             Spacer(minLength: 0)
@@ -100,6 +109,8 @@ extension MessageComposerView {
             ConfirmButton(action: {
                 Task { await store.send(intent: .tapConfirm)}
             })
+            .disabled(!store.state.isConfirmEnabled)
+            .opacity(store.state.isConfirmEnabled ? 1.0 : 0.4)
 
             Spacer(minLength: 0)
         }
@@ -137,6 +148,15 @@ extension MessageComposerView {
                     .foregroundStyle(Color.meomunPrimaryColor)
             }
         }
+        .alert(item: alertBinding) { alert in
+            Alert(
+                title: Text(alert.title),
+                message: Text(alert.message),
+                dismissButton: .default(Text("확인"), action: {
+                    Task { await store.send(intent: .dismissAlert) }
+                })
+            )
+        }
     }
 }
 
@@ -144,6 +164,16 @@ extension MessageComposerView {
     @Previewable @State var message: String = ""
 
     NavigationStack {
-        MessageComposerView()
+        MessageComposerView(
+            store: MessageComposerStore(
+                userLocation: .init(
+                    latitude: 37.5665,
+                    longitude: 126.9780
+                ),
+                createMessage: CreateMessageUseCaseImpl(
+                    messageRepository: MessageRepositoryImpl()
+                )
+            )
+        )
     }
 }
