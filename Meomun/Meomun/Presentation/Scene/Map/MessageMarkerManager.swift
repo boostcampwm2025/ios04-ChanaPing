@@ -142,7 +142,7 @@ extension MessageMarkerManager {
         guard let current = messages.first else { return }
 
         let currentTime = Date().timeIntervalSince1970
-        let image = renderStaticRotatingBubbleImage(message: current)
+        let image = renderStaticBubbleImage(for: current, showsAccentLine: false)
         marker.iconImage = NMFOverlayImage(image: image)
 
         let state = AnimationState(
@@ -206,24 +206,6 @@ extension MessageMarkerManager {
         renderer.scale = scale
         renderer.isOpaque = false
 
-        return renderer.uiImage ?? UIImage()
-    }
-
-    func renderStaticRotatingBubbleImage(
-        message: Message,
-        scale: CGFloat = UIScreen.main.scale
-    ) -> UIImage {
-        let bubble = MessageBubble(
-            placeName: message.placeTag?.name,
-            statusIndicator: .none,
-            layout: .fixedWidth(rotatingBubbleWidth)
-        ) {
-            BubbleText(text: message.content)
-        }
-
-        let renderer = ImageRenderer(content: bubble.padding(4))
-        renderer.scale = scale
-        renderer.isOpaque = false
         return renderer.uiImage ?? UIImage()
     }
 }
