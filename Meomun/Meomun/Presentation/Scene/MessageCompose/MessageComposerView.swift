@@ -153,6 +153,19 @@ extension MessageComposerView {
                 })
             )
         }
+        .overlay(alignment: .bottom) {
+            if let toast = store.state.toastMessage {
+                ToastView(message: toast)
+                    .padding(.bottom, 32)
+                    .onAppear {
+                        DispatchQueue.main.asyncAfter(deadline: .now() + 2) {
+                            Task {
+                                await store.send(intent: .dismissToast)
+                            }
+                        }
+                    }
+            }
+        }
     }
 }
 

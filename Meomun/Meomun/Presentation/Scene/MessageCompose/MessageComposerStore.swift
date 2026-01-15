@@ -23,7 +23,9 @@ final class MessageComposerStore: Store {
         var isPlaceSearchPresented: Bool = false
 
         var alert: AlertState?
+        var toastMessage: String?
 
+        var isConfirmLoading: Bool = false
         var isConfirmEnabled: Bool {
             message
                 .trimmingCharacters(in: .whitespacesAndNewlines)
@@ -44,6 +46,7 @@ final class MessageComposerStore: Store {
 
         case tapConfirm
         case dismissAlert
+        case dismissToast
     }
 
     enum Action {
@@ -56,6 +59,7 @@ final class MessageComposerStore: Store {
         case setConfirmLoading(Bool)
         case presentAlert(AlertState?)
 
+        case showToast(String?)
         case close
     }
 
@@ -96,6 +100,9 @@ final class MessageComposerStore: Store {
 
             case .dismissAlert:
                 continuation.yield(.presentAlert(nil))
+
+            case .dismissToast:
+                continuation.yield(.showToast(nil))
 
             case .tapConfirm:
                 if state.placeText != "" {
@@ -175,6 +182,9 @@ final class MessageComposerStore: Store {
 
         case .presentAlert(let alertState):
             newState.alert = alertState
+
+        case .showToast(let message):
+            newState.toastMessage = message
 
         case .close:
             break
