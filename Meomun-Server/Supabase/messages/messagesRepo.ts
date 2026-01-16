@@ -18,9 +18,9 @@ export async function insertMessage(
   const row: MessageInsertRow = {
     author_id: userId,
     content: req.content,
-    latitude: req.coordinate.latitude,
-    longitude: req.coordinate.longitude,
-    place_id: req.placeTag?.id ?? null,
+    latitude: req.latitude,
+    longitude: req.longitude,
+    place_id: req.place?.id ?? null,
   };
 
   const { error } = await client.from("messages").insert(row);

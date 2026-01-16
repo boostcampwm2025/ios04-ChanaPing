@@ -79,7 +79,10 @@ struct MapView: View {
                         userLocation: store.state.userLocation,
                         createMessage: CreateMessageUseCaseImpl(
                             messageRepository: MessageRepositoryImpl()
-                        )
+                        ),
+                        onClose: {
+                            Task { await store.send(intent: .dismissAddMessage)}
+                        }
                     )
                 )
                 .onAppear { setTabBarHidden(true) }
