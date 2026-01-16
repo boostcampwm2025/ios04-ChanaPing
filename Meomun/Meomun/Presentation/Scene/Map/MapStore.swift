@@ -25,8 +25,6 @@ final class MapStore: Store {
         case setShowAddMessage(Bool)
         case setMessages([Message])
         case setSelectedPlace(Place?)
-        case setLoading(Bool)
-        case setError(String)
     }
 
     struct State {
@@ -34,28 +32,25 @@ final class MapStore: Store {
         var userLocation: Coordinate
         var isShowingAddMessage: Bool = false
         var selectedPlace: Place?
-        var isLoading: Bool = false
-        var errorMessage: String = ""
     }
 
     @Published var state: State
 
     private var messageStreamTask: Task<Void, Never>?
-    private let getNearbyMessagesUseCase: GetNearbyMessagesUseCase
 
-    init(
-        userLocation: Coordinate,
-        getNearbyMessagesUseCase: GetNearbyMessagesUseCase
-    ) {
+    init(userLocation: Coordinate) {
         self.state = State(userLocation: userLocation)
-        self.getNearbyMessagesUseCase = getNearbyMessagesUseCase
     }
 
     func action(intent: Intent) -> AsyncStream<Action> {
         AsyncStream { continuation in
             switch intent {
             case .onAppear:
-                self.fetchNearbyMessages(continuation: continuation)
+                // TODO: - api 호출 (messageStreamTask 프로퍼티 사용)
+                let messages = getDummyMessages()
+
+                continuation.yield(.setMessages(messages))
+                continuation.finish()
 
             case .onDisappear:
                 // 화면 내려갈 때 실시간 작업 정리
@@ -105,47 +100,8 @@ final class MapStore: Store {
 
         case .setSelectedPlace(let place):
             newState.selectedPlace = place
-
-        case .setLoading(let isLoading):
-            newState.isLoading = isLoading
-
-        case .setError(let message):
-            newState.errorMessage = message
         }
 
         return newState
-    }
-
-    private func fetchNearbyMessages(continuation: AsyncStream<Action>.Continuation) {
-        messageStreamTask?.cancel()
-        continuation.yield(.setLoading(true))
-
-        messageStreamTask = Task { [weak self] in
-            guard let self else { return }
-
-            defer {
-                continuation.yield(.setLoading(false))
-                continuation.finish()
-            }
-
-            do {
-                let messages = try await self.getNearbyMessagesUseCase.execute(
-                    location: self.state.userLocation,
-                    limit: nil
-                )
-
-                guard !Task.isCancelled else { return }
-
-                continuation.yield(.setMessages(messages))
-                continuation.yield(.setError(""))
-            } catch is CancellationError {
-                return
-            } catch {
-                guard !Task.isCancelled else { return }
-
-                AppLog.error("Failed to fetch nearby messages", category: .store, error: error)
-                continuation.yield(.setError(error.localizedDescription))
-            }
-        }
     }
 }
