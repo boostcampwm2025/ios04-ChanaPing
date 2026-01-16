@@ -181,11 +181,10 @@ extension MapViewController {
 extension MapViewController {
     func updateUserLocation(_ coordinate: Coordinate?) {
         guard let coordinate else { return }
-
-        naverMapView.mapView.positionMode = .direction
-
         guard didMoveToCurrentLocation == false else { return }
         didMoveToCurrentLocation = true
+
+        naverMapView.mapView.positionMode = .direction
 
         let latLng = NMGLatLng(lat: coordinate.latitude, lng: coordinate.longitude)
         let cameraUpdate = NMFCameraUpdate(scrollTo: latLng)
