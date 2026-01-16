@@ -18,7 +18,12 @@ struct MapView: View {
         userLocation: Coordinate,
         messageMarkerManager: MessageMarkerManager
     ) {
-        _store = StateObject(wrappedValue: MapStore(userLocation: userLocation))
+        _store = StateObject(wrappedValue: MapStore(
+            userLocation: userLocation,
+            getNearbyMessagesUseCase: GetNearbyMessagesUseCaseImpl(
+                messageRepository: MessageRepositoryImpl()
+            )
+        ))
         self.messageMarkerManager = messageMarkerManager
     }
 
@@ -145,7 +150,7 @@ struct MapView: View {
         bubbleImageRenderer: bubbleImageRenderer
     )
 
-    MapView(
+    return MapView(
         userLocation: .init(latitude: 37.5665, longitude: 126.9780),
         messageMarkerManager: messageMarkerManager
     )
