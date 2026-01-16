@@ -41,7 +41,7 @@ as $$
             case
                 when f.place_id is null then null
                 else jsonb_build_object(
-                'placeId', p.place_id,
+                'place_id', p.place_id,
                 'name', p.name,
                 'latitude', p.latitude,
                 'longitude', p.longitude
