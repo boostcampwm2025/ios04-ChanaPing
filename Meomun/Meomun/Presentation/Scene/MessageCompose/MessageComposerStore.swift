@@ -7,7 +7,14 @@
 
 import Foundation
 import Combine
+import CoreLocation
 import Supabase
+
+fileprivate enum BoundaryPolicy {
+    static let boundaryRadiusMeters: CLLocationDistance = 60
+    static let outsideBoundaryAlertTitle = "현재 머문 위치를 벗어났습니다."
+    static let outsideBoundaryAlertMessage = "메세지는 계속 작성할 수 있어요."
+}
 
 final class MessageComposerStore: Store {
     struct AlertState: Identifiable, Equatable {
@@ -21,8 +28,8 @@ final class MessageComposerStore: Store {
         var startLocation: Coordinate
         var currentLocation: Coordinate?
 
-        var isOutOfBoundary: Bool = false
-        var didShowOutOfBoundaryAlert: Bool = false
+        var isOutsideBoundary: Bool = false
+        var didPresentOutsideBoundaryAlert: Bool = false
 
         var message: String = ""
         var placeText: String = ""
@@ -37,6 +44,7 @@ final class MessageComposerStore: Store {
                 .trimmingCharacters(in: .whitespacesAndNewlines)
                 .isEmpty == false
             && isConfirmLoading == false
+            && isOutsideBoundary == false
         }
 
         init(userLocation: Coordinate) {
@@ -126,9 +134,23 @@ final class MessageComposerStore: Store {
                 continuation.yield(.showToast(nil))
 
             case .tapConfirm:
-                if state.placeText != "" {
+                if state.isOutsideBoundary {
+                    continuation.yield(
+                        .presentAlert(
+                            .init(
+                                title: BoundaryPolicy.outsideBoundaryAlertTitle,
+                                message: BoundaryPolicy.outsideBoundaryAlertMessage
+                            )
+                        )
+                    )
+                    continuation.finish()
+                    return
+                }
+
+                if state.placeText.isEmpty == false {
                     // TODO: 1차 검증) 장소 태그 존재 시, 현재 위치 기준으로 거리 검증
                 }
+
                 createMessage(continuation: continuation)
                 return
             }
@@ -144,6 +166,29 @@ final class MessageComposerStore: Store {
 
         case .updateCurrentLocation(let coordinate):
             newState.currentLocation = coordinate
+            let wasOutOfBoundary = newState.isOutsideBoundary
+
+            if let current = coordinate {
+                let distance = distanceMeters(from: newState.startLocation, to: current)
+                newState.isOutsideBoundary = distance > BoundaryPolicy.boundaryRadiusMeters
+            }
+
+            // 제한 범위 밖으로 나가는 경우
+            if wasOutOfBoundary == false,
+               newState.isOutsideBoundary == true,
+               newState.didPresentOutsideBoundaryAlert == false {
+                newState.alert = .init(
+                    title: BoundaryPolicy.outsideBoundaryAlertTitle,
+                    message: BoundaryPolicy.outsideBoundaryAlertMessage
+                )
+                newState.didPresentOutsideBoundaryAlert = true
+            }
+
+            // 제한 범위 밖에서 다시 내부로 들어오는 경우
+            if wasOutOfBoundary == true,
+               newState.isOutsideBoundary == false {
+                newState.didPresentOutsideBoundaryAlert = false
+            }
 
         case .presentPlaceSearch(let isPresented):
             newState.isPlaceSearchPresented = isPresented
@@ -201,8 +246,8 @@ extension MessageComposerStore {
     private func makeCreateMessageRequest() -> CreateMessageRequestDTO {
         CreateMessageRequestDTO(
             content: state.message,
-            latitude: state.userLocation.latitude,
-            longitude: state.userLocation.longitude,
+            latitude: state.startLocation.latitude,
+            longitude: state.startLocation.longitude,
             place: nil
         )
     }
@@ -235,4 +280,10 @@ extension MessageComposerStore {
         }
     }
 
+    private func distanceMeters(from start: Coordinate, to current: Coordinate) -> CLLocationDistance {
+        let startLocation = CLLocation(latitude: start.latitude, longitude: start.longitude)
+        let currentLocation = CLLocation(latitude: current.latitude, longitude: current.longitude)
+
+        return startLocation.distance(from: currentLocation)
+    }
 }
