@@ -52,22 +52,6 @@ struct MessageComposerView: View {
 }
 
 extension MessageComposerView {
-    private var messageBinding: Binding<String> {
-        Binding(
-            get: { store.state.message },
-            set: { newValue in
-                Task { await store.send(intent: .setMessage(newValue)) }
-            }
-        )
-    }
-
-    private var alertBinding: Binding<MessageComposerStore.AlertState?> {
-        Binding(
-            get: { store.state.alert },
-            set: { _ in Task { await store.send(intent: .dismissAlert) } }
-        )
-    }
-
     private var content: some View {
         VStack(alignment: .center, spacing: 12) {
             Spacer()
@@ -166,6 +150,22 @@ extension MessageComposerView {
                     }
             }
         }
+    }
+
+    private var messageBinding: Binding<String> {
+        Binding(
+            get: { store.state.message },
+            set: { newValue in
+                Task { await store.send(intent: .setMessage(newValue)) }
+            }
+        )
+    }
+
+    private var alertBinding: Binding<MessageComposerStore.AlertState?> {
+        Binding(
+            get: { store.state.alert },
+            set: { _ in Task { await store.send(intent: .dismissAlert) } }
+        )
     }
 }
 
