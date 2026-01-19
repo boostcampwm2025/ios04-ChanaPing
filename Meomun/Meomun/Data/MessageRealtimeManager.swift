@@ -76,8 +76,10 @@ private extension MessageRealtimeManager {
 
             switch type {
             case "created":
+                guard let messageObject = root["message"]?.objectValue else { return nil }
+
                 do {
-                    let data = try JSONSerialization.data(withJSONObject: root.toAnyObject(), options: [])
+                    let data = try JSONSerialization.data(withJSONObject: messageObject.toAnyObject(), options: [])
                     let dto = try JSONDecoders.iso8601.decode(RealtimeCreatedMessageDTO.self, from: data)
                     return .created(dto.toDomain())
                 } catch {

@@ -14,7 +14,7 @@ struct RealtimeCreatedMessageDTO: Decodable {
     let content: String
     let latitude: Double
     let longitude: Double
-    let placeId: String?
+    let placeId: PlaceDTO?
 
     func toDomain() -> Message {
         Message(
@@ -26,18 +26,7 @@ struct RealtimeCreatedMessageDTO: Decodable {
                 latitude: latitude,
                 longitude: longitude
             ),
-            placeTag: (
-                placeId == nil ? nil : Place(
-                    id: PlaceID(
-                        value: placeId!
-                    ),
-                    name: "",   // place도 같이 받아와야 되는구나..
-                    coordinate: Coordinate(
-                        latitude: latitude,
-                        longitude: longitude
-                    )
-                )
-            )
+            placeTag: (placeId == nil ? nil : placeId?.toDomain())
         )
     }
 }
