@@ -7,23 +7,15 @@
 
 import Foundation
 
-// 임시 값
-struct CreateMessageRequest: Sendable {
-    let text: String
-    let placeID: PlaceID?
-    let location: Location?
-}
-
 protocol MessageRepository: Sendable {
-    func createMessage(_ request: CreateMessageRequest) async throws -> Message
+    func createMessage(_ request: CreateMessageRequestDTO) async throws
     func deleteMessage(messageID: MessageID) async throws
 
-    func reportMessage(messageID: MessageID, description: String?) async throws
+    func reportMessage(messageID: MessageID) async throws -> MessageID
 
     func saveMessage(messageID: MessageID) async throws
-    func deleteSavedMessage(messageID: MessageID) async throws
     func deleteSavedMessages(messageIDs: [MessageID]) async throws
 
-    func getNearbyMessages(center: Location, radiusMeters: Double, limit: Int?) async throws -> [Message]
-    func getPlaceMessages(placeID: PlaceID, limit: Int?, before: Date?) async throws -> [Message]
+    func getNearbyMessages(location: Coordinate, limit: Int?) async throws -> [Message]
+    func getPlaceMessages(placeID: PlaceID, limit: Int?) async throws -> [Message]
 }

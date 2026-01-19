@@ -8,38 +8,33 @@
 import SwiftUI
 
 struct RootView: View {
-    @StateObject private var store = MainTabStore()
+    @StateObject private var locationProvider = LocationProvider()
+    @State private var userLocation: Coordinate?
 
     var body: some View {
-        ZStack {
-            contentView(for: store.state.selectedTab)
-        }
-        .frame(maxWidth: .infinity, maxHeight: .infinity)
-        .overlay(alignment: .bottom) {
-            FloatingTabBar(
-                selectedTab: store.state.selectedTab,
-                onSelect: { tab in
-                    Task {
-                        await store.send(intent: .selectTab(tab))
-                    }
+        Group {
+            #if DEBUG
+            MainTabShellView(userLocation: .init(latitude: 37.5665, longitude: 126.9780))
+                .task {
+                    await SupabaseAuthBootstrapper.signInAnonymouslyIfNeeded()
+                    await SupabaseAuthBootstrapper.logCurrentAccessToken()
                 }
-            )
+            #else
+            if let userLocation {
+                MainTabShellView(userLocation: userLocation)
+                    .task {
+                        await SupabaseAuthBootstrapper.signInAnonymouslyIfNeeded()
+                        await SupabaseAuthBootstrapper.logCurrentAccessToken()
+                    }
+            } else {
+                LocationGateView { coordinate in
+                    self.userLocation = coordinate
+                }
+            }
+            #endif
         }
-        .task {
-            await store.send(intent: .onAppear)
-        }
-    }
-
-    @ViewBuilder
-    private func contentView(for tab: MainTab) -> some View {
-        switch tab {
-        case .map:
-            MapView()
-        case .record:
-            EmptyView()
-        case .myPage:
-            EmptyView()
-        }
+        .environmentObject(locationProvider)
+        .ignoresSafeArea(.keyboard)
     }
 }
 
