@@ -73,10 +73,10 @@ extension MessageComposerView {
         .navigationBarBackButtonHidden()
         .toolbar { toolbarContent }
         .customAlert(
-            store.state.alert,
+            alertBinding,
             title: { $0.title },
             message: { $0.message },
-            onDismiss: { send(.dismissAlert) }
+            buttons: { _ in [.confirm] }
         )
         .toast(store.state.toastMessage) { send(.dismissToast) }
     }
@@ -133,11 +133,14 @@ extension MessageComposerView {
         )
     }
 
-    private var alertBinding: Binding<Bool> {
+    private var alertBinding: Binding<AlertModel?> {
         Binding(
-            get: { store.state.alert != nil },
-            set: { isPresented in
-                if !isPresented { send(.dismissAlert) }
+            get: { store.state.alert },
+            set: { alert in
+                send(.setAlert(alert))
+            }
+        )
+    }
             }
         )
     }

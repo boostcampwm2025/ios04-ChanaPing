@@ -37,7 +37,7 @@ final class MessageComposerStore: Store {
         case clearPlace
 
         case tapConfirm
-        case dismissAlert
+        case setAlert(AlertModel?)
         case dismissToast
     }
 
@@ -91,9 +91,8 @@ final class MessageComposerStore: Store {
             case .clearPlace:
                 continuation.yield(.clearPlace)
 
-
-            case .dismissAlert:
-                continuation.yield(.presentAlert(nil))
+            case .setAlert(let alert):
+                continuation.yield(.presentAlert(alert))
 
             case .dismissToast:
                 continuation.yield(.showToast(nil))

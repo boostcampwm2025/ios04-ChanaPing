@@ -7,17 +7,36 @@
 
 import SwiftUI
 
+struct AlertButtonConfig {
+    enum Role {
+        case normal
+        case cancel
+        case destructive
+    }
+
+    let title: String
+    let role: Role
+    let action: (() -> Void)?
+
+    static let confirm = AlertButtonConfig(
+        title: "확인",
+        role: .cancel,
+        action: nil
+    )
+}
+
 struct CustomAlertModifier<AlertModel>: ViewModifier {
-    let alert: AlertModel?
+    @Binding var alert: AlertModel?
+
     let title: (AlertModel) -> String
     let message: (AlertModel) -> String
-    let onDismiss: () -> Void
+    let buttons: (AlertModel) -> [AlertButtonConfig]
 
     func body(content: Content) -> some View {
         let isPresented = Binding<Bool>(
             get: { alert != nil },
             set: { newValue in
-                if !newValue { onDismiss() }
+                if !newValue { alert = nil }
             }
         )
 
@@ -25,27 +44,52 @@ struct CustomAlertModifier<AlertModel>: ViewModifier {
             alert.map(title) ?? "",
             isPresented: isPresented,
             presenting: alert
-        ) { _ in
-            Button("확인", role: .cancel) { onDismiss() }
+        ) { alert in
+            let configs = Array(buttons(alert))
+
+            if configs.isEmpty {
+                Button("확인", role: .cancel) {}
+            } else {
+                ForEach(Array(configs.enumerated()), id: \.offset) { _, config in
+                    makeButton(config)
+                }
+            }
         } message: { alert in
             Text(message(alert))
+        }
+    }
+
+    @ViewBuilder
+    private func makeButton(_ config: AlertButtonConfig) -> some View {
+        let action: () -> Void = {
+            config.action?()
+            alert = nil
+        }
+
+        switch config.role {
+        case .cancel:
+            Button(config.title, role: .cancel, action: action)
+        case .destructive:
+            Button(config.title, role: .destructive, action: action)
+        case .normal:
+            Button(config.title, action: action)
         }
     }
 }
 
 extension View {
     func customAlert<AlertModel>(
-        _ alert: AlertModel?,
+        _ alert: Binding<AlertModel?>,
         title: @escaping (AlertModel) -> String,
         message: @escaping (AlertModel) -> String,
-        onDismiss: @escaping () -> Void
+        buttons: @escaping (AlertModel) -> [AlertButtonConfig] = { _ in [] }
     ) -> some View {
         modifier(
             CustomAlertModifier(
                 alert: alert,
                 title: title,
                 message: message,
-                onDismiss: onDismiss
+                buttons: buttons
             )
         )
     }
