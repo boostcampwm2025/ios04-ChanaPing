@@ -65,38 +65,10 @@ extension MessageComposerView {
         }
         .padding(.horizontal, 24)
         .padding(.vertical, 24)
-        .background {
-            Image(.background)
-                .resizable()
-                .scaledToFill()
-                .ignoresSafeArea()
-        }
         .onTapGesture {
             isFocused = false
         }
         .navigationBarBackButtonHidden()
-        .toolbar {
-            if #available(iOS 26.0, *) {
-                ToolbarItem(placement: .topBarLeading) {
-                    BackButton {
-                        dismiss()
-                    }
-                }
-                .sharedBackgroundVisibility(.hidden)
-            } else {
-                ToolbarItem(placement: .topBarLeading) {
-                    BackButton {
-                        dismiss()
-                    }
-                }
-            }
-
-            ToolbarItem(placement: .principal) {
-                Text(Constants.navigationTitle)
-                    .font(.headline.weight(.semibold))
-                    .foregroundStyle(Color.meomunPrimaryColor)
-            }
-        }
         .alert(item: alertBinding) { alert in
             Alert(
                 title: Text(alert.title),
@@ -106,6 +78,8 @@ extension MessageComposerView {
                 })
             )
         }
+        .background(backgroundView)
+        .toolbar { toolbarContent }
         .toast(store.state.toastMessage) { send(.dismissToast) }
         }
     }
@@ -150,6 +124,13 @@ extension MessageComposerView {
         .opacity(store.state.isConfirmEnabled ? 1.0 : 0.4)
     }
 
+    private var backgroundView: some View {
+        Image(.background)
+            .resizable()
+            .scaledToFill()
+            .ignoresSafeArea()
+    }
+
     private var messageBinding: Binding<String> {
         Binding(
             get: { store.state.message },
@@ -164,6 +145,30 @@ extension MessageComposerView {
             get: { store.state.alert },
             set: { _ in Task { await store.send(intent: .dismissAlert) } }
         )
+    }
+
+    @ToolbarContentBuilder
+    private var toolbarContent: some ToolbarContent {
+        if #available(iOS 26.0, *) {
+            ToolbarItem(placement: .topBarLeading) {
+                BackButton {
+                    dismiss()
+                }
+            }
+            .sharedBackgroundVisibility(.hidden)
+        } else {
+            ToolbarItem(placement: .topBarLeading) {
+                BackButton {
+                    dismiss()
+                }
+            }
+        }
+
+        ToolbarItem(placement: .principal) {
+            Text(Constants.navigationTitle)
+                .font(.headline.weight(.semibold))
+                .foregroundStyle(Color.meomunPrimaryColor)
+        }
     }
 }
 
