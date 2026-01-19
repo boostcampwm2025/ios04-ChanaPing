@@ -38,7 +38,7 @@ final class MessageComposerStore: Store {
 
         case tapConfirm
         case setAlert(AlertModel?)
-        case dismissToast
+        case setToast(String?)
     }
 
     enum Action {
@@ -50,8 +50,7 @@ final class MessageComposerStore: Store {
 
         case setConfirmLoading(Bool)
         case presentAlert(AlertModel?)
-
-        case showToast(String?)
+        case presentToast(String?)
         case close
     }
 
@@ -94,8 +93,8 @@ final class MessageComposerStore: Store {
             case .setAlert(let alert):
                 continuation.yield(.presentAlert(alert))
 
-            case .dismissToast:
-                continuation.yield(.showToast(nil))
+            case .setToast(let message):
+                continuation.yield(.presentToast(message))
 
             case .tapConfirm:
                 if state.placeText != "" {
@@ -129,7 +128,7 @@ final class MessageComposerStore: Store {
         case .presentAlert(let alertState):
             newState.alert = alertState
 
-        case .showToast(let message):
+        case .presentToast(let message):
             newState.toastMessage = message
 
         case .close:
@@ -151,7 +150,7 @@ extension MessageComposerStore {
             do {
                 try await createMessageUseCase.execute(makeCreateMessageRequest())
 
-                continuation.yield(.showToast("메시지가 등록되었어요."))
+                continuation.yield(.presentToast("메시지가 등록되었어요."))
                 try await Task.sleep(nanoseconds: 700_000_000)
                 continuation.yield(.close)
 

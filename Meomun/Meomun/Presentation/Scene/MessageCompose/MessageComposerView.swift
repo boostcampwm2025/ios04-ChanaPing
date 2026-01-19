@@ -78,7 +78,7 @@ extension MessageComposerView {
             message: { $0.message },
             buttons: { _ in [.confirm] }
         )
-        .toast(store.state.toastMessage) { send(.dismissToast) }
+        .toast(toastBinding)
     }
 
     private var headerSection: some View {
@@ -141,6 +141,12 @@ extension MessageComposerView {
             }
         )
     }
+
+    private var toastBinding: Binding<String?> {
+        Binding(
+            get: { store.state.toastMessage },
+            set: { message in
+                send(.setToast(message))
             }
         )
     }

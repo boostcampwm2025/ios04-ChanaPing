@@ -8,21 +8,19 @@
 import SwiftUI
 
 struct ToastModifier: ViewModifier {
-    let message: String?
+    @Binding var message: String?
+
     let duration: Duration
     let bottomPadding: CGFloat
-    let onDismiss: () -> Void
 
     init(
-        message: String?,
+        message: Binding<String?>,
         duration: Duration = .seconds(2),
-        bottomPadding: CGFloat = 32,
-        onDismiss: @escaping () -> Void
+        bottomPadding: CGFloat = 32
     ) {
-        self.message = message
+        self._message = message
         self.duration = duration
         self.bottomPadding = bottomPadding
-        self.onDismiss = onDismiss
     }
 
     func body(content: Content) -> some View {
@@ -33,7 +31,9 @@ struct ToastModifier: ViewModifier {
                     .transition(.opacity)
                     .task(id: message) {
                         try? await Task.sleep(for: duration)
-                        await MainActor.run { onDismiss() }
+                        await MainActor.run {
+                            self.message = nil
+                        }
                     }
             }
         }
@@ -43,17 +43,15 @@ struct ToastModifier: ViewModifier {
 
 extension View {
     func toast(
-        _ message: String?,
+        _ message: Binding<String?>,
         duration: Duration = .seconds(2),
-        bottomPadding: CGFloat = 32,
-        onDismiss: @escaping () -> Void
+        bottomPadding: CGFloat = 32
     ) -> some View {
         modifier(
             ToastModifier(
                 message: message,
                 duration: duration,
                 bottomPadding: bottomPadding,
-                onDismiss: onDismiss
             )
         )
     }
