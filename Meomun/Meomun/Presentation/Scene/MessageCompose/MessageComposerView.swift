@@ -71,16 +71,13 @@ extension MessageComposerView {
         .navigationBarBackButtonHidden()
         .background(backgroundView)
         .toolbar { toolbarContent }
+        .customAlert(
+            store.state.alert,
+            title: { $0.title },
+            message: { $0.message },
+            onDismiss: { send(.dismissAlert) }
+        )
         .toast(store.state.toastMessage) { send(.dismissToast) }
-        .alert(
-            store.state.alert?.title ?? "",
-            isPresented: alertBinding,
-            presenting: store.state.alert
-        ) { _ in
-            Button("확인", role: .cancel) { send(.dismissAlert) }
-        } message: { alert in
-            Text(alert.message)
-        }
     }
 
     private var headerSection: some View {
