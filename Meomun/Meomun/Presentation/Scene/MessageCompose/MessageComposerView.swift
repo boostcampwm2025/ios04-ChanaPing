@@ -16,6 +16,7 @@ fileprivate enum Constants {
 struct MessageComposerView: View {
     @FocusState var isFocused: Bool
     @Environment(\.dismiss) private var dismiss
+    @EnvironmentObject private var locationProvider: LocationProvider
 
     @StateObject private var store: MessageComposerStore
 
@@ -121,6 +122,11 @@ extension MessageComposerView {
         .onTapGesture {
             isFocused = false
         }
+        .onChange(of: locationProvider.current) { _, current in
+            Task {
+                await store.send(intent: .updateCurrentLocation(current))
+            }
+        }
         .navigationBarBackButtonHidden()
         .toolbar {
             if #available(iOS 26.0, *) {
@@ -187,5 +193,6 @@ extension MessageComposerView {
                 }
             )
         )
+        .environmentObject(LocationProvider())
     }
 }
