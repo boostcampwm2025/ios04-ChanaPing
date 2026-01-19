@@ -15,6 +15,11 @@ final class LocationProvider: NSObject, ObservableObject {
 
     private let manager = CLLocationManager()
 
+    // 앱 단위 정책에서 연속 추적을 요청했는지 여부
+    private var wantsContinuousUpdates = false
+    // 연속 추적이 이미 시작된 상태인지 여부(멱등성)
+    private var isContinuousUpdating = false
+
     // one-shot 대기자 (공간 화면에서 작성 버튼 탭 시 사용)
     private var oneShotContinuations: [CheckedContinuation<Coordinate, Error>] = []
     private var isRequestingOneShot = false
@@ -44,18 +49,37 @@ final class LocationProvider: NSObject, ObservableObject {
         }
     }
 
-    // 지도 화면: 지속 추적 시작
+    // 연속 추적 시작(앱 단위 정책)
     func startContinuous() {
+        wantsContinuousUpdates = true
+
         guard manager.authorizationStatus == .authorizedWhenInUse
                 || manager.authorizationStatus == .authorizedAlways else {
             requestAuthorizationIfNeeded()
             return
         }
+
+        guard isContinuousUpdating == false else {
+            AppLog.debug("startContinuous() skipped (already updating)", category: .location)
+            return
+        }
+
+        isContinuousUpdating = true
+        AppLog.debug("startUpdatingLocation()", category: .location)
         manager.startUpdatingLocation()
     }
 
-    // 지도 화면: 지속 추적 종료
+    // 연속 추적 종료(앱 단위 정책)
     func stopContinuous() {
+        wantsContinuousUpdates = false
+
+        guard isContinuousUpdating else {
+            AppLog.debug("stopContinuous() skipped (not updating)", category: .location)
+            return
+        }
+
+        isContinuousUpdating = false
+        AppLog.debug("stopUpdatingLocation()", category: .location)
         manager.stopUpdatingLocation()
     }
 
@@ -100,6 +124,11 @@ extension LocationProvider: CLLocationManagerDelegate {
         // 권한이 허용으로 바뀌면 current warm-up
         if authorizationStatus == .authorizedWhenInUse || authorizationStatus == .authorizedAlways {
             manager.requestLocation()
+
+            // startContinuous()가 권한 요청으로 인해 대기 중이었다면, 권한 허용 즉시 연속 추적을 시작
+            if wantsContinuousUpdates {
+                startContinuous()
+            }
         }
     }
 
@@ -108,6 +137,10 @@ extension LocationProvider: CLLocationManagerDelegate {
         didUpdateLocations locations: [CLLocation]
     ) {
         isRequestingOneShot = false
+
+        if wantsContinuousUpdates {
+            isContinuousUpdating = true
+        }
 
         guard let last = locations.last else {
             failOneShots(LocationError.noLocation)

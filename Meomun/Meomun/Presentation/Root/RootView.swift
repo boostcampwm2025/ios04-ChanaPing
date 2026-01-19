@@ -9,6 +9,8 @@ import SwiftUI
 
 struct RootView: View {
     @StateObject private var locationProvider = LocationProvider()
+    @Environment(\.scenePhase) private var scenePhase
+    @State private var didStartContinuous = false
     @State private var userLocation: Coordinate?
 
     var body: some View {
@@ -32,6 +34,25 @@ struct RootView: View {
                 }
             }
             #endif
+        }
+        .task {
+            if didStartContinuous == false {
+                didStartContinuous = true
+                locationProvider.requestAuthorizationIfNeeded()
+                locationProvider.startContinuous()
+            }
+        }
+        .onChange(of: scenePhase) { _, newPhase in
+            switch newPhase {
+            case .active:
+                locationProvider.startContinuous()
+            case .background:
+                locationProvider.stopContinuous()
+            case .inactive:
+                break
+            @unknown default:
+                break
+            }
         }
         .environmentObject(locationProvider)
         .ignoresSafeArea(.keyboard)
