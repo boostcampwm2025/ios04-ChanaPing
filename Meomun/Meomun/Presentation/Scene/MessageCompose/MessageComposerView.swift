@@ -170,15 +170,18 @@ extension MessageComposerView {
     }
 
     private var backToolbarButton: some View {
-        let trimmed = store.state.message.trimmingCharacters(in: .whitespacesAndNewlines)
-
-        if trimmed.isEmpty {
-            return BackButton {
-                dismiss()
+        BackButton {
+            if store.state.isPlaceSearchPresented {
+                send(.dismissPlaceSearch)
+                return
             }
-        }
 
-        return BackButton {
+            let trimmed = store.state.message.trimmingCharacters(in: .whitespacesAndNewlines)
+            guard trimmed.isEmpty == false else {
+                dismiss()
+                return
+            }
+
             send(.setAlert(AlertModel(
                 title: "작성 중인 말이 있어요",
                 message: "지금 나가면 작성 중인 내용이 사라져요. 그대로 나갈까요?",
