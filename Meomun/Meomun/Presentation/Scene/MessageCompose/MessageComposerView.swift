@@ -55,43 +55,12 @@ extension MessageComposerView {
     private var content: some View {
         VStack(alignment: .center, spacing: 12) {
             Spacer()
-
-            Text(Constants.textEditorTitle)
-                .font(.headline.bold())
-                .foregroundStyle(Color.meomunSecondaryColor)
-                .frame(maxWidth: .infinity, alignment: .leading)
-
-            MessageTextEditor(text: messageBinding)
-            .focused($isFocused)
-
+            headerSection
+            editorSection
             Spacer(minLength: 0)
-
-            HStack(spacing: 8) {
-                PlaceSearchContainerView {
-                    Button {
-                        isFocused = false
-                        Task { await store.send(intent: .tapPlaceField) }
-                    } label: {
-                        Text(store.state.placeText.isEmpty ? Constants.textEditorPlaceholder : store.state.placeText)
-                            .font(.system(size: 16, weight: .medium))
-                            .foregroundStyle(store.state.placeText.isEmpty ? Color(.placeholderText) : Color.tabActive)
-                            .frame(maxWidth: .infinity, alignment: .leading)
-                    }
-                }
-
-                CancelButton {
-                    Task { await store.send(intent: .clearPlace) }
-                }
-            }
-
+            placeSection
             Spacer(minLength: 0)
-
-            ConfirmButton(action: {
-                Task { await store.send(intent: .tapConfirm)}
-            })
-            .disabled(!store.state.isConfirmEnabled)
-            .opacity(store.state.isConfirmEnabled ? 1.0 : 0.4)
-
+            confirmSection
             Spacer(minLength: 0)
         }
         .padding(.horizontal, 24)
@@ -150,6 +119,46 @@ extension MessageComposerView {
                     }
             }
         }
+    }
+
+    private var headerSection: some View {
+        Text(Constants.textEditorTitle)
+            .font(.headline.bold())
+            .foregroundStyle(Color.meomunSecondaryColor)
+            .frame(maxWidth: .infinity, alignment: .leading)
+    }
+
+    private var editorSection: some View {
+        MessageTextEditor(text: messageBinding)
+        .focused($isFocused)
+    }
+
+    private var placeSection: some View {
+        HStack(spacing: 8) {
+            PlaceSearchContainerView {
+                Button {
+                    isFocused = false
+                    Task { await store.send(intent: .tapPlaceField) }
+                } label: {
+                    Text(store.state.placeText.isEmpty ? Constants.textEditorPlaceholder : store.state.placeText)
+                        .font(.system(size: 16, weight: .medium))
+                        .foregroundStyle(store.state.placeText.isEmpty ? Color(.placeholderText) : Color.tabActive)
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                }
+            }
+
+            CancelButton {
+                Task { await store.send(intent: .clearPlace) }
+            }
+        }
+    }
+
+    private var confirmSection: some View {
+        ConfirmButton(action: {
+            Task { await store.send(intent: .tapConfirm)}
+        })
+        .disabled(!store.state.isConfirmEnabled)
+        .opacity(store.state.isConfirmEnabled ? 1.0 : 0.4)
     }
 
     private var messageBinding: Binding<String> {
