@@ -86,8 +86,6 @@ extension MessageComposerView {
             HStack(spacing: 8) {
                 PlaceSearchContainerView {
                     Button {
-                        guard store.state.isPlaceTagLocked == false else { return }
-
                         isFocused = false
                         Task { await store.send(intent: .tapPlaceField) }
                     } label: {
@@ -100,7 +98,6 @@ extension MessageComposerView {
                             )
                             .frame(maxWidth: .infinity, alignment: .leading)
                     }
-                    .disabled(store.state.isPlaceTagLocked)
                 }
 
                 CancelButton {

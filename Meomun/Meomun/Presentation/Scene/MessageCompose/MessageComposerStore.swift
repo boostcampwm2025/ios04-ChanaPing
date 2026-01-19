@@ -16,6 +16,7 @@ fileprivate enum BoundaryPolicy {
     static let outsideBoundaryAlertMessage = "메세지는 계속 작성할 수 있어요."
     static let primaryButtonTitle = "새 위치로 갱신"
     static let secondaryButtonTitle = "기존 위치에 남기기"
+    static let placeTagLockedToastMessage = "현재 위치에서는 장소 태그를 선택할 수 없어요."
 }
 
 final class MessageComposerStore: Store {
@@ -146,6 +147,12 @@ final class MessageComposerStore: Store {
                 continuation.yield(.updateCurrentLocation(coordinate))
 
             case .tapPlaceField:
+                // 장소 태그가 비활성화된 상태에서는 장소 검색을 열지 않고 안내 토스트 표시
+                if state.isPlaceTagLocked {
+                    continuation.yield(.showToast(BoundaryPolicy.placeTagLockedToastMessage))
+                    break
+                }
+
                 continuation.yield(.presentPlaceSearch(true))
 
             case .dismissPlaceSearch:
@@ -228,7 +235,7 @@ final class MessageComposerStore: Store {
             if wasOutOfBoundary == false,
                newState.isOutsideBoundary == true,
                newState.didPresentOutsideBoundaryAlert == false,
-                newState.outsideBoundaryDecision == .none {
+               newState.outsideBoundaryDecision == .none {
                 newState.alert = .init(
                     title: BoundaryPolicy.outsideBoundaryAlertTitle,
                     message: BoundaryPolicy.outsideBoundaryAlertMessage,
