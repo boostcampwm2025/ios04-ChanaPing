@@ -75,7 +75,7 @@ extension MessageComposerView {
             alertBinding,
             title: { $0.title },
             message: { $0.message },
-            buttons: { _ in [.confirm] }
+            buttons: { $0.buttons }
         )
         .toast(toastBinding)
     }
@@ -153,16 +153,12 @@ extension MessageComposerView {
     private var toolbarContent: some ToolbarContent {
         if #available(iOS 26.0, *) {
             ToolbarItem(placement: .topBarLeading) {
-                BackButton {
-                    dismiss()
-                }
+                backToolbarButton
             }
             .sharedBackgroundVisibility(.hidden)
         } else {
             ToolbarItem(placement: .topBarLeading) {
-                BackButton {
-                    dismiss()
-                }
+                backToolbarButton
             }
         }
 
@@ -170,6 +166,37 @@ extension MessageComposerView {
             Text(Constants.navigationTitle)
                 .font(.headline.weight(.semibold))
                 .foregroundStyle(Color.meomunPrimaryColor)
+        }
+    }
+
+    private var backToolbarButton: some View {
+        let trimmed = store.state.message.trimmingCharacters(in: .whitespacesAndNewlines)
+
+        if trimmed.isEmpty {
+            return BackButton {
+                dismiss()
+            }
+        }
+
+        return BackButton {
+            send(.setAlert(AlertModel(
+                title: "작성 중인 말이 있어요",
+                message: "지금 나가면 작성 중인 내용이 사라져요. 그대로 나갈까요?",
+                buttons: [
+                    AlertButtonConfig(
+                        title: "그대로 나가기",
+                        role: .destructive,
+                        action: {
+                            send(.resetDraft)
+                        }
+                    ),
+                    AlertButtonConfig(
+                        title: "머무르기",
+                        role: .cancel,
+                        action: nil
+                    )
+                ]
+            )))
         }
     }
 }

@@ -30,6 +30,7 @@ final class MessageComposerStore: Store {
 
     enum Intent {
         case setMessage(String)
+        case resetDraft
 
         case tapPlaceField
         case dismissPlaceSearch
@@ -77,6 +78,10 @@ final class MessageComposerStore: Store {
             case .setMessage(let message):
                 continuation.yield(.updateMessage(message))
 
+            case .resetDraft:
+                continuation.yield(.updateMessage(""))
+                continuation.yield(.close)
+
             case .tapPlaceField:
                 continuation.yield(.presentPlaceSearch(true))
 
@@ -90,18 +95,18 @@ final class MessageComposerStore: Store {
             case .clearPlace:
                 continuation.yield(.clearPlace)
 
-            case .setAlert(let alert):
-                continuation.yield(.presentAlert(alert))
-
-            case .setToast(let message):
-                continuation.yield(.presentToast(message))
-
             case .tapConfirm:
                 if state.placeText != "" {
                     // TODO: 1차 검증) 장소 태그 존재 시, 현재 위치 기준으로 거리 검증
                 }
                 createMessage(continuation: continuation)
                 return
+
+            case .setAlert(let alert):
+                continuation.yield(.presentAlert(alert))
+
+            case .setToast(let message):
+                continuation.yield(.presentToast(message))
             }
             continuation.finish()
         }

@@ -62,8 +62,11 @@ struct CustomAlertModifier<AlertModel>: ViewModifier {
     @ViewBuilder
     private func makeButton(_ config: AlertButtonConfig) -> some View {
         let action: () -> Void = {
-            config.action?()
             alert = nil
+
+            Task { @MainActor in
+                config.action?()
+            }
         }
 
         switch config.role {
