@@ -86,14 +86,21 @@ extension MessageComposerView {
             HStack(spacing: 8) {
                 PlaceSearchContainerView {
                     Button {
+                        guard store.state.isPlaceTagLocked == false else { return }
+
                         isFocused = false
                         Task { await store.send(intent: .tapPlaceField) }
                     } label: {
                         Text(store.state.placeText.isEmpty ? Constants.textEditorPlaceholder : store.state.placeText)
                             .font(.system(size: 16, weight: .medium))
-                            .foregroundStyle(store.state.placeText.isEmpty ? Color(.placeholderText) : Color.tabActive)
+                            .foregroundStyle(
+                                store.state.isPlaceTagLocked
+                                ? Color(.placeholderText)
+                                : (store.state.placeText.isEmpty ? Color(.placeholderText) : Color.tabActive)
+                            )
                             .frame(maxWidth: .infinity, alignment: .leading)
                     }
+                    .disabled(store.state.isPlaceTagLocked)
                 }
 
                 CancelButton {
@@ -104,7 +111,7 @@ extension MessageComposerView {
             Spacer(minLength: 0)
 
             ConfirmButton(action: {
-                Task { await store.send(intent: .tapConfirm)}
+                Task { await store.send(intent: .tapConfirm) }
             })
             .disabled(!store.state.isConfirmEnabled)
             .opacity(store.state.isConfirmEnabled ? 1.0 : 0.4)
@@ -151,13 +158,26 @@ extension MessageComposerView {
             }
         }
         .alert(item: alertBinding) { alert in
-            Alert(
-                title: Text(alert.title),
-                message: Text(alert.message),
-                dismissButton: .default(Text("확인"), action: {
-                    Task { await store.send(intent: .dismissAlert) }
-                })
-            )
+            if let secondary = alert.secondaryButton {
+                return Alert(
+                    title: Text(alert.title),
+                    message: Text(alert.message),
+                    primaryButton: .default(Text(alert.primaryButton.title), action: {
+                        Task { await store.send(intent: alert.primaryButton.intent) }
+                    }),
+                    secondaryButton: .cancel(Text(secondary.title), action: {
+                        Task { await store.send(intent: secondary.intent) }
+                    })
+                )
+            } else {
+                return Alert(
+                    title: Text(alert.title),
+                    message: Text(alert.message),
+                    dismissButton: .default(Text(alert.primaryButton.title), action: {
+                        Task { await store.send(intent: alert.primaryButton.intent) }
+                    })
+                )
+            }
         }
         .overlay(alignment: .bottom) {
             if let toast = store.state.toastMessage {
