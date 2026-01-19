@@ -14,6 +14,7 @@ final class MapStore: Store {
         case onDisappear
         case updateUserLocation(Coordinate)
         case cameraDidIdle(Coordinate)
+        case cameraChangedByLocation(Coordinate)
         case tapWriteButton
         case dismissAddMessage
         case updateMessages([Message])
@@ -76,6 +77,10 @@ final class MapStore: Store {
                 continuation.finish()
 
             case .cameraDidIdle(let coordinate):
+                continuation.yield(.setCameraCoordinate(coordinate))
+                self.debouncedFetchNearbyMessages(at: coordinate, continuation: continuation)
+
+            case .cameraChangedByLocation(let coordinate):
                 continuation.yield(.setCameraCoordinate(coordinate))
                 self.debouncedFetchNearbyMessages(at: coordinate, continuation: continuation)
 

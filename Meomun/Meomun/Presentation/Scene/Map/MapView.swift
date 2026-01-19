@@ -49,6 +49,11 @@ struct MapView: View {
                         Task {
                             await store.send(intent: .cameraDidIdle(coordinate))
                         }
+                    },
+                    onCameraChangedByLocation: { coordinate in
+                        Task {
+                            await store.send(intent: .cameraChangedByLocation(coordinate))
+                        }
                     }
                 )
                 .ignoresSafeArea()
