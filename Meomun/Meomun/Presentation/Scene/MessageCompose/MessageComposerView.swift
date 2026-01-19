@@ -69,18 +69,17 @@ extension MessageComposerView {
             isFocused = false
         }
         .navigationBarBackButtonHidden()
-        .alert(item: alertBinding) { alert in
-            Alert(
-                title: Text(alert.title),
-                message: Text(alert.message),
-                dismissButton: .default(Text("확인"), action: {
-                    Task { await store.send(intent: .dismissAlert) }
-                })
-            )
-        }
         .background(backgroundView)
         .toolbar { toolbarContent }
         .toast(store.state.toastMessage) { send(.dismissToast) }
+        .alert(
+            store.state.alert?.title ?? "",
+            isPresented: alertBinding,
+            presenting: store.state.alert
+        ) { _ in
+            Button("확인", role: .cancel) { send(.dismissAlert) }
+        } message: { alert in
+            Text(alert.message)
         }
     }
 
@@ -140,10 +139,12 @@ extension MessageComposerView {
         )
     }
 
-    private var alertBinding: Binding<MessageComposerStore.AlertState?> {
+    private var alertBinding: Binding<Bool> {
         Binding(
-            get: { store.state.alert },
-            set: { _ in Task { await store.send(intent: .dismissAlert) } }
+            get: { store.state.alert != nil },
+            set: { isPresented in
+                if !isPresented { send(.dismissAlert) }
+            }
         )
     }
 
