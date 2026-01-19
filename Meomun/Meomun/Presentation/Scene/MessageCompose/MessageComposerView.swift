@@ -59,7 +59,6 @@ extension MessageComposerView {
     private var content: some View {
         VStack(alignment: .center, spacing: 12) {
             Spacer()
-            headerSection
             editorSection
             Spacer(minLength: 0)
             placeSection
@@ -81,14 +80,13 @@ extension MessageComposerView {
         .toast(toastBinding)
     }
 
-    private var headerSection: some View {
+    @ViewBuilder
+    private var editorSection: some View {
         Text(Constants.textEditorTitle)
             .font(.headline.bold())
             .foregroundStyle(Color.meomunSecondaryColor)
             .frame(maxWidth: .infinity, alignment: .leading)
-    }
 
-    private var editorSection: some View {
         MessageTextEditor(text: messageBinding)
         .focused($isFocused)
     }
