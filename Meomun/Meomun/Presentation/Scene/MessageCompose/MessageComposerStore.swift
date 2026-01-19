@@ -14,6 +14,8 @@ fileprivate enum BoundaryPolicy {
     static let boundaryRadiusMeters: CLLocationDistance = 60
     static let outsideBoundaryAlertTitle = "현재 머문 위치를 벗어났습니다."
     static let outsideBoundaryAlertMessage = "메세지는 계속 작성할 수 있어요."
+    static let primaryButtonTitle = "새 위치로 갱신"
+    static let secondaryButtonTitle = "기존 위치에 남기기"
 }
 
 final class MessageComposerStore: Store {
@@ -21,6 +23,32 @@ final class MessageComposerStore: Store {
         let id: UUID = UUID()
         let title: String
         let message: String
+        let primaryButton: AlertButton
+        let secondaryButton: AlertButton?
+
+        init(
+            title: String,
+            message: String,
+            primaryButton: AlertButton = .init(title: "확인", intent: .dismissAlert),
+            secondaryButton: AlertButton? = nil
+        ) {
+            self.title = title
+            self.message = message
+            self.primaryButton = primaryButton
+            self.secondaryButton = secondaryButton
+        }
+    }
+
+    struct AlertButton: Equatable {
+        let title: String
+        let intent: Intent
+    }
+
+    // 위치 이탈 상태에서 사용자의 선택을 반영하기 위한 상태
+    enum OutsideBoundaryDecision: Equatable {
+        case none
+        case refreshStartLocation   // "새 위치로 갱신"
+        case keepWritingWithoutTag  // "기존 위치에 남기기"
     }
 
     struct State: Equatable {
@@ -29,6 +57,9 @@ final class MessageComposerStore: Store {
 
         var isOutsideBoundary: Bool = false
         var didPresentOutsideBoundaryAlert: Bool = false
+
+        var outsideBoundaryDecision: OutsideBoundaryDecision = .none
+        var isPlaceTagLocked: Bool = false
 
         var message: String = ""
         var placeText: String = ""
@@ -43,7 +74,7 @@ final class MessageComposerStore: Store {
                 .trimmingCharacters(in: .whitespacesAndNewlines)
                 .isEmpty == false
             && isConfirmLoading == false
-            && isOutsideBoundary == false
+            && (isOutsideBoundary == false || outsideBoundaryDecision == .keepWritingWithoutTag)
         }
 
         init(userLocation: Coordinate) {
@@ -52,7 +83,7 @@ final class MessageComposerStore: Store {
         }
     }
 
-    enum Intent {
+    enum Intent: Equatable {
         case setMessage(String)
         case updateCurrentLocation(Coordinate?)
 
@@ -64,6 +95,8 @@ final class MessageComposerStore: Store {
         case selectSuggestedPlace(String)
 
         case tapConfirm
+        case tapRefreshStartLocation
+        case tapKeepWritingWithoutTag
         case dismissAlert
         case dismissToast
     }
@@ -75,6 +108,9 @@ final class MessageComposerStore: Store {
         case presentPlaceSearch(Bool)
         case updatePlace(String)
         case clearPlace
+
+        case refreshStartLocation
+        case keepWritingWithoutTag
 
         case setConfirmLoading(Bool)
         case presentAlert(AlertState?)
@@ -132,16 +168,23 @@ final class MessageComposerStore: Store {
                 continuation.yield(.showToast(nil))
 
             case .tapConfirm:
-                if state.isOutsideBoundary {
+                if state.isOutsideBoundary, state.outsideBoundaryDecision == .none {
                     continuation.yield(
                         .presentAlert(
                             .init(
                                 title: BoundaryPolicy.outsideBoundaryAlertTitle,
-                                message: BoundaryPolicy.outsideBoundaryAlertMessage
+                                message: BoundaryPolicy.outsideBoundaryAlertMessage,
+                                primaryButton: .init(
+                                    title: BoundaryPolicy.primaryButtonTitle,
+                                    intent: .tapRefreshStartLocation
+                                ),
+                                secondaryButton: .init(
+                                    title: BoundaryPolicy.secondaryButtonTitle,
+                                    intent: .tapKeepWritingWithoutTag
+                                )
                             )
                         )
                     )
-
                     break
                 }
 
@@ -151,6 +194,12 @@ final class MessageComposerStore: Store {
 
                 createMessage(continuation: continuation)
                 return
+
+            case .tapRefreshStartLocation:
+                continuation.yield(.refreshStartLocation)
+
+            case .tapKeepWritingWithoutTag:
+                continuation.yield(.keepWritingWithoutTag)
             }
 
             continuation.finish()
@@ -178,10 +227,19 @@ final class MessageComposerStore: Store {
             // 제한 범위 밖으로 나가는 경우
             if wasOutOfBoundary == false,
                newState.isOutsideBoundary == true,
-               newState.didPresentOutsideBoundaryAlert == false {
+               newState.didPresentOutsideBoundaryAlert == false,
+                newState.outsideBoundaryDecision == .none {
                 newState.alert = .init(
                     title: BoundaryPolicy.outsideBoundaryAlertTitle,
-                    message: BoundaryPolicy.outsideBoundaryAlertMessage
+                    message: BoundaryPolicy.outsideBoundaryAlertMessage,
+                    primaryButton: .init(
+                        title: BoundaryPolicy.primaryButtonTitle,
+                        intent: .tapRefreshStartLocation
+                    ),
+                    secondaryButton: .init(
+                        title: BoundaryPolicy.secondaryButtonTitle,
+                        intent: .tapKeepWritingWithoutTag
+                    )
                 )
                 newState.didPresentOutsideBoundaryAlert = true
             }
@@ -190,6 +248,10 @@ final class MessageComposerStore: Store {
             if wasOutOfBoundary == true,
                newState.isOutsideBoundary == false {
                 newState.didPresentOutsideBoundaryAlert = false
+
+                // 범위 내로 복귀하면 장소 태그는 자동으로 다시 활성화
+                newState.isPlaceTagLocked = false
+                newState.outsideBoundaryDecision = .none
             }
 
         case .presentPlaceSearch(let isPresented):
@@ -200,6 +262,37 @@ final class MessageComposerStore: Store {
 
         case .clearPlace:
             newState.placeText = ""
+
+        case .refreshStartLocation:
+            // 현재 위치를 기준으로 startLocation 갱신
+            if let current = newState.currentLocation {
+                newState.startLocation = current
+            }
+
+            // 장소 태그는 새 기준에서 다시 선택하도록 초기화
+            newState.placeText = ""
+
+            // 선택 상태 갱신
+            newState.outsideBoundaryDecision = .refreshStartLocation
+            newState.isPlaceTagLocked = false
+
+            // 새 기준에서는 이탈 상태를 해제(다음 위치 업데이트에서 재계산됨)
+            newState.isOutsideBoundary = false
+            newState.didPresentOutsideBoundaryAlert = false
+
+            // 알럿 닫기
+            newState.alert = nil
+
+        case .keepWritingWithoutTag:
+            // 초기 위치는 유지하고, 장소 태그 없이 계속 작성 모드로 전환
+            newState.outsideBoundaryDecision = .keepWritingWithoutTag
+            newState.isPlaceTagLocked = true
+
+            // 장소 태그가 있다면 제거
+            newState.placeText = ""
+
+            // 알럿 닫기
+            newState.alert = nil
 
         case .setConfirmLoading(let isLoading):
             newState.isConfirmLoading = isLoading
