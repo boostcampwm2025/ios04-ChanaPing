@@ -86,7 +86,7 @@ struct MapView: View {
                             messageRepository: MessageRepositoryImpl()
                         ),
                         onClose: {
-                            Task { await store.send(intent: .dismissAddMessage)}
+                            Task { await store.send(intent: .dismissAddMessage) }
                         }
                     )
                 )
@@ -121,13 +121,10 @@ struct MapView: View {
                 }
             }
             .task {
-                locationProvider.requestAuthorizationIfNeeded()
-                locationProvider.startContinuous()
                 await store.send(intent: .onAppear)
             }
             .onAppear { setTabBarHidden(false) }
             .onDisappear {
-                locationProvider.stopContinuous()
                 Task {
                     await store.send(intent: .onDisappear)
                 }
