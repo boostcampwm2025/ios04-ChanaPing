@@ -10,19 +10,13 @@ import Combine
 import Supabase
 
 final class MessageComposerStore: Store {
-    struct AlertState: Identifiable, Equatable {
-        let id: UUID = UUID()
-        let title: String
-        let message: String
-    }
-
     struct State: Equatable {
         var userLocation: Coordinate
         var message: String = ""
         var placeText: String = ""
         var isPlaceSearchPresented: Bool = false
 
-        var alert: AlertState?
+        var alert: AlertModel?
         var toastMessage: String?
 
         var isConfirmLoading: Bool = false
@@ -57,7 +51,7 @@ final class MessageComposerStore: Store {
         case clearPlace
 
         case setConfirmLoading(Bool)
-        case presentAlert(AlertState?)
+        case presentAlert(AlertModel?)
 
         case showToast(String?)
         case close
