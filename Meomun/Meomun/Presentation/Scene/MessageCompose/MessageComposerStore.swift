@@ -280,7 +280,7 @@ final class MessageComposerStore: Store {
             newState.placeText = ""
 
             // 선택 상태 갱신
-            newState.outsideBoundaryDecision = .refreshStartLocation
+            newState.outsideBoundaryDecision = .none
             newState.isPlaceTagLocked = false
 
             // 새 기준에서는 이탈 상태를 해제(다음 위치 업데이트에서 재계산됨)
