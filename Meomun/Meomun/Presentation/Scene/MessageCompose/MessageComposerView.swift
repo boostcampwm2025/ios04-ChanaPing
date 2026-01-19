@@ -36,7 +36,7 @@ struct MessageComposerView: View {
                                 network: NetworkClientImpl()
                             )
                         ),
-                        userLocation: store.state.userLocation,
+                        userLocation: store.state.startLocation,
                         onSelect: { selected in
                             Task { await store.send(intent: .selectPlace(selected.name)) }
                         },
@@ -176,8 +176,6 @@ extension MessageComposerView {
 }
 
 #Preview {
-    @Previewable @State var message: String = ""
-
     NavigationStack {
         MessageComposerView(
             store: MessageComposerStore(

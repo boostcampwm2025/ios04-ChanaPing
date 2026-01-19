@@ -24,7 +24,6 @@ final class MessageComposerStore: Store {
     }
 
     struct State: Equatable {
-        var userLocation: Coordinate
         var startLocation: Coordinate
         var currentLocation: Coordinate?
 
@@ -48,7 +47,6 @@ final class MessageComposerStore: Store {
         }
 
         init(userLocation: Coordinate) {
-            self.userLocation = userLocation
             self.startLocation = userLocation
             self.currentLocation = userLocation
         }
@@ -99,7 +97,7 @@ final class MessageComposerStore: Store {
         self.state = State(userLocation: userLocation)
         self.createMessageUseCase = createMessage
         self.onClose = onClose
-        AppLog.debug("userLocation: \(userLocation)", category: .location)
+        AppLog.debug("startLocation: \(state.startLocation)", category: .location)
     }
 
     func action(intent: Intent) -> AsyncStream<Action> {
@@ -143,8 +141,8 @@ final class MessageComposerStore: Store {
                             )
                         )
                     )
-                    continuation.finish()
-                    return
+
+                    break
                 }
 
                 if state.placeText.isEmpty == false {
@@ -154,6 +152,7 @@ final class MessageComposerStore: Store {
                 createMessage(continuation: continuation)
                 return
             }
+
             continuation.finish()
         }
     }
@@ -171,6 +170,9 @@ final class MessageComposerStore: Store {
             if let current = coordinate {
                 let distance = distanceMeters(from: newState.startLocation, to: current)
                 newState.isOutsideBoundary = distance > BoundaryPolicy.boundaryRadiusMeters
+            } else {
+                // 위치 정보를 받아오지 못한 경우, 기본값은 제한 범위 내부로 처리
+                newState.isOutsideBoundary = false
             }
 
             // 제한 범위 밖으로 나가는 경우
