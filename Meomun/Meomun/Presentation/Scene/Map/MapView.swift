@@ -13,6 +13,7 @@ struct MapView: View {
     @StateObject private var store: MapStore
 
     private let messageMarkerManager: MessageMarkerManager
+    private let initialUserLocation: Coordinate
 
     init(
         userLocation: Coordinate,
@@ -25,6 +26,7 @@ struct MapView: View {
             )
         ))
         self.messageMarkerManager = messageMarkerManager
+        self.initialUserLocation = userLocation
     }
 
     var body: some View {
@@ -123,7 +125,7 @@ struct MapView: View {
             .task {
                 locationProvider.requestAuthorizationIfNeeded()
                 locationProvider.startContinuous()
-                await store.send(intent: .onAppear)
+                await store.send(intent: .onAppear(initialUserLocation))
             }
             .onAppear { setTabBarHidden(false) }
             .onDisappear {
