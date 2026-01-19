@@ -36,8 +36,6 @@ final class MessageComposerStore: Store {
         case selectPlace(String)
         case clearPlace
 
-        case selectSuggestedPlace(String)
-
         case tapConfirm
         case dismissAlert
         case dismissToast
@@ -93,8 +91,6 @@ final class MessageComposerStore: Store {
             case .clearPlace:
                 continuation.yield(.clearPlace)
 
-            case .selectSuggestedPlace(let place):
-                continuation.yield(.updatePlace(place))
 
             case .dismissAlert:
                 continuation.yield(.presentAlert(nil))
