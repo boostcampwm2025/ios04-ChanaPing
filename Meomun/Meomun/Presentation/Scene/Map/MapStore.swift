@@ -13,6 +13,7 @@ final class MapStore: Store {
         case onAppear(Coordinate)
         case onDisappear
         case updateUserLocation(Coordinate)
+        case cameraDidIdle(Coordinate)
         case tapWriteButton
         case dismissAddMessage
         case updateMessages([Message])
@@ -43,6 +44,7 @@ final class MapStore: Store {
     @Published var state: State
 
     private var messageStreamTask: Task<Void, Never>?
+    private var fetchDebounceTask: Task<Void, Never>?
     private let getNearbyMessagesUseCase: GetNearbyMessagesUseCase
 
     init(
@@ -59,16 +61,23 @@ final class MapStore: Store {
             case .onAppear(let coordinate):
                 continuation.yield(.setCameraCoordinate(coordinate))
                 self.fetchNearbyMessages(at: coordinate, continuation: continuation)
+                continuation.finish()
 
             case .onDisappear:
                 // 화면 내려갈 때 실시간 작업 정리
-                messageStreamTask?.cancel()
-                messageStreamTask = nil
+                self.fetchDebounceTask?.cancel()
+                self.fetchDebounceTask = nil
+                self.messageStreamTask?.cancel()
+                self.messageStreamTask = nil
                 continuation.finish()
 
             case .updateUserLocation(let location):
                 continuation.yield(.setUserLocation(location))
                 continuation.finish()
+
+            case .cameraDidIdle(let coordinate):
+                continuation.yield(.setCameraCoordinate(coordinate))
+                self.debouncedFetchNearbyMessages(at: coordinate, continuation: continuation)
 
             case .tapWriteButton:
                 continuation.yield(.setShowAddMessage(true))
@@ -122,7 +131,21 @@ final class MapStore: Store {
         return newState
     }
 
-    private func fetchNearbyMessages(continuation: AsyncStream<Action>.Continuation) {
+    private func debouncedFetchNearbyMessages(
+        at coordinate: Coordinate,
+        continuation: AsyncStream<Action>.Continuation
+    ) {
+        fetchDebounceTask?.cancel()
+        fetchDebounceTask = Task { [weak self] in
+            try? await Task.sleep(nanoseconds: 300_000_000) // 300ms
+            guard !Task.isCancelled else {
+                continuation.finish()
+                return
+            }
+            self?.fetchNearbyMessages(at: coordinate, continuation: continuation)
+        }
+    }
+
     private func fetchNearbyMessages(
         at coordinate: Coordinate,
         continuation: AsyncStream<Action>.Continuation
