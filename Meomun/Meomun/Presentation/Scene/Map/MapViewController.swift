@@ -15,7 +15,6 @@ final class MapViewController: UIViewController {
     // MARK: - Properties
 
     private var appLifecycleObservers: [NSObjectProtocol] = []
-    private var didMoveToCurrentLocation = false
 
     // MARK: - Animation Properties
 
@@ -193,8 +192,6 @@ extension MapViewController {
 extension MapViewController {
     func updateUserLocation(_ coordinate: Coordinate?) {
         guard let coordinate else { return }
-        guard didMoveToCurrentLocation == false else { return }
-        didMoveToCurrentLocation = true
 
         naverMapView.mapView.positionMode = .direction
 
@@ -263,15 +260,15 @@ extension MapViewController: NMFMapViewCameraDelegate {
         let coordinate = Coordinate(latitude: center.lat, longitude: center.lng)
         onCameraIdle?(coordinate)
     }
-    
+
     func mapView(_ mapView: NMFMapView, cameraDidChangeByReason reason: Int, animated: Bool) {
         // 위치 추적으로 인한 카메라 변경인지 확인
         guard reason == NMFMapChangedByLocation else { return }
-        
+
         // 위치 모드가 direction 또는 compass인지 확인
         let positionMode = naverMapView.mapView.positionMode
         guard positionMode == .direction || positionMode == .compass else { return }
-        
+
         // 카메라 중심 좌표 추출 및 콜백 호출
         let center = mapView.cameraPosition.target
         let coordinate = Coordinate(latitude: center.lat, longitude: center.lng)
@@ -326,6 +323,5 @@ struct MapViewWrapper: UIViewControllerRepresentable {
 
     func updateUIViewController(_ uiViewController: MapViewController, context: Context) {
         uiViewController.loadMessages(messages)
-        uiViewController.updateUserLocation(userLocation)
     }
 }

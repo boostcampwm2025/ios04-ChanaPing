@@ -12,7 +12,6 @@ final class MapStore: Store {
     enum Intent {
         case onAppear(Coordinate)
         case onDisappear
-        case updateUserLocation(Coordinate)
         case cameraDidIdle(Coordinate)
         case cameraChangedByLocation(Coordinate)
         case tapWriteButton
@@ -23,7 +22,6 @@ final class MapStore: Store {
     }
 
     enum Action {
-        case setUserLocation(Coordinate)
         case setCameraCoordinate(Coordinate)
         case setShowAddMessage(Bool)
         case setMessages([Message])
@@ -34,7 +32,6 @@ final class MapStore: Store {
 
     struct State {
         var messages: [Message] = []
-        var userLocation: Coordinate
         var cameraCoordinate: Coordinate?
         var isShowingAddMessage: Bool = false
         var selectedPlace: Place?
@@ -49,10 +46,9 @@ final class MapStore: Store {
     private let getNearbyMessagesUseCase: GetNearbyMessagesUseCase
 
     init(
-        userLocation: Coordinate,
         getNearbyMessagesUseCase: GetNearbyMessagesUseCase
     ) {
-        self.state = State(userLocation: userLocation)
+        self.state = State()
         self.getNearbyMessagesUseCase = getNearbyMessagesUseCase
     }
 
@@ -70,10 +66,6 @@ final class MapStore: Store {
                 self.fetchDebounceTask = nil
                 self.messageStreamTask?.cancel()
                 self.messageStreamTask = nil
-                continuation.finish()
-
-            case .updateUserLocation(let location):
-                continuation.yield(.setUserLocation(location))
                 continuation.finish()
 
             case .cameraDidIdle(let coordinate):
@@ -113,9 +105,6 @@ final class MapStore: Store {
         switch action {
         case .setMessages(let messages):
             newState.messages = messages
-
-        case .setUserLocation(let location):
-            newState.userLocation = location
 
         case .setCameraCoordinate(let coordinate):
             newState.cameraCoordinate = coordinate
