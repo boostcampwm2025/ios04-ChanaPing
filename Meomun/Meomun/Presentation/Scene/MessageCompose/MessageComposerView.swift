@@ -23,6 +23,10 @@ struct MessageComposerView: View {
         _store = StateObject(wrappedValue: store)
     }
 
+    private func send(_ intent: MessageComposerStore.Intent) {
+        Task { await store.send(intent: intent) }
+    }
+
     var body: some View {
         ZStack {
             content
@@ -37,10 +41,10 @@ struct MessageComposerView: View {
                         ),
                         userLocation: store.state.userLocation,
                         onSelect: { selected in
-                            Task { await store.send(intent: .selectPlace(selected.name)) }
+                            send(.selectPlace(selected.name))
                         },
                         onDismiss: {
-                            Task { await store.send(intent: .dismissPlaceSearch) }
+                            send(.dismissPlaceSearch)
                         }
                     )
                 )
@@ -63,13 +67,10 @@ extension MessageComposerView {
             confirmSection
             Spacer(minLength: 0)
         }
-        .padding(.horizontal, 24)
-        .padding(.vertical, 24)
-        .onTapGesture {
-            isFocused = false
-        }
-        .navigationBarBackButtonHidden()
+        .padding(24)
         .background(backgroundView)
+        .onTapGesture { isFocused = false }
+        .navigationBarBackButtonHidden()
         .toolbar { toolbarContent }
         .customAlert(
             store.state.alert,
@@ -97,7 +98,7 @@ extension MessageComposerView {
             PlaceSearchContainerView {
                 Button {
                     isFocused = false
-                    Task { await store.send(intent: .tapPlaceField) }
+                    send(.tapPlaceField)
                 } label: {
                     Text(store.state.placeText.isEmpty ? Constants.textEditorPlaceholder : store.state.placeText)
                         .font(.system(size: 16, weight: .medium))
@@ -106,16 +107,12 @@ extension MessageComposerView {
                 }
             }
 
-            CancelButton {
-                Task { await store.send(intent: .clearPlace) }
-            }
+            CancelButton { send(.clearPlace) }
         }
     }
 
     private var confirmSection: some View {
-        ConfirmButton(action: {
-            Task { await store.send(intent: .tapConfirm)}
-        })
+        ConfirmButton(action: { send(.tapConfirm) })
         .disabled(!store.state.isConfirmEnabled)
         .opacity(store.state.isConfirmEnabled ? 1.0 : 0.4)
     }
@@ -130,8 +127,8 @@ extension MessageComposerView {
     private var messageBinding: Binding<String> {
         Binding(
             get: { store.state.message },
-            set: { newValue in
-                Task { await store.send(intent: .setMessage(newValue)) }
+            set: { message in
+                send(.setMessage(message))
             }
         )
     }
