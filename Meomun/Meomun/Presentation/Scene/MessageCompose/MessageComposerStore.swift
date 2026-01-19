@@ -18,6 +18,12 @@ final class MessageComposerStore: Store {
 
     struct State: Equatable {
         var userLocation: Coordinate
+        var startLocation: Coordinate
+        var currentLocation: Coordinate?
+
+        var isOutOfBoundary: Bool = false
+        var didShowOutOfBoundaryAlert: Bool = false
+
         var message: String = ""
         var placeText: String = ""
         var isPlaceSearchPresented: Bool = false
@@ -32,10 +38,17 @@ final class MessageComposerStore: Store {
                 .isEmpty == false
             && isConfirmLoading == false
         }
+
+        init(userLocation: Coordinate) {
+            self.userLocation = userLocation
+            self.startLocation = userLocation
+            self.currentLocation = userLocation
+        }
     }
 
     enum Intent {
         case setMessage(String)
+        case updateCurrentLocation(Coordinate?)
 
         case tapPlaceField
         case dismissPlaceSearch
@@ -51,6 +64,7 @@ final class MessageComposerStore: Store {
 
     enum Action {
         case updateMessage(String)
+        case updateCurrentLocation(Coordinate?)
 
         case presentPlaceSearch(Bool)
         case updatePlace(String)
@@ -85,6 +99,9 @@ final class MessageComposerStore: Store {
             switch intent {
             case .setMessage(let message):
                 continuation.yield(.updateMessage(message))
+
+            case .updateCurrentLocation(let coordinate):
+                continuation.yield(.updateCurrentLocation(coordinate))
 
             case .tapPlaceField:
                 continuation.yield(.presentPlaceSearch(true))
@@ -124,6 +141,9 @@ final class MessageComposerStore: Store {
         switch action {
         case .updateMessage(let message):
             newState.message = message
+
+        case .updateCurrentLocation(let coordinate):
+            newState.currentLocation = coordinate
 
         case .presentPlaceSearch(let isPresented):
             newState.isPlaceSearchPresented = isPresented
