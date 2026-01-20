@@ -501,6 +501,16 @@ private struct BubblePlacer {
                 locationProvider: .init(),
                 fetchPlaceMessagesUseCase: FetchPlaceMessagesUseCaseImpl(
                     messageRepository: MessageRepositoryImpl()
+                ),
+                place: .init(
+                    id: .init(
+                        value: .init()
+                    ),
+                    name: "광화문",
+                    coordinate: .init(
+                        latitude: 0,
+                        longitude: 0
+                    )
                 )
             ),
             domeEnvironment: .init(

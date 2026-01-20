@@ -119,7 +119,8 @@ struct MapView: View {
                             locationProvider: locationProvider,
                             fetchPlaceMessagesUseCase: FetchPlaceMessagesUseCaseImpl(
                                 messageRepository: MessageRepositoryImpl()
-                            )
+                            ),
+                            place: place
                         ),
                         domeEnvironment: .init(
                             weather: .sunny,
