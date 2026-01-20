@@ -30,7 +30,11 @@ struct ToastModifier: ViewModifier {
                     .padding(.bottom, bottomPadding)
                     .transition(.opacity)
                     .task(id: message) {
-                        try? await Task.sleep(for: duration)
+                        do {
+                            try await Task.sleep(for: duration)
+                        } catch {
+                            return
+                        }
                         await MainActor.run {
                             self.message = nil
                         }
