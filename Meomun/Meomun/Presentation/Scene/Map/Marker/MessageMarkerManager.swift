@@ -293,8 +293,9 @@ extension MessageMarkerManager {
         // 6. 마커 저장
         markers[key] = marker
 
-        // 7. 회전 애니메이션 상태 등록 (rotatingBubble인 경우만)
-        if case .rotatingBubble = markerType {
+        // 7. 회전 애니메이션 상태 등록 (rotatingBubble 또는 stackBubble인 경우)
+        switch markerType {
+        case .rotatingBubble, .stackBubble:
             let messagesProvider: () -> [Message] = { [weak self] in
                 guard let self else { return [] }
                 let source = isPlace ? self.placeMessagesByCoord[coord] : self.noPlaceMessagesByCoord[coord]
@@ -305,6 +306,8 @@ extension MessageMarkerManager {
                 messagesProvider: messagesProvider,
                 lastRotationTime: Date().timeIntervalSince1970
             )
+        case .singleBubble:
+            break
         }
     }
 
@@ -332,19 +335,16 @@ extension MessageMarkerManager {
             // 메시지 1개: 최신 표시 accent line + 단일 버블
             image = bubbleImageRenderer.renderSingleBubble(message: message, showsAccentLine: true)
 
-        case .rotatingBubble(let messages):
-            // 메시지 2개 이상 (Place): 첫 번째 메시지로 초기 이미지
+        case .rotatingBubble(let messages), .stackBubble(let messages):
+            // 메시지 2개 이상: 첫 번째 메시지로 초기 이미지
             // 악센트 라인 없음 (회전 중에는 표시 안 함)
+            // stackBubble도 임시로 rotatingBubble과 동일하게 처리 (추후 별도 UI 구현 예정)
             guard let firstMessage = messages.first else {
                 image = UIImage()
                 break
             }
 
             image = bubbleImageRenderer.renderSingleBubble(message: firstMessage, showsAccentLine: false)
-
-        case .stackBubble(let messages):
-            // 메시지 2개 이상 (NoPlace): 스택 버블 이미지
-            image = bubbleImageRenderer.renderStackBubble(messages: messages)
         }
 
         marker.iconImage = NMFOverlayImage(image: image)
