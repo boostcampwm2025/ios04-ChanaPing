@@ -27,16 +27,17 @@ struct WriteButton: View {
     var body: some View {
         Button(action: action) {
             Image(systemName: "pencil")
-                .font(.system(size: 22, weight: .semibold))
+                .font(.system(size: 27, weight: .semibold))
                 .foregroundStyle(.white)
-                .frame(width: 56, height: 56)
+                .frame(width: 61, height: 61)
                 .background(
                     LeftTopCutRoundedShape()
                         .fill(Color.meomunWriteButton)
                 )
                 .shadow(color: .black.opacity(0.15), radius: 6, y: 4)
         }
-        .padding(.horizontal, 24)
+        .padding(.horizontal, 35)
+        .padding(.vertical, 17)
     }
 }
 
