@@ -58,7 +58,6 @@ final class MapStore: Store {
             case .onAppear(let coordinate):
                 continuation.yield(.setCameraCoordinate(coordinate))
                 self.fetchNearbyMessages(at: coordinate, continuation: continuation)
-                continuation.finish()
 
             case .onDisappear:
                 // 화면 내려갈 때 실시간 작업 정리
