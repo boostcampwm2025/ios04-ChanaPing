@@ -12,6 +12,7 @@ fileprivate enum Constants {
     static let textEditorTitle = "이 말은 잠시 머물 거에요."
     static let textEditorPlaceholder = "지금 느낌 어때요?"
     static let placeContainerPlaceholder = "지금 어디에 있나요?"
+    static let loadingMessage = "머문 흔적을 남기고 있어요"
 }
 
 struct MessageComposerView: View {
@@ -51,6 +52,10 @@ struct MessageComposerView: View {
                 )
                 .transition(.opacity.combined(with: .scale(scale: 0.98)))
                 .zIndex(999)
+            }
+
+            if store.state.isConfirmLoading {
+                LoadingOverlayView(message: Constants.loadingMessage)
             }
         }
     }
@@ -118,6 +123,7 @@ extension MessageComposerView {
         ConfirmButton(action: { send(.tapConfirm) })
         .disabled(!store.state.isConfirmEnabled)
         .opacity(store.state.isConfirmEnabled ? 1.0 : 0.4)
+        .animation(.default, value: store.state.isConfirmLoading)
     }
 
     private var backgroundView: some View {
