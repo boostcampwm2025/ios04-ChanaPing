@@ -193,10 +193,6 @@ final class MessageComposerStore: Store {
                     break
                 }
 
-                if state.placeText.isEmpty == false {
-                    // TODO: 1차 검증) 장소 태그 존재 시, 현재 위치 기준으로 거리 검증
-                }
-
                 createMessage(continuation: continuation)
                 return
 
