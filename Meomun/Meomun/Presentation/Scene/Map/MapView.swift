@@ -120,8 +120,6 @@ struct MapView: View {
                     )
                 }
             }
-            .padding(.top, 8)
-            .padding(.bottom, 96)
             .task {
                 locationProvider.requestAuthorizationIfNeeded()
                 locationProvider.startContinuous()
