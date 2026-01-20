@@ -13,14 +13,16 @@ struct MessageTextEditor: View {
     let maxCount: Int
     let placeholder: String
 
-    @FocusState private var isFocused: Bool
+    @FocusState.Binding private var isFocused: Bool
 
     init(
         text: Binding<String>,
-        maxCount: Int = 30,
-        placeholder: String = "지금 느낌 어때요?"
+        isFocused: FocusState<Bool>.Binding,
+        maxCount: Int,
+        placeholder: String
     ) {
         self._text = text
+        self._isFocused = isFocused
         self.maxCount = maxCount
         self.placeholder = placeholder
     }
@@ -51,11 +53,13 @@ struct MessageTextEditor: View {
                         .background(Color.clear)
                         .submitLabel(.done)
                         .onChange(of: text) { _, newValue in
-                            if newValue.contains("\n") {
+                            if newValue.contains("\n") || newValue.contains("\r") {
                                 text = newValue.replacingOccurrences(of: "\n", with: "")
-                                isFocused = false
+                                               .replacingOccurrences(of: "\r", with: "")
+                                $isFocused.wrappedValue = false
                                 return
                             }
+
                             if newValue.count > maxCount {
                                 text = String(newValue.prefix(maxCount))
                             }
@@ -97,13 +101,14 @@ struct MessageTextEditor: View {
         }
         .frame(height: 140)
         .onTapGesture {
-            isFocused = true
+            $isFocused.wrappedValue = true
         }
     }
 }
 
 #Preview {
     @Previewable @State var message: String = ""
+    @Previewable @FocusState var isFocused: Bool
 
-    MessageTextEditor(text: $message)
+    MessageTextEditor(text: $message, isFocused: $isFocused, maxCount: 30, placeholder: "지금 느낌 어때요?")
 }

@@ -10,7 +10,8 @@ import SwiftUI
 fileprivate enum Constants {
     static let navigationTitle = "잠시 남겨놓기"
     static let textEditorTitle = "이 말은 잠시 머물 거에요."
-    static let textEditorPlaceholder = "지금 어디에 있나요?"
+    static let textEditorPlaceholder = "지금 느낌 어때요?"
+    static let placeContainerPlaceholder = "지금 어디에 있나요?"
 }
 
 struct MessageComposerView: View {
@@ -87,8 +88,12 @@ extension MessageComposerView {
             .foregroundStyle(Color.meomunSecondaryColor)
             .frame(maxWidth: .infinity, alignment: .leading)
 
-        MessageTextEditor(text: messageBinding)
-        .focused($isFocused)
+        MessageTextEditor(
+            text: messageBinding,
+            isFocused: $isFocused,
+            maxCount: EditorPolicy.maxCount,
+            placeholder: Constants.textEditorPlaceholder
+        )
     }
 
     private var placeSection: some View {
@@ -98,7 +103,7 @@ extension MessageComposerView {
                     isFocused = false
                     send(.tapPlaceField)
                 } label: {
-                    Text(store.state.placeText.isEmpty ? Constants.textEditorPlaceholder : store.state.placeText)
+                    Text(store.state.placeText.isEmpty ? Constants.placeContainerPlaceholder : store.state.placeText)
                         .font(.system(size: 16, weight: .medium))
                         .foregroundStyle(store.state.placeText.isEmpty ? Color(.placeholderText) : Color.tabActive)
                         .frame(maxWidth: .infinity, alignment: .leading)
@@ -176,6 +181,7 @@ extension MessageComposerView {
                 return
             }
 
+            isFocused = false
             let trimmed = store.state.message.trimmingCharacters(in: .whitespacesAndNewlines)
             guard trimmed.isEmpty == false else {
                 dismiss()

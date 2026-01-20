@@ -9,6 +9,10 @@ import Foundation
 import Combine
 import Supabase
 
+enum EditorPolicy {
+    static let maxCount = 30
+}
+
 final class MessageComposerStore: Store {
     struct State: Equatable {
         var userLocation: Coordinate
@@ -96,9 +100,16 @@ final class MessageComposerStore: Store {
                 continuation.yield(.clearPlace)
 
             case .tapConfirm:
-                if state.placeText != "" {
-                    // TODO: 1차 검증) 장소 태그 존재 시, 현재 위치 기준으로 거리 검증
+                let normalized = state.message
+                    .replacingOccurrences(of: "\n", with: "")
+                    .replacingOccurrences(of: "\r", with: "")
+
+                let finalMessage = String(normalized.prefix(EditorPolicy.maxCount))
+
+                if finalMessage != state.message {
+                    continuation.yield(.updateMessage(finalMessage))
                 }
+
                 createMessage(continuation: continuation)
                 return
 
