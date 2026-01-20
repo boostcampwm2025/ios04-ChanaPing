@@ -19,6 +19,7 @@ final class MapStore: Store {
         case updateMessages([Message])
         case tapPlaceMarker(Place)
         case dismissSpaceView
+        case handleRealtimeEvent(MessageRealtimeEvent)
     }
 
     enum Action {
@@ -28,6 +29,8 @@ final class MapStore: Store {
         case setSelectedPlace(Place?)
         case setLoading(Bool)
         case setError(String)
+        case insertMessage(Message)
+        case removeMessage(MessageID)
     }
 
     struct State {
@@ -44,13 +47,17 @@ final class MapStore: Store {
     private let debounceInterval: UInt64 = 300_000_000 // 300ms
 
     private var getNearbyMessageTask: Task<Void, Never>?
+    private var realtimeSubscriptionTask: Task<Void, Never>?
     private let getNearbyMessagesUseCase: GetNearbyMessagesUseCase
+    private let messageRealtimeManager: MessageRealtimeManaging
 
     init(
-        getNearbyMessagesUseCase: GetNearbyMessagesUseCase
+        getNearbyMessagesUseCase: GetNearbyMessagesUseCase,
+        messageRealtimeManager: MessageRealtimeManaging = MessageRealtimeManager()
     ) {
         self.state = State()
         self.getNearbyMessagesUseCase = getNearbyMessagesUseCase
+        self.messageRealtimeManager = messageRealtimeManager
     }
 
     func action(intent: Intent) -> AsyncStream<Action> {
@@ -59,10 +66,12 @@ final class MapStore: Store {
             case .onAppear(let coordinate):
                 continuation.yield(.setCameraCoordinate(coordinate))
                 self.getNearbyMessages(at: coordinate, continuation: continuation)
+                self.startRealtimeSubscription()
 
             case .onDisappear:
                 self.getNearbyMessageTask?.cancel()
                 self.getNearbyMessageTask = nil
+                self.stopRealtimeSubscription()
                 continuation.yield(.setLoading(false))
                 continuation.finish()
 
@@ -93,6 +102,17 @@ final class MapStore: Store {
             case .dismissSpaceView:
                 continuation.yield(.setSelectedPlace(nil))
                 continuation.finish()
+
+            case .handleRealtimeEvent(let event):
+                switch event {
+                case .created(let message):
+                    continuation.yield(.insertMessage(message))
+                case .deleted(let id), .expired(let id):
+                    continuation.yield(.removeMessage(id))
+                case .becameStale:
+                    break
+                }
+                continuation.finish()
             }
         }
     }
@@ -118,6 +138,15 @@ final class MapStore: Store {
 
         case .setError(let message):
             newState.errorMessage = message
+
+        case .insertMessage(let message):
+            if !newState.messages.contains(where: { $0.id == message.id }) {
+                newState.messages.append(message)
+                newState.messages.sort { $0.createdAt < $1.createdAt }
+            }
+
+        case .removeMessage(let id):
+            newState.messages.removeAll { $0.id == id }
         }
 
         return newState
@@ -168,5 +197,26 @@ final class MapStore: Store {
                 continuation.yield(.setError(error.localizedDescription))
             }
         }
+    }
+
+    private func startRealtimeSubscription() {
+        realtimeSubscriptionTask?.cancel()
+
+        realtimeSubscriptionTask = Task { @MainActor [weak self] in
+            guard let self else { return }
+
+            let stream = self.messageRealtimeManager.subscribeNearby(topic: "messages:nearby")
+
+            for await event in stream {
+                guard !Task.isCancelled else { break }
+                await self.send(intent: .handleRealtimeEvent(event))
+            }
+        }
+    }
+
+    private func stopRealtimeSubscription() {
+        realtimeSubscriptionTask?.cancel()
+        realtimeSubscriptionTask = nil
+        messageRealtimeManager.unsubscribeNearby()
     }
 }
