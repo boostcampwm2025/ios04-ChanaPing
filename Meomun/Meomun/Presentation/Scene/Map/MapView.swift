@@ -122,6 +122,7 @@ struct MapView: View {
                         )
                     )
                     .onAppear { setTabBarHidden(true) }
+                    .onDisappear { setTabBarHidden(false) }
                 }
             }
         }
