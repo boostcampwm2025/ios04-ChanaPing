@@ -63,6 +63,7 @@ final class MapStore: Store {
             case .onDisappear:
                 self.getNearbyMessageTask?.cancel()
                 self.getNearbyMessageTask = nil
+                continuation.yield(.setLoading(false))
                 continuation.finish()
 
             case .cameraDidIdle(let coordinate):
@@ -130,7 +131,9 @@ final class MapStore: Store {
 
         getNearbyMessageTask = Task { [weak self] in
             defer {
-                continuation.yield(.setLoading(false))
+                if !Task.isCancelled {
+                    continuation.yield(.setLoading(false))
+                }
                 continuation.finish()
             }
 
