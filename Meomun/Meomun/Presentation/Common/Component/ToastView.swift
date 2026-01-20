@@ -18,6 +18,5 @@ struct ToastView: View {
             .background(.black.opacity(0.8))
             .foregroundColor(.white)
             .cornerRadius(8)
-            .transition(.opacity)
     }
 }

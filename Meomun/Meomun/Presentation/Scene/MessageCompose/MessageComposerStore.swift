@@ -20,31 +20,6 @@ fileprivate enum BoundaryPolicy {
 }
 
 final class MessageComposerStore: Store {
-    struct AlertState: Identifiable, Equatable {
-        let id: UUID = UUID()
-        let title: String
-        let message: String
-        let primaryButton: AlertButton
-        let secondaryButton: AlertButton?
-
-        init(
-            title: String,
-            message: String,
-            primaryButton: AlertButton = .init(title: "확인", intent: .dismissAlert),
-            secondaryButton: AlertButton? = nil
-        ) {
-            self.title = title
-            self.message = message
-            self.primaryButton = primaryButton
-            self.secondaryButton = secondaryButton
-        }
-    }
-
-    struct AlertButton: Equatable {
-        let title: String
-        let intent: Intent
-    }
-
     // 위치 이탈 상태에서 사용자의 선택을 반영하기 위한 상태
     enum OutsideBoundaryDecision: Equatable {
         case none
@@ -66,7 +41,7 @@ final class MessageComposerStore: Store {
         var placeText: String = ""
         var isPlaceSearchPresented: Bool = false
 
-        var alert: AlertState?
+        var alert: AlertModel?
         var toastMessage: String?
 
         var placeTagLockedHintMessage: String {
@@ -91,19 +66,19 @@ final class MessageComposerStore: Store {
     enum Intent: Equatable {
         case setMessage(String)
         case updateCurrentLocation(Coordinate?)
+        case resetDraft
 
         case tapPlaceField
         case dismissPlaceSearch
         case selectPlace(String)
         case clearPlace
 
-        case selectSuggestedPlace(String)
-
         case tapConfirm
         case tapRefreshStartLocation
         case tapKeepWritingWithoutTag
-        case dismissAlert
-        case dismissToast
+
+        case setAlert(AlertModel?)
+        case setToast(String?)
     }
 
     enum Action {
@@ -118,9 +93,8 @@ final class MessageComposerStore: Store {
         case keepWritingWithoutTag
 
         case setConfirmLoading(Bool)
-        case presentAlert(AlertState?)
-
-        case showToast(String?)
+        case presentAlert(AlertModel?)
+        case presentToast(String?)
         case close
     }
 
@@ -142,13 +116,17 @@ final class MessageComposerStore: Store {
     }
 
     func action(intent: Intent) -> AsyncStream<Action> {
-        AsyncStream { continuation in
+        AsyncStream<Action>(bufferingPolicy: .unbounded) { continuation in
             switch intent {
             case .setMessage(let message):
                 continuation.yield(.updateMessage(message))
 
             case .updateCurrentLocation(let coordinate):
                 continuation.yield(.updateCurrentLocation(coordinate))
+
+            case .resetDraft:
+                continuation.yield(.updateMessage(""))
+                continuation.yield(.close)
 
             case .tapPlaceField:
                 continuation.yield(.presentPlaceSearch(true))
@@ -163,15 +141,6 @@ final class MessageComposerStore: Store {
             case .clearPlace:
                 continuation.yield(.clearPlace)
 
-            case .selectSuggestedPlace(let place):
-                continuation.yield(.updatePlace(place))
-
-            case .dismissAlert:
-                continuation.yield(.presentAlert(nil))
-
-            case .dismissToast:
-                continuation.yield(.showToast(nil))
-
             case .tapConfirm:
                 if state.isOutsideBoundary, state.outsideBoundaryDecision == .none {
                     continuation.yield(
@@ -179,14 +148,18 @@ final class MessageComposerStore: Store {
                             .init(
                                 title: BoundaryPolicy.outsideBoundaryAlertTitle,
                                 message: BoundaryPolicy.outsideBoundaryAlertMessage,
-                                primaryButton: .init(
-                                    title: BoundaryPolicy.primaryButtonTitle,
-                                    intent: .tapRefreshStartLocation
-                                ),
-                                secondaryButton: .init(
-                                    title: BoundaryPolicy.secondaryButtonTitle,
-                                    intent: .tapKeepWritingWithoutTag
-                                )
+                                buttons: [
+                                    .init(
+                                        title: BoundaryPolicy.primaryButtonTitle,
+                                        role: .normal,
+                                        action: nil // Intent.tapRefreshStartLocation
+                                    ),
+                                    .init(
+                                        title: BoundaryPolicy.secondaryButtonTitle,
+                                        role: .normal,
+                                        action: nil // Intent.tapKeepWritingWithoutTag
+                                    )
+                                ]
                             )
                         )
                     )
@@ -201,6 +174,12 @@ final class MessageComposerStore: Store {
 
             case .tapKeepWritingWithoutTag:
                 continuation.yield(.keepWritingWithoutTag)
+
+            case .setAlert(let alert):
+                continuation.yield(.presentAlert(alert))
+
+            case .setToast(let message):
+                continuation.yield(.presentToast(message))
             }
 
             continuation.finish()
@@ -234,14 +213,18 @@ final class MessageComposerStore: Store {
                 newState.alert = .init(
                     title: BoundaryPolicy.outsideBoundaryAlertTitle,
                     message: BoundaryPolicy.outsideBoundaryAlertMessage,
-                    primaryButton: .init(
-                        title: BoundaryPolicy.primaryButtonTitle,
-                        intent: .tapRefreshStartLocation
-                    ),
-                    secondaryButton: .init(
-                        title: BoundaryPolicy.secondaryButtonTitle,
-                        intent: .tapKeepWritingWithoutTag
-                    )
+                    buttons: [
+                        .init(
+                            title: BoundaryPolicy.primaryButtonTitle,
+                            role: .normal,
+                            action: nil // Intent.tapRefreshStartLocation
+                        ),
+                        .init(
+                            title: BoundaryPolicy.secondaryButtonTitle,
+                            role: .normal,
+                            action: nil // Intent.tapKeepWritingWithoutTag
+                        )
+                    ]
                 )
                 newState.didPresentOutsideBoundaryAlert = true
             }
@@ -299,15 +282,16 @@ final class MessageComposerStore: Store {
         case .setConfirmLoading(let isLoading):
             newState.isConfirmLoading = isLoading
 
-        case .presentAlert(let alertState):
-            newState.alert = alertState
+        case .presentAlert(let alertModel):
+            newState.alert = alertModel
 
-        case .showToast(let message):
+        case .presentToast(let message):
             newState.toastMessage = message
 
         case .close:
             onClose()
         }
+
         return newState
     }
 }
@@ -324,7 +308,7 @@ extension MessageComposerStore {
             do {
                 try await createMessageUseCase.execute(makeCreateMessageRequest())
 
-                continuation.yield(.showToast("메시지가 등록되었어요."))
+                continuation.yield(.presentToast("메시지가 등록되었어요."))
                 try await Task.sleep(nanoseconds: 700_000_000)
                 continuation.yield(.close)
 

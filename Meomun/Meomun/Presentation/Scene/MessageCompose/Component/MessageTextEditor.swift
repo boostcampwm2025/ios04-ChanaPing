@@ -53,6 +53,8 @@ struct MessageTextEditor: View {
                         .onChange(of: text) { _, newValue in
                             if newValue.contains("\n") {
                                 text = newValue.replacingOccurrences(of: "\n", with: "")
+                                isFocused = false
+                                return
                             }
                             if newValue.count > maxCount {
                                 text = String(newValue.prefix(maxCount))

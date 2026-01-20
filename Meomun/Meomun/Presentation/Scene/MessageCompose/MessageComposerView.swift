@@ -25,6 +25,10 @@ struct MessageComposerView: View {
         _store = StateObject(wrappedValue: store)
     }
 
+    private func send(_ intent: MessageComposerStore.Intent) {
+        Task { await store.send(intent: intent) }
+    }
+
     var body: some View {
         ZStack {
             content
@@ -39,10 +43,10 @@ struct MessageComposerView: View {
                         ),
                         userLocation: store.state.startLocation,
                         onSelect: { selected in
-                            Task { await store.send(intent: .selectPlace(selected.name)) }
+                            send(.selectPlace(selected.name))
                         },
                         onDismiss: {
-                            Task { await store.send(intent: .dismissPlaceSearch) }
+                            send(.dismissPlaceSearch)
                         }
                     )
                 )
@@ -54,153 +58,174 @@ struct MessageComposerView: View {
 }
 
 extension MessageComposerView {
-    private var messageBinding: Binding<String> {
-        Binding(
-            get: { store.state.message },
-            set: { newValue in
-                Task { await store.send(intent: .setMessage(newValue)) }
-            }
-        )
-    }
-
-    private var alertBinding: Binding<MessageComposerStore.AlertState?> {
-        Binding(
-            get: { store.state.alert },
-            set: { _ in Task { await store.send(intent: .dismissAlert) } }
-        )
-    }
-
     private var content: some View {
         VStack(alignment: .center, spacing: 12) {
             Spacer()
-
-            Text(Constants.textEditorTitle)
-                .font(.headline.bold())
-                .foregroundStyle(Color.meomunSecondaryColor)
-                .frame(maxWidth: .infinity, alignment: .leading)
-
-            MessageTextEditor(text: messageBinding)
-            .focused($isFocused)
-
+            editorSection
             Spacer(minLength: 0)
-
-            HStack(spacing: 8) {
-                PlaceSearchContainerView {
-                    Button {
-                        isFocused = false
-                        Task { await store.send(intent: .tapPlaceField) }
-                    } label: {
-                        Text(
-                            store.state.isPlaceTagLocked
-                            ? Constants.textEditorPlaceholderWhenBlocked
-                            : store.state.placeText.isEmpty ? Constants.textEditorPlaceholder : store.state.placeText
-                        )
-                            .font(.system(size: 16, weight: .medium))
-                            .foregroundStyle(
-                                store.state.isPlaceTagLocked
-                                ? Color(.placeholderText)
-                                : (store.state.placeText.isEmpty ? Color(.placeholderText) : Color.tabActive)
-                            )
-                            .frame(maxWidth: .infinity, alignment: .leading)
-                    }
-                }
-
-                CancelButton {
-                    Task { await store.send(intent: .clearPlace) }
-                }
-            }
-            .disabled(store.state.isPlaceTagLocked)
-
-            Text(store.state.placeTagLockedHintMessage)
-                .font(.subheadline)
-                .foregroundStyle(Color(.placeholderText))
-                .frame(maxWidth: .infinity, alignment: .leading)
-                .opacity(store.state.isPlaceTagLocked ? 1.0 : 0.0)
-                .accessibilityHidden(store.state.isPlaceTagLocked == false)
-
+            placeSection
+            placeHintSection
             Spacer(minLength: 0)
-
-            ConfirmButton(action: {
-                Task { await store.send(intent: .tapConfirm) }
-            })
-            .disabled(!store.state.isConfirmEnabled)
-            .opacity(store.state.isConfirmEnabled ? 1.0 : 0.4)
-
+            confirmSection
             Spacer(minLength: 0)
         }
-        .padding(.horizontal, 24)
-        .padding(.vertical, 24)
-        .background {
-            Image(.background)
-                .resizable()
-                .scaledToFill()
-                .ignoresSafeArea()
-        }
-        .onTapGesture {
-            isFocused = false
-        }
+        .padding(24)
+        .background(backgroundView)
+        .onTapGesture { isFocused = false }
         .onChange(of: locationProvider.current) { _, current in
             Task {
                 await store.send(intent: .updateCurrentLocation(current))
             }
         }
         .navigationBarBackButtonHidden()
-        .toolbar {
-            if #available(iOS 26.0, *) {
-                ToolbarItem(placement: .topBarLeading) {
-                    BackButton {
-                        dismiss()
-                    }
-                }
-                .sharedBackgroundVisibility(.hidden)
-            } else {
-                ToolbarItem(placement: .topBarLeading) {
-                    BackButton {
-                        dismiss()
-                    }
+        .toolbar { toolbarContent }
+        .customAlert(
+            alertBinding,
+            title: { $0.title },
+            message: { $0.message },
+            buttons: { $0.buttons }
+        )
+        .toast(toastBinding)
+    }
+
+    @ViewBuilder
+    private var editorSection: some View {
+        Text(Constants.textEditorTitle)
+            .font(.headline.bold())
+            .foregroundStyle(Color.meomunSecondaryColor)
+            .frame(maxWidth: .infinity, alignment: .leading)
+
+        MessageTextEditor(text: messageBinding)
+        .focused($isFocused)
+    }
+
+    private var placeSection: some View {
+        HStack(spacing: 8) {
+            PlaceSearchContainerView {
+                Button {
+                    isFocused = false
+                    send(.tapPlaceField)
+                } label: {
+                    Text(
+                        store.state.isPlaceTagLocked
+                        ? Constants.textEditorPlaceholderWhenBlocked
+                        : store.state.placeText.isEmpty ? Constants.textEditorPlaceholder : store.state.placeText
+                    )
+                        .font(.system(size: 16, weight: .medium))
+                        .foregroundStyle(
+                            store.state.isPlaceTagLocked
+                            ? Color(.placeholderText)
+                            : (store.state.placeText.isEmpty ? Color(.placeholderText) : Color.tabActive)
+                        )
+                        .frame(maxWidth: .infinity, alignment: .leading)
                 }
             }
 
-            ToolbarItem(placement: .principal) {
-                Text(Constants.navigationTitle)
-                    .font(.headline.weight(.semibold))
-                    .foregroundStyle(Color.meomunPrimaryColor)
+            CancelButton { send(.clearPlace) }
+        }
+        .disabled(store.state.isPlaceTagLocked)
+    }
+
+    private var placeHintSection: some View {
+        Text(store.state.placeTagLockedHintMessage)
+            .font(.subheadline)
+            .foregroundStyle(Color(.placeholderText))
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .opacity(store.state.isPlaceTagLocked ? 1.0 : 0.0)
+            .accessibilityHidden(store.state.isPlaceTagLocked == false)
+    }
+
+    private var confirmSection: some View {
+        ConfirmButton(action: { send(.tapConfirm) })
+        .disabled(!store.state.isConfirmEnabled)
+        .opacity(store.state.isConfirmEnabled ? 1.0 : 0.4)
+    }
+
+    private var backgroundView: some View {
+        Image(.background)
+            .resizable()
+            .scaledToFill()
+            .ignoresSafeArea()
+    }
+
+    private var messageBinding: Binding<String> {
+        Binding(
+            get: { store.state.message },
+            set: { message in
+                send(.setMessage(message))
+            }
+        )
+    }
+
+    private var alertBinding: Binding<AlertModel?> {
+        Binding(
+            get: { store.state.alert },
+            set: { alert in
+                send(.setAlert(alert))
+            }
+        )
+    }
+
+    private var toastBinding: Binding<String?> {
+        Binding(
+            get: { store.state.toastMessage },
+            set: { message in
+                send(.setToast(message))
+            }
+        )
+    }
+
+    @ToolbarContentBuilder
+    private var toolbarContent: some ToolbarContent {
+        if #available(iOS 26.0, *) {
+            ToolbarItem(placement: .topBarLeading) {
+                backToolbarButton
+            }
+            .sharedBackgroundVisibility(.hidden)
+        } else {
+            ToolbarItem(placement: .topBarLeading) {
+                backToolbarButton
             }
         }
-        .alert(item: alertBinding) { alert in
-            if let secondary = alert.secondaryButton {
-                return Alert(
-                    title: Text(alert.title),
-                    message: Text(alert.message),
-                    primaryButton: .default(Text(alert.primaryButton.title), action: {
-                        Task { await store.send(intent: alert.primaryButton.intent) }
-                    }),
-                    secondaryButton: .cancel(Text(secondary.title), action: {
-                        Task { await store.send(intent: secondary.intent) }
-                    })
-                )
-            } else {
-                return Alert(
-                    title: Text(alert.title),
-                    message: Text(alert.message),
-                    dismissButton: .default(Text(alert.primaryButton.title), action: {
-                        Task { await store.send(intent: alert.primaryButton.intent) }
-                    })
-                )
-            }
+
+        ToolbarItem(placement: .principal) {
+            Text(Constants.navigationTitle)
+                .font(.headline.weight(.semibold))
+                .foregroundStyle(Color.meomunPrimaryColor)
         }
-        .overlay(alignment: .bottom) {
-            if let toast = store.state.toastMessage {
-                ToastView(message: toast)
-                    .padding(.bottom, 32)
-                    .onAppear {
-                        DispatchQueue.main.asyncAfter(deadline: .now() + 2) {
-                            Task {
-                                await store.send(intent: .dismissToast)
-                            }
+    }
+
+    private var backToolbarButton: some View {
+        BackButton {
+            if store.state.isPlaceSearchPresented {
+                send(.dismissPlaceSearch)
+                return
+            }
+
+            let trimmed = store.state.message.trimmingCharacters(in: .whitespacesAndNewlines)
+            guard trimmed.isEmpty == false else {
+                dismiss()
+                return
+            }
+
+            send(.setAlert(AlertModel(
+                title: "작성 중인 말이 있어요",
+                message: "지금 나가면 작성 중인 내용이 사라져요. 그대로 나갈까요?",
+                buttons: [
+                    AlertButtonConfig(
+                        title: "그대로 나가기",
+                        role: .destructive,
+                        action: {
+                            send(.resetDraft)
                         }
-                    }
-            }
+                    ),
+                    AlertButtonConfig(
+                        title: "머무르기",
+                        role: .cancel,
+                        action: nil
+                    )
+                ]
+            )))
         }
     }
 }

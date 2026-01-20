@@ -1,20 +1,20 @@
 //
-//  NearbyMessageDTO.swift
+//  RealtimeMessageDTO.swift
 //  Meomun
 //
-//  Created by 지연 on 1/15/26.
+//  Created by 지연 on 1/20/26.
 //
 
 import Foundation
 
-struct NearbyMessageResponseDTO: Decodable, Identifiable {
+struct RealtimeCreatedMessageDTO: Decodable {
     let id: UUID
     let authorId: UUID
     let createdAt: Date
     let content: String
     let latitude: Double
     let longitude: Double
-    let place: PlaceDTO?
+    let placeId: PlaceDTO?
 
     enum CodingKeys: String, CodingKey {
         case id
@@ -23,14 +23,15 @@ struct NearbyMessageResponseDTO: Decodable, Identifiable {
         case content
         case latitude
         case longitude
-        case place
-
+        case placeId = "place_id"
     }
 }
 
-extension NearbyMessageResponseDTO {
+// MARK: - Mapping
+
+extension RealtimeCreatedMessageDTO {
     func toDomain() -> Message {
-        return Message(
+        Message(
             id: MessageID(value: id),
             authorID: UserID(value: authorId),
             createdAt: createdAt,
@@ -39,16 +40,7 @@ extension NearbyMessageResponseDTO {
                 latitude: latitude,
                 longitude: longitude
             ),
-            placeTag: place.map {
-                Place(
-                    id: PlaceID(value: $0.placeId),
-                    name: $0.name,
-                    coordinate: Coordinate(
-                        latitude: $0.latitude,
-                        longitude: $0.longitude
-                    )
-                )
-            }
+            placeTag: (placeId == nil ? nil : placeId?.toDomain())
         )
     }
 }
