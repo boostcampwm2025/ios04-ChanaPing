@@ -54,7 +54,9 @@ struct MessageTextEditor: View {
                         .background(Color.clear)
                         .submitLabel(.done)
                         .onChange(of: localText) { _, newValue in
-                            let filtered = newValue.replacingOccurrences(of: "\n", with: "")
+                            let filtered = newValue
+                                .replacingOccurrences(of: "\n", with: "")
+                                .replacingOccurrences(of: "\r", with: "")
 
                             if filtered.count > maxCount {
                                 localText = String(filtered.prefix(maxCount))
@@ -64,7 +66,7 @@ struct MessageTextEditor: View {
 
                             text = localText
 
-                            if newValue.contains("\n") {
+                            if newValue.contains("\n") || newValue.contains("\r") {
                                 $isFocused.wrappedValue = false
                             }
                         }
