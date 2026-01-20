@@ -114,7 +114,7 @@ extension MessageComposerView {
             Text(store.state.placeTagLockedHintMessage)
                 .font(.subheadline)
                 .foregroundStyle(Color(.placeholderText))
-                .frame(maxWidth: .infinity, alignment: .center)
+                .frame(maxWidth: .infinity, alignment: .leading)
                 .opacity(store.state.isPlaceTagLocked ? 1.0 : 0.0)
                 .accessibilityHidden(store.state.isPlaceTagLocked == false)
 
