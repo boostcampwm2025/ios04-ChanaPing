@@ -10,19 +10,13 @@ import Combine
 import Supabase
 
 final class MessageComposerStore: Store {
-    struct AlertState: Identifiable, Equatable {
-        let id: UUID = UUID()
-        let title: String
-        let message: String
-    }
-
     struct State: Equatable {
         var userLocation: Coordinate
         var message: String = ""
         var placeText: String = ""
         var isPlaceSearchPresented: Bool = false
 
-        var alert: AlertState?
+        var alert: AlertModel?
         var toastMessage: String?
 
         var isConfirmLoading: Bool = false
@@ -36,17 +30,16 @@ final class MessageComposerStore: Store {
 
     enum Intent {
         case setMessage(String)
+        case resetDraft
 
         case tapPlaceField
         case dismissPlaceSearch
         case selectPlace(String)
         case clearPlace
 
-        case selectSuggestedPlace(String)
-
         case tapConfirm
-        case dismissAlert
-        case dismissToast
+        case setAlert(AlertModel?)
+        case setToast(String?)
     }
 
     enum Action {
@@ -57,9 +50,8 @@ final class MessageComposerStore: Store {
         case clearPlace
 
         case setConfirmLoading(Bool)
-        case presentAlert(AlertState?)
-
-        case showToast(String?)
+        case presentAlert(AlertModel?)
+        case presentToast(String?)
         case close
     }
 
@@ -86,6 +78,10 @@ final class MessageComposerStore: Store {
             case .setMessage(let message):
                 continuation.yield(.updateMessage(message))
 
+            case .resetDraft:
+                continuation.yield(.updateMessage(""))
+                continuation.yield(.close)
+
             case .tapPlaceField:
                 continuation.yield(.presentPlaceSearch(true))
 
@@ -99,21 +95,18 @@ final class MessageComposerStore: Store {
             case .clearPlace:
                 continuation.yield(.clearPlace)
 
-            case .selectSuggestedPlace(let place):
-                continuation.yield(.updatePlace(place))
-
-            case .dismissAlert:
-                continuation.yield(.presentAlert(nil))
-
-            case .dismissToast:
-                continuation.yield(.showToast(nil))
-
             case .tapConfirm:
                 if state.placeText != "" {
                     // TODO: 1차 검증) 장소 태그 존재 시, 현재 위치 기준으로 거리 검증
                 }
                 createMessage(continuation: continuation)
                 return
+
+            case .setAlert(let alert):
+                continuation.yield(.presentAlert(alert))
+
+            case .setToast(let message):
+                continuation.yield(.presentToast(message))
             }
             continuation.finish()
         }
@@ -140,7 +133,7 @@ final class MessageComposerStore: Store {
         case .presentAlert(let alertState):
             newState.alert = alertState
 
-        case .showToast(let message):
+        case .presentToast(let message):
             newState.toastMessage = message
 
         case .close:
@@ -162,7 +155,7 @@ extension MessageComposerStore {
             do {
                 try await createMessageUseCase.execute(makeCreateMessageRequest())
 
-                continuation.yield(.showToast("메시지가 등록되었어요."))
+                continuation.yield(.presentToast("메시지가 등록되었어요."))
                 try await Task.sleep(nanoseconds: 700_000_000)
                 continuation.yield(.close)
 
