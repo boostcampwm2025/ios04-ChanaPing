@@ -56,6 +56,8 @@ struct MessageComposerView: View {
 
             if store.state.isConfirmLoading {
                 LoadingOverlayView(message: Constants.loadingMessage)
+                    .transition(.opacity.animation(.easeInOut(duration: 0.2)))
+                    .zIndex(1000)
             }
         }
     }
@@ -213,6 +215,8 @@ extension MessageComposerView {
                 ]
             )))
         }
+        .disabled(store.state.isConfirmLoading)
+        .opacity(store.state.isConfirmLoading ? 0.4 : 1.0)
     }
 }
 
