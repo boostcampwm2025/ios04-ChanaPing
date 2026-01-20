@@ -167,8 +167,8 @@ struct MapView: View {
     }
 }
 
-extension MapView {
-    private var toastBinding: Binding<String?> {
+private extension MapView {
+    var toastBinding: Binding<String?> {
         Binding(
             get: { store.state.toastMessage },
             set: { message in
@@ -179,6 +179,7 @@ extension MapView {
         )
     }
 }
+
 #Preview {
     let rotationAnimator = MessageRotationAnimator()
     let bubbleImageRenderer = BubbleImageRenderer()
