@@ -12,7 +12,7 @@ fileprivate enum Constants {
     static let textEditorTitle = "이 말은 잠시 머물 거에요."
     static let textEditorPlaceholder = "지금 느낌 어때요?"
     static let placeContainerPlaceholder = "지금 어디에 있나요?"
-    static let loadingMessage = "머문 흔적을 남기고 있어요"
+    static let loadingMessage = "머문 흔적을 남기고 있어요."
 }
 
 struct MessageComposerView: View {
@@ -234,7 +234,7 @@ extension MessageComposerView {
                 createMessage: CreateMessageUseCaseImpl(
                     messageRepository: MessageRepositoryImpl()
                 ),
-                onClose: {
+                onClose: { _ in
                     print("close")
                 }
             )

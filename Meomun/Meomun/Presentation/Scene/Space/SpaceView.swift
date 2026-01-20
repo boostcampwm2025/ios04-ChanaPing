@@ -8,6 +8,10 @@
 import RealityKit
 import SwiftUI
 
+fileprivate enum Constants {
+    static let successMessage = "머문 흔적을 남겼어요."
+}
+
 struct SpaceView: View {
 
     @EnvironmentObject private var locationProvider: LocationProvider
@@ -87,8 +91,14 @@ struct SpaceView: View {
                             createMessage: CreateMessageUseCaseImpl(
                                 messageRepository: MessageRepositoryImpl()
                             ),
-                            onClose: {
-                                Task { await store.send(intent: .dismissAddMessage) }
+                            onClose: { isSuccess in
+                                Task {
+                                    await store.send(intent: .dismissAddMessage)
+
+                                    if isSuccess {
+                                        await store.send(intent: .setToast(Constants.successMessage))
+                                    }
+                                }
                             }
                         )
                     )

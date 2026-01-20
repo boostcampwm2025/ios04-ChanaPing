@@ -56,19 +56,19 @@ final class MessageComposerStore: Store {
         case setConfirmLoading(Bool)
         case presentAlert(AlertModel?)
         case presentToast(String?)
-        case close
+        case close(isSuccess: Bool)
     }
 
     @Published var state: State
 
     private let createMessageUseCase: CreateMessageUseCase
 
-    private let onClose: () -> Void
+    private let onClose: (Bool) -> Void
 
     init(
         userLocation: Coordinate,
         createMessage: CreateMessageUseCase,
-        onClose: @escaping () -> Void
+        onClose: @escaping (Bool) -> Void
     ) {
         self.state = State(userLocation: userLocation)
         self.createMessageUseCase = createMessage
@@ -84,7 +84,7 @@ final class MessageComposerStore: Store {
 
             case .resetDraft:
                 continuation.yield(.updateMessage(""))
-                continuation.yield(.close)
+                continuation.yield(.close(isSuccess: false))
 
             case .tapPlaceField:
                 continuation.yield(.presentPlaceSearch(true))
@@ -147,8 +147,8 @@ final class MessageComposerStore: Store {
         case .presentToast(let message):
             newState.toastMessage = message
 
-        case .close:
-            onClose()
+        case .close(let isSuccess):
+            onClose(isSuccess)
         }
         return newState
     }
@@ -165,10 +165,7 @@ extension MessageComposerStore {
 
             do {
                 try await createMessageUseCase.execute(makeCreateMessageRequest())
-
-                continuation.yield(.presentToast("메시지가 등록되었어요."))
-                try await Task.sleep(nanoseconds: 700_000_000)
-                continuation.yield(.close)
+                continuation.yield(.close(isSuccess: true))
 
             } catch let error as CreateMessageError {
                 continuation.yield(mapCreateMessageErrorToAlertAction(error))
