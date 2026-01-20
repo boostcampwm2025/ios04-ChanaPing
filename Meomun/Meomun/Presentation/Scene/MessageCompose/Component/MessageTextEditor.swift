@@ -9,11 +9,11 @@ import SwiftUI
 
 struct MessageTextEditor: View {
     @Binding private var text: String
+    @FocusState.Binding private var isFocused: Bool
+    @State private var localText: String = ""
 
     let maxCount: Int
     let placeholder: String
-
-    @FocusState.Binding private var isFocused: Bool
 
     init(
         text: Binding<String>,
@@ -23,6 +23,7 @@ struct MessageTextEditor: View {
     ) {
         self._text = text
         self._isFocused = isFocused
+        self._localText = State(initialValue: text.wrappedValue)
         self.maxCount = maxCount
         self.placeholder = placeholder
     }
@@ -42,7 +43,7 @@ struct MessageTextEditor: View {
             VStack {
                 // Editor + placeholder
                 ZStack(alignment: .topLeading) {
-                    TextEditor(text: $text)
+                    TextEditor(text: $localText)
                         .focused($isFocused)
                         .font(.body.bold())
                         .foregroundStyle(Color.meomunPrimaryColor.opacity(0.8))
@@ -52,16 +53,24 @@ struct MessageTextEditor: View {
                         .scrollContentBackground(.hidden)
                         .background(Color.clear)
                         .submitLabel(.done)
-                        .onChange(of: text) { _, newValue in
-                            if newValue.contains("\n") || newValue.contains("\r") {
-                                text = newValue.replacingOccurrences(of: "\n", with: "")
-                                               .replacingOccurrences(of: "\r", with: "")
-                                $isFocused.wrappedValue = false
-                                return
+                        .onChange(of: localText) { _, newValue in
+                            let filtered = newValue.replacingOccurrences(of: "\n", with: "")
+
+                            if filtered.count > maxCount {
+                                localText = String(filtered.prefix(maxCount))
+                            } else {
+                                localText = filtered
                             }
 
-                            if newValue.count > maxCount {
-                                text = String(newValue.prefix(maxCount))
+                            text = localText
+
+                            if newValue.contains("\n") {
+                                $isFocused.wrappedValue = false
+                            }
+                        }
+                        .onChange(of: text) { _, newValue in
+                            if newValue != localText {
+                                localText = newValue
                             }
                         }
 
