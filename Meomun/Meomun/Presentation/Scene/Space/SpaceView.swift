@@ -66,7 +66,6 @@ struct SpaceView: View {
                             Task { await store.send(intent: .tapWriteButton) }
                         }
                     }
-                    .padding(.trailing, 24)
                     .padding(.bottom, 96)
                 }
             }
