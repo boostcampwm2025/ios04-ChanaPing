@@ -32,8 +32,8 @@ as $$
         jsonb_agg(
         jsonb_build_object(
             'id', f.id,
-            'authorId', f.author_id,
-            'createdAt', f.created_at,
+            'author_id', f.author_id,
+            'created_at', f.created_at,
             'content', f.content,
             'latitude', f.latitude,
             'longitude', f.longitude,
