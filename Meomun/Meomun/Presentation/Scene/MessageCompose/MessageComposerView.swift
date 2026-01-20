@@ -17,7 +17,6 @@ fileprivate enum Constants {
 struct MessageComposerView: View {
     @FocusState var isFocused: Bool
     @Environment(\.dismiss) private var dismiss
-    @EnvironmentObject private var locationProvider: LocationProvider
 
     @StateObject private var store: MessageComposerStore
 
@@ -43,7 +42,7 @@ struct MessageComposerView: View {
                         ),
                         userLocation: store.state.startLocation,
                         onSelect: { selected in
-                            send(.selectPlace(selected.name))
+                            send(.selectPlace(selected))
                         },
                         onDismiss: {
                             send(.dismissPlaceSearch)
@@ -54,6 +53,8 @@ struct MessageComposerView: View {
                 .zIndex(999)
             }
         }
+        .onAppear { send(.onAppear) }
+        .onDisappear { send(.onDisappear) }
     }
 }
 
@@ -72,7 +73,7 @@ extension MessageComposerView {
         .padding(24)
         .background(backgroundView)
         .onTapGesture { isFocused = false }
-        .onChange(of: locationProvider.current) { _, current in
+        .onChange(of: store.locationProvider.current) { _, current in
             send(.updateCurrentLocation(current))
         }
         .navigationBarBackButtonHidden()
@@ -104,18 +105,20 @@ extension MessageComposerView {
                     isFocused = false
                     send(.tapPlaceField)
                 } label: {
-                    Text(
-                        store.state.isPlaceTagLocked
-                        ? Constants.textEditorPlaceholderWhenBlocked
-                        : store.state.placeText.isEmpty ? Constants.textEditorPlaceholder : store.state.placeText
+                    let isPlaceSelected = store.state.selectedPlace != nil
+                    let placeName = store.state.selectedPlace?.name ?? ""
+
+                    Text(store.state.isPlaceTagLocked
+                         ? Constants.textEditorPlaceholderWhenBlocked
+                         : isPlaceSelected ? placeName : Constants.textEditorPlaceholder
                     )
-                        .font(.system(size: 16, weight: .medium))
-                        .foregroundStyle(
-                            store.state.isPlaceTagLocked
-                            ? Color(.placeholderText)
-                            : (store.state.placeText.isEmpty ? Color(.placeholderText) : Color.tabActive)
-                        )
-                        .frame(maxWidth: .infinity, alignment: .leading)
+                    .font(.system(size: 16, weight: .medium))
+                    .foregroundStyle(
+                        store.state.isPlaceTagLocked
+                        ? Color(.placeholderText)
+                        : isPlaceSelected ? Color.tabActive : Color(.placeholderText)
+                    )
+                    .frame(maxWidth: .infinity, alignment: .leading)
                 }
             }
 
@@ -202,6 +205,7 @@ extension MessageComposerView {
 
             let trimmed = store.state.message.trimmingCharacters(in: .whitespacesAndNewlines)
             guard trimmed.isEmpty == false else {
+                send(.onDisappear)
                 dismiss()
                 return
             }
@@ -232,10 +236,7 @@ extension MessageComposerView {
     NavigationStack {
         MessageComposerView(
             store: MessageComposerStore(
-                userLocation: .init(
-                    latitude: 37.5665,
-                    longitude: 126.9780
-                ),
+                locationProvider: LocationProvider(),
                 createMessage: CreateMessageUseCaseImpl(
                     messageRepository: MessageRepositoryImpl()
                 ),

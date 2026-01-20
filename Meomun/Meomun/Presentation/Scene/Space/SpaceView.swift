@@ -80,19 +80,17 @@ struct SpaceView: View {
                     }
                 )
             ) {
-                if let coordinate = store.state.userLocation {
-                    MessageComposerView(
-                        store: MessageComposerStore(
-                            userLocation: coordinate,
-                            createMessage: CreateMessageUseCaseImpl(
-                                messageRepository: MessageRepositoryImpl()
-                            ),
-                            onClose: {
-                                Task { await store.send(intent: .dismissAddMessage) }
-                            }
-                        )
+                MessageComposerView(
+                    store: MessageComposerStore(
+                        locationProvider: locationProvider,
+                        createMessage: CreateMessageUseCaseImpl(
+                            messageRepository: MessageRepositoryImpl()
+                        ),
+                        onClose: {
+                            Task { await store.send(intent: .dismissAddMessage) }
+                        }
                     )
-                }
+                )
             }
         }
         .task {

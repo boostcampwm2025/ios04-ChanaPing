@@ -28,7 +28,7 @@ final class MessageComposerStore: Store {
     }
 
     struct State: Equatable {
-        var startLocation: Coordinate
+        var startLocation: Coordinate?
         var currentLocation: Coordinate?
 
         var isOutsideBoundary: Bool = false
@@ -38,7 +38,7 @@ final class MessageComposerStore: Store {
         var isPlaceTagLocked: Bool = false
 
         var message: String = ""
-        var placeText: String = ""
+        var selectedPlace: Place?
         var isPlaceSearchPresented: Bool = false
 
         var alert: AlertModel?
@@ -56,21 +56,17 @@ final class MessageComposerStore: Store {
             && isConfirmLoading == false
             && (isOutsideBoundary == false || outsideBoundaryDecision == .keepWritingWithoutTag)
         }
-
-        init(userLocation: Coordinate) {
-            self.startLocation = userLocation
-            self.currentLocation = userLocation
-        }
     }
 
     enum Intent: Equatable {
+        case onAppear
         case setMessage(String)
         case updateCurrentLocation(Coordinate?)
         case resetDraft
 
         case tapPlaceField
         case dismissPlaceSearch
-        case selectPlace(String)
+        case selectPlace(Place)
         case clearPlace
 
         case tapConfirm
@@ -79,14 +75,16 @@ final class MessageComposerStore: Store {
 
         case setAlert(AlertModel?)
         case setToast(String?)
+        case onDisappear
     }
 
     enum Action {
+        case setInitLocation(Coordinate?)
         case updateMessage(String)
         case updateCurrentLocation(Coordinate?)
 
         case presentPlaceSearch(Bool)
-        case updatePlace(String)
+        case updatePlace(Place)
         case clearPlace
 
         case refreshStartLocation
@@ -101,23 +99,28 @@ final class MessageComposerStore: Store {
     @Published var state: State
 
     private let createMessageUseCase: CreateMessageUseCase
+    let locationProvider: LocationProvider
 
     private let onClose: () -> Void
 
     init(
-        userLocation: Coordinate,
+        locationProvider: LocationProvider,
         createMessage: CreateMessageUseCase,
         onClose: @escaping () -> Void
     ) {
-        self.state = State(userLocation: userLocation)
+        self.state = State()
+        self.locationProvider = locationProvider
         self.createMessageUseCase = createMessage
         self.onClose = onClose
-        AppLog.debug("startLocation: \(state.startLocation)", category: .location)
     }
 
     func action(intent: Intent) -> AsyncStream<Action> {
         AsyncStream<Action>(bufferingPolicy: .unbounded) { continuation in
             switch intent {
+            case .onAppear:
+                locationProvider.startContinuous()
+                continuation.yield(.setInitLocation(locationProvider.current))
+
             case .setMessage(let message):
                 continuation.yield(.updateMessage(message))
 
@@ -188,6 +191,9 @@ final class MessageComposerStore: Store {
 
             case .setToast(let message):
                 continuation.yield(.presentToast(message))
+
+            case .onDisappear:
+                locationProvider.stopContinuous()
             }
 
             continuation.finish()
@@ -198,6 +204,10 @@ final class MessageComposerStore: Store {
         var newState = state
 
         switch action {
+        case .setInitLocation(let coordinate):
+            newState.startLocation = coordinate
+            newState.currentLocation = coordinate
+
         case .updateMessage(let message):
             newState.message = message
 
@@ -205,8 +215,8 @@ final class MessageComposerStore: Store {
             newState.currentLocation = coordinate
             let wasOutOfBoundary = newState.isOutsideBoundary
 
-            if let current = coordinate {
-                let distance = distanceMeters(from: newState.startLocation, to: current)
+            if let current = coordinate, let start = newState.startLocation {
+                let distance = distanceMeters(from: start, to: current)
                 newState.isOutsideBoundary = distance > BoundaryPolicy.boundaryRadiusMeters
             } else {
                 // 위치 정보를 받아오지 못한 경우, 기본값은 제한 범위 내부로 처리
@@ -259,10 +269,10 @@ final class MessageComposerStore: Store {
             newState.isPlaceSearchPresented = isPresented
 
         case .updatePlace(let place):
-            newState.placeText = place
+            newState.selectedPlace = place
 
         case .clearPlace:
-            newState.placeText = ""
+            newState.selectedPlace = nil
 
         case .refreshStartLocation:
             // 현재 위치를 기준으로 startLocation 갱신
@@ -271,7 +281,7 @@ final class MessageComposerStore: Store {
             }
 
             // 장소 태그는 새 기준에서 다시 선택하도록 초기화
-            newState.placeText = ""
+            newState.selectedPlace = nil
 
             // 선택 상태 갱신
             newState.outsideBoundaryDecision = .none
@@ -290,7 +300,7 @@ final class MessageComposerStore: Store {
             newState.isPlaceTagLocked = true
 
             // 장소 태그가 있다면 제거
-            newState.placeText = ""
+            newState.selectedPlace = nil
 
             // 알럿 닫기
             newState.alert = nil
@@ -322,10 +332,12 @@ extension MessageComposerStore {
             }
 
             do {
-                try await createMessageUseCase.execute(makeCreateMessageRequest())
+                guard let createMessageRequest = makeCreateMessageRequest() else { return }
+                try await createMessageUseCase.execute(createMessageRequest)
 
                 continuation.yield(.presentToast("메시지가 등록되었어요."))
                 try await Task.sleep(nanoseconds: 700_000_000)
+                locationProvider.stopContinuous()
                 continuation.yield(.close)
 
             } catch let error as CreateMessageError {
@@ -340,11 +352,15 @@ extension MessageComposerStore {
         }
     }
 
-    private func makeCreateMessageRequest() -> CreateMessageRequestDTO {
-        CreateMessageRequestDTO(
+    private func makeCreateMessageRequest() -> CreateMessageRequestDTO? {
+        guard let latitude = state.startLocation?.latitude,
+              let longitude = state.startLocation?.longitude
+        else { return nil }
+
+        return CreateMessageRequestDTO(
             content: state.message,
-            latitude: state.startLocation.latitude,
-            longitude: state.startLocation.longitude,
+            latitude: latitude,
+            longitude: longitude,
             place: nil
         )
     }

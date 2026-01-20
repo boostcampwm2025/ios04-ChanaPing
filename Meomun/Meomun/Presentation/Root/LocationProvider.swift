@@ -8,7 +8,6 @@
 import CoreLocation
 import Combine
 
-@MainActor
 final class LocationProvider: NSObject, ObservableObject {
     @Published private(set) var current: Coordinate?
     @Published private(set) var authorizationStatus: CLAuthorizationStatus = .notDetermined
