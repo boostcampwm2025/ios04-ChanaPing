@@ -73,9 +73,7 @@ extension MessageComposerView {
         .background(backgroundView)
         .onTapGesture { isFocused = false }
         .onChange(of: locationProvider.current) { _, current in
-            Task {
-                await store.send(intent: .updateCurrentLocation(current))
-            }
+            send(.updateCurrentLocation(current))
         }
         .navigationBarBackButtonHidden()
         .toolbar { toolbarContent }

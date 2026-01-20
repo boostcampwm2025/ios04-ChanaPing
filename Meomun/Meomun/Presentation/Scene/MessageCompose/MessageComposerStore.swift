@@ -152,12 +152,20 @@ final class MessageComposerStore: Store {
                                     .init(
                                         title: BoundaryPolicy.primaryButtonTitle,
                                         role: .normal,
-                                        action: nil // Intent.tapRefreshStartLocation
+                                        action: { [weak self] in
+                                            Task {
+                                                await self?.send(intent: .tapRefreshStartLocation)
+                                            }
+                                        }
                                     ),
                                     .init(
                                         title: BoundaryPolicy.secondaryButtonTitle,
                                         role: .normal,
-                                        action: nil // Intent.tapKeepWritingWithoutTag
+                                        action: { [weak self] in
+                                            Task {
+                                                await self?.send(intent: .tapKeepWritingWithoutTag)
+                                            }
+                                        }
                                     )
                                 ]
                             )
@@ -217,12 +225,20 @@ final class MessageComposerStore: Store {
                         .init(
                             title: BoundaryPolicy.primaryButtonTitle,
                             role: .normal,
-                            action: nil // Intent.tapRefreshStartLocation
+                            action: { [weak self] in
+                                Task {
+                                    await self?.send(intent: .tapRefreshStartLocation)
+                                }
+                            }
                         ),
                         .init(
                             title: BoundaryPolicy.secondaryButtonTitle,
                             role: .normal,
-                            action: nil // Intent.tapKeepWritingWithoutTag
+                            action: { [weak self] in
+                                Task {
+                                    await self?.send(intent: .tapKeepWritingWithoutTag)
+                                }
+                            }
                         )
                     ]
                 )
