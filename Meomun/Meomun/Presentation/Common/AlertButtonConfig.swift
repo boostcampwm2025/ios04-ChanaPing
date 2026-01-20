@@ -20,7 +20,7 @@ struct AlertButtonConfig {
 
     static let confirm = AlertButtonConfig(
         title: "확인",
-        role: .cancel,
+        role: .normal,
         action: nil
     )
 }
