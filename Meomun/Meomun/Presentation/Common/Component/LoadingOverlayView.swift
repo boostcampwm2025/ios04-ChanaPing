@@ -8,9 +8,9 @@
 import SwiftUI
 
 struct LoadingOverlayView: View {
-    let message: String
+    let message: String?
 
-    init(message: String = "") {
+    init(message: String? = nil) {
         self.message = message
     }
 
@@ -24,9 +24,11 @@ struct LoadingOverlayView: View {
                     .controlSize(.large)
                     .tint(.meomunPointColor)
 
-                Text(message)
-                    .font(.subheadline.bold())
-                    .foregroundStyle(Color.meomunPrimaryColor)
+                if let message {
+                    Text(message)
+                        .font(.subheadline.bold())
+                        .foregroundStyle(Color.meomunPrimaryColor)
+                }
             }
             .padding(30)
             .background(
@@ -40,5 +42,5 @@ struct LoadingOverlayView: View {
 }
 
 #Preview {
-    LoadingOverlayView(message: "머문 흔적을 남기고 있어요")
+    LoadingOverlayView()
 }
