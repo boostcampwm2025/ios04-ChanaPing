@@ -10,9 +10,10 @@ import Combine
 
 final class MapStore: Store {
     enum Intent {
-        case onAppear
+        case onAppear(Coordinate)
         case onDisappear
-        case updateUserLocation(Coordinate)
+        case cameraDidIdle(Coordinate)
+        case cameraChangedByLocation(Coordinate)
         case tapWriteButton
         case dismissAddMessage
         case updateMessages([Message])
@@ -22,7 +23,7 @@ final class MapStore: Store {
     }
 
     enum Action {
-        case setUserLocation(Coordinate)
+        case setCameraCoordinate(Coordinate)
         case setShowAddMessage(Bool)
         case setMessages([Message])
         case setSelectedPlace(Place?)
@@ -33,7 +34,7 @@ final class MapStore: Store {
 
     struct State {
         var messages: [Message] = []
-        var userLocation: Coordinate
+        var cameraCoordinate: Coordinate?
         var isShowingAddMessage: Bool = false
         var selectedPlace: Place?
         var isLoading: Bool = false
@@ -43,32 +44,38 @@ final class MapStore: Store {
 
     @Published var state: State
 
-    private var messageStreamTask: Task<Void, Never>?
+    private let debounceInterval: UInt64 = 300_000_000 // 300ms
+
+    private var getNearbyMessageTask: Task<Void, Never>?
     private let getNearbyMessagesUseCase: GetNearbyMessagesUseCase
 
     init(
-        userLocation: Coordinate,
         getNearbyMessagesUseCase: GetNearbyMessagesUseCase
     ) {
-        self.state = State(userLocation: userLocation)
+        self.state = State()
         self.getNearbyMessagesUseCase = getNearbyMessagesUseCase
     }
 
     func action(intent: Intent) -> AsyncStream<Action> {
         AsyncStream { continuation in
             switch intent {
-            case .onAppear:
-                self.fetchNearbyMessages(continuation: continuation)
+            case .onAppear(let coordinate):
+                continuation.yield(.setCameraCoordinate(coordinate))
+                self.getNearbyMessages(at: coordinate, continuation: continuation)
 
             case .onDisappear:
-                // 화면 내려갈 때 실시간 작업 정리
-                messageStreamTask?.cancel()
-                messageStreamTask = nil
+                self.getNearbyMessageTask?.cancel()
+                self.getNearbyMessageTask = nil
+                continuation.yield(.setLoading(false))
                 continuation.finish()
 
-            case .updateUserLocation(let location):
-                continuation.yield(.setUserLocation(location))
-                continuation.finish()
+            case .cameraDidIdle(let coordinate):
+                continuation.yield(.setCameraCoordinate(coordinate))
+                self.getNearbyMessages(at: coordinate, continuation: continuation)
+
+            case .cameraChangedByLocation(let coordinate):
+                continuation.yield(.setCameraCoordinate(coordinate))
+                self.getNearbyMessages(at: coordinate, continuation: continuation)
 
             case .tapWriteButton:
                 continuation.yield(.setShowAddMessage(true))
@@ -104,8 +111,8 @@ final class MapStore: Store {
         case .setMessages(let messages):
             newState.messages = messages
 
-        case .setUserLocation(let location):
-            newState.userLocation = location
+        case .setCameraCoordinate(let coordinate):
+            newState.cameraCoordinate = coordinate
 
         case .setShowAddMessage(let isShown):
             newState.isShowingAddMessage = isShown
@@ -126,21 +133,35 @@ final class MapStore: Store {
         return newState
     }
 
-    private func fetchNearbyMessages(continuation: AsyncStream<Action>.Continuation) {
-        messageStreamTask?.cancel()
-        continuation.yield(.setLoading(true))
+    private func getNearbyMessages(
+        at coordinate: Coordinate,
+        continuation: AsyncStream<Action>.Continuation
+    ) {
+        getNearbyMessageTask?.cancel()
 
-        messageStreamTask = Task { [weak self] in
-            guard let self else { return }
-
+        getNearbyMessageTask = Task { [weak self] in
             defer {
-                continuation.yield(.setLoading(false))
+                if !Task.isCancelled {
+                    continuation.yield(.setLoading(false))
+                }
                 continuation.finish()
             }
 
+            guard let self else { return }
+
+            do {
+                try await Task.sleep(nanoseconds: self.debounceInterval)
+            } catch {
+                return
+            }
+
+            guard !Task.isCancelled else { return }
+
+            continuation.yield(.setLoading(true))
+
             do {
                 let messages = try await self.getNearbyMessagesUseCase.execute(
-                    location: self.state.userLocation,
+                    location: coordinate,
                     limit: nil
                 )
 
