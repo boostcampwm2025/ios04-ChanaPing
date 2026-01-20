@@ -159,7 +159,7 @@ struct MapStoreTests {
         func fetchMessagesWhenCameraChangedByLocation() async throws {
             // Arrange
             let expectedResult = DummyMessageFactory.makeMessages(count: 2, at: stubbedCoordinate)
-            let spyUseCase = SpyGetNearbyMessagesUseCase(stubbedMessages: expectedResult)
+            let spyUseCase = StubGetNearbyMessagesUseCase(stubbedMessages: expectedResult)
             let sut = MapStore(getNearbyMessagesUseCase: spyUseCase)
             let movedCoordinate = stubbedCoordinate
 
