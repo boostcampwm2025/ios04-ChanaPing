@@ -15,6 +15,17 @@ struct NearbyMessageResponseDTO: Decodable, Identifiable {
     let latitude: Double
     let longitude: Double
     let place: PlaceDTO?
+
+    enum CodingKeys: String, CodingKey {
+        case id
+        case authorId = "author_id"
+        case createdAt = "created_at"
+        case content
+        case latitude
+        case longitude
+        case place
+
+    }
 }
 
 extension NearbyMessageResponseDTO {
