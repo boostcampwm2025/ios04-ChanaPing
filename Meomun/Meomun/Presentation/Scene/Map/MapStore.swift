@@ -136,7 +136,11 @@ final class MapStore: Store {
 
             guard let self else { return }
 
-            try? await Task.sleep(nanoseconds: self.debounceInterval)
+            do {
+                try await Task.sleep(nanoseconds: self.debounceInterval)
+            } catch {
+                return
+            }
 
             guard !Task.isCancelled else { return }
 
