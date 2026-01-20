@@ -41,6 +41,8 @@ final class MapStore: Store {
 
     @Published var state: State
 
+    private let debounceInterval: UInt64 = 300_000_000 // 300ms
+
     private var messageStreamTask: Task<Void, Never>?
     private var fetchDebounceTask: Task<Void, Never>?
     private let getNearbyMessagesUseCase: GetNearbyMessagesUseCase
@@ -130,12 +132,16 @@ final class MapStore: Store {
     ) {
         fetchDebounceTask?.cancel()
         fetchDebounceTask = Task { [weak self] in
-            try? await Task.sleep(nanoseconds: 300_000_000) // 300ms
+            guard let self else { return }
+
+            try? await Task.sleep(nanoseconds: self.debounceInterval)
+
             guard !Task.isCancelled else {
                 continuation.finish()
                 return
             }
-            self?.fetchNearbyMessages(at: coordinate, continuation: continuation)
+
+            self.fetchNearbyMessages(at: coordinate, continuation: continuation)
         }
     }
 
