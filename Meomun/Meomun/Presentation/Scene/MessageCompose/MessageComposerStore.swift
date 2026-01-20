@@ -11,12 +11,12 @@ import CoreLocation
 import Supabase
 
 fileprivate enum BoundaryPolicy {
-    static let boundaryRadiusMeters: CLLocationDistance = 60
+    static let boundaryRadiusMeters: CLLocationDistance = 200
     static let outsideBoundaryAlertTitle = "현재 머문 위치를 벗어났습니다."
     static let outsideBoundaryAlertMessage = "메세지는 계속 작성할 수 있어요."
     static let primaryButtonTitle = "새 위치로 갱신"
     static let secondaryButtonTitle = "기존 위치에 남기기"
-    static let placeTagLockedToastMessage = "현재 위치에서는 장소 태그를 선택할 수 없어요."
+    static let placeTagLockedMessage = "현재 위치에서는 장소 태그를 선택할 수 없어요."
 }
 
 final class MessageComposerStore: Store {
@@ -68,6 +68,10 @@ final class MessageComposerStore: Store {
 
         var alert: AlertState?
         var toastMessage: String?
+
+        var placeTagLockedHintMessage: String {
+            BoundaryPolicy.placeTagLockedMessage
+        }
 
         var isConfirmLoading: Bool = false
         var isConfirmEnabled: Bool {
@@ -147,12 +151,6 @@ final class MessageComposerStore: Store {
                 continuation.yield(.updateCurrentLocation(coordinate))
 
             case .tapPlaceField:
-                // 장소 태그가 비활성화된 상태에서는 장소 검색을 열지 않고 안내 토스트 표시
-                if state.isPlaceTagLocked {
-                    continuation.yield(.showToast(BoundaryPolicy.placeTagLockedToastMessage))
-                    break
-                }
-
                 continuation.yield(.presentPlaceSearch(true))
 
             case .dismissPlaceSearch:
@@ -215,6 +213,7 @@ final class MessageComposerStore: Store {
 
     func reduce(state: State, action: Action) -> State {
         var newState = state
+
         switch action {
         case .updateMessage(let message):
             newState.message = message

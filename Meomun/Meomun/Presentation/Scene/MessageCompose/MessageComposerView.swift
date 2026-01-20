@@ -11,6 +11,7 @@ fileprivate enum Constants {
     static let navigationTitle = "잠시 남겨놓기"
     static let textEditorTitle = "이 말은 잠시 머물 거에요."
     static let textEditorPlaceholder = "지금 어디에 있나요?"
+    static let textEditorPlaceholderWhenBlocked = "선택한 장소와 너무 멀어요."
 }
 
 struct MessageComposerView: View {
@@ -89,7 +90,11 @@ extension MessageComposerView {
                         isFocused = false
                         Task { await store.send(intent: .tapPlaceField) }
                     } label: {
-                        Text(store.state.placeText.isEmpty ? Constants.textEditorPlaceholder : store.state.placeText)
+                        Text(
+                            store.state.isPlaceTagLocked
+                            ? Constants.textEditorPlaceholderWhenBlocked
+                            : store.state.placeText.isEmpty ? Constants.textEditorPlaceholder : store.state.placeText
+                        )
                             .font(.system(size: 16, weight: .medium))
                             .foregroundStyle(
                                 store.state.isPlaceTagLocked
@@ -104,6 +109,14 @@ extension MessageComposerView {
                     Task { await store.send(intent: .clearPlace) }
                 }
             }
+            .disabled(store.state.isPlaceTagLocked)
+
+            Text(store.state.placeTagLockedHintMessage)
+                .font(.subheadline)
+                .foregroundStyle(Color(.placeholderText))
+                .frame(maxWidth: .infinity, alignment: .center)
+                .opacity(store.state.isPlaceTagLocked ? 1.0 : 0.0)
+                .accessibilityHidden(store.state.isPlaceTagLocked == false)
 
             Spacer(minLength: 0)
 
