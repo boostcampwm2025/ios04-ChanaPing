@@ -43,7 +43,7 @@ final class MapStore: Store {
 
     private let debounceInterval: UInt64 = 300_000_000 // 300ms
 
-    private var fetchNearbyMessageTask: Task<Void, Never>?
+    private var getNearbyMessageTask: Task<Void, Never>?
     private let getNearbyMessagesUseCase: GetNearbyMessagesUseCase
 
     init(
@@ -58,20 +58,20 @@ final class MapStore: Store {
             switch intent {
             case .onAppear(let coordinate):
                 continuation.yield(.setCameraCoordinate(coordinate))
-                self.fetchNearbyMessages(at: coordinate, continuation: continuation)
+                self.getNearbyMessages(at: coordinate, continuation: continuation)
 
             case .onDisappear:
-                self.fetchNearbyMessageTask?.cancel()
-                self.fetchNearbyMessageTask = nil
+                self.getNearbyMessageTask?.cancel()
+                self.getNearbyMessageTask = nil
                 continuation.finish()
 
             case .cameraDidIdle(let coordinate):
                 continuation.yield(.setCameraCoordinate(coordinate))
-                self.fetchNearbyMessages(at: coordinate, continuation: continuation)
+                self.getNearbyMessages(at: coordinate, continuation: continuation)
 
             case .cameraChangedByLocation(let coordinate):
                 continuation.yield(.setCameraCoordinate(coordinate))
-                self.fetchNearbyMessages(at: coordinate, continuation: continuation)
+                self.getNearbyMessages(at: coordinate, continuation: continuation)
 
             case .tapWriteButton:
                 continuation.yield(.setShowAddMessage(true))
@@ -122,13 +122,13 @@ final class MapStore: Store {
         return newState
     }
 
-    private func fetchNearbyMessages(
+    private func getNearbyMessages(
         at coordinate: Coordinate,
         continuation: AsyncStream<Action>.Continuation
     ) {
-        fetchNearbyMessageTask?.cancel()
+        getNearbyMessageTask?.cancel()
 
-        fetchNearbyMessageTask = Task { [weak self] in
+        getNearbyMessageTask = Task { [weak self] in
             defer {
                 continuation.yield(.setLoading(false))
                 continuation.finish()
