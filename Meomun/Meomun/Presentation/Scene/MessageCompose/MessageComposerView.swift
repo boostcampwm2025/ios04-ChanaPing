@@ -32,6 +32,7 @@ struct MessageComposerView: View {
     var body: some View {
         ZStack {
             content
+                .disabled(store.state.isConfirmLoading || store.state.isPlaceSearchPresented)
 
             if store.state.isPlaceSearchPresented {
                 PlaceSearchOverlayView(
