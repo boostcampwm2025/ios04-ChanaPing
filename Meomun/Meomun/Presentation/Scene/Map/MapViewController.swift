@@ -15,7 +15,6 @@ final class MapViewController: UIViewController {
     // MARK: - Properties
 
     private var appLifecycleObservers: [NSObjectProtocol] = []
-    private var didMoveToCurrentLocation = false
 
     // MARK: - Animation Properties
 
@@ -28,6 +27,8 @@ final class MapViewController: UIViewController {
 
     private let onTapPlace: ((Place) -> Void)?
     private let onTapNoPlace: (([Message]) -> Void)?
+    private let onCameraIdle: ((Coordinate) -> Void)?
+    private let onCameraChangedByLocation: ((Coordinate) -> Void)?
 
     // MARK: - Dependencies
 
@@ -39,11 +40,15 @@ final class MapViewController: UIViewController {
     init(
         messageMarkerManager: MessageMarkerManager,
         onTapPlace: ((Place) -> Void)? = nil,
-        onTapNoPlace: (([Message]) -> Void)? = nil
+        onTapNoPlace: (([Message]) -> Void)? = nil,
+        onCameraIdle: ((Coordinate) -> Void)? = nil,
+        onCameraChangedByLocation: ((Coordinate) -> Void)? = nil
     ) {
         self.messageMarkerManager = messageMarkerManager
         self.onTapPlace = onTapPlace
         self.onTapNoPlace = onTapNoPlace
+        self.onCameraIdle = onCameraIdle
+        self.onCameraChangedByLocation = onCameraChangedByLocation
         super.init(nibName: nil, bundle: nil)
     }
 
@@ -51,6 +56,8 @@ final class MapViewController: UIViewController {
         self.messageMarkerManager = .init(rotationAnimator: .init(), bubbleImageRenderer: .init())
         self.onTapPlace = nil
         self.onTapNoPlace = nil
+        self.onCameraIdle = nil
+        self.onCameraChangedByLocation = nil
         super.init(coder: coder)
     }
 
@@ -97,6 +104,9 @@ final class MapViewController: UIViewController {
             right: 24
         )
 
+        // 카메라 delegate 등록
+        naverMapView.mapView.addCameraDelegate(delegate: self)
+
         // 앱 라이프사이클 옵저버 등록
         registerAppLifecycleObservers()
     }
@@ -114,6 +124,7 @@ final class MapViewController: UIViewController {
     deinit {
         unregisterAppLifecycleObservers()
         stopBubbleRotationTimer()
+        naverMapView.mapView.removeCameraDelegate(delegate: self)
     }
 }
 
@@ -181,8 +192,6 @@ extension MapViewController {
 extension MapViewController {
     func updateUserLocation(_ coordinate: Coordinate?) {
         guard let coordinate else { return }
-        guard didMoveToCurrentLocation == false else { return }
-        didMoveToCurrentLocation = true
 
         naverMapView.mapView.positionMode = .direction
 
@@ -243,6 +252,30 @@ extension MapViewController {
     }
 }
 
+// MARK: - NMFMapViewCameraDelegate
+
+extension MapViewController: NMFMapViewCameraDelegate {
+    func mapViewCameraIdle(_ mapView: NMFMapView) {
+        let center = mapView.cameraPosition.target
+        let coordinate = Coordinate(latitude: center.lat, longitude: center.lng)
+        onCameraIdle?(coordinate)
+    }
+
+    func mapView(_ mapView: NMFMapView, cameraDidChangeByReason reason: Int, animated: Bool) {
+        // 위치 추적으로 인한 카메라 변경인지 확인
+        guard reason == NMFMapChangedByLocation else { return }
+
+        // 위치 모드가 direction 또는 compass인지 확인
+        let positionMode = naverMapView.mapView.positionMode
+        guard positionMode == .direction || positionMode == .compass else { return }
+
+        // 카메라 중심 좌표 추출 및 콜백 호출
+        let center = mapView.cameraPosition.target
+        let coordinate = Coordinate(latitude: center.lat, longitude: center.lng)
+        onCameraChangedByLocation?(coordinate)
+    }
+}
+
 // MARK: - MapViewWrapper
 
 struct MapViewWrapper: UIViewControllerRepresentable {
@@ -250,6 +283,8 @@ struct MapViewWrapper: UIViewControllerRepresentable {
     private let userLocation: Coordinate?
     private let onTapPlace: ((Place) -> Void)?
     private let onTapNoPlace: (([Message]) -> Void)?
+    private let onCameraIdle: ((Coordinate) -> Void)?
+    private let onCameraChangedByLocation: ((Coordinate) -> Void)?
 
     private let messageMarkerManager: MessageMarkerManager
 
@@ -258,20 +293,26 @@ struct MapViewWrapper: UIViewControllerRepresentable {
         markerManager: MessageMarkerManager,
         messages: [Message],
         onTapPlace: ((Place) -> Void)? = nil,
-        onTapNoPlace: (([Message]) -> Void)? = nil
+        onTapNoPlace: (([Message]) -> Void)? = nil,
+        onCameraIdle: ((Coordinate) -> Void)? = nil,
+        onCameraChangedByLocation: ((Coordinate) -> Void)? = nil
     ) {
         self.userLocation = userLocation
         self.messageMarkerManager = markerManager
         self.messages = messages
         self.onTapPlace = onTapPlace
         self.onTapNoPlace = onTapNoPlace
+        self.onCameraIdle = onCameraIdle
+        self.onCameraChangedByLocation = onCameraChangedByLocation
     }
 
     func makeUIViewController(context: Context) -> MapViewController {
         let viewController = MapViewController(
             messageMarkerManager: messageMarkerManager,
             onTapPlace: onTapPlace,
-            onTapNoPlace: onTapNoPlace
+            onTapNoPlace: onTapNoPlace,
+            onCameraIdle: onCameraIdle,
+            onCameraChangedByLocation: onCameraChangedByLocation
         )
 
         viewController.loadMessages(messages)
@@ -282,6 +323,5 @@ struct MapViewWrapper: UIViewControllerRepresentable {
 
     func updateUIViewController(_ uiViewController: MapViewController, context: Context) {
         uiViewController.loadMessages(messages)
-        uiViewController.updateUserLocation(userLocation)
     }
 }

@@ -11,27 +11,29 @@ struct MapView: View {
     @Environment(\.setTabBarHidden) private var setTabBarHidden
     @EnvironmentObject private var locationProvider: LocationProvider
     @StateObject private var store: MapStore
+    @State private var currentUserLocation: Coordinate?     // TODO: MessageComposerStore에 LocationProvider 주입 후 제거
 
     private let messageMarkerManager: MessageMarkerManager
+    private let initialUserLocation: Coordinate
 
     init(
         userLocation: Coordinate,
         messageMarkerManager: MessageMarkerManager
     ) {
         _store = StateObject(wrappedValue: MapStore(
-            userLocation: userLocation,
             getNearbyMessagesUseCase: GetNearbyMessagesUseCaseImpl(
                 messageRepository: MessageRepositoryImpl()
             )
         ))
         self.messageMarkerManager = messageMarkerManager
+        self.initialUserLocation = userLocation
     }
 
     var body: some View {
         NavigationStack {
             ZStack {
                 MapViewWrapper(
-                    userLocation: store.state.userLocation,
+                    userLocation: initialUserLocation,
                     markerManager: messageMarkerManager,
                     messages: store.state.messages,
                     onTapPlace: { place in
@@ -42,6 +44,16 @@ struct MapView: View {
                     onTapNoPlace: { messages in
                         // TODO: NoPlace 2개 이상 터치 시 UI(스택 펼치기 등) 연결 예정
                         print("NoPlace messages tapped: \(messages.count)")
+                    },
+                    onCameraIdle: { coordinate in
+                        Task {
+                            await store.send(intent: .cameraDidIdle(coordinate))
+                        }
+                    },
+                    onCameraChangedByLocation: { coordinate in
+                        Task {
+                            await store.send(intent: .cameraChangedByLocation(coordinate))
+                        }
                     }
                 )
                 .ignoresSafeArea()
@@ -59,7 +71,15 @@ struct MapView: View {
 
                         WriteButton {
                             Task {
-                                await store.send(intent: .tapWriteButton)
+                                do {
+                                    let location = try await locationProvider.requestCurrentOnce()
+                                    currentUserLocation = location
+                                    await store.send(intent: .tapWriteButton)
+                                } catch {
+                                    // 위치 가져오기 실패 시 에러 처리
+                                    AppLog.error("Failed to get current location", category: .location, error: error)
+                                    // TODO: 사용자에게 에러 알림 표시
+                                }
                             }
                         }
                     }
@@ -79,18 +99,20 @@ struct MapView: View {
                     }
                 )
             ) {
-                MessageComposerView(
-                    store: MessageComposerStore(
-                        userLocation: store.state.userLocation,
-                        createMessage: CreateMessageUseCaseImpl(
-                            messageRepository: MessageRepositoryImpl()
-                        ),
-                        onClose: {
-                            Task { await store.send(intent: .dismissAddMessage)}
-                        }
+                if let userLocation = currentUserLocation {
+                    MessageComposerView(
+                        store: MessageComposerStore(
+                            userLocation: userLocation,
+                            createMessage: CreateMessageUseCaseImpl(
+                                messageRepository: MessageRepositoryImpl()
+                            ),
+                            onClose: {
+                                Task { await store.send(intent: .dismissAddMessage)}
+                            }
+                        )
                     )
-                )
-                .onAppear { setTabBarHidden(true) }
+                    .onAppear { setTabBarHidden(true) }
+                }
             }
             .navigationDestination(
                 isPresented: Binding(
@@ -121,21 +143,12 @@ struct MapView: View {
                 }
             }
             .task {
-                locationProvider.requestAuthorizationIfNeeded()
-                locationProvider.startContinuous()
-                await store.send(intent: .onAppear)
+                await store.send(intent: .onAppear(initialUserLocation))
             }
             .onAppear { setTabBarHidden(false) }
             .onDisappear {
-                locationProvider.stopContinuous()
                 Task {
                     await store.send(intent: .onDisappear)
-                }
-            }
-            .onChange(of: locationProvider.current) { _, newValue in
-                guard let newValue else { return }
-                Task {
-                    await store.send(intent: .updateUserLocation(newValue))
                 }
             }
         }
