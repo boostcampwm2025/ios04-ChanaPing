@@ -16,6 +16,20 @@ struct RealtimeCreatedMessageDTO: Decodable {
     let longitude: Double
     let placeId: PlaceDTO?
 
+    enum CodingKeys: String, CodingKey {
+        case id
+        case authorId = "author_id"
+        case createdAt = "created_at"
+        case content
+        case latitude
+        case longitude
+        case placeId = "place_id"
+    }
+}
+
+// MARK: - Mapping
+
+extension RealtimeCreatedMessageDTO {
     func toDomain() -> Message {
         Message(
             id: MessageID(value: id),
