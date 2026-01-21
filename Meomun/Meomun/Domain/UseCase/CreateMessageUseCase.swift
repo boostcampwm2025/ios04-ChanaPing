@@ -8,7 +8,7 @@
 import Foundation
 
 protocol CreateMessageUseCase {
-    func execute(_ request: CreateMessageRequestDTO) async throws
+    func execute(_ request: CreateMessageRequest) async throws
 }
 
 final class CreateMessageUseCaseImpl: CreateMessageUseCase {
@@ -18,7 +18,7 @@ final class CreateMessageUseCaseImpl: CreateMessageUseCase {
         self.messageRepository = messageRepository
     }
 
-    func execute(_ request: CreateMessageRequestDTO) async throws {
+    func execute(_ request: CreateMessageRequest) async throws {
         try await messageRepository.createMessage(request)
     }
 }

@@ -35,8 +35,6 @@ struct BackButton: View {
             WriteButton(action: {})
         }
 
-        MessageTextEditor(text: $message)
-
         HStack {
             CancelButton(action: {})
         }

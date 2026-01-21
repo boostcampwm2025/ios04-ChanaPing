@@ -10,8 +10,12 @@ import SwiftUI
 fileprivate enum Constants {
     static let navigationTitle = "잠시 남겨놓기"
     static let textEditorTitle = "이 말은 잠시 머물 거에요."
-    static let textEditorPlaceholder = "지금 어디에 있나요?"
-    static let textEditorPlaceholderWhenBlocked = "선택한 장소와 너무 멀어요."
+    static let textEditorPlaceholder = "지금 느낌 어때요?"
+    static let placeContainerPlaceholder = "지금 어디에 있나요?"
+    static let placeContainerPlaceholderWhenBlocked = "선택한 장소와 너무 멀어요."
+    static let loadingMessage = "머문 흔적을 남기고 있어요."
+    static let successMessage = "머문 흔적을 남겼어요."
+    static let failMessage = "머문 흔적 남기기에 실패했어요."
 }
 
 struct MessageComposerView: View {
@@ -31,6 +35,7 @@ struct MessageComposerView: View {
     var body: some View {
         ZStack {
             content
+                .disabled(store.state.confirmStatus == .sending || store.state.isPlaceSearchPresented)
 
             if store.state.isPlaceSearchPresented {
                 PlaceSearchOverlayView(
@@ -51,6 +56,16 @@ struct MessageComposerView: View {
                 )
                 .transition(.opacity.combined(with: .scale(scale: 0.98)))
                 .zIndex(999)
+            }
+
+            // TODO: alert 수정할 때 같이 수정해야됨. fail 경우도 추가하기
+            if store.state.confirmStatus == .sending || store.state.confirmStatus == .success {
+                LoadingOverlayView(
+                    mode: store.state.confirmStatus == .success ? .success : .loading,
+                    message: store.state.confirmStatus == .sending ? Constants.loadingMessage :
+                        Constants.successMessage)
+                    .transition(.opacity.animation(.easeInOut(duration: 0.2)))
+                    .zIndex(1000)
             }
         }
         .onAppear { send(.onAppear) }
@@ -94,8 +109,12 @@ extension MessageComposerView {
             .foregroundStyle(Color.meomunSecondaryColor)
             .frame(maxWidth: .infinity, alignment: .leading)
 
-        MessageTextEditor(text: messageBinding)
-        .focused($isFocused)
+        MessageTextEditor(
+            text: messageBinding,
+            isFocused: $isFocused,
+            maxCount: EditorPolicy.maxCount,
+            placeholder: Constants.textEditorPlaceholder
+        )
     }
 
     private var placeSection: some View {
@@ -109,8 +128,8 @@ extension MessageComposerView {
                     let placeName = store.state.selectedPlace?.name ?? ""
 
                     Text(store.state.isPlaceTagLocked
-                         ? Constants.textEditorPlaceholderWhenBlocked
-                         : isPlaceSelected ? placeName : Constants.textEditorPlaceholder
+                         ? Constants.placeContainerPlaceholderWhenBlocked
+                         : isPlaceSelected ? placeName : Constants.placeContainerPlaceholder
                     )
                     .font(.system(size: 16, weight: .medium))
                     .foregroundStyle(
@@ -203,6 +222,7 @@ extension MessageComposerView {
                 return
             }
 
+            isFocused = false
             let trimmed = store.state.message.trimmingCharacters(in: .whitespacesAndNewlines)
             guard trimmed.isEmpty == false else {
                 send(.onDisappear)
@@ -229,6 +249,8 @@ extension MessageComposerView {
                 ]
             )))
         }
+        .disabled(store.state.confirmStatus == .sending)
+        .opacity(store.state.confirmStatus == .sending ? 0.4 : 1.0)
     }
 }
 
@@ -240,7 +262,7 @@ extension MessageComposerView {
                 createMessage: CreateMessageUseCaseImpl(
                     messageRepository: MessageRepositoryImpl()
                 ),
-                onClose: {
+                onClose: { _ in
                     print("close")
                 }
             )

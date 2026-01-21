@@ -85,7 +85,7 @@ struct SpaceView: View {
                         createMessage: CreateMessageUseCaseImpl(
                             messageRepository: MessageRepositoryImpl()
                         ),
-                        onClose: {
+                        onClose: { _ in
                             Task { await store.send(intent: .dismissAddMessage) }
                         }
                     )

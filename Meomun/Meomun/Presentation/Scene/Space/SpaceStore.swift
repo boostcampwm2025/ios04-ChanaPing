@@ -14,6 +14,7 @@ final class SpaceStore: Store {
         case onAppear(placeID: PlaceID)
         case tapWriteButton
         case dismissAddMessage
+        case setToast(String?)
     }
 
     enum Action {
@@ -23,6 +24,7 @@ final class SpaceStore: Store {
         case setUserLocation(Coordinate)
         case setShowAddMessage(Bool)
         case setCurrentPlaceID(PlaceID)
+        case setToastMessage(String?)
     }
 
     struct State {
@@ -32,6 +34,7 @@ final class SpaceStore: Store {
         var userLocation: Coordinate?           // TODO: - 지도 > 공간 진입 시점 좌표 넘겨주고, 옵셔널 지우기
         var isShowingAddMessage: Bool = false
         var currentPlaceID: PlaceID?
+        var toastMessage: String?
     }
 
     @Published var state: State
@@ -100,6 +103,10 @@ final class SpaceStore: Store {
             case .dismissAddMessage:
                 continuation.yield(.setShowAddMessage(false))
                 continuation.finish()
+
+            case .setToast(let message):
+                continuation.yield(.setToastMessage(message))
+                continuation.finish()
             }
         }
     }
@@ -125,6 +132,9 @@ final class SpaceStore: Store {
 
         case .setCurrentPlaceID(let placeID):
             newState.currentPlaceID = placeID
+
+        case .setToastMessage(let message):
+            newState.toastMessage = message
         }
 
         return newState

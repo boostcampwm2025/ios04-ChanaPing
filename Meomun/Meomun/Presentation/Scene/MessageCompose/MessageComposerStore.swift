@@ -10,6 +10,10 @@ import Combine
 import CoreLocation
 import Supabase
 
+enum EditorPolicy {
+    static let maxCount = 30
+}
+
 fileprivate enum BoundaryPolicy {
     static let boundaryRadiusMeters: CLLocationDistance = 200
     static let outsideBoundaryAlertTitle = "현재 머문 위치를 벗어났습니다."
@@ -20,6 +24,13 @@ fileprivate enum BoundaryPolicy {
 }
 
 final class MessageComposerStore: Store {
+    enum ConfirmStatus: Equatable {
+        case idle
+        case sending
+        case success
+        case fail
+    }
+
     // 위치 이탈 상태에서 사용자의 선택을 반영하기 위한 상태
     enum OutsideBoundaryDecision: Equatable {
         case none
@@ -44,16 +55,15 @@ final class MessageComposerStore: Store {
         var alert: AlertModel?
         var toastMessage: String?
 
+        var confirmStatus: ConfirmStatus = .idle
         var placeTagLockedHintMessage: String {
             BoundaryPolicy.placeTagLockedMessage
         }
-
-        var isConfirmLoading: Bool = false
         var isConfirmEnabled: Bool {
             message
                 .trimmingCharacters(in: .whitespacesAndNewlines)
                 .isEmpty == false
-            && isConfirmLoading == false
+            && confirmStatus != .sending
             && (isOutsideBoundary == false || outsideBoundaryDecision == .keepWritingWithoutTag)
         }
     }
@@ -90,10 +100,10 @@ final class MessageComposerStore: Store {
         case refreshStartLocation
         case keepWritingWithoutTag
 
-        case setConfirmLoading(Bool)
+        case setConfirmStatus(ConfirmStatus)
         case presentAlert(AlertModel?)
         case presentToast(String?)
-        case close
+        case close(isSuccess: Bool)
     }
 
     @Published var state: State
@@ -101,12 +111,12 @@ final class MessageComposerStore: Store {
     private let createMessageUseCase: CreateMessageUseCase
     let locationProvider: LocationProvider
 
-    private let onClose: () -> Void
+    private let onClose: (Bool) -> Void
 
     init(
         locationProvider: LocationProvider,
         createMessage: CreateMessageUseCase,
-        onClose: @escaping () -> Void
+        onClose: @escaping (Bool) -> Void
     ) {
         self.state = State()
         self.locationProvider = locationProvider
@@ -129,7 +139,7 @@ final class MessageComposerStore: Store {
 
             case .resetDraft:
                 continuation.yield(.updateMessage(""))
-                continuation.yield(.close)
+                continuation.yield(.close(isSuccess: false))
 
             case .tapPlaceField:
                 continuation.yield(.presentPlaceSearch(true))
@@ -145,6 +155,16 @@ final class MessageComposerStore: Store {
                 continuation.yield(.clearPlace)
 
             case .tapConfirm:
+                let normalized = state.message
+                    .replacingOccurrences(of: "\n", with: "")
+                    .replacingOccurrences(of: "\r", with: "")
+
+                let finalMessage = String(normalized.prefix(EditorPolicy.maxCount))
+
+                if finalMessage != state.message {
+                    continuation.yield(.updateMessage(finalMessage))
+                }
+
                 if state.isOutsideBoundary, state.outsideBoundaryDecision == .none {
                     continuation.yield(
                         .presentAlert(
@@ -305,8 +325,8 @@ final class MessageComposerStore: Store {
             // 알럿 닫기
             newState.alert = nil
 
-        case .setConfirmLoading(let isLoading):
-            newState.isConfirmLoading = isLoading
+        case .setConfirmStatus(let status):
+            newState.confirmStatus = status
 
         case .presentAlert(let alertModel):
             newState.alert = alertModel
@@ -314,8 +334,8 @@ final class MessageComposerStore: Store {
         case .presentToast(let message):
             newState.toastMessage = message
 
-        case .close:
-            onClose()
+        case .close(let isSuccess):
+            onClose(isSuccess)
         }
 
         return newState
@@ -325,25 +345,23 @@ final class MessageComposerStore: Store {
 extension MessageComposerStore {
     private func createMessage(continuation: AsyncStream<Action>.Continuation) {
         Task {
-            continuation.yield(.setConfirmLoading(true))
+            continuation.yield(.setConfirmStatus(.sending))
             defer {
-                continuation.yield(.setConfirmLoading(false))
                 continuation.finish()
             }
 
             do {
                 guard let createMessageRequest = makeCreateMessageRequest() else { return }
                 try await createMessageUseCase.execute(createMessageRequest)
-
-                continuation.yield(.presentToast("메시지가 등록되었어요."))
-                try await Task.sleep(nanoseconds: 700_000_000)
+                continuation.yield(.setConfirmStatus(.success))
+                try await Task.sleep(nanoseconds: 1_000_000_000)
                 locationProvider.stopContinuous()
-                continuation.yield(.close)
-
+                continuation.yield(.close(isSuccess: true))
             } catch let error as CreateMessageError {
+                continuation.yield(.setConfirmStatus(.fail))
                 continuation.yield(mapCreateMessageErrorToAlertAction(error))
-
             } catch {
+                continuation.yield(.setConfirmStatus(.fail))
                 continuation.yield(.presentAlert(.init(
                     title: "네트워크에 연결할 수 없어요.",
                     message: "네트워크 상태를 확인하고 다시 시도해 주세요."
@@ -352,16 +370,13 @@ extension MessageComposerStore {
         }
     }
 
-    private func makeCreateMessageRequest() -> CreateMessageRequestDTO? {
-        guard let latitude = state.startLocation?.latitude,
-              let longitude = state.startLocation?.longitude
-        else { return nil }
+    private func makeCreateMessageRequest() -> CreateMessageRequest? {
+        guard let startLocation = state.startLocation else { return nil }
 
-        return CreateMessageRequestDTO(
+        return CreateMessageRequest(
             content: state.message,
-            latitude: latitude,
-            longitude: longitude,
-            place: nil
+            coordinate: startLocation,
+            place: state.selectedPlace
         )
     }
 

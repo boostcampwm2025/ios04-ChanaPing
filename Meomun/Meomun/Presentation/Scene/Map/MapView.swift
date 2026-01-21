@@ -94,12 +94,13 @@ struct MapView: View {
                         createMessage: CreateMessageUseCaseImpl(
                             messageRepository: MessageRepositoryImpl()
                         ),
-                        onClose: {
+                        onClose: { _ in
                             Task { await store.send(intent: .dismissAddMessage) }
                         }
                     )
                 )
                 .onAppear { setTabBarHidden(true) }
+                .onDisappear { setTabBarHidden(false) }
             }
             .navigationDestination(
                 isPresented: Binding(
@@ -140,6 +141,20 @@ struct MapView: View {
                 }
             }
         }
+        .toast(toastBinding, bottomPadding: 100)
+    }
+}
+
+private extension MapView {
+    var toastBinding: Binding<String?> {
+        Binding(
+            get: { store.state.toastMessage },
+            set: { message in
+                Task {
+                    await store.send(intent: .setToast(message))
+                }
+            }
+        )
     }
 }
 

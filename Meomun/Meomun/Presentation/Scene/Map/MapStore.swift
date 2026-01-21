@@ -19,6 +19,7 @@ final class MapStore: Store {
         case updateMessages([Message])
         case tapPlaceMarker(Place)
         case dismissSpaceView
+        case setToast(String?)
     }
 
     enum Action {
@@ -28,6 +29,7 @@ final class MapStore: Store {
         case setSelectedPlace(Place?)
         case setLoading(Bool)
         case setError(String)
+        case setToastMessage(String?)
     }
 
     struct State {
@@ -37,6 +39,7 @@ final class MapStore: Store {
         var selectedPlace: Place?
         var isLoading: Bool = false
         var errorMessage: String = ""
+        var toastMessage: String?
     }
 
     @Published var state: State
@@ -93,6 +96,10 @@ final class MapStore: Store {
             case .dismissSpaceView:
                 continuation.yield(.setSelectedPlace(nil))
                 continuation.finish()
+
+            case .setToast(let message):
+                continuation.yield(.setToastMessage(message))
+                continuation.finish()
             }
         }
     }
@@ -118,6 +125,9 @@ final class MapStore: Store {
 
         case .setError(let message):
             newState.errorMessage = message
+
+        case .setToastMessage(let message):
+            newState.toastMessage = message
         }
 
         return newState
