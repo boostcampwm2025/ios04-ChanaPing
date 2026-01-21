@@ -20,6 +20,7 @@ final class MapStore: Store {
         case tapPlaceMarker(Place)
         case dismissSpaceView
         case handleRealtimeEvent(MessageRealtimeEvent)
+        case setToast(String?)
     }
 
     enum Action {
@@ -29,6 +30,7 @@ final class MapStore: Store {
         case setSelectedPlace(Place?)
         case setLoading(Bool)
         case setError(String)
+        case setToastMessage(String?)   
         case insertMessage(Message)
         case removeMessage(MessageID)
     }
@@ -40,6 +42,7 @@ final class MapStore: Store {
         var selectedPlace: Place?
         var isLoading: Bool = false
         var errorMessage: String = ""
+        var toastMessage: String?
     }
 
     @Published var state: State
@@ -113,6 +116,10 @@ final class MapStore: Store {
                     break
                 }
                 continuation.finish()
+
+            case .setToast(let message):
+                continuation.yield(.setToastMessage(message))
+                continuation.finish()
             }
         }
     }
@@ -138,6 +145,9 @@ final class MapStore: Store {
 
         case .setError(let message):
             newState.errorMessage = message
+
+        case .setToastMessage(let message):
+            newState.toastMessage = message
 
         case .insertMessage(let message):
             if !newState.messages.contains(where: { $0.id == message.id }) {

@@ -8,7 +8,7 @@
 import Foundation
 
 protocol MessageRepository: Sendable {
-    func createMessage(_ request: CreateMessageRequestDTO) async throws
+    func createMessage(_ request: CreateMessageRequest) async throws
     func deleteMessage(messageID: MessageID) async throws
 
     func reportMessage(messageID: MessageID) async throws -> MessageID

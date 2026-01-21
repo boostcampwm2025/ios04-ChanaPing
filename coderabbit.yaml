@@ -1,4 +1,4 @@
-language: "ko-KR"
+language: ko-KR
 reviews:
     suggested_reviewers: false  # 코드 변경에 따른 리뷰어 추천 (기본값: true)
 

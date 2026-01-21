@@ -14,6 +14,7 @@ final class SpaceStore: Store {
         case onAppear(placeID: PlaceID)
         case tapWriteButton
         case dismissAddMessage
+        case setToast(String?)
     }
 
     enum Action {
@@ -23,15 +24,17 @@ final class SpaceStore: Store {
         case setUserLocation(Coordinate)
         case setShowAddMessage(Bool)
         case setCurrentPlaceID(PlaceID)
+        case setToastMessage(String?)
     }
 
     struct State {
         var isLoading: Bool = false
         var errorMessage: String = ""
         var messages: [Message] = []
-        var userLocation: Coordinate? = nil     // TODO: - 지도 > 공간 진입 시점 좌표 넘겨주고, 옵셔널 지우기
+        var userLocation: Coordinate?           // TODO: - 지도 > 공간 진입 시점 좌표 넘겨주고, 옵셔널 지우기
         var isShowingAddMessage: Bool = false
         var currentPlaceID: PlaceID?
+        var toastMessage: String?
     }
 
     @Published var state: State
@@ -43,13 +46,17 @@ final class SpaceStore: Store {
 
     private var fetchMessagesTask: Task<Void, Never>?
 
+    private let place: Place
+
     init(
         locationProvider: LocationProvider,
-        fetchPlaceMessagesUseCase: FetchPlaceMessagesUseCase
+        fetchPlaceMessagesUseCase: FetchPlaceMessagesUseCase,
+        place: Place
     ) {
         self.locationProvider = locationProvider
         self.state = State()
         self.fetchPlaceMessagesUseCase = fetchPlaceMessagesUseCase
+        self.place = place
     }
 
     func action(intent: Intent) -> AsyncStream<Action> {
@@ -96,6 +103,10 @@ final class SpaceStore: Store {
             case .dismissAddMessage:
                 continuation.yield(.setShowAddMessage(false))
                 continuation.finish()
+
+            case .setToast(let message):
+                continuation.yield(.setToastMessage(message))
+                continuation.finish()
             }
         }
     }
@@ -121,6 +132,9 @@ final class SpaceStore: Store {
 
         case .setCurrentPlaceID(let placeID):
             newState.currentPlaceID = placeID
+
+        case .setToastMessage(let message):
+            newState.toastMessage = message
         }
 
         return newState

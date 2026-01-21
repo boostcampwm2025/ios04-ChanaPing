@@ -9,6 +9,8 @@ import SwiftUI
 
 struct RootView: View {
     @StateObject private var locationProvider = LocationProvider()
+    @Environment(\.scenePhase) private var scenePhase
+    @State private var didStartContinuous = false
     @State private var userLocation: Coordinate?
 
     var body: some View {

@@ -15,10 +15,27 @@ final class MessageRepositoryImpl: MessageRepository {
         self.supabaseClient = supabaseClient
     }
 
-    func createMessage(_ request: CreateMessageRequestDTO) async throws {
+    func createMessage(_ request: CreateMessageRequest) async throws {
         let session = try await supabaseClient.auth.session
 
         let authHeader = "Bearer \(session.accessToken)"
+
+        let placeDTO: PlaceDTO? = request.place.map { place in
+            PlaceDTO(
+                placeId: place.id.value,
+                name: place.name,
+                latitude: place.coordinate.latitude,
+                longitude: place.coordinate.longitude,
+                address: place.address.isEmpty ? nil : place.address
+            )
+        }
+
+        let dto = CreateMessageRequestDTO(
+            content: request.content,
+            latitude: request.coordinate.latitude,
+            longitude: request.coordinate.longitude,
+            place: placeDTO
+        )
 
         do {
             _ = try await supabaseClient.functions.invoke(
@@ -26,7 +43,7 @@ final class MessageRepositoryImpl: MessageRepository {
                 options: FunctionInvokeOptions(
                     method: .post,
                     headers: ["Authorization": authHeader],
-                    body: request
+                    body: dto
                 ),
                 decode: { _, response in
                     if (200...299).contains(response.statusCode) { return () }
