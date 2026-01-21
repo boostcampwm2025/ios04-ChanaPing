@@ -14,7 +14,3 @@ struct MessageID: Hashable, Sendable {
 struct PlaceID: Hashable, Sendable {
     let value: String
 }
-
-struct UserID: Hashable, Sendable {
-    let value: UUID
-}

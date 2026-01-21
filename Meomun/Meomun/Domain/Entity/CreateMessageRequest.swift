@@ -2,7 +2,7 @@
 //  CreateMessageRequest.swift
 //  Meomun
 //
-//  Created by Claude on 1/21/26.
+//  Created by MinwooJe on 1/21/26.
 //
 
 struct CreateMessageRequest: Equatable {

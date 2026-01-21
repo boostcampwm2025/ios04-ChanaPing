@@ -513,7 +513,6 @@ private struct BubblePlacer {
                 )
             ),
             domeEnvironment: .init(
-                weather: .sunny,
                 dayPart: .afternoon
             ),
             place: .init(

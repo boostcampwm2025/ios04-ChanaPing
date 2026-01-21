@@ -9,7 +9,6 @@ protocol SearchNearbyPlaceUseCase {
     func execute(
         query: String,
         userLocation: Coordinate,
-        radiusMeters: Double
     ) async throws -> [Place]
 }
 
@@ -25,7 +24,6 @@ final class SearchNearbyPlaceUseCaseImpl: SearchNearbyPlaceUseCase {
     func execute(
         query: String,
         userLocation: Coordinate,
-        radiusMeters: Double
     ) async throws -> [Place] {
 
         let candidates = try await placeRepository.searchPlace(query: query)
@@ -54,9 +52,8 @@ final class SearchNearbyPlaceUseCaseImpl: SearchNearbyPlaceUseCase {
             )
         }
 
-        // 사용자 위치 기준 거리 필터 + 가까운 순 정렬
+        // 사용자 위치 기준 가까운 순 정렬
         return places
-            .filter { userLocation.distance(to: $0.coordinate) <= radiusMeters }
             .sorted {
                 userLocation.distance(to: $0.coordinate) < userLocation.distance(to: $1.coordinate)
             }

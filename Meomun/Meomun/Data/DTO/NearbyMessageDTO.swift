@@ -32,7 +32,6 @@ extension NearbyMessageResponseDTO {
     func toDomain() -> Message {
         return Message(
             id: MessageID(value: id),
-            authorID: UserID(value: authorId),
             createdAt: createdAt,
             content: content,
             coordinate: Coordinate(

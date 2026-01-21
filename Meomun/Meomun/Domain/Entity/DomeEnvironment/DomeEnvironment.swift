@@ -6,6 +6,5 @@
 //
 
 struct DomeEnvironment {
-    let weather: Weather
     let dayPart: DayPart
 }

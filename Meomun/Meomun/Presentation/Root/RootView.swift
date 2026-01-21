@@ -17,17 +17,9 @@ struct RootView: View {
         Group {
             #if DEBUG
             MainTabShellView(userLocation: .init(latitude: 37.5665, longitude: 126.9780))
-                .task {
-                    await SupabaseAuthBootstrapper.signInAnonymouslyIfNeeded()
-                    await SupabaseAuthBootstrapper.logCurrentAccessToken()
-                }
             #else
             if let userLocation {
                 MainTabShellView(userLocation: userLocation)
-                    .task {
-                        await SupabaseAuthBootstrapper.signInAnonymouslyIfNeeded()
-                        await SupabaseAuthBootstrapper.logCurrentAccessToken()
-                    }
             } else {
                 LocationGateView { coordinate in
                     self.userLocation = coordinate

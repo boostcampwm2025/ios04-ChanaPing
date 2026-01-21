@@ -11,11 +11,6 @@ protocol MessageRepository: Sendable {
     func createMessage(_ request: CreateMessageRequest) async throws
     func deleteMessage(messageID: MessageID) async throws
 
-    func reportMessage(messageID: MessageID) async throws -> MessageID
-
-    func saveMessage(messageID: MessageID) async throws
-    func deleteSavedMessages(messageIDs: [MessageID]) async throws
-
     func getNearbyMessages(location: Coordinate, limit: Int?) async throws -> [Message]
     func getPlaceMessages(placeID: PlaceID, limit: Int?) async throws -> [Message]
 }

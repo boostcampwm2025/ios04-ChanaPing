@@ -22,8 +22,7 @@ struct MapView: View {
         _store = StateObject(wrappedValue: MapStore(
             getNearbyMessagesUseCase: GetNearbyMessagesUseCaseImpl(
                 messageRepository: MessageRepositoryImpl()
-            ),
-            messageRealtimeManager: MessageRealtimeManager()
+            )
         ))
         self.messageMarkerManager = messageMarkerManager
         self.initialUserLocation = userLocation
@@ -125,7 +124,6 @@ struct MapView: View {
                             place: place
                         ),
                         domeEnvironment: .init(
-                            weather: .sunny,
                             dayPart: .afternoon
                         ),
                         place: place
