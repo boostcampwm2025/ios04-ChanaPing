@@ -21,13 +21,6 @@ struct FloatingTabBar: View {
             }
 
             FloatingTabItem(
-                systemImageName: "archivebox",
-                isSelected: selectedTab == .record
-            ) {
-                onSelect(.record)
-            }
-
-            FloatingTabItem(
                 systemImageName: "person",
                 isSelected: selectedTab == .myPage
             ) {
@@ -35,7 +28,7 @@ struct FloatingTabBar: View {
             }
         }
         .padding(.horizontal, 22)
-        .padding(.vertical, 18)
+        .padding(.vertical, 22)
         .background(
             CornerRadiusShape(
                 topLeft: 24,
@@ -43,15 +36,15 @@ struct FloatingTabBar: View {
                 bottomLeft: 10,
                 bottomRight: 10
             )
-                .fill(.white.opacity(0.96))
-                .shadow(
-                    color: .black.opacity(0.12),
-                    radius: 18,
-                    x: 0,
-                    y: 6
-                )
+            .fill(.white.opacity(0.76))
+            .shadow(
+                color: .black.opacity(0.12),
+                radius: 18,
+                x: 0,
+                y: 6
+            )
         )
-        .padding(.horizontal, 24)
+        .padding(.horizontal, 30)
         .animation(
             .spring(
                 response: 0.25,
@@ -59,6 +52,7 @@ struct FloatingTabBar: View {
             ),
             value: selectedTab
         )
+        .padding(.bottom, 5)
     }
 }
 
