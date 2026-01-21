@@ -52,7 +52,6 @@ final class PlaceSearchStore: Store {
     private var searchTask: Task<[Place], Never>?
 
     private let searchNearbyPlaces: SearchNearbyPlaceUseCase
-    private let radiusMeters: Double
 
     private let onSelect: (Place) -> Void
     private let onDismiss: () -> Void
@@ -60,13 +59,11 @@ final class PlaceSearchStore: Store {
     init(
         searchPlaces: SearchNearbyPlaceUseCase,
         userLocation: Coordinate?,
-        radiusMeters: Double = 600,
         onSelect: @escaping (Place) -> Void,
         onDismiss: @escaping () -> Void
     ) {
         self.searchNearbyPlaces = searchPlaces
         self.state = State(userLocation: userLocation)
-        self.radiusMeters = radiusMeters
         self.onSelect = onSelect
         self.onDismiss = onDismiss
     }
@@ -130,7 +127,6 @@ final class PlaceSearchStore: Store {
 
         let stabilizedQuery = trimmedQuery
         let userLocation = self.state.userLocation
-        let radiusMeters = self.radiusMeters
         let useCase = self.searchNearbyPlaces
 
         searchTask = Task { [weak self] in
@@ -145,8 +141,7 @@ final class PlaceSearchStore: Store {
             do {
                 let results = try await useCase.execute(
                     query: stabilizedQuery,
-                    userLocation: userLocation,
-                    radiusMeters: radiusMeters
+                    userLocation: userLocation
                 )
                 return results
             } catch {
