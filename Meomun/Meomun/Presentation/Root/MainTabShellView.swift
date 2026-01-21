@@ -71,7 +71,6 @@ struct MainTabShellView: View {
                     )
                 ),
                 domeEnvironment: DomeEnvironment(
-                    weather: .sunny,
                     dayPart: .daybreak
                 ),
                 place: Place(

@@ -18,7 +18,6 @@ enum LogCategory: String {
     case space = "Space"    // 3D 공간, Realitykit 관련
     case resource = "Resource"  // 모델, material, 에셋 로딩 관련
     case login = "Login"
-    case realtime = "Realtime"
 }
 
 enum AppLog {

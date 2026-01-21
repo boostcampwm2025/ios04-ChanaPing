@@ -215,16 +215,6 @@ extension MapViewController {
             onTapNoPlace: onTapNoPlace
         )
     }
-
-    /// 실시간 이벤트를 처리합니다.
-    func handleEvent(_ event: MessageEvent) {
-        messageMarkerManager.handleEvent(
-            event,
-            mapView: naverMapView.mapView,
-            onTapPlace: onTapPlace,
-            onTapNoPlace: onTapNoPlace
-        )
-    }
 }
 
 // MARK: - Animation Timer

@@ -125,7 +125,7 @@ extension MessageMarkerManager {
         let coord = event.message.coordinate
 
         // 1. 이벤트 타입에 따라 메시지 저장소 업데이트
-        switch event.event {
+        switch event.type {
         case .insert:
             insertMessage(event.message)
 

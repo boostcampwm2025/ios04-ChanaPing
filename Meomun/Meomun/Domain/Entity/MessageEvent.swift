@@ -6,6 +6,11 @@
 //
 
 struct MessageEvent {
-    let event: RealtimeEvent
+    let type: MessageEventType
     let message: Message
+}
+
+enum MessageEventType {
+    case insert
+    case delete
 }

@@ -26,8 +26,5 @@ struct CreateMessageErrorResponseDTO: Decodable, Equatable {
 }
 
 enum CreateMessageError: Error, Equatable {
-    case blocked(details: CreateMessageErrorResponseDTO)
-    case unknown(details: CreateMessageErrorResponseDTO)
-    case unauthorized
     case http(code: Int, rawBody: String)
 }
