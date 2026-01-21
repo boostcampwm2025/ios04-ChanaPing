@@ -28,6 +28,7 @@ final class MessageComposerStore: Store {
         case idle
         case sending
         case success
+        case fail
     }
 
     // 위치 이탈 상태에서 사용자의 선택을 반영하기 위한 상태
@@ -357,9 +358,10 @@ extension MessageComposerStore {
                 locationProvider.stopContinuous()
                 continuation.yield(.close(isSuccess: true))
             } catch let error as CreateMessageError {
+                continuation.yield(.setConfirmStatus(.fail))
                 continuation.yield(mapCreateMessageErrorToAlertAction(error))
-
             } catch {
+                continuation.yield(.setConfirmStatus(.fail))
                 continuation.yield(.presentAlert(.init(
                     title: "네트워크에 연결할 수 없어요.",
                     message: "네트워크 상태를 확인하고 다시 시도해 주세요."

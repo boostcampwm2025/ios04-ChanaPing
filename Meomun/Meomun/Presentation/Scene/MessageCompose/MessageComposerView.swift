@@ -15,6 +15,7 @@ fileprivate enum Constants {
     static let placeContainerPlaceholderWhenBlocked = "선택한 장소와 너무 멀어요."
     static let loadingMessage = "머문 흔적을 남기고 있어요."
     static let successMessage = "머문 흔적을 남겼어요."
+    static let failMessage = "머문 흔적 남기기에 실패했어요."
 }
 
 struct MessageComposerView: View {
@@ -57,7 +58,8 @@ struct MessageComposerView: View {
                 .zIndex(999)
             }
 
-            if store.state.confirmStatus != .idle {
+            // TODO: alert 수정할 때 같이 수정해야됨. fail 경우도 추가하기
+            if store.state.confirmStatus == .sending || store.state.confirmStatus == .success {
                 LoadingOverlayView(
                     mode: store.state.confirmStatus == .success ? .success : .loading,
                     message: store.state.confirmStatus == .sending ? Constants.loadingMessage :
