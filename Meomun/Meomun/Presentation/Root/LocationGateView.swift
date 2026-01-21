@@ -8,39 +8,72 @@
 import SwiftUI
 import CoreLocation
 
+fileprivate enum Constants {
+    // Title
+    static let loadingMessage = "현재 위치 불러오는 중..."
+    static let permissionTitle = "위치 권한 필요"
+    static let permissionMessage = "머문에서 위치를 사용할 수 없습니다.\n위치 권한을 허용해주세요."
+
+    // Image
+    static let locationImage = "location.slash.fill"
+}
+
 struct LocationGateView: View {
     @EnvironmentObject private var locationProvider: LocationProvider
-    @State private var didSendReady = false
-    let onReady: (Coordinate) -> Void
+
+    private let onReady: (Coordinate) -> Void
+
+    init(onReady: @escaping (Coordinate) -> Void) {
+        self.onReady = onReady
+    }
 
     var body: some View {
         Group {
             switch locationProvider.authorizationStatus {
-            case .notDetermined:
-                Text("위치 권한을 요청 중...")
+            case .authorizedWhenInUse, .authorizedAlways:
+                ProgressView(Constants.loadingMessage)
+                    .task(id: locationProvider.current) {
+                        if let coordinate = locationProvider.current {
+                            onReady(coordinate)
+                        }
+                    }
 
             case .denied, .restricted:
-                // 설정으로 이동 안내 화면
+                permissionDeniedView
+
+            case .notDetermined:
                 EmptyView()
 
-            case .authorizedWhenInUse, .authorizedAlways:
-                if let current = locationProvider.current {
-                    Color.clear
-                        .task {
-                            guard !didSendReady else { return }
-                            didSendReady = true
-                            onReady(current)
-                        }
-                } else {
-                    ProgressView("현재 위치 불러오는 중...")
-                }
-
             @unknown default:
-                Text("알 수 없는 권한 상태")
+                EmptyView()
             }
         }
         .task {
             locationProvider.requestAuthorizationIfNeeded()
         }
+    }
+}
+
+extension LocationGateView {
+    private var permissionDeniedView: some View {
+        VStack(spacing: 16) {
+            Image(systemName: Constants.locationImage)
+                .font(.largeTitle)
+                .imageScale(.large)
+                .foregroundStyle(.secondary)
+
+            VStack(spacing: 6) {
+                Text(Constants.permissionTitle)
+                    .font(.title2)
+                    .fontWeight(.semibold)
+
+                Text(Constants.permissionMessage)
+                    .font(.body)
+                    .foregroundStyle(.secondary)
+                    .multilineTextAlignment(.center)
+            }
+        }
+        .padding()
+        .padding(.horizontal)
     }
 }
