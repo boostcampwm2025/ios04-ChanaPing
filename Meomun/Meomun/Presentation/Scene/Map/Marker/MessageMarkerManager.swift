@@ -80,6 +80,7 @@ extension MessageMarkerManager {
     /// 초기 메시지 로딩 (앱 시작 또는 화면 진입 시 호출)
     ///
     /// 기존 데이터를 모두 초기화하고 전달받은 메시지들로 마커를 새로 생성합니다.
+    /// Place 메시지를 먼저 저장한 후 NoPlace 메시지를 저장하여 좌표 겹침 시 오프셋을 적용합니다.
     ///
     /// - Parameters:
     ///   - onTapPlace: Place 마커 탭 시 콜백 (장소 정보 전달)
@@ -93,13 +94,20 @@ extension MessageMarkerManager {
         // 1. 기존 데이터 모두 제거
         clearAll()
 
-        // 2. 메시지를 오래된 순으로 정렬 후 저장 (suffix로 최신 N개를 가져오기 위함)
+        // 2. 메시지를 오래된 순으로 정렬 (suffix로 최신 N개를 가져오기 위함)
         let sortedMessages = messages.sorted { $0.createdAt < $1.createdAt }
-        for message in sortedMessages {
+
+        // 3. Place 메시지 먼저 저장 (좌표 확정)
+        for message in sortedMessages where message.placeTag != nil {
             insertMessage(message)
         }
 
-        // 3. 저장된 메시지 기반으로 모든 마커 생성
+        // 4. NoPlace 메시지 저장 (Place 좌표와 겹치면 오프셋 적용)
+        for message in sortedMessages where message.placeTag == nil {
+            insertMessage(message)
+        }
+
+        // 5. 저장된 메시지 기반으로 모든 마커 생성
         rebuildAllMarkers(mapView: mapView, onTapPlace: onTapPlace, onTapNoPlace: onTapNoPlace)
     }
 
@@ -137,26 +145,40 @@ extension MessageMarkerManager {
     /// 새로운 메시지를 그룹화하여 저장합니다.
     ///
     /// placeTag 유무에 따라 placeMessagesByCoord 또는 noPlaceMessagesByCoord에 저장합니다.
+    /// NoPlace 메시지가 Place 메시지 좌표와 겹치면 오프셋을 적용합니다.
     /// 메시지는 오래된 순(createdAt 오름차순)으로 저장되며, 새 메시지는 항상 뒤에 추가됩니다.
     /// 표시할 때는 suffix(displayLimit)로 최신 메시지들을 가져옵니다.
     private func insertMessage(_ message: Message) {
-        let coord = message.coordinate
-
         if message.placeTag != nil {
-            // 장소 태그가 있는 메시지 -> placeMessagesByCoord에 저장
+            // 장소 태그가 있는 메시지 -> 원본 좌표로 저장
+            let coord = message.coordinate
             placeMessagesByCoord[coord, default: []].append(message)
         } else {
-            // 장소 태그가 없는 메시지 -> noPlaceMessagesByCoord에 저장
+            // 장소 태그가 없는 메시지 -> Place 좌표와 겹치면 오프셋 적용
+            let coord = displayCoordinate(for: message)
             noPlaceMessagesByCoord[coord, default: []].append(message)
         }
     }
 
-    /// 메시지를 제거합니다.
-    private func removeMessage(_ message: Message) {
-        let coord = message.coordinate
+    /// NoPlace 메시지의 표시용 좌표 계산
+    /// Place 좌표와 겹치면 오프셋 적용, 아니면 원본 좌표 반환
+    private func displayCoordinate(for message: Message) -> Coordinate {
+        let originalCoord = message.coordinate
 
+        // Place 메시지가 해당 좌표에 있으면 오프셋 적용
+        if placeMessagesByCoord[originalCoord] != nil {
+            return originalCoord.offset(for: message.id)
+        }
+
+        return originalCoord
+    }
+
+    /// 메시지를 제거합니다.
+    /// NoPlace 메시지의 경우 원본 좌표와 오프셋 좌표 모두에서 검색합니다.
+    private func removeMessage(_ message: Message) {
         if message.placeTag != nil {
             // Place 메시지 제거
+            let coord = message.coordinate
             placeMessagesByCoord[coord]?.removeAll { $0.id == message.id }
 
             // 빈 배열이면 키 삭제
@@ -164,12 +186,23 @@ extension MessageMarkerManager {
                 placeMessagesByCoord.removeValue(forKey: coord)
             }
         } else {
-            // NoPlace 메시지 제거
-            noPlaceMessagesByCoord[coord]?.removeAll { $0.id == message.id }
+            // NoPlace 메시지 제거 - 원본 좌표와 오프셋 좌표 모두 확인
+            let originalCoord = message.coordinate
+            let offsetCoord = originalCoord.offset(for: message.id)
 
-            // 빈 배열이면 키 삭제
-            if noPlaceMessagesByCoord[coord]?.isEmpty == true {
-                noPlaceMessagesByCoord.removeValue(forKey: coord)
+            // 원본 좌표에서 찾기
+            if noPlaceMessagesByCoord[originalCoord]?.contains(where: { $0.id == message.id }) == true {
+                noPlaceMessagesByCoord[originalCoord]?.removeAll { $0.id == message.id }
+                if noPlaceMessagesByCoord[originalCoord]?.isEmpty == true {
+                    noPlaceMessagesByCoord.removeValue(forKey: originalCoord)
+                }
+            }
+            // 오프셋 좌표에서 찾기
+            else if noPlaceMessagesByCoord[offsetCoord]?.contains(where: { $0.id == message.id }) == true {
+                noPlaceMessagesByCoord[offsetCoord]?.removeAll { $0.id == message.id }
+                if noPlaceMessagesByCoord[offsetCoord]?.isEmpty == true {
+                    noPlaceMessagesByCoord.removeValue(forKey: offsetCoord)
+                }
             }
         }
     }
@@ -293,8 +326,9 @@ extension MessageMarkerManager {
         // 6. 마커 저장
         markers[key] = marker
 
-        // 7. 회전 애니메이션 상태 등록 (rotatingBubble인 경우만)
-        if case .rotatingBubble = markerType {
+        // 7. 회전 애니메이션 상태 등록 (rotatingBubble 또는 stackBubble인 경우)
+        switch markerType {
+        case .rotatingBubble, .stackBubble:
             let messagesProvider: () -> [Message] = { [weak self] in
                 guard let self else { return [] }
                 let source = isPlace ? self.placeMessagesByCoord[coord] : self.noPlaceMessagesByCoord[coord]
@@ -305,6 +339,8 @@ extension MessageMarkerManager {
                 messagesProvider: messagesProvider,
                 lastRotationTime: Date().timeIntervalSince1970
             )
+        case .singleBubble:
+            break
         }
     }
 
@@ -332,19 +368,16 @@ extension MessageMarkerManager {
             // 메시지 1개: 최신 표시 accent line + 단일 버블
             image = bubbleImageRenderer.renderSingleBubble(message: message, showsAccentLine: true)
 
-        case .rotatingBubble(let messages):
-            // 메시지 2개 이상 (Place): 첫 번째 메시지로 초기 이미지
+        case .rotatingBubble(let messages), .stackBubble(let messages):
+            // 메시지 2개 이상: 첫 번째 메시지로 초기 이미지
             // 악센트 라인 없음 (회전 중에는 표시 안 함)
+            // stackBubble도 임시로 rotatingBubble과 동일하게 처리 (추후 별도 UI 구현 예정)
             guard let firstMessage = messages.first else {
                 image = UIImage()
                 break
             }
 
             image = bubbleImageRenderer.renderSingleBubble(message: firstMessage, showsAccentLine: false)
-
-        case .stackBubble(let messages):
-            // 메시지 2개 이상 (NoPlace): 스택 버블 이미지
-            image = bubbleImageRenderer.renderStackBubble(messages: messages)
         }
 
         marker.iconImage = NMFOverlayImage(image: image)

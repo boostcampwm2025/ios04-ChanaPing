@@ -22,7 +22,8 @@ struct MapView: View {
         _store = StateObject(wrappedValue: MapStore(
             getNearbyMessagesUseCase: GetNearbyMessagesUseCaseImpl(
                 messageRepository: MessageRepositoryImpl()
-            )
+            ),
+            messageRealtimeManager: MessageRealtimeManager()
         ))
         self.messageMarkerManager = messageMarkerManager
         self.initialUserLocation = userLocation
