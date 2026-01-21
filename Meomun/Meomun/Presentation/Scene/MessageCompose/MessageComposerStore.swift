@@ -370,16 +370,13 @@ extension MessageComposerStore {
         }
     }
 
-    private func makeCreateMessageRequest() -> CreateMessageRequestDTO? {
-        guard let latitude = state.startLocation?.latitude,
-              let longitude = state.startLocation?.longitude
-        else { return nil }
+    private func makeCreateMessageRequest() -> CreateMessageRequest? {
+        guard let startLocation = state.startLocation else { return nil }
 
-        return CreateMessageRequestDTO(
+        return CreateMessageRequest(
             content: state.message,
-            latitude: latitude,
-            longitude: longitude,
-            place: nil
+            coordinate: startLocation,
+            place: state.selectedPlace
         )
     }
 
