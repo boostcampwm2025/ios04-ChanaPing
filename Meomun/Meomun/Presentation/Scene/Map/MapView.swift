@@ -7,10 +7,6 @@
 
 import SwiftUI
 
-fileprivate enum Constants {
-    static let successMessage = "머문 흔적을 남겼어요."
-}
-
 struct MapView: View {
     @Environment(\.setTabBarHidden) private var setTabBarHidden
     @EnvironmentObject private var locationProvider: LocationProvider
@@ -110,13 +106,9 @@ struct MapView: View {
                             createMessage: CreateMessageUseCaseImpl(
                                 messageRepository: MessageRepositoryImpl()
                             ),
-                            onClose: { isSuccess in
+                            onClose: { _ in
                                 Task {
                                     await store.send(intent: .dismissAddMessage)
-
-                                    if isSuccess {
-                                        await store.send(intent: .setToast(Constants.successMessage))
-                                    }
                                 }
                             }
                         )

@@ -14,6 +14,12 @@ enum EditorPolicy {
 }
 
 final class MessageComposerStore: Store {
+    enum ConfirmStatus: Equatable {
+        case idle
+        case sending
+        case success
+    }
+
     struct State: Equatable {
         var userLocation: Coordinate
         var message: String = ""
@@ -23,12 +29,13 @@ final class MessageComposerStore: Store {
         var alert: AlertModel?
         var toastMessage: String?
 
-        var isConfirmLoading: Bool = false
+//        var isConfirmLoading: Bool = false
+        var confirmStatus: ConfirmStatus = .idle
         var isConfirmEnabled: Bool {
             message
                 .trimmingCharacters(in: .whitespacesAndNewlines)
                 .isEmpty == false
-            && isConfirmLoading == false
+            && confirmStatus != .sending
         }
     }
 
@@ -53,7 +60,7 @@ final class MessageComposerStore: Store {
         case updatePlace(String)
         case clearPlace
 
-        case setConfirmLoading(Bool)
+        case setConfirmStatus(ConfirmStatus)
         case presentAlert(AlertModel?)
         case presentToast(String?)
         case close(isSuccess: Bool)
@@ -138,8 +145,8 @@ final class MessageComposerStore: Store {
         case .clearPlace:
             newState.placeText = ""
 
-        case .setConfirmLoading(let isLoading):
-            newState.isConfirmLoading = isLoading
+        case .setConfirmStatus(let status):
+            newState.confirmStatus = status
 
         case .presentAlert(let alertState):
             newState.alert = alertState
@@ -157,14 +164,15 @@ final class MessageComposerStore: Store {
 extension MessageComposerStore {
     private func createMessage(continuation: AsyncStream<Action>.Continuation) {
         Task {
-            continuation.yield(.setConfirmLoading(true))
+            continuation.yield(.setConfirmStatus(.sending))
             defer {
-                continuation.yield(.setConfirmLoading(false))
                 continuation.finish()
             }
 
             do {
                 try await createMessageUseCase.execute(makeCreateMessageRequest())
+                continuation.yield(.setConfirmStatus(.success))
+                try await Task.sleep(nanoseconds: 1_000_000_000)
                 continuation.yield(.close(isSuccess: true))
 
             } catch let error as CreateMessageError {

@@ -7,10 +7,17 @@
 
 import SwiftUI
 
+enum Mode {
+    case loading
+    case success
+}
+
 struct LoadingOverlayView: View {
+    let mode: Mode
     let message: String?
 
-    init(message: String? = nil) {
+    init(mode: Mode = .loading, message: String? = nil) {
+        self.mode = mode
         self.message = message
     }
 
@@ -20,9 +27,18 @@ struct LoadingOverlayView: View {
                 .ignoresSafeArea()
 
             VStack(spacing: 16) {
-                ProgressView()
-                    .controlSize(.large)
-                    .tint(.meomunPointColor)
+                Group {
+                    if mode == .loading {
+                        ProgressView()
+                            .controlSize(.large)
+                            .tint(.meomunPointColor)
+                    } else {
+                        Image(systemName: "checkmark.circle.fill")
+                            .font(.system(size: 40))
+                            .foregroundStyle(Color.meomunPointColor)
+                            .transition(.scale.combined(with: .opacity))
+                    }
+                }
 
                 if let message {
                     Text(message)
@@ -38,6 +54,7 @@ struct LoadingOverlayView: View {
                     .shadow(color: .black.opacity(0.05), radius: 0, x: 1, y: 1)
             )
         }
+        .animation(.spring(duration: 0.3), value: mode)
     }
 }
 

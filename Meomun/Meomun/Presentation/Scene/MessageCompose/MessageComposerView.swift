@@ -13,6 +13,7 @@ fileprivate enum Constants {
     static let textEditorPlaceholder = "지금 느낌 어때요?"
     static let placeContainerPlaceholder = "지금 어디에 있나요?"
     static let loadingMessage = "머문 흔적을 남기고 있어요."
+    static let successMessage = "머문 흔적을 남겼어요."
 }
 
 struct MessageComposerView: View {
@@ -32,7 +33,7 @@ struct MessageComposerView: View {
     var body: some View {
         ZStack {
             content
-                .disabled(store.state.isConfirmLoading || store.state.isPlaceSearchPresented)
+                .disabled(store.state.confirmStatus == .sending || store.state.isPlaceSearchPresented)
 
             if store.state.isPlaceSearchPresented {
                 PlaceSearchOverlayView(
@@ -55,8 +56,11 @@ struct MessageComposerView: View {
                 .zIndex(999)
             }
 
-            if store.state.isConfirmLoading {
-                LoadingOverlayView(message: Constants.loadingMessage)
+            if store.state.confirmStatus != .idle {
+                LoadingOverlayView(
+                    mode: store.state.confirmStatus == .success ? .success : .loading,
+                    message: store.state.confirmStatus == .sending ? Constants.loadingMessage :
+                        Constants.successMessage)
                     .transition(.opacity.animation(.easeInOut(duration: 0.2)))
                     .zIndex(1000)
             }
@@ -126,7 +130,6 @@ extension MessageComposerView {
         ConfirmButton(action: { send(.tapConfirm) })
         .disabled(!store.state.isConfirmEnabled)
         .opacity(store.state.isConfirmEnabled ? 1.0 : 0.4)
-        .animation(.default, value: store.state.isConfirmLoading)
     }
 
     private var backgroundView: some View {
@@ -216,8 +219,8 @@ extension MessageComposerView {
                 ]
             )))
         }
-        .disabled(store.state.isConfirmLoading)
-        .opacity(store.state.isConfirmLoading ? 0.4 : 1.0)
+        .disabled(store.state.confirmStatus == .sending)
+        .opacity(store.state.confirmStatus == .sending ? 0.4 : 1.0)
     }
 }
 
