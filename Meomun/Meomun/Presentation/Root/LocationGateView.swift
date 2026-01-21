@@ -42,7 +42,7 @@ struct LocationGateView: View {
                     }
 
             case .denied, .restricted:
-                permissionDeniedView
+                permissionRequestView
 
             case .notDetermined:
                 EmptyView()
@@ -60,7 +60,7 @@ struct LocationGateView: View {
 }
 
 extension LocationGateView {
-    private var permissionDeniedView: some View {
+    private var permissionRequestView: some View {
         VStack(spacing: 16) {
             Image(systemName: Constants.locationImage)
                 .font(.largeTitle)
