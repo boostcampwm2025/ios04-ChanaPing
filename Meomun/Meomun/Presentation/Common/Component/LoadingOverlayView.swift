@@ -7,17 +7,12 @@
 
 import SwiftUI
 
-enum Mode {
-    case loading
-    case success
-}
-
 struct LoadingOverlayView: View {
-    let mode: Mode
+    let status: LoadingStatus
     let message: String?
 
-    init(mode: Mode = .loading, message: String? = nil) {
-        self.mode = mode
+    init(status: LoadingStatus = .loading, message: String? = nil) {
+        self.status = status
         self.message = message
     }
 
@@ -28,7 +23,7 @@ struct LoadingOverlayView: View {
 
             VStack(spacing: 16) {
                 Group {
-                    if mode == .loading {
+                    if status == .loading {
                         ProgressView()
                             .controlSize(.large)
                             .tint(.meomunPointColor)
@@ -54,7 +49,7 @@ struct LoadingOverlayView: View {
                     .shadow(color: .black.opacity(0.05), radius: 0, x: 1, y: 1)
             )
         }
-        .animation(.spring(duration: 0.3), value: mode)
+        .animation(.spring(duration: 0.3), value: status)
     }
 }
 

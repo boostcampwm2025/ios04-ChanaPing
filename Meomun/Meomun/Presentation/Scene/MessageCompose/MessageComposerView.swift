@@ -36,7 +36,7 @@ struct MessageComposerView: View {
     var body: some View {
         ZStack {
             content
-                .disabled(store.state.confirmStatus == .sending || store.state.isPlaceSearchPresented)
+                .disabled(store.state.confirmStatus == .loading || store.state.isPlaceSearchPresented)
 
             if store.state.isPlaceSearchPresented {
                 PlaceSearchOverlayView(
@@ -59,11 +59,10 @@ struct MessageComposerView: View {
                 .zIndex(999)
             }
 
-            // TODO: alert 수정할 때 같이 수정해야됨. fail 경우도 추가하기
-            if store.state.confirmStatus == .sending || store.state.confirmStatus == .success {
+            if store.state.confirmStatus != .idle {
                 LoadingOverlayView(
-                    mode: store.state.confirmStatus == .success ? .success : .loading,
-                    message: store.state.confirmStatus == .sending ? Constants.loadingMessage :
+                    status: store.state.confirmStatus == .success ? .success : .loading,
+                    message: store.state.confirmStatus == .loading ? Constants.loadingMessage :
                         Constants.successMessage)
                     .transition(.opacity.animation(.easeInOut(duration: 0.2)))
                     .zIndex(1000)
@@ -227,6 +226,7 @@ extension MessageComposerView {
                     )
                 ]
             )))
+            return
         }
         .disabled(store.state.confirmStatus == .sending)
         .opacity(store.state.confirmStatus == .sending ? 0.4 : 1.0)
