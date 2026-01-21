@@ -13,6 +13,7 @@ fileprivate enum Constants {
     static let loadingMessage = "현재 위치 불러오는 중..."
     static let permissionTitle = "위치 권한 필요"
     static let permissionMessage = "머문에서 위치를 사용할 수 없습니다.\n위치 권한을 허용해주세요."
+    static let settingsButtonTitle = "위치 권한 설정하기"
 
     // Image
     static let locationImage = "location.slash.fill"
@@ -20,6 +21,7 @@ fileprivate enum Constants {
 
 struct LocationGateView: View {
     @EnvironmentObject private var locationProvider: LocationProvider
+    @Environment(\.openURL) private var openURL
 
     private let onReady: (Coordinate) -> Void
 
@@ -72,6 +74,17 @@ extension LocationGateView {
                     .foregroundStyle(.secondary)
                     .multilineTextAlignment(.center)
             }
+
+            Button {
+                if let url = URL(string: UIApplication.openSettingsURLString) {
+                    openURL(url)
+                }
+            } label: {
+                Text(Constants.settingsButtonTitle)
+                    .frame(maxWidth: .infinity)
+            }
+            .buttonStyle(.borderedProminent)
+            .controlSize(.large)
         }
         .padding()
         .padding(.horizontal)
