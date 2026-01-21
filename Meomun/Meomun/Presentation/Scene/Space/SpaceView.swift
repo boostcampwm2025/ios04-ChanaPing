@@ -79,19 +79,17 @@ struct SpaceView: View {
                     }
                 )
             ) {
-                if let coordinate = store.state.userLocation {
-                    MessageComposerView(
-                        store: MessageComposerStore(
-                            userLocation: coordinate,
-                            createMessage: CreateMessageUseCaseImpl(
-                                messageRepository: MessageRepositoryImpl()
-                            ),
-                            onClose: {
-                                Task { await store.send(intent: .dismissAddMessage) }
-                            }
-                        )
+                MessageComposerView(
+                    store: MessageComposerStore(
+                        locationProvider: locationProvider,
+                        createMessage: CreateMessageUseCaseImpl(
+                            messageRepository: MessageRepositoryImpl()
+                        ),
+                        onClose: {
+                            Task { await store.send(intent: .dismissAddMessage) }
+                        }
                     )
-                }
+                )
             }
         }
         .task {
@@ -502,6 +500,16 @@ private struct BubblePlacer {
                 locationProvider: .init(),
                 fetchPlaceMessagesUseCase: FetchPlaceMessagesUseCaseImpl(
                     messageRepository: MessageRepositoryImpl()
+                ),
+                place: .init(
+                    id: .init(
+                        value: .init()
+                    ),
+                    name: "광화문",
+                    coordinate: .init(
+                        latitude: 0,
+                        longitude: 0
+                    )
                 )
             ),
             domeEnvironment: .init(

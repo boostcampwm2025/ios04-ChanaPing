@@ -43,7 +43,7 @@ final class PlaceSearchStore: Store {
     struct State {
         var query: String = ""
         var phase: Phase = .idle
-        var userLocation: Coordinate
+        var userLocation: Coordinate?
     }
 
     @Published var state: State
@@ -59,7 +59,7 @@ final class PlaceSearchStore: Store {
 
     init(
         searchPlaces: SearchNearbyPlaceUseCase,
-        userLocation: Coordinate,
+        userLocation: Coordinate?,
         radiusMeters: Double = 60,
         onSelect: @escaping (Place) -> Void,
         onDismiss: @escaping () -> Void
@@ -134,7 +134,7 @@ final class PlaceSearchStore: Store {
         let useCase = self.searchNearbyPlaces
 
         searchTask = Task { [weak self] in
-            guard let self else { return [] }
+            guard let self, let userLocation else { return [] }
 
             if !immediate {
                 // 디바운스 300ms

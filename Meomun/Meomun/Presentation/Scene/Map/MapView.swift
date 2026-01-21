@@ -11,7 +11,6 @@ struct MapView: View {
     @Environment(\.setTabBarHidden) private var setTabBarHidden
     @EnvironmentObject private var locationProvider: LocationProvider
     @StateObject private var store: MapStore
-    @State private var currentUserLocation: Coordinate?     // TODO: MessageComposerStore에 LocationProvider 주입 후 제거
 
     private let messageMarkerManager: MessageMarkerManager
     private let initialUserLocation: Coordinate
@@ -70,17 +69,7 @@ struct MapView: View {
                         Spacer()
 
                         WriteButton {
-                            Task {
-                                do {
-                                    let location = try await locationProvider.requestCurrentOnce()
-                                    currentUserLocation = location
-                                    await store.send(intent: .tapWriteButton)
-                                } catch {
-                                    // 위치 가져오기 실패 시 에러 처리
-                                    AppLog.error("Failed to get current location", category: .location, error: error)
-                                    // TODO: 사용자에게 에러 알림 표시
-                                }
-                            }
+                            Task { await store.send(intent: .tapWriteButton) }
                         }
                     }
                 }
@@ -99,20 +88,18 @@ struct MapView: View {
                     }
                 )
             ) {
-                if let userLocation = currentUserLocation {
-                    MessageComposerView(
-                        store: MessageComposerStore(
-                            userLocation: userLocation,
-                            createMessage: CreateMessageUseCaseImpl(
-                                messageRepository: MessageRepositoryImpl()
-                            ),
-                            onClose: {
-                                Task { await store.send(intent: .dismissAddMessage)}
-                            }
-                        )
+                MessageComposerView(
+                    store: MessageComposerStore(
+                        locationProvider: locationProvider,
+                        createMessage: CreateMessageUseCaseImpl(
+                            messageRepository: MessageRepositoryImpl()
+                        ),
+                        onClose: {
+                            Task { await store.send(intent: .dismissAddMessage) }
+                        }
                     )
-                    .onAppear { setTabBarHidden(true) }
-                }
+                )
+                .onAppear { setTabBarHidden(true) }
             }
             .navigationDestination(
                 isPresented: Binding(
@@ -132,7 +119,8 @@ struct MapView: View {
                             locationProvider: locationProvider,
                             fetchPlaceMessagesUseCase: FetchPlaceMessagesUseCaseImpl(
                                 messageRepository: MessageRepositoryImpl()
-                            )
+                            ),
+                            place: place
                         ),
                         domeEnvironment: .init(
                             weather: .sunny,
