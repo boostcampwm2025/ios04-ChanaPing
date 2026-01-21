@@ -60,7 +60,7 @@ final class PlaceSearchStore: Store {
     init(
         searchPlaces: SearchNearbyPlaceUseCase,
         userLocation: Coordinate?,
-        radiusMeters: Double = 60,
+        radiusMeters: Double = 600,
         onSelect: @escaping (Place) -> Void,
         onDismiss: @escaping () -> Void
     ) {
