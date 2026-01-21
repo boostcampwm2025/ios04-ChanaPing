@@ -9,15 +9,16 @@ import SwiftUI
 
 private enum Layout {
     static let iconSize: CGFloat = 40
-    static let textMaxWidth: CGFloat = 150
+    static let textMaxWidth: CGFloat = 160
     static let textMaxHeight: CGFloat = 38
 
     static let cardSideNoMessage: CGFloat = 100
-    static let cardWidthWithMessage: CGFloat = 200
+    static let cardWidthWithMessage: CGFloat = 210
     static let cardHeightWithMessage: CGFloat = 150
 
     static let iconToTextSpacing: CGFloat = 15
-    static let horizontalPadding: CGFloat = 20
+    static let topPadding: CGFloat = 20
+    static let bottomPadding: CGFloat = 10
     static let verticalPadding: CGFloat = 10
 }
 
@@ -91,7 +92,7 @@ private extension LoadingOverlayView {
         VStack(spacing: Layout.iconToTextSpacing) {
             statusIcon
                 .frame(width: Layout.iconSize, height: Layout.iconSize)
-                .padding(.top, Layout.horizontalPadding)
+                .padding(.top, Layout.topPadding)
 
             Text(message ?? "")
                 .font(.subheadline.bold())
@@ -100,7 +101,7 @@ private extension LoadingOverlayView {
                 .lineLimit(2)
                 .fixedSize(horizontal: false, vertical: false)
                 .frame(maxWidth: Layout.textMaxWidth, maxHeight: Layout.textMaxHeight)
-                .padding(.bottom, Layout.horizontalPadding)
+                .padding(.bottom, Layout.bottomPadding)
         }
     }
 
@@ -125,6 +126,7 @@ private extension LoadingOverlayView {
 
     VStack(alignment: .center) {
         LoadingOverlayView()
+        LoadingOverlayView(status: .loading, message: loadingMessage)
         LoadingOverlayView(status: .success, message: successMessage )
         LoadingOverlayView(status: .fail, message: failMessage)
     }
