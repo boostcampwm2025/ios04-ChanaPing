@@ -22,6 +22,7 @@ fileprivate enum Constants {
 struct LocationGateView: View {
     @EnvironmentObject private var locationProvider: LocationProvider
     @Environment(\.openURL) private var openURL
+    @Environment(\.scenePhase) private var scenePhase
 
     private let onReady: (Coordinate) -> Void
 
@@ -50,8 +51,10 @@ struct LocationGateView: View {
                 EmptyView()
             }
         }
-        .task {
-            locationProvider.requestAuthorizationIfNeeded()
+        .onChange(of: scenePhase) { _, newPhase in      // "다음번에 묻기 또는 내가 공유할 때" 선택 후 앱 진입 시 얼럿을 다시 띄우기 위함.
+            if newPhase == .active {
+                locationProvider.requestAuthorizationIfNeeded()
+            }
         }
     }
 }
