@@ -49,4 +49,21 @@ struct Coordinate: Sendable, Equatable, Hashable {
         hasher.combine(normalizedLatitude)
         hasher.combine(normalizedLongitude)
     }
+
+    /// 메시지 ID 기반으로 결정적인 오프셋이 적용된 좌표 반환
+    /// - Parameter messageId: 오프셋 방향을 결정할 메시지 ID
+    /// - Returns: 소숫점 5자리가 변경된 새 좌표 (약 1.1m 이동)
+    func offset(for messageId: MessageID) -> Coordinate {
+        // 메시지 ID 해시값으로 각도 결정 (0~359도)
+        let angle = Double(abs(messageId.value.hashValue % 360))
+        let radians = angle * .pi / 180
+
+        // 소숫점 5자리 오프셋 (약 1.1m)
+        let offsetUnit: Double = 0.00001
+
+        return Coordinate(
+            latitude: latitude + offsetUnit * cos(radians),
+            longitude: longitude + offsetUnit * sin(radians)
+        )
+    }
 }
