@@ -9,7 +9,6 @@ import Foundation
 
 struct Message: Identifiable, Sendable {
     let id: MessageID
-    let authorID: UserID
     let createdAt: Date
     let content: String
     let coordinate: Coordinate

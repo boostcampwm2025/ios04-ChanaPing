@@ -42,7 +42,6 @@ extension PlaceMessageResponseDTO {
 
         return Message(
             id: MessageID(value: id),
-            authorID: UserID(value: authorID),
             createdAt: createdAt,
             content: content,
             coordinate: coordinate,
