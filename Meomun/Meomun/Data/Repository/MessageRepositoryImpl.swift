@@ -30,12 +30,22 @@ final class MessageRepositoryImpl: MessageRepository {
             )
         }
 
-        let dto = CreateMessageRequestDTO(
-            content: request.content,
-            latitude: request.coordinate.latitude,
-            longitude: request.coordinate.longitude,
-            place: placeDTO
-        )
+        let dto: CreateMessageRequestDTO
+        if let placeDTO {
+            dto = CreateMessageRequestDTO(
+                content: request.content,
+                latitude: placeDTO.latitude,
+                longitude: placeDTO.longitude,
+                place: placeDTO
+            )
+        } else {
+            dto = CreateMessageRequestDTO(
+                content: request.content,
+                latitude: request.coordinate.latitude,
+                longitude: request.coordinate.longitude,
+                place: placeDTO
+            )
+        }
 
         do {
             _ = try await supabaseClient.functions.invoke(
