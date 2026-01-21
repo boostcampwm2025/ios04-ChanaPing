@@ -22,9 +22,11 @@ struct MessageComposerView: View {
     @Environment(\.dismiss) private var dismiss
 
     @StateObject private var store: MessageComposerStore
+    @State private var presentedAlert: AlertModel?
 
     init(store: MessageComposerStore) {
         _store = StateObject(wrappedValue: store)
+        _presentedAlert = State(initialValue: store.state.alert)
     }
 
     private func send(_ intent: MessageComposerStore.Intent) {
@@ -69,6 +71,14 @@ struct MessageComposerView: View {
         }
         .onAppear { send(.onAppear) }
         .onDisappear { send(.onDisappear) }
+        .onChange(of: store.state.alert) { newValue in
+            guard presentedAlert != newValue else { return }
+            presentedAlert = newValue
+        }
+        .onChange(of: presentedAlert) { newValue in
+            guard store.state.alert != newValue else { return }
+            send(.setAlert(newValue))
+        }
     }
 }
 
@@ -89,7 +99,7 @@ extension MessageComposerView {
         .navigationBarBackButtonHidden()
         .toolbar { toolbarContent }
         .customAlert(
-            alertBinding,
+            $presentedAlert,
             title: { $0.title },
             message: { $0.message },
             buttons: { $0.buttons }
@@ -151,15 +161,6 @@ extension MessageComposerView {
             get: { store.state.message },
             set: { message in
                 send(.setMessage(message))
-            }
-        )
-    }
-
-    private var alertBinding: Binding<AlertModel?> {
-        Binding(
-            get: { store.state.alert },
-            set: { alert in
-                send(.setAlert(alert))
             }
         )
     }

@@ -17,9 +17,7 @@ struct CustomAlertModifier<AlertModel>: ViewModifier {
     func body(content: Content) -> some View {
         let isPresented = Binding<Bool>(
             get: { alert != nil },
-            set: { newValue in
-                if !newValue { alert = nil }
-            }
+            set: { if !$0 { alert = nil } }
         )
 
         content.alert(
@@ -30,7 +28,7 @@ struct CustomAlertModifier<AlertModel>: ViewModifier {
             let configs = Array(buttons(alert))
 
             if configs.isEmpty {
-                Button("확인", role: .cancel) {}
+                Button("확인") {}
             } else {
                 ForEach(Array(configs.enumerated()), id: \.offset) { _, config in
                     makeButton(config)
@@ -44,8 +42,6 @@ struct CustomAlertModifier<AlertModel>: ViewModifier {
     @ViewBuilder
     private func makeButton(_ config: AlertButtonConfig) -> some View {
         let action: () -> Void = {
-            alert = nil
-
             Task { @MainActor in
                 config.action?()
             }
