@@ -12,9 +12,15 @@ fileprivate enum Constants {
     static let textEditorTitle = "이 말은 잠시 머물 거에요."
     static let textEditorPlaceholder = "지금 느낌 어때요?"
     static let placeContainerPlaceholder = "지금 어디에 있나요?"
+
     static let loadingMessage = "머문 흔적을 남기고 있어요."
     static let successMessage = "머문 흔적을 남겼어요."
     static let failMessage = "머문 흔적 남기기에 실패했어요."
+
+    static let exitAlertTitle = "지금 작성 중인 말이 있어요."
+    static let exitAlertMessage = "지금 나가면 작성 중인 내용이 사라져요. 그대로 나갈까요?"
+    static let exitAlertPrimaryButtonTitle = "그대로 나가기"
+    static let exitAlertSecondaryButtonTitle = "머무르기"
 }
 
 struct MessageComposerView: View {
@@ -39,50 +45,33 @@ struct MessageComposerView: View {
                 .disabled(store.state.confirmStatus == .loading || store.state.isPlaceSearchPresented)
 
             if store.state.isPlaceSearchPresented {
-                PlaceSearchOverlayView(
-                    store: PlaceSearchStore(
-                        searchPlaces: SearchNearbyPlaceUseCaseImpl(
-                            placeRepository: NaverPlaceSearchRepositoryImpl(
-                                network: NetworkClientImpl()
-                            )
-                        ),
-                        userLocation: store.state.startLocation,
-                        onSelect: { selected in
-                            send(.selectPlace(selected))
-                        },
-                        onDismiss: {
-                            send(.dismissPlaceSearch)
-                        }
-                    )
-                )
-                .transition(.opacity.combined(with: .scale(scale: 0.98)))
-                .zIndex(999)
+                placeSearchOverlay
+                    .transition(.opacity.combined(with: .scale(scale: 0.98)))
+                    .zIndex(999)
             }
 
             if store.state.confirmStatus != .idle {
-                LoadingOverlayView(
-                    status: store.state.confirmStatus == .success ? .success : .loading,
-                    message: store.state.confirmStatus == .loading ? Constants.loadingMessage :
-                        Constants.successMessage)
+                loadingOverlay
                     .transition(.opacity.animation(.easeInOut(duration: 0.2)))
                     .zIndex(1000)
             }
         }
         .onAppear { send(.onAppear) }
         .onDisappear { send(.onDisappear) }
-        .onChange(of: store.state.alert) { newValue in
+        .onChange(of: store.state.alert) { _, newValue in
             guard presentedAlert != newValue else { return }
             presentedAlert = newValue
         }
-        .onChange(of: presentedAlert) { newValue in
+        .onChange(of: presentedAlert) { _, newValue in
             guard store.state.alert != newValue else { return }
             send(.setAlert(newValue))
         }
     }
 }
 
-extension MessageComposerView {
-    private var content: some View {
+// MARK: Subviews
+private extension MessageComposerView {
+    var content: some View {
         VStack(alignment: .center, spacing: 12) {
             Spacer()
             editorSection
@@ -107,7 +96,7 @@ extension MessageComposerView {
     }
 
     @ViewBuilder
-    private var editorSection: some View {
+    var editorSection: some View {
         Text(Constants.textEditorTitle)
             .font(.headline.bold())
             .foregroundStyle(Color.meomunSecondaryColor)
@@ -121,19 +110,13 @@ extension MessageComposerView {
         )
     }
 
-    private var placeSection: some View {
+    var placeSection: some View {
         HStack(spacing: 8) {
             PlaceSearchContainerView {
-                Button {
-                    isFocused = false
-                    send(.tapPlaceField)
-                } label: {
-                    let isPlaceSelected = store.state.selectedPlace != nil
-                    let placeName = store.state.selectedPlace?.name ?? ""
-
-                    Text(isPlaceSelected ? placeName : Constants.placeContainerPlaceholder)
+                Button(action: onTapPlaceField) {
+                    Text(placeFieldText)
                     .font(.system(size: 16, weight: .medium))
-                    .foregroundStyle(isPlaceSelected ? Color.tabActive : Color(.placeholderText))
+                    .foregroundStyle(placeFieldColor)
                     .frame(maxWidth: .infinity, alignment: .leading)
                 }
             }
@@ -142,39 +125,90 @@ extension MessageComposerView {
         }
     }
 
-    private var confirmSection: some View {
+    var confirmSection: some View {
         ConfirmButton(action: { send(.tapConfirm) })
         .disabled(!store.state.isConfirmEnabled)
         .opacity(store.state.isConfirmEnabled ? 1.0 : 0.4)
     }
 
-    private var backgroundView: some View {
+    var backgroundView: some View {
         Image(.background)
             .resizable()
             .scaledToFill()
             .ignoresSafeArea()
     }
 
-    private var messageBinding: Binding<String> {
+    var placeSearchOverlay: some View {
+        PlaceSearchOverlayView(
+            store: PlaceSearchStore(
+                searchPlaces: SearchNearbyPlaceUseCaseImpl(
+                    placeRepository: NaverPlaceSearchRepositoryImpl(
+                        network: NetworkClientImpl()
+                    )
+                ),
+                userLocation: store.state.startLocation,
+                onSelect: { send(.selectPlace($0)) },
+                onDismiss: { send(.dismissPlaceSearch) }
+            )
+        )
+    }
+
+    var loadingOverlay: some View {
+        LoadingOverlayView(
+            status: store.state.confirmStatus,
+            message: loadingOverlayMessage)
+    }
+}
+
+// MARK: Stored property
+private extension MessageComposerView {
+    var placeFieldText: String {
+        store.state.selectedPlace?.name ?? Constants.placeContainerPlaceholder
+    }
+
+    var placeFieldColor: Color {
+        store.state.selectedPlace == nil ? Color(.placeholderText) : Color.tabActive
+    }
+
+    var loadingOverlayMessage: String {
+        switch store.state.confirmStatus {
+        case .loading: return Constants.loadingMessage
+        case .success: return Constants.successMessage
+        case .fail: return Constants.failMessage
+        case .idle: return ""
+        }
+    }
+
+    var isInteractionDisabled: Bool {
+        store.state.confirmStatus == .loading || store.state.isPlaceSearchPresented
+    }
+
+    var isDraftEmpty: Bool {
+        store.state.message.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+    }
+}
+
+// MARK: Bindings
+private extension MessageComposerView {
+    var messageBinding: Binding<String> {
         Binding(
             get: { store.state.message },
-            set: { message in
-                send(.setMessage(message))
-            }
+            set: { send(.setMessage($0)) }
         )
     }
 
-    private var toastBinding: Binding<String?> {
+    var toastBinding: Binding<String?> {
         Binding(
             get: { store.state.toastMessage },
-            set: { message in
-                send(.setToast(message))
-            }
+            set: { send(.setToast($0)) }
         )
     }
+}
 
+// MARK: Toolbar / Actions
+private extension MessageComposerView {
     @ToolbarContentBuilder
-    private var toolbarContent: some ToolbarContent {
+    var toolbarContent: some ToolbarContent {
         if #available(iOS 26.0, *) {
             ToolbarItem(placement: .topBarLeading) {
                 backToolbarButton
@@ -193,43 +227,50 @@ extension MessageComposerView {
         }
     }
 
-    private var backToolbarButton: some View {
-        BackButton {
-            if store.state.isPlaceSearchPresented {
-                send(.dismissPlaceSearch)
-                return
-            }
+    var backToolbarButton: some View {
+        BackButton(action: onTapBackButton)
+        .disabled(store.state.confirmStatus == .loading)
+        .opacity(store.state.confirmStatus == .loading ? 0.4 : 1.0)
+    }
 
-            isFocused = false
-            let trimmed = store.state.message.trimmingCharacters(in: .whitespacesAndNewlines)
-            guard trimmed.isEmpty == false else {
-                send(.onDisappear)
-                dismiss()
-                return
-            }
+    func onTapPlaceField() {
+        isFocused = false
+        send(.tapPlaceField)
+    }
 
-            send(.setAlert(AlertModel(
-                title: "작성 중인 말이 있어요",
-                message: "지금 나가면 작성 중인 내용이 사라져요. 그대로 나갈까요?",
-                buttons: [
-                    AlertButtonConfig(
-                        title: "그대로 나가기",
-                        role: .destructive,
-                        action: {
-                            send(.resetDraft)
-                        }
-                    ),
-                    AlertButtonConfig(
-                        title: "머무르기",
-                        role: .cancel,
-                        action: nil
-                    )
-                ]
-            )))
+    func onTapBackButton() {
+        if store.state.isPlaceSearchPresented {
+            send(.dismissPlaceSearch)
             return
         }
-        .disabled(store.state.confirmStatus == .sending)
-        .opacity(store.state.confirmStatus == .sending ? 0.4 : 1.0)
+
+        isFocused = false
+
+        guard !isDraftEmpty else {
+            dismiss()
+            return
+        }
+
+        send(.setAlert(exitAlert))
+    }
+
+    var exitAlert: AlertModel {
+        AlertModel(
+            title: Constants.exitAlertTitle,
+            message: Constants.exitAlertMessage,
+            buttons: [
+                AlertButtonConfig(
+                    title: Constants.exitAlertPrimaryButtonTitle,
+                    role: .destructive,
+                    action: { send(.resetDraft) }
+                ),
+                AlertButtonConfig(
+                    title: Constants.exitAlertSecondaryButtonTitle,
+                    role: .cancel,
+                    action: nil
+                )
+            ]
+        )
     }
 }
 
