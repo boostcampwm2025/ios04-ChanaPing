@@ -12,6 +12,7 @@ fileprivate enum Constants {
     static let textEditorTitle = "이 말은 잠시 머물 거에요."
     static let textEditorPlaceholder = "지금 느낌 어때요?"
     static let placeContainerPlaceholder = "지금 어디에 있나요?"
+    static let placeContainerPlaceholderWhenBlocked = "선택한 장소와 너무 멀어요."
     static let loadingMessage = "머문 흔적을 남기고 있어요."
     static let successMessage = "머문 흔적을 남겼어요."
 }
@@ -43,9 +44,9 @@ struct MessageComposerView: View {
                                 network: NetworkClientImpl()
                             )
                         ),
-                        userLocation: store.state.userLocation,
+                        userLocation: store.state.startLocation,
                         onSelect: { selected in
-                            send(.selectPlace(selected.name))
+                            send(.selectPlace(selected))
                         },
                         onDismiss: {
                             send(.dismissPlaceSearch)
@@ -65,6 +66,8 @@ struct MessageComposerView: View {
                     .zIndex(1000)
             }
         }
+        .onAppear { send(.onAppear) }
+        .onDisappear { send(.onDisappear) }
     }
 }
 
@@ -75,6 +78,7 @@ extension MessageComposerView {
             editorSection
             Spacer(minLength: 0)
             placeSection
+            placeHintSection
             Spacer(minLength: 0)
             confirmSection
             Spacer(minLength: 0)
@@ -82,6 +86,9 @@ extension MessageComposerView {
         .padding(24)
         .background(backgroundView)
         .onTapGesture { isFocused = false }
+        .onChange(of: store.locationProvider.current) { _, current in
+            send(.updateCurrentLocation(current))
+        }
         .navigationBarBackButtonHidden()
         .toolbar { toolbarContent }
         .customAlert(
@@ -115,15 +122,35 @@ extension MessageComposerView {
                     isFocused = false
                     send(.tapPlaceField)
                 } label: {
-                    Text(store.state.placeText.isEmpty ? Constants.placeContainerPlaceholder : store.state.placeText)
-                        .font(.system(size: 16, weight: .medium))
-                        .foregroundStyle(store.state.placeText.isEmpty ? Color(.placeholderText) : Color.tabActive)
-                        .frame(maxWidth: .infinity, alignment: .leading)
+                    let isPlaceSelected = store.state.selectedPlace != nil
+                    let placeName = store.state.selectedPlace?.name ?? ""
+
+                    Text(store.state.isPlaceTagLocked
+                         ? Constants.placeContainerPlaceholderWhenBlocked
+                         : isPlaceSelected ? placeName : Constants.placeContainerPlaceholder
+                    )
+                    .font(.system(size: 16, weight: .medium))
+                    .foregroundStyle(
+                        store.state.isPlaceTagLocked
+                        ? Color(.placeholderText)
+                        : isPlaceSelected ? Color.tabActive : Color(.placeholderText)
+                    )
+                    .frame(maxWidth: .infinity, alignment: .leading)
                 }
             }
 
             CancelButton { send(.clearPlace) }
         }
+        .disabled(store.state.isPlaceTagLocked)
+    }
+
+    private var placeHintSection: some View {
+        Text(store.state.placeTagLockedHintMessage)
+            .font(.subheadline)
+            .foregroundStyle(Color(.placeholderText))
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .opacity(store.state.isPlaceTagLocked ? 1.0 : 0.0)
+            .accessibilityHidden(store.state.isPlaceTagLocked == false)
     }
 
     private var confirmSection: some View {
@@ -196,6 +223,7 @@ extension MessageComposerView {
             isFocused = false
             let trimmed = store.state.message.trimmingCharacters(in: .whitespacesAndNewlines)
             guard trimmed.isEmpty == false else {
+                send(.onDisappear)
                 dismiss()
                 return
             }
@@ -225,15 +253,10 @@ extension MessageComposerView {
 }
 
 #Preview {
-    @Previewable @State var message: String = ""
-
     NavigationStack {
         MessageComposerView(
             store: MessageComposerStore(
-                userLocation: .init(
-                    latitude: 37.5665,
-                    longitude: 126.9780
-                ),
+                locationProvider: LocationProvider(),
                 createMessage: CreateMessageUseCaseImpl(
                     messageRepository: MessageRepositoryImpl()
                 ),
@@ -242,5 +265,6 @@ extension MessageComposerView {
                 }
             )
         )
+        .environmentObject(LocationProvider())
     }
 }

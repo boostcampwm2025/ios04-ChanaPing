@@ -19,7 +19,7 @@ struct FloatingNavigationBar: View {
             Spacer()
 
             Text(title)
-                .font(.system(size: 20, weight: .semibold))
+                .font(.system(size: 18, weight: .semibold))
                 .foregroundStyle(Color.black.opacity(0.9))
 
             Spacer()
@@ -33,7 +33,7 @@ struct FloatingNavigationBar: View {
             .buttonStyle(.plain)
         }
         .padding(.horizontal, 20)
-        .padding(.vertical, 14)
+        .padding(.vertical, 10)
         .background(
             CornerRadiusShape(
                 topLeft: 10,
@@ -41,7 +41,7 @@ struct FloatingNavigationBar: View {
                 bottomLeft: 24,
                 bottomRight: 24
             )
-            .fill(Color.white.opacity(0.96))
+            .fill(Color.white.opacity(0.76))
             .shadow(color: .black.opacity(0.12),
                     radius: 18,
                     x: 0,

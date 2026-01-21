@@ -11,7 +11,6 @@ struct MapView: View {
     @Environment(\.setTabBarHidden) private var setTabBarHidden
     @EnvironmentObject private var locationProvider: LocationProvider
     @StateObject private var store: MapStore
-    @State private var currentUserLocation: Coordinate?     // TODO: MessageComposerStore에 LocationProvider 주입 후 제거
 
     private let messageMarkerManager: MessageMarkerManager
     private let initialUserLocation: Coordinate
@@ -70,17 +69,7 @@ struct MapView: View {
                         Spacer()
 
                         WriteButton {
-                            Task {
-                                do {
-                                    let location = try await locationProvider.requestCurrentOnce()
-                                    currentUserLocation = location
-                                    await store.send(intent: .tapWriteButton)
-                                } catch {
-                                    // 위치 가져오기 실패 시 에러 처리
-                                    AppLog.error("Failed to get current location", category: .location, error: error)
-                                    // TODO: 사용자에게 에러 알림 표시
-                                }
-                            }
+                            Task { await store.send(intent: .tapWriteButton) }
                         }
                     }
                 }
@@ -99,60 +88,57 @@ struct MapView: View {
                     }
                 )
             ) {
-                if let userLocation = currentUserLocation {
-                    MessageComposerView(
-                        store: MessageComposerStore(
-                            userLocation: userLocation,
-                            createMessage: CreateMessageUseCaseImpl(
-                                messageRepository: MessageRepositoryImpl()
-                            ),
-                            onClose: { _ in
-                                Task {
-                                    await store.send(intent: .dismissAddMessage)
-                                }
-                            }
-                        )
+                MessageComposerView(
+                    store: MessageComposerStore(
+                        locationProvider: locationProvider,
+                        createMessage: CreateMessageUseCaseImpl(
+                            messageRepository: MessageRepositoryImpl()
+                        ),
+                        onClose: { _ in
+                            Task { await store.send(intent: .dismissAddMessage) }
+                        }
                     )
-                    .onAppear { setTabBarHidden(true) }
-                    .onDisappear { setTabBarHidden(false) }
-                }
+                )
+                .onAppear { setTabBarHidden(true) }
+                .onDisappear { setTabBarHidden(false) }
             }
-        }
-        .navigationDestination(
-            isPresented: Binding(
-                get: { store.state.selectedPlace != nil },
-                set: { isPresented in
-                    if !isPresented {
-                        Task {
-                            await store.send(intent: .dismissSpaceView)
+            .navigationDestination(
+                isPresented: Binding(
+                    get: { store.state.selectedPlace != nil },
+                    set: { isPresented in
+                        if !isPresented {
+                            Task {
+                                await store.send(intent: .dismissSpaceView)
+                            }
                         }
                     }
-                }
-            )
-        ) {
-            if let place = store.state.selectedPlace {
-                SpaceView(
-                    store: SpaceStore(
-                        locationProvider: locationProvider,
-                        fetchPlaceMessagesUseCase: FetchPlaceMessagesUseCaseImpl(
-                            messageRepository: MessageRepositoryImpl()
-                        )
-                    ),
-                    domeEnvironment: .init(
-                        weather: .sunny,
-                        dayPart: .afternoon
-                    ),
-                    place: place
                 )
+            ) {
+                if let place = store.state.selectedPlace {
+                    SpaceView(
+                        store: SpaceStore(
+                            locationProvider: locationProvider,
+                            fetchPlaceMessagesUseCase: FetchPlaceMessagesUseCaseImpl(
+                                messageRepository: MessageRepositoryImpl()
+                            ),
+                            place: place
+                        ),
+                        domeEnvironment: .init(
+                            weather: .sunny,
+                            dayPart: .afternoon
+                        ),
+                        place: place
+                    )
+                }
             }
-        }
-        .task {
-            await store.send(intent: .onAppear(initialUserLocation))
-        }
-        .onAppear { setTabBarHidden(false) }
-        .onDisappear {
-            Task {
-                await store.send(intent: .onDisappear)
+            .task {
+                await store.send(intent: .onAppear(initialUserLocation))
+            }
+            .onAppear { setTabBarHidden(false) }
+            .onDisappear {
+                Task {
+                    await store.send(intent: .onDisappear)
+                }
             }
         }
         .toast(toastBinding, bottomPadding: 100)
