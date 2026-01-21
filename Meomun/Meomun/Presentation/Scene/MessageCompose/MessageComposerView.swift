@@ -160,7 +160,7 @@ private extension MessageComposerView {
     }
 }
 
-// MARK: Stored property
+// MARK: Computed property
 private extension MessageComposerView {
     var placeFieldText: String {
         store.state.selectedPlace?.name ?? Constants.placeContainerPlaceholder
