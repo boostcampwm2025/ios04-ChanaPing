@@ -294,7 +294,9 @@ extension MessageMarkerManager {
             if animationStates[key] == nil {
                 let messagesProvider: () -> [Message] = { [weak self] in
                     guard let self else { return [] }
-                    let source = isPlace ? self.placeMessagesByCoord[coordinate] : self.noPlaceMessagesByCoord[coordinate]
+                    let source = isPlace
+                        ? self.placeMessagesByCoord[coordinate]
+                        : self.noPlaceMessagesByCoord[coordinate]
                     return Array((source ?? []).suffix(self.displayLimit))
                 }
 
@@ -523,15 +525,13 @@ extension MessageMarkerManager {
         let signature = makeRenderSignature(markerType: markerType, messages: messages)
 
         // 3-2. 기존 마커가 있고, 시그니처가 동일하면 아이콘 렌더 스킵
-        if let marker = markers[key], lastRenderedSignature[key] == signature { return }
+        if let _ = markers[key], lastRenderedSignature[key] == signature { return }
 
         // 시그니처 갱신
         lastRenderedSignature[key] = signature
 
         // 4. 초기 이미지 렌더 (key 기준 검증 + Task 누적 방지)
         scheduleInitialRender(for: key, marker: marker, markerType: markerType)
-
-
     }
 
     /// 마커를 지도에서 제거하고 저장소에서 삭제합니다.
@@ -620,15 +620,18 @@ extension MessageMarkerManager {
             // 메시지가 2개 미만이면 애니메이션 불필요
             guard state.messages.count > 1 else { continue }
             // 해당 마커가 없으면 스킵
-            guard let marker = markers[groupKey] else { continue }
+            guard markers[groupKey] != nil else { continue }
 
             if state.isAnimating {
                 // 애니메이션 진행 중: 진행률 업데이트
                 rotationAnimator.updateAnimation(for: &state, currentTime: currentTime)
 
+                let current = state.currentMessage
+                let next = state.nextMessage
+                let progress = state.animationProgress
+
                 // 현재/다음 메시지로 회전 이미지 렌더링
-                if let current = state.currentMessage,
-                    let next = state.nextMessage {
+                if let current, let next {
 
                     // 기존 렌더 취소 (프레임 누적 방지)
                     renderTasks[groupKey]?.cancel()
@@ -640,7 +643,7 @@ extension MessageMarkerManager {
                         let image = await bubbleImageRenderer.renderRotatingBubble(
                             current: current,
                             next: next,
-                            progress: state.animationProgress
+                            progress: progress
                         )
 
                         guard !Task.isCancelled else { return }
