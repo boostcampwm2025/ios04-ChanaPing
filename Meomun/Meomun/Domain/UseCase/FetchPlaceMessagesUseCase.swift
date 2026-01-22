@@ -31,7 +31,7 @@ struct FetchPlaceMessagesUseCaseImpl: FetchPlaceMessagesUseCase, Sendable {
     }
 
     func execute(placeID: PlaceID, limit: Int?) async throws -> [Message] {
-        let messages = try await messageRepository.getPlaceMessages(
+        let messages = try await messageRepository.fetchPlaceMessages(
             placeID: placeID,
             limit: limit
         )

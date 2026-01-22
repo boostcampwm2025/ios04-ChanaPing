@@ -38,15 +38,15 @@ final class MessageRepositoryImpl: MessageRepository {
         }
     }
 
-    func deleteMessage(messageID: MessageID) async throws {
+    func deleteMessages(messageIDs: [MessageID]) async throws {
         return
     }
 
-    func getNearbyMessages(location: Coordinate, limit: Int?) async throws -> [Message] {
+    func fetchNearbyMessages(location: Coordinate, limit: Int?) async throws -> [Message] {
         return []
     }
 
-    func getPlaceMessages(placeID: PlaceID, limit: Int?) async throws -> [Message] {
+    func fetchPlaceMessages(placeID: PlaceID, limit: Int?) async throws -> [Message] {
         return []
     }
 }
