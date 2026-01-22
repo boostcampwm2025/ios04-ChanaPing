@@ -11,7 +11,8 @@ import Supabase
 final class MessageRepositoryImpl: MessageRepository {
     private let storage: MessageStorage
 
-    init(storage: MessageStorage = MessageInMemoryStorage()) {
+    // TODO: MessageCoreDataStorage 구현 후 디폴트 파라미터 제거
+    init(storage: MessageStorage = MessageInMemoryStorage.shared) {
         self.storage = storage
     }
 

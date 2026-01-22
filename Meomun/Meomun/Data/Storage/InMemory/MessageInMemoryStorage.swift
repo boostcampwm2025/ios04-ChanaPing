@@ -9,11 +9,11 @@ import Foundation
 
 final class MessageInMemoryStorage: MessageStorage {
 
-    private var storage: [MessageResponseDTO]
+    private var storage: [MessageResponseDTO] = []
 
-    init(storage: [MessageResponseDTO] = []) {
-        self.storage = storage
-    }
+    static let shared = MessageInMemoryStorage()
+
+    private init() { }
 
     func fetchNearby(at coordinate: Coordinate, limit: Int?) async throws -> [MessageResponseDTO] {
         // 인메모리 임시 구현이므로 반경 필터링 생략
