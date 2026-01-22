@@ -13,31 +13,47 @@ fileprivate enum Constants {
 
 struct TimelineListView: View {
     @StateObject private var store: TimelineListStore
+    private let configuration: Configuration
 
-    init(store: TimelineListStore) {
+    init(store: TimelineListStore, configuration: Configuration = .full) {
         _store = StateObject(wrappedValue: store)
+        self.configuration = configuration
     }
 
     var body: some View {
         VStack {
-            header
+            if configuration.showsHeader { header }
 
             content
         }
         .background(Color.meomunBackgroundColor)
-        .toolbar { toolbarContent }
     }
 }
 
 private extension TimelineListView {
     var header: some View {
-        VStack(spacing: 0) {
+        ZStack {
             Text(Constants.navigationTitle)
                 .font(.headline)
                 .foregroundStyle(Color.meomunPrimaryColor)
-                .padding(.top, 18)
-                .padding(.bottom, 30)
+
+            HStack {
+                Spacer()
+
+                Button {
+                    Task {
+                        await store.send(intent: .tapEdit)
+                    }
+                } label: {
+                    Text("편집")
+                        .font(.headline)
+                        .foregroundStyle(Color.meomunPointColor)
+                }
+            }
         }
+        .padding(.horizontal, 16)
+        .padding(.top, 18)
+        .padding(.bottom, 30)
     }
 
     var content: some View {
@@ -61,7 +77,7 @@ private extension TimelineListView {
             }
             .padding(.bottom, 16)
 
-            footer
+            if configuration.showsFooter { footer }
         }
     }
 
@@ -79,16 +95,20 @@ private extension TimelineListView {
         .frame(maxWidth: .infinity)
         .padding(.bottom, 100)
     }
+}
 
-    @ToolbarContentBuilder
-    var toolbarContent: some ToolbarContent {
-        ToolbarItem(placement: .principal) {
-            Text(Constants.navigationTitle)
-                .font(.headline.weight(.semibold))
-                .foregroundStyle(Color.meomunPrimaryColor)
-        }
+extension TimelineListView {
+    struct Configuration: Equatable {
+        var showsHeader: Bool
+        var showsFooter: Bool
+        var showsEditButton: Bool
+
+        static let full = Configuration(showsHeader: true, showsFooter: true, showsEditButton: true)
+
+        static let bottomSheet = Configuration(showsHeader: false, showsFooter: false, showsEditButton: false)
     }
 }
+
 #Preview {
     TimelineListView(
         store: TimelineListStore(
