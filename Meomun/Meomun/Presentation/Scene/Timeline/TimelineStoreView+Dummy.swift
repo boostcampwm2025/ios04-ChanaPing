@@ -1,5 +1,5 @@
 //
-//  TimelineListView+Dummy.swift
+//  TimelineListStore+Dummy.swift
 //  Meomun
 //
 //  Created by Hayeon Park on 1/23/26.
@@ -7,7 +7,7 @@
 
 import Foundation
 
-extension TimelineListView {
+extension TimelineListStore {
     static func getTimelineDummyMessages() -> [Message] {
         let messages: [Message] = [
                 Message(

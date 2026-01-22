@@ -7,7 +7,7 @@
 
 import Foundation
 
-struct Message: Identifiable, Sendable {
+struct Message: Identifiable, Sendable, Equatable {
     let id: MessageID
     let createdAt: Date
     let content: String

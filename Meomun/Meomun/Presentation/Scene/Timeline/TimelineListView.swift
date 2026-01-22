@@ -12,10 +12,10 @@ fileprivate enum Constants {
 }
 
 struct TimelineListView: View {
-    let messages: [Message]
+    @StateObject private var store: TimelineListStore
 
-    private var sections: [(key: YearMonth, value: [Message])] {
-        MessageTimelineGrouper.groupByYearMonth(messages)
+    init(store: TimelineListStore) {
+        _store = StateObject(wrappedValue: store)
     }
 
     var body: some View {
@@ -33,7 +33,7 @@ private extension TimelineListView {
     var header: some View {
         VStack(spacing: 0) {
             Text(Constants.navigationTitle)
-                .font(.title3)
+                .font(.headline)
                 .foregroundStyle(Color.meomunPrimaryColor)
                 .padding(.top, 18)
                 .padding(.bottom, 30)
@@ -43,7 +43,7 @@ private extension TimelineListView {
     var content: some View {
         ScrollView {
             LazyVStack(alignment: .leading, spacing: 0, pinnedViews: [.sectionHeaders]) {
-                ForEach(sections, id: \.key) { section in
+                ForEach(store.state.sections, id: \.key) { section in
                     Section {
                         let monthMessages = section.value
 
@@ -90,5 +90,10 @@ private extension TimelineListView {
     }
 }
 #Preview {
-    TimelineListView(messages: TimelineListView.getTimelineDummyMessages())
+    TimelineListView(
+        store: TimelineListStore(
+            initialMessages: TimelineListStore
+                .getTimelineDummyMessages()
+        )
+    )
 }

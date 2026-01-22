@@ -50,7 +50,12 @@ struct MainTabShellView: View {
             )
 
         case .record:
-            TimelineListView(messages: TimelineListView.getTimelineDummyMessages())
+            TimelineListView(
+                store: TimelineListStore(
+                    initialMessages: TimelineListStore
+                        .getTimelineDummyMessages()
+                )
+            )
 
         case .myPage:
             SpaceView(
