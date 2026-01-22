@@ -200,11 +200,12 @@
 				};
 			};
 			buildConfigurationList = 1628F4652EF53602005E6C42 /* Build configuration list for PBXProject "Meomun" */;
-			developmentRegion = en;
+			developmentRegion = ko;
 			hasScannedForEncodings = 0;
 			knownRegions = (
 				en,
 				Base,
+				ko,
 			);
 			mainGroup = 1628F4612EF53602005E6C42;
 			minimizedProjectReferenceProxies = 1;
