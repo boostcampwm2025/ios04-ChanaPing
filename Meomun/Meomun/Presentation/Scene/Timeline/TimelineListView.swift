@@ -33,7 +33,7 @@ private extension TimelineListView {
     var header: some View {
         VStack(spacing: 0) {
             Text(Constants.navigationTitle)
-                .font(.headline)
+                .font(.title3)
                 .foregroundStyle(Color.meomunPrimaryColor)
                 .padding(.top, 18)
                 .padding(.bottom, 30)
