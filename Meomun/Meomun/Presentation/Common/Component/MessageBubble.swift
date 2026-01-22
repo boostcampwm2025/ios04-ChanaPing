@@ -74,12 +74,18 @@ struct MessageBubble<Content: View>: View {
                 }
             }
 
-            content
+            if case .fixedSize = layout {
+                content
+                    .frame(height: 36, alignment: .center)
+                    .clipped()
+            } else {
+                content
+            }
 
             Text("25.02.01")
                 .font(.system(size: 13, weight: .semibold))
                 .foregroundStyle(Color.gray.opacity(0.8))
-                .frame(alignment: .trailing)
+                .frame(maxWidth: .infinity, alignment: .trailing)
         }
         .padding(.vertical, 15)
         .padding(.horizontal, 15)
