@@ -11,12 +11,20 @@ import CoreLocation
 fileprivate enum Constants {
     // Title
     static let loadingMessage = "현재 위치 불러오는 중..."
-    static let permissionTitle = "위치 권한 필요"
-    static let permissionMessage = "머문에서 위치를 사용할 수 없습니다.\n위치 권한을 허용해주세요."
+    static let permissionTitle = "위치 권한이 필요해요"
+    static let permissionMessage = "위치 접근을 허용하고 지도 위에 기록을 남겨봐요!"
     static let settingsButtonTitle = "위치 권한 설정하기"
 
     // Image
     static let locationImage = "location.slash.fill"
+
+    // UI
+    static let dimOpacity: Double = 0.4
+    static let popupCornerRadius: CGFloat = 16
+    static let popupInset: CGFloat = 24
+    static let popupHorizontalPadding: CGFloat = 32
+    static let popupContentSpacing: CGFloat = 20
+    static let descriptionSpacing: CGFloat = 6
 }
 
 struct LocationGateView: View {
@@ -42,12 +50,15 @@ struct LocationGateView: View {
                     }
 
             case .denied, .restricted:
-                permissionRequestView
+                ZStack {
+                    Color.black.opacity(Constants.dimOpacity)
+                        .ignoresSafeArea()
 
-            case .notDetermined:
-                EmptyView()
+                    permissionRequestView
 
-            @unknown default:
+                }
+
+            default:
                 EmptyView()
             }
         }
@@ -61,15 +72,15 @@ struct LocationGateView: View {
 
 extension LocationGateView {
     private var permissionRequestView: some View {
-        VStack(spacing: 16) {
+        VStack(spacing: Constants.popupContentSpacing) {
             Image(systemName: Constants.locationImage)
                 .font(.largeTitle)
                 .imageScale(.large)
                 .foregroundStyle(.secondary)
 
-            VStack(spacing: 6) {
+            VStack(spacing: Constants.descriptionSpacing) {
                 Text(Constants.permissionTitle)
-                    .font(.title2)
+                    .font(.title3)
                     .fontWeight(.semibold)
 
                 Text(Constants.permissionMessage)
@@ -89,7 +100,8 @@ extension LocationGateView {
             .buttonStyle(.borderedProminent)
             .controlSize(.large)
         }
-        .padding()
-        .padding(.horizontal)
+        .padding(Constants.popupInset)
+        .background(.regularMaterial, in: RoundedRectangle(cornerRadius: Constants.popupCornerRadius))
+        .padding(.horizontal, Constants.popupHorizontalPadding)
     }
 }
