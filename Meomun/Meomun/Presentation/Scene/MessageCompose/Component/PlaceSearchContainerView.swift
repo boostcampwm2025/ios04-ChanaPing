@@ -32,7 +32,7 @@ struct PlaceSearchContainerView<Content: View>: View {
         .frame(height: 44)
         .background(
             RoundedRectangle(cornerRadius: 12, style: .continuous)
-                .fill(Color.meomunBackgroundColor.opacity(0.7))
+                .fill(Color.meomunMessageBackgroundColor.opacity(0.7))
         )
         .overlay(
             RoundedRectangle(cornerRadius: 12, style: .continuous)
