@@ -1,0 +1,115 @@
+//
+//  MessageBoxView.swift
+//  Meomun
+//
+//  Created by Hayeon Park on 1/22/26.
+//
+
+import SwiftUI
+
+private enum Layout {
+    static let cornerRadius: CGFloat = 12
+
+    static let horizontalPadding: CGFloat = 20
+    static let verticalPadding: CGFloat = 20
+
+    static let metaChipPaddingH: CGFloat = 12
+    static let metaChipPaddingV: CGFloat = 6
+
+    static let minWidth: CGFloat = 100
+    static let minHeight: CGFloat = 100
+}
+
+struct MessageBoxView: View {
+    private let message: Message
+
+    init(message: Message) {
+        self.message = message
+    }
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 24) {
+            messageTextView
+
+            metaRowView
+        }
+        .padding(.horizontal, Layout.horizontalPadding)
+        .padding(.vertical, Layout.verticalPadding)
+        .frame(minWidth: Layout.minWidth, alignment: .leading)
+        .frame(minHeight: Layout.minHeight, alignment: .topLeading)
+        .background(backgroundView)
+    }
+}
+
+private extension MessageBoxView {
+    var messageTextView: some View {
+        Text(message.content)
+            .font(.body)
+            .foregroundStyle(Color.meomunPrimaryColor.opacity(0.8))
+            .frame(maxHeight: .infinity, alignment: .leading)
+            .fixedSize(horizontal: false, vertical: true)
+    }
+
+    var metaRowView: some View {
+
+        HStack(spacing: 10) {
+            if let placeName = message.placeTag?.name {
+                Label {
+                    Text(placeName)
+                } icon: {
+                    Image(systemName: "mappin.and.ellipse")
+                }
+                .font(.footnote.bold())
+                .foregroundStyle(Color.meomunSecondaryColor)
+            }
+            Spacer(minLength: 8)
+
+            Text(MessageTimestampFormatter.string(from: message.createdAt))
+                .font(.footnote.weight(.semibold))
+                .foregroundStyle(Color.meomunSecondaryColor)
+        }
+    }
+
+    var backgroundView: some View {
+        RoundedRectangle(cornerRadius: Layout.cornerRadius, style: .continuous)
+            .fill(Color.meomunBackgroundColor.opacity(0.8))
+            .overlay(
+                RoundedRectangle(cornerRadius: Layout.cornerRadius, style: .continuous)
+                    .strokeBorder(Color.meomunPrimaryColor.opacity(0.15), lineWidth: 0.5)
+            )
+            .shadow(color: .black.opacity(0.05), radius: 2)
+            .shadow(color: .black.opacity(0.05), radius: 0, x: 1, y: 1)
+    }
+}
+
+#Preview {
+    var messages: [Message] =  [
+        Message(
+            id: MessageID(value: UUID()),
+            createdAt: Date().addingTimeInterval(-7 * 60),
+            content: "[Case4] NoPlace 스택 메시지 1",
+            coordinate: Coordinate.defaultCoordinate,
+            placeTag: nil
+        ),
+        Message(
+            id: MessageID(value: UUID()),
+            createdAt: Date().addingTimeInterval(-30 * 60),
+            content: "[Case4] NoPlace 스택 메시지 2",
+            coordinate: Coordinate.defaultCoordinate,
+            placeTag: nil
+        ),
+        Message(
+            id: MessageID(value: UUID()),
+            createdAt: Date().addingTimeInterval(-15000 * 60),
+            content: "[Case4] NoPlace 스택 메시지 3",
+            coordinate: Coordinate.defaultCoordinate,
+            placeTag: nil
+        )
+    ]
+
+    VStack(spacing: 10) {
+        ForEach(messages) { message in
+            MessageBoxView(message: message)
+        }
+    }
+}
