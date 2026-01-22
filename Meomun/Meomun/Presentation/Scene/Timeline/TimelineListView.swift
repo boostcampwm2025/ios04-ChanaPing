@@ -42,7 +42,7 @@ private extension TimelineListView {
 
     var content: some View {
         ScrollView {
-            LazyVStack(alignment: .leading, spacing: 6, pinnedViews: [.sectionHeaders]) {
+            LazyVStack(alignment: .leading, spacing: 0, pinnedViews: [.sectionHeaders]) {
                 ForEach(sections, id: \.key) { section in
                     Section {
                         let monthMessages = section.value
@@ -67,16 +67,9 @@ private extension TimelineListView {
 
     var footer: some View {
         VStack(spacing: 10) {
-            if #available(iOS 26.0, *) {
-                Image(systemName: "book.pages")
-                    .font(.system(size: 26, weight: .regular))
-                    .foregroundStyle(Color.meomunSecondaryColor)
-                    .symbolEffect(.drawOn.individually, options: .nonRepeating)
-            } else {
-                Image(systemName: "book.pages")
-                    .font(.system(size: 26, weight: .regular))
-                    .foregroundStyle(Color.meomunSecondaryColor)
-            }
+            Image(systemName: "book.pages")
+                .font(.system(size: 26, weight: .regular))
+                .foregroundStyle(Color.meomunSecondaryColor)
 
             Text("END OF RECORDS")
                 .font(.footnote.weight(.semibold))
@@ -84,7 +77,7 @@ private extension TimelineListView {
                 .foregroundStyle(Color.meomunSecondaryColor)
         }
         .frame(maxWidth: .infinity)
-        .padding(.vertical, 28)
+        .padding(.bottom, 100)
     }
 
     @ToolbarContentBuilder

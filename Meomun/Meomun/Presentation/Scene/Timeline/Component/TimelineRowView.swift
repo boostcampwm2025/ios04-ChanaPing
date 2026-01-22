@@ -12,14 +12,26 @@ struct TimelineRowView: View {
     let showTopLine: Bool
     let showBottomLine: Bool
 
+    @State private var messageBoxHeight: CGFloat = 0
+
+    private var indicatorHeight: CGFloat {
+        max(messageBoxHeight * 1.3, 120)
+    }
+
     var body: some View {
-        HStack(alignment: .top, spacing: 10) {
+        HStack(alignment: .center, spacing: 10) {
             TimelineIndicatorView(
+                height: indicatorHeight,
                 showTopLine: showTopLine,
                 showBottomLine: showBottomLine
             )
 
             MessageBoxView(message: message)
+                .readHeight { newHeight in
+                    if newHeight > 0, abs(newHeight - messageBoxHeight) > 0.5 {
+                        messageBoxHeight = newHeight
+                    }
+                }
         }
         .padding(.horizontal, 14)
     }

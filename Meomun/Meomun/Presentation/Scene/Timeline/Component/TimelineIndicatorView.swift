@@ -12,9 +12,9 @@ struct TimelineIndicatorView: View {
         static let lineWidth: CGFloat = 1
         static let nodeSize: CGFloat = 10
         static let columnWidth: CGFloat = 26
-        static let topOffset: CGFloat = 20
     }
 
+    let height: CGFloat
     let showTopLine: Bool
     let showBottomLine: Bool
 
@@ -36,17 +36,18 @@ struct TimelineIndicatorView: View {
                 .frame(width: Layout.lineWidth)
                 .frame(maxHeight: .infinity)
         }
-        .frame(width: Layout.columnWidth)
+        .frame(width: Layout.columnWidth, height: height)
     }
 }
 
 #Preview {
+    var height: CGFloat = 120
     VStack(spacing: 0) {
-        TimelineIndicatorView(showTopLine: false, showBottomLine: true)
-        TimelineIndicatorView(showTopLine: true, showBottomLine: true)
-        TimelineIndicatorView(showTopLine: true, showBottomLine: true)
-        TimelineIndicatorView(showTopLine: true, showBottomLine: true)
-        TimelineIndicatorView(showTopLine: true, showBottomLine: false)
+        TimelineIndicatorView(height: height, showTopLine: false, showBottomLine: true)
+        TimelineIndicatorView(height: height, showTopLine: true, showBottomLine: true)
+        TimelineIndicatorView(height: height, showTopLine: true, showBottomLine: true)
+        TimelineIndicatorView(height: height, showTopLine: true, showBottomLine: true)
+        TimelineIndicatorView(height: height, showTopLine: true, showBottomLine: false)
 
     }
 }
