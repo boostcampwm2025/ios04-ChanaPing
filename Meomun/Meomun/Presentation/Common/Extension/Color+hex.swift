@@ -12,6 +12,7 @@ extension Color {
     static let meomunPrimaryColor = Color(hex: "#0E1B1A")
     static let meomunSecondaryColor = Color(hex: "#789290")
     static let meomunPointColor = Color(hex: "#1DC9C0")
+    static let meomunBackgroundColor = Color(hex: "#FAFAFA")
 }
 
 extension Color {
