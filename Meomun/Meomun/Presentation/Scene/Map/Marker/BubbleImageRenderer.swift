@@ -26,15 +26,13 @@ final class BubbleImageRenderer {
     func renderSingleBubble(
         message: Message,
         scale: CGFloat? = nil
-    ) -> UIImage {
+    ) async -> UIImage {
         let bubble = MessageBubble(
             message: message,
             layout: .flexible
         )
 
-        print("renderSingleBubble: \(message.content)")
-
-        return render(view: bubble.padding(4), scale: scale ?? UIScreen.main.scale)
+        return await render(view: bubble.padding(4), scale: scale ?? UIScreen.main.scale)
     }
 
     /// 애니메이션 진행도에 따른 회전 버블의 이미지를 렌더링합니다.
@@ -60,9 +58,7 @@ final class BubbleImageRenderer {
             )
         }
 
-        print("renderRotatingBubble: \(current.content)")
-
-        return render(view: bubble.padding(4), scale: scale ?? UIScreen.main.scale)
+        return await render(view: bubble.padding(4), scale: scale ?? UIScreen.main.scale)
     }
 
     /// 스택 버블 이미지를 렌더링합니다.
@@ -72,15 +68,17 @@ final class BubbleImageRenderer {
     func renderStackBubble(
         messages: [Message],
         scale: CGFloat? = nil
-    ) -> UIImage {
+    ) async -> UIImage {
         // TODO: MessageStackBubble 구현 후 교체
         guard let first = messages.first else { return UIImage() }
-        return renderSingleBubble(message: first, scale: scale)
+        return await renderSingleBubble(message: first, scale: scale)
     }
 }
 
 extension BubbleImageRenderer {
-    private func render<V: View>(view: V, scale: CGFloat) -> UIImage {
+    private func render<V: View>(view: V, scale: CGFloat) async -> UIImage {
+        await Task.yield()
+
         let renderer = ImageRenderer(content: view)
         renderer.scale = scale
         renderer.isOpaque = false

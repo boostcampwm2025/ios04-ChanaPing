@@ -131,6 +131,14 @@ extension MapStore {
             ),
             Message(
                 id: MessageID(value: UUID()),
+                createdAt: Date().addingTimeInterval(-40 * 60),
+                content: "페이드인 되고 있어?",
+                coordinate: .init(latitude: 37.5665, longitude: 126.9780),
+                address: "서판교로29",
+                placeTag: nil
+            ),
+            Message(
+                id: MessageID(value: UUID()),
                 createdAt: Date().addingTimeInterval(-1 * 60 * 60),
                 content: "따뜻한 커피 향이 지나간다☕️",
                 coordinate: .init(latitude: 37.5704, longitude: 126.9766),
