@@ -1,7 +1,6 @@
 language: ko-KR
 reviews:
     suggested_reviewers: false  # 코드 변경에 따른 리뷰어 추천 (기본값: true)
-
     pre_merge_checks:
-    docstrings:
-        mode: off # 주석 충분한지 확인 (기본값: warning)
+        docstrings:
+            mode: off           # 주석 충분한지 확인 (기본값: warning)
