@@ -17,7 +17,7 @@ struct RotatingTextStack: View {
     private let movingArea: CGFloat = 16    // 움직일 거리
 
     var body: some View {
-        ZStack(alignment: .topLeading) {
+        ZStack(alignment: .center) {
             if progress > 0 {
                 BubbleText(text: nextText)
                     .opacity(progress)
@@ -28,7 +28,7 @@ struct RotatingTextStack: View {
                 .opacity(1 - progress)
                 .offset(y: -progress * movingArea)
         }
-        .frame(maxHeight: textAreaHeight, alignment: .top)
+        .frame(maxHeight: textAreaHeight, alignment: .center)
         .clipped()
     }
 }
