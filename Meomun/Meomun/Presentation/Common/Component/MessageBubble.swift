@@ -13,64 +13,77 @@ enum BubbleLayout {
 }
 
 struct MessageBubble<Content: View>: View {
-    let placeName: String?
-    let createdAt: Date?
+    let message: Message
     let layout: BubbleLayout
-    let content: Content
+    let content: (Message) -> Content
 
     var maxWidth: CGFloat = 210
 
     init(
-        placeName: String?,
-        createdAt: Date = .init(timeIntervalSince1970: 0),
+        message: Message,
         layout: BubbleLayout,
-        @ViewBuilder content: () -> Content
+        @ViewBuilder content: @escaping (Message) -> Content = {
+            BubbleText(
+                text: $0.content
+            )
+        }
     ) {
-        self.placeName = placeName
-        self.createdAt = createdAt
+        self.message = message
         self.layout = layout
-        self.content = content()
+        self.content = content
     }
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 6) {
+        VStack(alignment: .leading, spacing: 5) {
             // 장소 태그 (옵셔널)
-            if let placeName, !placeName.isEmpty {
+            if let locationName = message.displayLocationName {
                 HStack(spacing: 4) {
                     Image(systemName: "mappin.and.ellipse")
                         .font(.system(size: 13, weight: .semibold))
                         .foregroundStyle(Color(hex: "#53808C"))
 
-                    Text(placeName)
+                    Text(locationName)
                         .font(.system(size: 13, weight: .semibold))
                         .foregroundStyle(Color.gray.opacity(0.8))
                 }
             }
 
-            if case .fixedSize = layout {
-                content
-                    .frame(height: 36, alignment: .center)
-                    .clipped()
-            } else {
-                content
-            }
+            bodyPart
 
-            Text("25.02.01")
+            Divider()
+                .background(Color.black.opacity(0.8))
+                .padding(.top, 2)
+
+            Text(message.displayDateString)
                 .font(.system(size: 13, weight: .semibold))
                 .foregroundStyle(Color.gray.opacity(0.8))
                 .frame(maxWidth: .infinity, alignment: .trailing)
+                .padding(.top, -2)
         }
-        .padding(.vertical, 15)
-        .padding(.horizontal, 15)
+        .padding(.vertical, 10)
+        .padding(.horizontal, 12)
         .applyLayout(
             layout,
-            maxWidth: maxWidth,
-            background: bubbleBackground
+            maxWidth: maxWidth
         )
+        .background(bubbleBackground)
     }
 }
 
 private extension MessageBubble {
+    @ViewBuilder
+    var bodyPart: some View {
+        let bodyView = content(message)
+
+        if case .fixedSize = layout {
+            bodyView
+                .frame(height: 36, alignment: .center)
+                .clipped()
+        } else {
+            bodyView
+        }
+    }
+
     var bubbleBackground: some View {
         RoundedRectangle(cornerRadius: 22, style: .continuous)
             .fill(Color.white)
@@ -83,7 +96,7 @@ private extension MessageBubble {
 
 struct BubbleText: View {
     let text: String
-    var maxWidth: CGFloat? = 190
+    var maxWidth: CGFloat? = 180
 
     var body: some View {
         // 본문 (최대 2줄)
@@ -98,7 +111,7 @@ struct BubbleText: View {
                 maxWidth: maxWidth,
                 alignment: .leading
             )
-            .clampMaxHeight(50)
+            .clampMaxHeight(56)
     }
 }
 
@@ -106,7 +119,7 @@ struct BubbleText: View {
 
 private extension View {
     @ViewBuilder
-    func applyLayout(_ layout: BubbleLayout, maxWidth: CGFloat, background: some View) -> some View {
+    func applyLayout(_ layout: BubbleLayout, maxWidth: CGFloat) -> some View {
         Group {
             switch layout {
             case .flexible:
@@ -121,65 +134,106 @@ private extension View {
                 self
                     .frame(
                         width: fixedSize,
-                        height: 98,
+                        height: 103,
                         alignment: .leading
                     )
             }
         }
-        .background(background)
     }
 }
 
 // MARK: - Preview
 
 #Preview {
+    let placeMessage = Message(
+        id: MessageID(value: UUID()),
+        createdAt: Date(),
+        content: "[한줄] 오늘 좀 춥다🫥🍃",
+        coordinate: .init(latitude: 0, longitude: 0),
+        address: nil,
+        placeTag: Place(
+            id: PlaceID(value: ""),
+            name: "장소 이름",
+            coordinate: .init(
+                latitude: 0,
+                longitude: 0
+            )
+        )
+    )
+
+    let longMessage = Message(
+        id: MessageID(value: UUID()),
+        createdAt: Date(),
+        content: "[두줄] 오늘 좀 asfrfrfasxscscscs춥다🫥🍃",
+        coordinate: .init(latitude: 0, longitude: 0),
+        address: nil,
+        placeTag: Place(
+            id: PlaceID(value: ""),
+            name: "장소 이름",
+            coordinate: .init(
+                latitude: 0,
+                longitude: 0
+            )
+        )
+    )
+
+    let longMessage2 = Message(
+        id: MessageID(value: UUID()),
+        createdAt: Date(),
+        content: "sdcfvvfvfvffvfvfvfvfvfvfvfvfff",
+        coordinate: .init(latitude: 0, longitude: 0),
+        address: nil,
+        placeTag: Place(
+            id: PlaceID(value: ""),
+            name: "장소 이름",
+            coordinate: .init(
+                latitude: 0,
+                longitude: 0
+            )
+        )
+    )
+
+    let noPlaceMessage = Message(
+        id: MessageID(value: UUID()),
+        createdAt: Date(),
+        content: "dkfdkkdlsjkd",
+        coordinate: .init(latitude: 0, longitude: 0),
+        address: "어딘가의 주소",
+        placeTag: nil
+    )
+
     ZStack {
         Color.gray.opacity(0.15).ignoresSafeArea()
 
         VStack(alignment: .leading, spacing: 12) {
             Text(".flexible (단일 버블)")
-            MessageBubble(
-                placeName: "장소 이름",
-                layout: .flexible
-            ) {
-                BubbleText(text: "[한줄] 오늘 좀 춥다🫥🍃")
-            }
 
             MessageBubble(
-                placeName: "장소 이름",
+                message: placeMessage,
                 layout: .flexible
-            ) {
-                BubbleText(text: "[두줄] 오늘 좀 asfrfrfasxscscscs춥다🫥🍃")
-            }
+            )
 
             MessageBubble(
-                placeName: "장소 이름",
+                message: longMessage,
                 layout: .flexible
-            ) {
-                BubbleText(text: "[두줄] 이건 30자 메시지에요 재밌죠 나는 자고싶어요")
-            }
+            )
+
+            MessageBubble(
+                message: longMessage2,
+                layout: .flexible
+            )
 
             Text(".fixedSize(170) (회전 버블)")
-            MessageBubble(
-                placeName: "장소 이름",
-                layout: .fixedSize(170)
-            ) {
-                BubbleText(text: "🫥🫥🫥🫥🫥🫥🫥🫥🫥🫥🫥🫥🫥🫥🫥🫥🫥🫥")
-            }
 
             MessageBubble(
-                placeName: "장소 이름",
+                message: placeMessage,
                 layout: .fixedSize(170)
-            ) {
-                BubbleText(text: "dkfdkkdkdksdjkfskdlsjkd")
-            }
+            )
 
             MessageBubble(
-                placeName: "장소 이름",
+                message: noPlaceMessage,
                 layout: .fixedSize(170)
-            ) {
-                BubbleText(text: "dkfdkkdlsjkd")
-            }
+            )
         }
     }
 }

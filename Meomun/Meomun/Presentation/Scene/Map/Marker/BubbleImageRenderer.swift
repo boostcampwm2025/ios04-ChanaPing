@@ -22,19 +22,17 @@ final class BubbleImageRenderer {
     /// 단일 메시지 버블 이미지를 렌더링합니다.
     /// - Parameters:
     ///   - message: 렌더링할 메시지
-    ///   - showsAccentLine: 좌측 상태 라인 표시 여부
     ///   - scale: 렌더링 스케일 (nil이면 화면 스케일 사용)
     func renderSingleBubble(
         message: Message,
-        showsAccentLine: Bool,
         scale: CGFloat? = nil
     ) -> UIImage {
         let bubble = MessageBubble(
-            placeName: message.placeTag?.name,
-            layout: showsAccentLine ? .flexible : .fixedSize(rotatingBubbleWidth)
-        ) {
-            BubbleText(text: message.content)
-        }
+            message: message,
+            layout: .flexible
+        )
+
+        print("renderSingleBubble: \(message.content)")
 
         return render(view: bubble.padding(4), scale: scale ?? UIScreen.main.scale)
     }
@@ -52,15 +50,17 @@ final class BubbleImageRenderer {
         scale: CGFloat? = nil
     ) -> UIImage {
         let bubble = MessageBubble(
-            placeName: current.placeTag?.name,
+            message: current,
             layout: .fixedSize(rotatingBubbleWidth)
-        ) {
+        ) { _ in
             RotatingTextStack(
                 currentText: current.content,
                 nextText: next.content,
                 progress: progress
             )
         }
+
+        print("renderRotatingBubble: \(current.content)")
 
         return render(view: bubble.padding(4), scale: scale ?? UIScreen.main.scale)
     }
@@ -75,7 +75,7 @@ final class BubbleImageRenderer {
     ) -> UIImage {
         // TODO: MessageStackBubble 구현 후 교체
         guard let first = messages.first else { return UIImage() }
-        return renderSingleBubble(message: first, showsAccentLine: true, scale: scale)
+        return renderSingleBubble(message: first, scale: scale)
     }
 }
 

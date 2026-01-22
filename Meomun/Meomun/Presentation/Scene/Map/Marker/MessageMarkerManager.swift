@@ -366,7 +366,7 @@ extension MessageMarkerManager {
         switch markerType {
         case .singleBubble(let message):
             // 메시지 1개: 최신 표시 accent line + 단일 버블
-            image = bubbleImageRenderer.renderSingleBubble(message: message, showsAccentLine: true)
+            image = bubbleImageRenderer.renderSingleBubble(message: message)
 
         case .rotatingBubble(let messages), .stackBubble(let messages):
             // 메시지 2개 이상: 첫 번째 메시지로 초기 이미지
@@ -377,7 +377,7 @@ extension MessageMarkerManager {
                 break
             }
 
-            image = bubbleImageRenderer.renderSingleBubble(message: firstMessage, showsAccentLine: false)
+            image = bubbleImageRenderer.renderSingleBubble(message: firstMessage)
         }
 
         marker.iconImage = NMFOverlayImage(image: image)
