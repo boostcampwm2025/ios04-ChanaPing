@@ -37,17 +37,19 @@ private extension TimelineListView {
                 .font(.headline)
                 .foregroundStyle(Color.meomunPrimaryColor)
 
-            HStack {
-                Spacer()
+            if configuration.showsEditButton {
+                HStack {
+                    Spacer()
 
-                Button {
-                    Task {
-                        await store.send(intent: .tapEdit)
+                    Button {
+                        Task {
+                            await store.send(intent: .tapEdit)
+                        }
+                    } label: {
+                        Text("편집")
+                            .font(.headline)
+                            .foregroundStyle(Color.meomunPointColor)
                     }
-                } label: {
-                    Text("편집")
-                        .font(.headline)
-                        .foregroundStyle(Color.meomunPointColor)
                 }
             }
         }
