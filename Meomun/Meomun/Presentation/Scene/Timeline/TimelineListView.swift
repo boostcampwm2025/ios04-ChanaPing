@@ -53,7 +53,6 @@ private extension TimelineListView {
         }
         .padding(.horizontal, 16)
         .padding(.top, 18)
-        .padding(.bottom, 30)
     }
 
     var content: some View {
@@ -75,6 +74,7 @@ private extension TimelineListView {
                     }
                 }
             }
+            .padding(.top, 30)
             .padding(.bottom, 16)
 
             if configuration.showsFooter { footer }

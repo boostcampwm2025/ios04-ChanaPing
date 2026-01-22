@@ -41,7 +41,9 @@ struct MapView: View {
                         }
                     },
                     onTapNoPlace: { messages in
-                        // TODO: NoPlace 2개 이상 터치 시 UI(스택 펼치기 등) 연결 예정
+                        Task {
+                            await store.send(intent: .tapNoPlaceMarker(messages))
+                        }
                         print("NoPlace messages tapped: \(messages.count)")
                     },
                     onCameraIdle: { coordinate in
@@ -75,6 +77,20 @@ struct MapView: View {
                 }
                 .padding(.top, 12)
                 .padding(.bottom, 96)
+            }
+            .sheet(
+                isPresented: Binding(
+                    get: { store.state.selectedNoPlaceMessages.isEmpty == false },
+                    set: { isPresented in
+                        if !isPresented {
+                            Task { await store.send(intent: .dismissTimelineView)}
+                        }
+                    }
+                )
+            ) {
+                TimelineListView(store: TimelineListStore(initialMessages: store.state.selectedNoPlaceMessages), configuration: .bottomSheet)
+                    .presentationDetents(.init(arrayLiteral: .medium, .large))
+                    .presentationDragIndicator(.visible)
             }
             .navigationDestination(
                 isPresented: Binding(

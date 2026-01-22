@@ -17,8 +17,13 @@ final class MapStore: Store {
         case tapWriteButton
         case dismissAddMessage
         case updateMessages([Message])
+
         case tapPlaceMarker(Place)
         case dismissSpaceView
+
+        case tapNoPlaceMarker([Message])
+        case dismissTimelineView
+
         case setToast(String?)
     }
 
@@ -27,6 +32,7 @@ final class MapStore: Store {
         case setShowAddMessage(Bool)
         case setMessages([Message])
         case setSelectedPlace(Place?)
+        case setSelectedNoPlace([Message])
         case setLoading(Bool)
         case setError(String)
         case setToastMessage(String?)
@@ -37,6 +43,7 @@ final class MapStore: Store {
         var cameraCoordinate: Coordinate?
         var isShowingAddMessage: Bool = false
         var selectedPlace: Place?
+        var selectedNoPlaceMessages: [Message] = []
         var isLoading: Bool = false
         var errorMessage: String = ""
         var toastMessage: String?
@@ -97,6 +104,14 @@ final class MapStore: Store {
                 continuation.yield(.setSelectedPlace(nil))
                 continuation.finish()
 
+            case .tapNoPlaceMarker(let messages):
+                continuation.yield(.setSelectedNoPlace(messages))
+                continuation.finish()
+
+            case .dismissTimelineView:
+                continuation.yield(.setSelectedNoPlace([]))
+                continuation.finish()
+
             case .setToast(let message):
                 continuation.yield(.setToastMessage(message))
                 continuation.finish()
@@ -119,6 +134,9 @@ final class MapStore: Store {
 
         case .setSelectedPlace(let place):
             newState.selectedPlace = place
+
+        case .setSelectedNoPlace(let messages):
+            newState.selectedNoPlaceMessages = messages
 
         case .setLoading(let isLoading):
             newState.isLoading = isLoading
@@ -160,10 +178,12 @@ final class MapStore: Store {
             continuation.yield(.setLoading(true))
 
             do {
-                let messages = try await self.getNearbyMessagesUseCase.execute(
-                    location: coordinate,
-                    limit: nil
-                )
+//                let messages = try await self.getNearbyMessagesUseCase.execute(
+//                    location: coordinate,
+//                    limit: nil
+//                )
+
+                let messages = self.getDummyMessages()
 
                 guard !Task.isCancelled else { return }
 
