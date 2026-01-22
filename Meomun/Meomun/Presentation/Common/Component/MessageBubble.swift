@@ -7,12 +7,6 @@
 
 import SwiftUI
 
-enum MessageStatusIndicator {
-    case none
-    case recent
-    case normal
-}
-
 enum BubbleLayout {
     case flexible      // 단일 메시지
     case fixedSize(CGFloat)    // 회전 메시지
@@ -21,7 +15,6 @@ enum BubbleLayout {
 struct MessageBubble<Content: View>: View {
     let placeName: String?
     let createdAt: Date?
-    let statusIndicator: MessageStatusIndicator
     let layout: BubbleLayout
     let content: Content
 
@@ -30,26 +23,13 @@ struct MessageBubble<Content: View>: View {
     init(
         placeName: String?,
         createdAt: Date = .init(timeIntervalSince1970: 0),
-        statusIndicator: MessageStatusIndicator,
         layout: BubbleLayout,
         @ViewBuilder content: () -> Content
     ) {
         self.placeName = placeName
         self.createdAt = createdAt
-        self.statusIndicator = statusIndicator
         self.layout = layout
         self.content = content()
-    }
-
-    private var statusIndicatorColor: Color {
-        switch statusIndicator {
-        case .none:
-            return .clear
-        case .recent:
-            return .orange
-        case .normal:
-            return .blue
-        }
     }
 
     var body: some View {
@@ -160,7 +140,6 @@ private extension View {
             Text(".flexible (단일 버블)")
             MessageBubble(
                 placeName: "장소 이름",
-                statusIndicator: .none,
                 layout: .flexible
             ) {
                 BubbleText(text: "[한줄] 오늘 좀 춥다🫥🍃")
@@ -168,7 +147,6 @@ private extension View {
 
             MessageBubble(
                 placeName: "장소 이름",
-                statusIndicator: .none,
                 layout: .flexible
             ) {
                 BubbleText(text: "[두줄] 오늘 좀 asfrfrfasxscscscs춥다🫥🍃")
@@ -176,7 +154,6 @@ private extension View {
 
             MessageBubble(
                 placeName: "장소 이름",
-                statusIndicator: .none,
                 layout: .flexible
             ) {
                 BubbleText(text: "[두줄] 이건 30자 메시지에요 재밌죠 나는 자고싶어요")
@@ -185,7 +162,6 @@ private extension View {
             Text(".fixedSize(170) (회전 버블)")
             MessageBubble(
                 placeName: "장소 이름",
-                statusIndicator: .none,
                 layout: .fixedSize(170)
             ) {
                 BubbleText(text: "🫥🫥🫥🫥🫥🫥🫥🫥🫥🫥🫥🫥🫥🫥🫥🫥🫥🫥")
@@ -193,7 +169,6 @@ private extension View {
 
             MessageBubble(
                 placeName: "장소 이름",
-                statusIndicator: .none,
                 layout: .fixedSize(170)
             ) {
                 BubbleText(text: "dkfdkkdkdksdjkfskdlsjkd")
@@ -201,7 +176,6 @@ private extension View {
 
             MessageBubble(
                 placeName: "장소 이름",
-                statusIndicator: .none,
                 layout: .fixedSize(170)
             ) {
                 BubbleText(text: "dkfdkkdlsjkd")
