@@ -9,6 +9,12 @@ import Foundation
 import Supabase
 
 final class MessageRepositoryImpl: MessageRepository {
+    private let storage: MessageStorage
+
+    init(storage: MessageStorage = MessageInMemoryStorage()) {
+        self.storage = storage
+    }
+
     func createMessage(_ request: CreateMessageRequest) async throws {
         let placeDTO: PlaceDTO? = request.place.map { place in
             PlaceDTO(
@@ -20,22 +26,14 @@ final class MessageRepositoryImpl: MessageRepository {
             )
         }
 
-        let dto: CreateMessageRequestDTO
-        if let placeDTO {
-            dto = CreateMessageRequestDTO(
-                content: request.content,
-                latitude: placeDTO.latitude,
-                longitude: placeDTO.longitude,
-                place: placeDTO
-            )
-        } else {
-            dto = CreateMessageRequestDTO(
+        return try await storage.create(
+            for: .init(
                 content: request.content,
                 latitude: request.coordinate.latitude,
                 longitude: request.coordinate.longitude,
                 place: placeDTO
             )
-        }
+        )
     }
 
     func deleteMessages(messageIDs: [MessageID]) async throws {
@@ -43,14 +41,17 @@ final class MessageRepositoryImpl: MessageRepository {
     }
 
     func fetchNearbyMessages(location: Coordinate, limit: Int?) async throws -> [Message] {
-        return []
+        try await storage.fetchNearby(at: location, limit: limit)
+            .map { $0.toDomain() }
     }
 
     func fetchPlaceMessages(placeID: PlaceID, limit: Int?) async throws -> [Message] {
-        return []
+        try await storage.fetchByPlace(at: placeID, limit: limit)
+            .map { $0.toDomain() }
     }
 
     func fetchRecentMessages(page: Int, pageSize: Int) async throws -> [Message] {
-        []
+        try await storage.fetchRecent(page: page, pageSize: pageSize)
+            .map { $0.toDomain() }
     }
 }
