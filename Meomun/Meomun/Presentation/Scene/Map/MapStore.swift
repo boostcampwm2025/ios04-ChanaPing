@@ -14,19 +14,13 @@ final class MapStore: Store {
         case onDisappear
         case cameraDidIdle(Coordinate)
         case cameraChangedByLocation(Coordinate)
-        case tapWriteButton
-        case dismissAddMessage
         case updateMessages([Message])
-        case tapPlaceMarker(Place)
-        case dismissSpaceView
         case setToast(String?)
     }
 
     enum Action {
         case setCameraCoordinate(Coordinate)
-        case setShowAddMessage(Bool)
         case setMessages([Message])
-        case setSelectedPlace(Place?)
         case setLoading(Bool)
         case setError(String)
         case setToastMessage(String?)
@@ -35,8 +29,6 @@ final class MapStore: Store {
     struct State {
         var messages: [Message] = []
         var cameraCoordinate: Coordinate?
-        var isShowingAddMessage: Bool = false
-        var selectedPlace: Place?
         var isLoading: Bool = false
         var errorMessage: String = ""
         var toastMessage: String?
@@ -77,24 +69,8 @@ final class MapStore: Store {
                 continuation.yield(.setCameraCoordinate(coordinate))
                 self.getNearbyMessages(at: coordinate, continuation: continuation)
 
-            case .tapWriteButton:
-                continuation.yield(.setShowAddMessage(true))
-                continuation.finish()
-
-            case .dismissAddMessage:
-                continuation.yield(.setShowAddMessage(false))
-                continuation.finish()
-
             case .updateMessages(let messages):
                 continuation.yield(.setMessages(messages))
-                continuation.finish()
-
-            case .tapPlaceMarker(let place):
-                continuation.yield(.setSelectedPlace(place))
-                continuation.finish()
-
-            case .dismissSpaceView:
-                continuation.yield(.setSelectedPlace(nil))
                 continuation.finish()
 
             case .setToast(let message):
@@ -113,12 +89,6 @@ final class MapStore: Store {
 
         case .setCameraCoordinate(let coordinate):
             newState.cameraCoordinate = coordinate
-
-        case .setShowAddMessage(let isShown):
-            newState.isShowingAddMessage = isShown
-
-        case .setSelectedPlace(let place):
-            newState.selectedPlace = place
 
         case .setLoading(let isLoading):
             newState.isLoading = isLoading
