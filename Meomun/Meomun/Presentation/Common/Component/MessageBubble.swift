@@ -53,13 +53,6 @@ struct MessageBubble<Content: View>: View {
     }
 
     var body: some View {
-        //        HStack(alignment: .top, spacing: 10) {
-        // 왼쪽 세로 라인
-        //            Capsule()
-        //                .fill(statusIndicatorColor)
-        //                .frame(width: 3)
-        //                .padding(.vertical, 11)
-
         VStack(alignment: .leading, spacing: 6) {
             // 장소 태그 (옵셔널)
             if let placeName, !placeName.isEmpty {
@@ -95,9 +88,6 @@ struct MessageBubble<Content: View>: View {
             background: bubbleBackground
         )
     }
-
-//        )
-//    }
 }
 
 private extension MessageBubble {
