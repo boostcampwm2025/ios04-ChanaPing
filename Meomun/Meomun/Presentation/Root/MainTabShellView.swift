@@ -50,7 +50,7 @@ struct MainTabShellView: View {
             )
 
         case .record:
-            EmptyView()
+            TimelineListView(messages: TimelineListView.getTimelineDummyMessages())
 
         case .myPage:
             SpaceView(
