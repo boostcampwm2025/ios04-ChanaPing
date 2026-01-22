@@ -53,37 +53,7 @@ struct MainTabShellView: View {
             EmptyView()
 
         case .myPage:
-            SpaceView(
-                store: SpaceStore(
-                    locationProvider: locationProvider,
-                    fetchPlaceMessagesUseCase: FetchPlaceMessagesUseCaseImpl(
-                        messageRepository: MessageRepositoryImpl()
-                    ),
-                    place: Place(
-                        id: PlaceID(
-                            value: ""
-                        ),
-                        name: "",
-                        coordinate: Coordinate(
-                            latitude: 0.0,
-                            longitude: 0.0
-                        )
-                    )
-                ),
-                domeEnvironment: DomeEnvironment(
-                    dayPart: .daybreak
-                ),
-                place: Place(
-                    id: PlaceID(
-                        value: ""
-                    ),
-                    name: "",
-                    coordinate: Coordinate(
-                        latitude: 0.0,
-                        longitude: 0.0
-                    )
-                )
-            )
+            EmptyView()
         }
     }
 }
