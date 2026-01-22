@@ -32,7 +32,7 @@ final class BubbleImageRenderer {
         let bubble = MessageBubble(
             placeName: message.placeTag?.name,
             statusIndicator: showsAccentLine ? (message.isRecent() ? .recent : .normal) : .none,
-            layout: showsAccentLine ? .flexible : .fixedWidth(rotatingBubbleWidth)
+            layout: showsAccentLine ? .flexible : .fixedSize(rotatingBubbleWidth)
         ) {
             BubbleText(text: message.content)
         }
@@ -55,7 +55,7 @@ final class BubbleImageRenderer {
         let bubble = MessageBubble(
             placeName: current.placeTag?.name,
             statusIndicator: .none,
-            layout: .fixedWidth(rotatingBubbleWidth)
+            layout: .fixedSize(rotatingBubbleWidth)
         ) {
             RotatingTextStack(
                 currentText: current.content,
