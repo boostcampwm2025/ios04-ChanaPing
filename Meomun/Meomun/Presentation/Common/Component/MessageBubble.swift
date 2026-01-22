@@ -35,42 +35,41 @@ struct MessageBubble<Content: View>: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 5) {
-            // 장소 태그 (옵셔널)
-            if let locationName = message.displayLocationName {
-                HStack(spacing: 4) {
-                    Image(systemName: "mappin.and.ellipse")
-                        .font(.system(size: 13, weight: .semibold))
-                        .foregroundStyle(Color(hex: "#53808C"))
-
-                    Text(locationName)
-                        .font(.system(size: 13, weight: .semibold))
-                        .foregroundStyle(Color.gray.opacity(0.8))
-                }
-            }
+            locationPart
 
             bodyPart
 
-            Divider()
-                .background(Color.black.opacity(0.8))
-                .padding(.top, 2)
-
-            Text(message.displayDateString)
-                .font(.system(size: 13, weight: .semibold))
-                .foregroundStyle(Color.gray.opacity(0.8))
-                .frame(maxWidth: .infinity, alignment: .trailing)
-                .padding(.top, -2)
+            datePart
         }
-        .padding(.vertical, 10)
+        .padding(.vertical, 9)
         .padding(.horizontal, 12)
         .applyLayout(
             layout,
             maxWidth: maxWidth
         )
         .background(bubbleBackground)
+        .overlay(alignment: .bottomLeading) {
+            dividerOverlay
+        }
     }
 }
 
 private extension MessageBubble {
+    @ViewBuilder
+    var locationPart: some View {
+        if let locationName = message.displayLocationName {
+            HStack(spacing: 4) {
+                Image(systemName: "mappin.and.ellipse")
+                    .font(.system(size: 13, weight: .semibold))
+                    .foregroundStyle(Color(hex: "#53808C"))
+
+                Text(locationName)
+                    .font(.system(size: 13, weight: .semibold))
+                    .foregroundStyle(Color.gray.opacity(0.8))
+            }
+        }
+    }
+
     @ViewBuilder
     var bodyPart: some View {
         let bodyView = content(message)
@@ -84,6 +83,14 @@ private extension MessageBubble {
         }
     }
 
+    var datePart: some View {
+        Text(message.displayDateString)
+            .font(.system(size: 13, weight: .semibold))
+            .foregroundStyle(Color.gray.opacity(0.8))
+            .frame(maxWidth: .infinity, alignment: .trailing)
+            .padding(.top, 5)
+    }
+
     var bubbleBackground: some View {
         RoundedRectangle(cornerRadius: 22, style: .continuous)
             .fill(Color.white)
@@ -91,6 +98,14 @@ private extension MessageBubble {
                     radius: 12,
                     x: 0,
                     y: 6)
+    }
+
+    var dividerOverlay: some View {
+        Rectangle()
+            .fill(Color.black.opacity(0.8))
+            .frame(height: 1 / UIScreen.main.scale)
+            .padding(.horizontal, 12)
+            .padding(.bottom, 29)
     }
 }
 
