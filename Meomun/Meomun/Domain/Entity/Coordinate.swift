@@ -14,6 +14,9 @@ struct Coordinate: Sendable, Equatable, Hashable {
     // 소수점 5자리 정밀도 (약 1.1m 오차)
     private static let precision: Double = 100_000
 
+    /// 서울 시청
+    static let seoulCity: Coordinate = .init(latitude: 37.5665, longitude: 126.9780)
+
     private var normalizedLatitude: Int {
         Int((latitude * Self.precision).rounded())
     }
