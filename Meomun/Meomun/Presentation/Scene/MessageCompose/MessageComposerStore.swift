@@ -15,13 +15,6 @@ enum EditorPolicy {
 }
 
 final class MessageComposerStore: Store {
-    enum ConfirmStatus: Equatable {
-        case idle
-        case sending
-        case success
-        case fail
-    }
-
     struct State: Equatable {
         var startLocation: Coordinate?  // TODO: 생성자 주입 고려
 
@@ -32,13 +25,13 @@ final class MessageComposerStore: Store {
         var alert: AlertModel?
         var toastMessage: String?
 
-        var confirmStatus: ConfirmStatus = .idle
+        var confirmStatus: LoadingStatus = .idle
 
         var isConfirmEnabled: Bool {
             message
                 .trimmingCharacters(in: .whitespacesAndNewlines)
                 .isEmpty == false
-            && confirmStatus != .sending
+            && confirmStatus != .loading
         }
     }
 
@@ -67,7 +60,7 @@ final class MessageComposerStore: Store {
         case updatePlace(Place)
         case clearPlace
 
-        case setConfirmStatus(ConfirmStatus)
+        case setConfirmStatus(LoadingStatus)
         case presentAlert(AlertModel?)
         case presentToast(String?)
         case close(isSuccess: Bool)
@@ -185,7 +178,7 @@ final class MessageComposerStore: Store {
 extension MessageComposerStore {
     private func createMessage(continuation: AsyncStream<Action>.Continuation) {
         Task {
-            continuation.yield(.setConfirmStatus(.sending))
+            continuation.yield(.setConfirmStatus(.loading))
             defer {
                 continuation.finish()
             }
