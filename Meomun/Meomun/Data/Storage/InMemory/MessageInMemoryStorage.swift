@@ -7,7 +7,7 @@
 
 import Foundation
 
-final class MessageInMemoryStorage: MessageStorage {
+actor MessageInMemoryStorage: MessageStorage {
 
     private var storage: [MessageResponseDTO] = []
 
