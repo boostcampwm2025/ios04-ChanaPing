@@ -46,7 +46,7 @@ final class BubbleImageRenderer {
         next: Message,
         progress: Double,
         scale: CGFloat? = nil
-    ) -> UIImage {
+    ) async -> UIImage {
         let bubble = MessageBubble(
             message: current,
             layout: .fixedSize(rotatingBubbleWidth)
