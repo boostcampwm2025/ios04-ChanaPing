@@ -15,17 +15,16 @@ struct RootView: View {
 
     var body: some View {
         Group {
-            #if DEBUG
-            MainTabShellView(userLocation: .init(latitude: 37.5665, longitude: 126.9780))
-            #else
             if let userLocation {
                 MainTabShellView(userLocation: userLocation)
             } else {
-                LocationGateView { coordinate in
-                    self.userLocation = coordinate
-                }
+                MainTabShellView(userLocation: .seoulCity)
+                    .overlay {
+                        LocationGateView { coordinate in
+                            self.userLocation = coordinate
+                        }
+                    }
             }
-            #endif
         }
         .environmentObject(locationProvider)
         .ignoresSafeArea(.keyboard)
