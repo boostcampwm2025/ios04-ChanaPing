@@ -23,6 +23,11 @@ extension YearMonth {
         self.year = comps.year ?? 0
         self.month = comps.month ?? 0
     }
+
+    func startDate(in calendar: Calendar = .current) -> Date {
+        let comps = DateComponents(year: year, month: month, day: 1)
+        return calendar.date(from: comps) ?? Date(timeIntervalSince1970: 0)
+    }
 }
 
 struct MessageTimelineGrouper {
