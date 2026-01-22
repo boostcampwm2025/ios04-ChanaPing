@@ -23,6 +23,11 @@ final class LocationProvider: NSObject, ObservableObject {
     private var oneShotContinuations: [CheckedContinuation<Coordinate, Error>] = []
     private var isRequestingOneShot = false
 
+    // 위치 권한 허용 여부
+    var hasAuthorized: Bool {
+        authorizationStatus == .authorizedWhenInUse || authorizationStatus == .authorizedAlways
+    }
+
     override init() {
         super.init()
         manager.delegate = self
