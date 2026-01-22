@@ -13,4 +13,5 @@ protocol MessageRepository: Sendable {
 
     func fetchNearbyMessages(location: Coordinate, limit: Int?) async throws -> [Message]
     func fetchPlaceMessages(placeID: PlaceID, limit: Int?) async throws -> [Message]
+    func fetchRecentMessages(page: Int, pageSize: Int) async throws -> [Message]
 }

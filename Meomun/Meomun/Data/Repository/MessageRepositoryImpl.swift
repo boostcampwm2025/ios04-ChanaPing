@@ -49,4 +49,8 @@ final class MessageRepositoryImpl: MessageRepository {
     func fetchPlaceMessages(placeID: PlaceID, limit: Int?) async throws -> [Message] {
         return []
     }
+
+    func fetchRecentMessages(page: Int, pageSize: Int) async throws -> [Message] {
+        []
+    }
 }
