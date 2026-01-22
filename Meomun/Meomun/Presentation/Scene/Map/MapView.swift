@@ -126,7 +126,8 @@ struct MapView: View {
                         domeEnvironment: .init(
                             dayPart: .afternoon
                         ),
-                        place: place
+                        place: place,
+                        onNavigate: { _ in }
                     )
                 }
             }

@@ -22,16 +22,23 @@ struct SpaceView: View {
     @State private var syncTask: Task<Void, Never>?
 
     private let place: Place
+    private let onNavigate: (Coordinate) -> Void
 
     private let rotationCamera = RotationCamera(
         position: .init(x: 0, y: 0.7, z: 0),    // 카메라 시작 위치 (돔 중심에서 약간 위)
         rotateSensitivity: 0.003                // 회전 민감도 (값이 클수록 더 빠르게 회전)
     )
 
-    init(store: SpaceStore, domeEnvironment: DomeEnvironment, place: Place) {
+    init(
+        store: SpaceStore,
+        domeEnvironment: DomeEnvironment,
+        place: Place,
+        onNavigate: @escaping (Coordinate) -> Void
+    ) {
         _store = StateObject(wrappedValue: store)
         self.domeEnvironment = domeEnvironment
         self.place = place
+        self.onNavigate = onNavigate
     }
 
     var body: some View {
@@ -62,33 +69,13 @@ struct SpaceView: View {
                     Spacer()
 
                     WriteButton {   // TODO: - 위치 조정 필요
-                        Task { await store.send(intent: .tapWriteButton) }
+                        if let coordinate = locationProvider.current {
+                            onNavigate(coordinate)
+                        }
                     }
                 }
                 .padding(.bottom, 96)
             }
-        }
-        .navigationDestination(
-            isPresented: Binding(
-                get: { store.state.isShowingAddMessage },
-                set: { isPresented in
-                    if !isPresented {
-                        Task { await store.send(intent: .dismissAddMessage) }
-                    }
-                }
-            )
-        ) {
-            MessageComposerView(
-                store: MessageComposerStore(
-                    locationProvider: locationProvider,
-                    createMessage: CreateMessageUseCaseImpl(
-                        messageRepository: MessageRepositoryImpl()
-                    ),
-                    onClose: { _ in
-                        Task { await store.send(intent: .dismissAddMessage) }
-                    }
-                )
-            )
         }
         .task {
             await store.send(intent: .onAppear(placeID: place.id))
@@ -522,7 +509,8 @@ private struct BubblePlacer {
                     latitude: 0,
                     longitude: 0
                 )
-            )
+            ),
+            onNavigate: { _ in }
         )
     }
 }
