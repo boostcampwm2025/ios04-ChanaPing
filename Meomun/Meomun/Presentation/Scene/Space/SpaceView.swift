@@ -22,74 +22,59 @@ struct SpaceView: View {
     @State private var syncTask: Task<Void, Never>?
 
     private let place: Place
+    private let onNavigate: (Coordinate) -> Void
 
     private let rotationCamera = RotationCamera(
         position: .init(x: 0, y: 0.7, z: 0),    // 카메라 시작 위치 (돔 중심에서 약간 위)
         rotateSensitivity: 0.003                // 회전 민감도 (값이 클수록 더 빠르게 회전)
     )
 
-    init(store: SpaceStore, domeEnvironment: DomeEnvironment, place: Place) {
+    init(
+        store: SpaceStore,
+        domeEnvironment: DomeEnvironment,
+        place: Place,
+        onNavigate: @escaping (Coordinate) -> Void
+    ) {
         _store = StateObject(wrappedValue: store)
         self.domeEnvironment = domeEnvironment
         self.place = place
+        self.onNavigate = onNavigate
     }
 
     var body: some View {
-        NavigationStack {
-            ZStack {
-                RealityView { content in
-                    // 가상 카메라 모드 설정 (AR이 아닌 3D 공간)
-                    content.camera = .virtual
-                    configureSpace(content: content)
-                }
-                .gesture(
-                    DragGesture()
-                        .onChanged { value in
-                            rotationCamera.handleDrag(
-                                translationX: Float(value.translation.width),
-                                translationY: Float(value.translation.height)
-                            )
-                        }
-                        .onEnded { _ in
-                            rotationCamera.endDrag()
-                        }
-                )
-                .ignoresSafeArea()
+        ZStack {
+            RealityView { content in
+                // 가상 카메라 모드 설정 (AR이 아닌 3D 공간)
+                content.camera = .virtual
+                configureSpace(content: content)
+            }
+            .gesture(
+                DragGesture()
+                    .onChanged { value in
+                        rotationCamera.handleDrag(
+                            translationX: Float(value.translation.width),
+                            translationY: Float(value.translation.height)
+                        )
+                    }
+                    .onEnded { _ in
+                        rotationCamera.endDrag()
+                    }
+            )
+            .ignoresSafeArea()
 
-                VStack {
+            VStack {
+                Spacer()
+
+                HStack {
                     Spacer()
 
-                    HStack {
-                        Spacer()
-
-                        WriteButton {   // TODO: - 위치 조정 필요
-                            Task { await store.send(intent: .tapWriteButton) }
+                    WriteButton {   // TODO: - 위치 조정 필요
+                        if let coordinate = locationProvider.current {
+                            onNavigate(coordinate)
                         }
                     }
-                    .padding(.bottom, 96)
                 }
-            }
-            .navigationDestination(
-                isPresented: Binding(
-                    get: { store.state.isShowingAddMessage },
-                    set: { isPresented in
-                        if !isPresented {
-                            Task { await store.send(intent: .dismissAddMessage) }
-                        }
-                    }
-                )
-            ) {
-                MessageComposerView(
-                    store: MessageComposerStore(
-                        locationProvider: locationProvider,
-                        createMessage: CreateMessageUseCaseImpl(
-                            messageRepository: MessageRepositoryImpl()
-                        ),
-                        onClose: { _ in
-                            Task { await store.send(intent: .dismissAddMessage) }
-                        }
-                    )
-                )
+                .padding(.bottom, 96)
             }
         }
         .task {
@@ -524,7 +509,8 @@ private struct BubblePlacer {
                     latitude: 0,
                     longitude: 0
                 )
-            )
+            ),
+            onNavigate: { _ in }
         )
     }
 }

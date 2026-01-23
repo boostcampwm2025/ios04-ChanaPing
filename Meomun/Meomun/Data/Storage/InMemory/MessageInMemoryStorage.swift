@@ -30,6 +30,8 @@ actor MessageInMemoryStorage: MessageStorage {
     }
 
     func fetchRecent(page: Int, pageSize: Int) async throws -> [MessageResponseDTO] {
+        guard page >= 0, pageSize >= 0 else { return [] }
+
         // 1. 최신순 정렬
         let sorted = storage.sorted { $0.createdAt > $1.createdAt }
 

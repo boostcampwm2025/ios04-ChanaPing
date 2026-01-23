@@ -27,12 +27,12 @@ struct FloatingTabBar: View {
                 onSelect(.record)
             }
 
-            FloatingTabItem(
-                systemImageName: "person",
-                isSelected: selectedTab == .myPage
-            ) {
-                onSelect(.myPage)
-            }
+//            FloatingTabItem(
+//                systemImageName: "person",
+//                isSelected: selectedTab == .myPage
+//            ) {
+//                onSelect(.myPage)
+//            }
         }
         .padding(.horizontal, 22)
         .padding(.vertical, 22)

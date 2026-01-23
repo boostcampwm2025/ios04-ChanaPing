@@ -9,8 +9,11 @@ import SwiftUI
 
 struct MapView: View {
     @Environment(\.setTabBarHidden) private var setTabBarHidden
-    @EnvironmentObject private var locationProvider: LocationProvider
+
+    @State private var navigationPath = NavigationPath()
+
     @StateObject private var store: MapStore
+    @EnvironmentObject private var locationProvider: LocationProvider
 
     private let messageMarkerManager: MessageMarkerManager
     private let initialUserLocation: Coordinate
@@ -29,22 +32,19 @@ struct MapView: View {
     }
 
     var body: some View {
-        NavigationStack {
+        NavigationStack(path: $navigationPath) {
             ZStack {
                 MapViewWrapper(
                     userLocation: initialUserLocation,
                     markerManager: messageMarkerManager,
                     messages: store.state.messages,
                     onTapPlace: { place in
-                        Task {
-                            await store.send(intent: .tapPlaceMarker(place))
-                        }
+                        navigationPath.append(MapDestination.space(place: place))
                     },
                     onTapNoPlace: { messages in
                         Task {
                             await store.send(intent: .tapNoPlaceMarker(messages))
                         }
-                        print("NoPlace messages tapped: \(messages.count)")
                     },
                     onCameraIdle: { coordinate in
                         Task {
@@ -71,7 +71,9 @@ struct MapView: View {
                         Spacer()
 
                         WriteButton {
-                            Task { await store.send(intent: .tapWriteButton) }
+                            if let coordinate = locationProvider.current {
+                                navigationPath.append(MapDestination.messageComposer)
+                            }
                         }
                     }
                 }
@@ -88,62 +90,46 @@ struct MapView: View {
                     }
                 )
             ) {
-                TimelineListView(store: TimelineListStore(initialMessages: store.state.selectedNoPlaceMessages), configuration: .bottomSheet)
+                TimelineListView(
+                    store: TimelineListStore(
+                        initialMessages: store.state.selectedNoPlaceMessages,
+                        fetchRecentMessagesUseCase: FetchRecentMessagesUseCaseImpl(repository: MessageRepositoryImpl())
+                    ),
+                    configuration: .bottomSheet
+                )
                     .presentationDetents(.init(arrayLiteral: .medium, .large))
                     .presentationDragIndicator(.visible)
             }
-            .navigationDestination(
-                isPresented: Binding(
-                    get: { store.state.isShowingAddMessage },
-                    set: { isPresented in
-                        if !isPresented {
-                            Task {
-                                await store.send(intent: .dismissAddMessage)
-                            }
-                        }
-                    }
-                )
-            ) {
-                MessageComposerView(
-                    store: MessageComposerStore(
-                        locationProvider: locationProvider,
-                        createMessage: CreateMessageUseCaseImpl(
-                            messageRepository: MessageRepositoryImpl()
-                        ),
-                        onClose: { _ in
-                            Task { await store.send(intent: .dismissAddMessage) }
-                        }
-                    )
-                )
-                .onAppear { setTabBarHidden(true) }
-                .onDisappear { setTabBarHidden(false) }
-            }
-            .navigationDestination(
-                isPresented: Binding(
-                    get: { store.state.selectedPlace != nil },
-                    set: { isPresented in
-                        if !isPresented {
-                            Task {
-                                await store.send(intent: .dismissSpaceView)
-                            }
-                        }
-                    }
-                )
-            ) {
-                if let place = store.state.selectedPlace {
+            .navigationDestination(for: MapDestination.self) { destination in
+                switch destination {
+                case .space(let place):
                     SpaceView(
-                        store: SpaceStore(
+                        store: .init(
                             locationProvider: locationProvider,
                             fetchPlaceMessagesUseCase: FetchPlaceMessagesUseCaseImpl(
                                 messageRepository: MessageRepositoryImpl()
                             ),
                             place: place
                         ),
-                        domeEnvironment: .init(
-                            dayPart: .afternoon
-                        ),
-                        place: place
+                        domeEnvironment: .init(dayPart: .afternoon),
+                        place: place,
+                        onNavigate: { _ in
+                            navigationPath.append(MapDestination.messageComposer)
+                        }
                     )
+                    .onAppear { setTabBarHidden(true) }
+
+                case .messageComposer:
+                    MessageComposerView(
+                        store: .init(
+                            locationProvider: locationProvider,
+                            createMessage: CreateMessageUseCaseImpl(messageRepository: MessageRepositoryImpl()),
+                            onClose: { _ in
+                                navigationPath.removeLast()
+                            }
+                        )
+                    )
+                    .onAppear { setTabBarHidden(true) }
                 }
             }
             .task {

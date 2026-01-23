@@ -14,16 +14,10 @@ final class MapStore: Store {
         case onDisappear
         case cameraDidIdle(Coordinate)
         case cameraChangedByLocation(Coordinate)
-        case tapWriteButton
         case dismissAddMessage
         case updateMessages([Message])
-
-        case tapPlaceMarker(Place)
-        case dismissSpaceView
-
         case tapNoPlaceMarker([Message])
         case dismissTimelineView
-
         case setToast(String?)
     }
 
@@ -31,7 +25,6 @@ final class MapStore: Store {
         case setCameraCoordinate(Coordinate)
         case setShowAddMessage(Bool)
         case setMessages([Message])
-        case setSelectedPlace(Place?)
         case setSelectedNoPlace([Message])
         case setLoading(Bool)
         case setError(String)
@@ -42,7 +35,6 @@ final class MapStore: Store {
         var messages: [Message] = []
         var cameraCoordinate: Coordinate?
         var isShowingAddMessage: Bool = false
-        var selectedPlace: Place?
         var selectedNoPlaceMessages: [Message] = []
         var isLoading: Bool = false
         var errorMessage: String = ""
@@ -84,24 +76,12 @@ final class MapStore: Store {
                 continuation.yield(.setCameraCoordinate(coordinate))
                 self.getNearbyMessages(at: coordinate, continuation: continuation)
 
-            case .tapWriteButton:
-                continuation.yield(.setShowAddMessage(true))
-                continuation.finish()
-
             case .dismissAddMessage:
                 continuation.yield(.setShowAddMessage(false))
                 continuation.finish()
 
             case .updateMessages(let messages):
                 continuation.yield(.setMessages(messages))
-                continuation.finish()
-
-            case .tapPlaceMarker(let place):
-                continuation.yield(.setSelectedPlace(place))
-                continuation.finish()
-
-            case .dismissSpaceView:
-                continuation.yield(.setSelectedPlace(nil))
                 continuation.finish()
 
             case .tapNoPlaceMarker(let messages):
@@ -131,9 +111,6 @@ final class MapStore: Store {
 
         case .setShowAddMessage(let isShown):
             newState.isShowingAddMessage = isShown
-
-        case .setSelectedPlace(let place):
-            newState.selectedPlace = place
 
         case .setSelectedNoPlace(let messages):
             newState.selectedNoPlaceMessages = messages
@@ -178,12 +155,11 @@ final class MapStore: Store {
             continuation.yield(.setLoading(true))
 
             do {
-//                let messages = try await self.getNearbyMessagesUseCase.execute(
-//                    location: coordinate,
-//                    limit: nil
-//                )
-
-                let messages = self.getDummyMessages()
+                let messages = try await self.getNearbyMessagesUseCase.execute(
+                    location: coordinate,
+                    limit: nil
+                )
+//                let messages = self.getDummyMessages()
 
                 guard !Task.isCancelled else { return }
 

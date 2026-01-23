@@ -30,7 +30,7 @@ extension Message {
         if !address.isEmpty {
             return address
         }
-        return nil
+        return "와우산로 32"
     }
 
     var displayDateString: String { // 같은 날이면 시간, 다른 날이면 날짜로 보여지게 하기

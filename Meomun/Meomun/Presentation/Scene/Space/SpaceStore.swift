@@ -12,8 +12,6 @@ final class SpaceStore: Store {
 
     enum Intent {
         case onAppear(placeID: PlaceID)
-        case tapWriteButton
-        case dismissAddMessage
         case setToast(String?)
     }
 
@@ -22,7 +20,6 @@ final class SpaceStore: Store {
         case setMessages([Message])
         case setError(String)
         case setUserLocation(Coordinate)
-        case setShowAddMessage(Bool)
         case setCurrentPlaceID(PlaceID)
         case setToastMessage(String?)
     }
@@ -32,7 +29,6 @@ final class SpaceStore: Store {
         var errorMessage: String = ""
         var messages: [Message] = []
         var userLocation: Coordinate?           // TODO: - 지도 > 공간 진입 시점 좌표 넘겨주고, 옵셔널 지우기
-        var isShowingAddMessage: Bool = false
         var currentPlaceID: PlaceID?
         var toastMessage: String?
     }
@@ -66,44 +62,6 @@ final class SpaceStore: Store {
                 continuation.yield(.setCurrentPlaceID(placeID))
                 fetchMessages(for: placeID, continuation: continuation)
 
-            case .tapWriteButton:
-                oneShotTask?.cancel()
-                oneShotTask = nil
-
-                continuation.yield(.setError(""))
-                continuation.yield(.setLoading(true))
-
-                oneShotTask = Task { [weak self] in
-                    guard let self else { return }
-
-                    do {
-                        let coordinate = try await self.locationProvider.requestCurrentOnce()
-                        AppLog.debug("Space write: got location: \(coordinate)", category: .location)
-                        if Task.isCancelled { return }
-
-                        continuation.yield(.setUserLocation(coordinate))
-                        continuation.yield(.setShowAddMessage(true))
-                        continuation.yield(.setLoading(false))
-                        continuation.finish()
-                    } catch {
-                        if Task.isCancelled { return }
-
-                        continuation.yield(.setError("현재 위치를 가져오지 못했어요."))
-                        continuation.yield(.setLoading(false))
-                        continuation.finish()
-                    }
-                }
-
-                // 스트림 종료 시 task 정리
-                continuation.onTermination = { [weak self] _ in
-                    self?.oneShotTask?.cancel()
-                    self?.oneShotTask = nil
-                }
-
-            case .dismissAddMessage:
-                continuation.yield(.setShowAddMessage(false))
-                continuation.finish()
-
             case .setToast(let message):
                 continuation.yield(.setToastMessage(message))
                 continuation.finish()
@@ -126,9 +84,6 @@ final class SpaceStore: Store {
 
         case .setUserLocation(let location):
             newState.userLocation = location
-
-        case .setShowAddMessage(let isShown):
-            newState.isShowingAddMessage = isShown
 
         case .setCurrentPlaceID(let placeID):
             newState.currentPlaceID = placeID

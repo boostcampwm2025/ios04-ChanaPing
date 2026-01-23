@@ -27,13 +27,18 @@ struct TimelineListView: View {
             if !store.state.messages.isEmpty {
                 content
             }
-            
+
             if configuration.showsFooter && store.state.messages.isEmpty {
                 Spacer()
 
                 footer
 
                 Spacer()
+            }
+        }
+        .onAppear {
+            Task {
+                await store.send(intent: .onAppear)
             }
         }
         .background(Color.meomunBackgroundColor)
@@ -128,7 +133,10 @@ extension TimelineListView {
     var emptyMessages: [Message] = []
     TimelineListView(
         store: TimelineListStore(
-            initialMessages: emptyMessages
+            initialMessages: emptyMessages,
+            fetchRecentMessagesUseCase: FetchRecentMessagesUseCaseImpl(
+                repository: MessageRepositoryImpl()
+            )
         )
     )
 }

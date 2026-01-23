@@ -20,6 +20,7 @@ final class TimelineListStore: Store {
     }
 
     enum Intent: Equatable {
+        case onAppear
         case setMessages([Message])
         case deleteMessages([Message.ID])
 
@@ -29,6 +30,7 @@ final class TimelineListStore: Store {
 
     enum Action {
         case setMessages([Message])
+        case addMessages([Message])
         case setSelectedSection(YearMonth?)
         case setEditing(Bool)
         case deleteMessages([Message.ID])
@@ -36,13 +38,28 @@ final class TimelineListStore: Store {
 
     @Published var state: State
 
-    init(initialMessages: [Message] = []) {
+    private let fetchRecentMessagesUseCase: FetchRecentMessagesUseCase
+
+    init(initialMessages: [Message] = [], fetchRecentMessagesUseCase: FetchRecentMessagesUseCase) {
         self.state = State(messages: initialMessages)
+        self.fetchRecentMessagesUseCase = fetchRecentMessagesUseCase
     }
 
     func action(intent: Intent) -> AsyncStream<Action> {
-        AsyncStream<Action>(bufferingPolicy: .unbounded) { continuation in
+        AsyncStream { continuation in
             switch intent {
+            case .onAppear:
+                Task {
+                    do {
+                        // TODO: 페이지네이션 구현
+                        let messages = try await fetchRecentMessagesUseCase.execute(page: 0, pageSize: 10)
+                        continuation.yield(.addMessages(messages))
+                    } catch {
+                        AppLog.debug(error.localizedDescription, category: .store)
+                    }
+                }
+                return
+
             case .tapSection(let section):
                 // TODO: 섹션 탭 동작 구현
                 continuation.yield(.setSelectedSection(section))
@@ -70,6 +87,9 @@ final class TimelineListStore: Store {
         case .setMessages(let messages):
             newState.messages = messages
             cleanupSectionIfNeeded(&newState)
+
+        case .addMessages(let messages):
+            newState.messages += messages
 
         case .setSelectedSection(let section):
             newState.selectedSection = section
