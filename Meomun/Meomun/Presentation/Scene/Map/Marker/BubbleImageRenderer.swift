@@ -22,22 +22,17 @@ final class BubbleImageRenderer {
     /// 단일 메시지 버블 이미지를 렌더링합니다.
     /// - Parameters:
     ///   - message: 렌더링할 메시지
-    ///   - showsAccentLine: 좌측 상태 라인 표시 여부
     ///   - scale: 렌더링 스케일 (nil이면 화면 스케일 사용)
     func renderSingleBubble(
         message: Message,
-        showsAccentLine: Bool,
         scale: CGFloat? = nil
-    ) -> UIImage {
+    ) async -> UIImage {
         let bubble = MessageBubble(
-            placeName: message.placeTag?.name,
-            statusIndicator: showsAccentLine ? (message.isRecent() ? .recent : .normal) : .none,
-            layout: showsAccentLine ? .flexible : .fixedWidth(rotatingBubbleWidth)
-        ) {
-            BubbleText(text: message.content)
-        }
+            message: message,
+            layout: .flexible
+        )
 
-        return render(view: bubble.padding(4), scale: scale ?? UIScreen.main.scale)
+        return await render(view: bubble.padding(4), scale: scale ?? UIScreen.main.scale)
     }
 
     /// 애니메이션 진행도에 따른 회전 버블의 이미지를 렌더링합니다.
@@ -51,12 +46,11 @@ final class BubbleImageRenderer {
         next: Message,
         progress: Double,
         scale: CGFloat? = nil
-    ) -> UIImage {
+    ) async -> UIImage {
         let bubble = MessageBubble(
-            placeName: current.placeTag?.name,
-            statusIndicator: .none,
-            layout: .fixedWidth(rotatingBubbleWidth)
-        ) {
+            message: current,
+            layout: .fixedSize(rotatingBubbleWidth)
+        ) { _ in
             RotatingTextStack(
                 currentText: current.content,
                 nextText: next.content,
@@ -64,7 +58,7 @@ final class BubbleImageRenderer {
             )
         }
 
-        return render(view: bubble.padding(4), scale: scale ?? UIScreen.main.scale)
+        return await render(view: bubble.padding(4), scale: scale ?? UIScreen.main.scale)
     }
 
     /// 스택 버블 이미지를 렌더링합니다.
@@ -74,15 +68,17 @@ final class BubbleImageRenderer {
     func renderStackBubble(
         messages: [Message],
         scale: CGFloat? = nil
-    ) -> UIImage {
+    ) async -> UIImage {
         // TODO: MessageStackBubble 구현 후 교체
         guard let first = messages.first else { return UIImage() }
-        return renderSingleBubble(message: first, showsAccentLine: true, scale: scale)
+        return await renderSingleBubble(message: first, scale: scale)
     }
 }
 
 extension BubbleImageRenderer {
-    private func render<V: View>(view: V, scale: CGFloat) -> UIImage {
+    private func render<V: View>(view: V, scale: CGFloat) async -> UIImage {
+        await Task.yield()
+
         let renderer = ImageRenderer(content: view)
         renderer.scale = scale
         renderer.isOpaque = false

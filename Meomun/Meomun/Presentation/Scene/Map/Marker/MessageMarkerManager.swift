@@ -9,6 +9,20 @@ import UIKit
 
 import NMapsMap
 
+enum MarkerPlaceholder {
+    static let transparent1px: UIImage = {
+        let size = CGSize(width: 1, height: 1)
+        UIGraphicsBeginImageContextWithOptions(size, false, 0)
+        defer { UIGraphicsEndImageContext() }
+
+        return UIGraphicsGetImageFromCurrentImageContext() ?? UIImage()
+    }()
+
+    static let overlayImage: NMFOverlayImage = {
+        NMFOverlayImage(image: transparent1px)
+    }()
+}
+
 // MARK: - MessageMarkerManager
 
 /// 지도 위 메시지 마커의 생성, 업데이트, 애니메이션을 관리하는 객체입니다.
@@ -19,13 +33,16 @@ import NMapsMap
 /// noPlaceMessagesByCoord: [좌표: [장소 태그가 없는 메시지들]]
 /// markers: [마커키: 네이버맵 마커]
 /// animationStates: [마커키: 애니메이션 상태]
+/// renderTasks: [마커키: 렌더링 Task] (누적 방지, 최신만 반영)
+/// fadeTasks:   [마커키: 페이드 Task] (페이드 애니메이션 중복 방지)
+/// hasFadedIn:  Set<마커키> (마커별 최초 1회 페이드 적용 여부)
 /// ```
 ///
 /// ## 사용 흐름
 /// ```
 /// 1. loadMessages() -> 초기 메시지 로딩 (전체 마커 생성)
-/// 2. handleEvent() -> 실시간 이벤트 처리 (해당 좌표만 업데이트)
-/// 3. updateAnimations() -> 매 프레임 애니메이션 업데이트 (60fps)
+/// 2. handleEvent() -> 실시간 이벤트 처리 (해당 좌표의 마커/상태 갱신 + 필요 시 아이콘 재렌더)
+/// 3. updateAnimations() -> 애니메이션 대상 마커는 매 프레임 iconImage 갱신 (60fps)
 /// ```
 @MainActor
 final class MessageMarkerManager {
@@ -44,6 +61,15 @@ final class MessageMarkerManager {
 
     /// 한 마커에 표시할 최대 메시지 수 (기본값: 10)
     private let displayLimit: Int
+
+    /// 마커별 렌더링 Task (누적 방지, 최신만 반영)
+    private var renderTasks: [MarkerGroupKey: Task<Void, Never>] = [:]
+
+    /// 페이드 관리용 Task
+    private var fadeTasks: [MarkerGroupKey: Task<Void, Never>] = [:]
+
+    /// 마커 페이드인 여부 상태 플래그
+    private var hasFadedIn: Set<MarkerGroupKey> = []
 
     // MARK: - Dependencies
 
@@ -65,11 +91,17 @@ final class MessageMarkerManager {
 
 extension MessageMarkerManager {
     /// 네이버맵 마커 객체를 생성합니다.
+    ///  - 기본 핀 깜빡임 방지를 위해 투명 placeholder icon을 먼저 세팅하고,
+    ///  - 최초 1회는 렌더링 완료 후 페이드 인, 이후 갱신은 alpha = 1 유지한 채 iconImage만 교체
     private func makeMarker(at position: NMGLatLng, mapView: NMFMapView) -> NMFMarker {
         let marker = NMFMarker(position: position)
         marker.anchor = CGPoint(x: 0.5, y: 1.0)   // 마커 하단 중앙이 좌표 위치
         marker.zIndex = 1000                      // 다른 오버레이보다 위에 표시
         marker.isFlat = false                     // 3D 틸트 시에도 수직 유지
+
+        marker.iconImage = MarkerPlaceholder.overlayImage
+        marker.alpha = 0.0
+
         marker.mapView = mapView                  // 지도에 마커 표시
         return marker
     }
@@ -110,6 +142,8 @@ extension MessageMarkerManager {
         // 5. 저장된 메시지 기반으로 모든 마커 생성
         rebuildAllMarkers(mapView: mapView, onTapPlace: onTapPlace, onTapNoPlace: onTapNoPlace)
     }
+
+    // TODO: - handleEvent 정리 (실시간 이벤트 없으므로)
 
     /// 실시간 이벤트 처리 (메시지 추가/삭제 시 호출)
     /// - Parameters:
@@ -213,6 +247,9 @@ extension MessageMarkerManager {
     /// - 마커 딕셔너리 초기화
     /// - 애니메이션 상태 초기화
     /// - 메시지 저장소 초기화
+    /// - 진행 중인 렌더링 Task 취소 (누적 방지)
+    /// - fadeTasks 취소
+    /// - hasFadedIn 초기화
     private func clearAll() {
         // 지도에서 마커 제거
         for (_, marker) in markers {
@@ -222,6 +259,13 @@ extension MessageMarkerManager {
         animationStates.removeAll()
         placeMessagesByCoord.removeAll()
         noPlaceMessagesByCoord.removeAll()
+
+        for (_, task) in renderTasks { task.cancel() }
+        renderTasks.removeAll()
+
+        for (_, task) in fadeTasks { task.cancel() }
+        fadeTasks.removeAll()
+        hasFadedIn.removeAll()
     }
 }
 
@@ -291,7 +335,9 @@ extension MessageMarkerManager {
         )
     }
 
-    /// 단일 마커를 생성하거나 업데이트합니다.
+    /// 단일 마커가 없으면 생성하거나 있으면 재사용하고,
+    /// 메시지 상태에 따라 아이콘을 비동기로 렌더링하여 갱신합니다.
+    /// (메시지가 없으면 markerType이 nil이므로 아이콘 갱신 없이 종료됩니다.)
     private func updateMarker(
         coord: Coordinate,
         isPlace: Bool,
@@ -301,20 +347,28 @@ extension MessageMarkerManager {
         // 마커 식별 키 생성
         let key = MarkerGroupKey(coordinate: coord, isPlace: isPlace)
 
-        // 1. 기존 마커 제거 (있다면)
-        removeMarker(for: key)
+        AppLog.debug("updateMarker key=\(key) count(place)=\(placeMessagesByCoord[coord]?.count ?? 0) count(noPlace)=\(noPlaceMessagesByCoord[coord]?.count ?? 0)", category: .location)
+
+        // 1. 기존 마커가 있다면 그대로 쓰고, 없으면 새로 만들기
+        let marker: NMFMarker
+        if let existing = markers[key] {
+            marker = existing
+        } else {
+            marker = createMarker(at: coord, mapView: mapView)
+            markers[key] = marker
+        }
 
         // 2. 메시지 조회 (최신 displayLimit개만)
         let messagesInCoord = isPlace ? placeMessagesByCoord[coord] : noPlaceMessagesByCoord[coord]
         let messages = Array((messagesInCoord ?? []).suffix(displayLimit))
 
         // 3. MarkerType 결정 (메시지가 없으면 nil -> 마커 생성 안 함)
-        guard let markerType = MarkerType.from(messages: messages, isPlace: isPlace) else { return }
+        guard let markerType = MarkerType.from(messages: messages, isPlace: isPlace) else {
+            removeMarker(for: key)
+            return
+        }
 
-        // 4. 마커 생성 (타입에 맞는 이미지로)
-        let marker = createMarker(for: markerType, at: coord, mapView: mapView)
-
-        // 5. 탭 핸들러 등록
+        // 4. 탭 핸들러 등록 (위에서 만든 마커 재사용)
         // - 탭 시점의 최신 메시지를 조회하여 콜백에 전달
         marker.touchHandler = { [weak self] _ in
             guard let self else { return true }
@@ -323,10 +377,10 @@ extension MessageMarkerManager {
             return true
         }
 
-        // 6. 마커 저장
-        markers[key] = marker
+        // 5. 초기 이미지 렌더 (key 기준 검증 + Task 누적 방지)
+        scheduleInitialRender(for: key, marker: marker, markerType: markerType)
 
-        // 7. 회전 애니메이션 상태 등록 (rotatingBubble 또는 stackBubble인 경우)
+        // 6. 회전 애니메이션 상태 등록 (rotatingBubble 또는 stackBubble인 경우)
         switch markerType {
         case .rotatingBubble, .stackBubble:
             let messagesProvider: () -> [Message] = { [weak self] in
@@ -349,39 +403,59 @@ extension MessageMarkerManager {
         markers[key]?.mapView = nil           // 지도에서 제거
         markers.removeValue(forKey: key)      // 마커 딕셔너리에서 삭제
         animationStates.removeValue(forKey: key)  // 애니메이션 상태 삭제
+
+        renderTasks[key]?.cancel()
+        renderTasks.removeValue(forKey: key)
+
+        fadeTasks[key]?.cancel()
+        fadeTasks.removeValue(forKey: key)
+
+        hasFadedIn.remove(key)
     }
 
     /// MarkerType에 맞는 마커를 생성하고 이미지를 설정합니다.
     private func createMarker(
-        for markerType: MarkerType,
         at coord: Coordinate,
         mapView: NMFMapView
     ) -> NMFMarker {
         let position = NMGLatLng(lat: coord.latitude, lng: coord.longitude)
-        let marker = makeMarker(at: position, mapView: mapView)
+        return makeMarker(at: position, mapView: mapView)
+    }
 
-        // MarkerType에 따라 다른 이미지 렌더링
-        let image: UIImage
+    private func scheduleInitialRender(
+        for key: MarkerGroupKey,
+        marker: NMFMarker,
+        markerType: MarkerType
+    ) {
+        // 기존 렌더 작업 취소 (최신만 반영)
+        renderTasks[key]?.cancel()
 
-        switch markerType {
-        case .singleBubble(let message):
-            // 메시지 1개: 최신 표시 accent line + 단일 버블
-            image = bubbleImageRenderer.renderSingleBubble(message: message, showsAccentLine: true)
+        renderTasks[key] = Task { @MainActor in
+            let image: UIImage
 
-        case .rotatingBubble(let messages), .stackBubble(let messages):
-            // 메시지 2개 이상: 첫 번째 메시지로 초기 이미지
-            // 악센트 라인 없음 (회전 중에는 표시 안 함)
-            // stackBubble도 임시로 rotatingBubble과 동일하게 처리 (추후 별도 UI 구현 예정)
-            guard let firstMessage = messages.first else {
-                image = UIImage()
-                break
+            switch markerType {
+            case .singleBubble(let message):
+                image = await bubbleImageRenderer.renderSingleBubble(message: message)
+
+            case .rotatingBubble(let messages), .stackBubble(let messages):
+                guard let first = messages.first else { return }
+                image = await bubbleImageRenderer.renderSingleBubble(message: first)
             }
 
-            image = bubbleImageRenderer.renderSingleBubble(message: firstMessage, showsAccentLine: false)
-        }
+            // 취소되었으면 적용 X
+            guard !Task.isCancelled else { return }
 
-        marker.iconImage = NMFOverlayImage(image: image)
-        return marker
+            // 아직 이 key의 현재 마커가 이 marker인지 확인
+            guard markers[key] === marker else { return }
+
+            if hasFadedIn.contains(key) {
+                marker.iconImage = NMFOverlayImage(image: image)
+                marker.alpha = 1.0
+            } else {
+                hasFadedIn.insert(key)
+                applyIconWithFade(image, to: marker, key: key)
+            }
+        }
     }
 }
 
@@ -391,8 +465,8 @@ extension MessageMarkerManager {
 
     /// 회전 애니메이션 상태를 업데이트합니다.
     ///
-    /// MapViewController의 타이머에서 매 프레임(60fps) 호출됩니다.
-    /// rotatingBubble 타입의 마커들에 대해 애니메이션을 처리합니다.
+    /// MapViewController의 타이머/디스플레이 링크에서 주기적으로(예: 60fps 주기) 호출됩니다.
+    /// rotatingBubble / stackBubble 타입(다중 메시지)의 마커들에 대해 애니메이션을 처리합니다.
     ///
     /// ## 애니메이션 흐름
     /// 1. 대기 중 -> rotationInterval(3초) 후 애니메이션 시작
@@ -417,12 +491,25 @@ extension MessageMarkerManager {
                 // 현재/다음 메시지로 회전 이미지 렌더링
                 if let current = state.currentMessage,
                     let next = state.nextMessage {
-                    let image = bubbleImageRenderer.renderRotatingBubble(
-                        current: current,
-                        next: next,
-                        progress: state.animationProgress
-                    )
-                    marker.iconImage = NMFOverlayImage(image: image)
+
+                    // 기존 렌더 취소 (프레임 누적 방지)
+                    renderTasks[groupKey]?.cancel()
+
+                    renderTasks[groupKey] = Task { @MainActor in
+                        // marker는 Task 안에서 다시 가져오도록 하기 (교체될 수 있으므로)
+                        guard let marker = self.markers[groupKey] else { return }
+
+                        let image = await bubbleImageRenderer.renderRotatingBubble(
+                            current: current,
+                            next: next,
+                            progress: state.animationProgress
+                        )
+
+                        guard !Task.isCancelled else { return }
+                        guard self.markers[groupKey] === marker else { return }
+
+                        marker.iconImage = NMFOverlayImage(image: image)
+                    }
                 }
             } else {
                 // 대기 중: 시작 시간 확인 후 애니메이션 시작
@@ -432,6 +519,35 @@ extension MessageMarkerManager {
             }
 
             animationStates[groupKey] = state
+        }
+    }
+
+    private func applyIconWithFade(
+        _ image: UIImage,
+        to marker: NMFMarker,
+        key: MarkerGroupKey,
+        duration: TimeInterval = 0.5,
+        fps: Double = 60
+    ) {
+        // 기존 페이드 작업 취소
+        fadeTasks[key]?.cancel()
+
+        // 아이콘은 먼저 교체
+        marker.iconImage = NMFOverlayImage(image: image)
+
+        // 시작은 투명
+        marker.alpha = 0.0
+
+        let totalFrames = max(1, Int(duration * fps))
+        let frameNanos = UInt64(1_000_000_000 / fps)
+
+        fadeTasks[key] = Task { @MainActor in
+            for i in 0...totalFrames {
+                if Task.isCancelled { return }
+                marker.alpha = CGFloat(Double(i) / Double(totalFrames))
+                try? await Task.sleep(nanoseconds: frameNanos)
+            }
+            marker.alpha = 1.0
         }
     }
 }
