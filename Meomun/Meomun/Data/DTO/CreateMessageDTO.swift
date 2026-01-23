@@ -9,6 +9,7 @@ struct CreateMessageRequestDTO: Encodable, Equatable {
     let content: String
     let latitude: Double
     let longitude: Double
+    let address: String
     let place: PlaceDTO?
 }
 

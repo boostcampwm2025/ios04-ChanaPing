@@ -163,7 +163,7 @@ private extension View {
         createdAt: Date(),
         content: "[한줄] 오늘 좀 춥다🫥🍃",
         coordinate: .init(latitude: 0, longitude: 0),
-        address: nil,
+        address: "",
         placeTag: Place(
             id: PlaceID(value: ""),
             name: "장소 이름",
@@ -179,7 +179,7 @@ private extension View {
         createdAt: Date(),
         content: "[두줄] 오늘 좀 asfrfrfasxscscscs춥다🫥🍃",
         coordinate: .init(latitude: 0, longitude: 0),
-        address: nil,
+        address: "test address",
         placeTag: Place(
             id: PlaceID(value: ""),
             name: "장소 이름",
@@ -195,7 +195,7 @@ private extension View {
         createdAt: Date(),
         content: "sdcfvvfvfvffvfvfvfvfvfvfvfvfff",
         coordinate: .init(latitude: 0, longitude: 0),
-        address: nil,
+        address: "test address",
         placeTag: Place(
             id: PlaceID(value: ""),
             name: "장소 이름",

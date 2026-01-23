@@ -21,6 +21,13 @@ struct FloatingTabBar: View {
             }
 
             FloatingTabItem(
+                systemImageName: "archivebox",
+                isSelected: selectedTab == .record
+            ) {
+                onSelect(.record)
+            }
+
+            FloatingTabItem(
                 systemImageName: "person",
                 isSelected: selectedTab == .myPage
             ) {
