@@ -44,6 +44,7 @@ struct TimelineRowView: View {
             createdAt: Date().addingTimeInterval(-7 * 60),
             content: "[Case4] NoPlace 스택 메시지 1",
             coordinate: Coordinate.seoulCity,
+            address: "가람로 109",
             placeTag: nil
         ),
         Message(
@@ -51,6 +52,7 @@ struct TimelineRowView: View {
             createdAt: Date().addingTimeInterval(-30 * 60),
             content: "[Case4] NoPlace 스택 메시지 2",
             coordinate: Coordinate.seoulCity,
+            address: "가람로 109",
             placeTag: nil
         ),
         Message(
@@ -58,6 +60,7 @@ struct TimelineRowView: View {
             createdAt: Date().addingTimeInterval(-15000 * 60),
             content: "[Case4] NoPlace 스택 메시지 3",
             coordinate: Coordinate.seoulCity,
+            address: "가람로 109",
             placeTag: nil
         )
     ]

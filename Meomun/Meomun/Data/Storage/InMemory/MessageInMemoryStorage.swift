@@ -54,6 +54,7 @@ actor MessageInMemoryStorage: MessageStorage {
             content: message.content,
             latitude: message.latitude,
             longitude: message.longitude,
+            address: message.address,
             place: message.place
         )
 

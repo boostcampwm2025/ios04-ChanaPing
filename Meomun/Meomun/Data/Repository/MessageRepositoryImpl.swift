@@ -23,7 +23,7 @@ final class MessageRepositoryImpl: MessageRepository {
                 name: place.name,
                 latitude: place.coordinate.latitude,
                 longitude: place.coordinate.longitude,
-                address: place.address.isEmpty ? nil : place.address
+                address: place.address
             )
         }
 
@@ -32,6 +32,7 @@ final class MessageRepositoryImpl: MessageRepository {
                 content: request.content,
                 latitude: request.coordinate.latitude,
                 longitude: request.coordinate.longitude,
+                address: request.address,
                 place: placeDTO
             )
         )

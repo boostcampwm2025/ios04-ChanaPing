@@ -19,6 +19,7 @@ final class MessageComposerStore: Store {
         var startLocation: Coordinate?  // TODO: 생성자 주입 고려
 
         var message: String = ""
+        var address: String = ""
         var selectedPlace: Place?
         var isPlaceSearchPresented: Bool = false
 
@@ -209,6 +210,7 @@ extension MessageComposerStore {
         return CreateMessageRequest(
             content: state.message,
             coordinate: startLocation,
+            address: state.address,
             place: state.selectedPlace
         )
     }

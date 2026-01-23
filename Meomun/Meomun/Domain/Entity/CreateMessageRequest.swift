@@ -8,5 +8,6 @@
 struct CreateMessageRequest: Equatable {
     let content: String
     let coordinate: Coordinate
+    let address: String
     let place: Place?
 }

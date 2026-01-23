@@ -12,7 +12,7 @@ struct Message: Identifiable, Sendable, Equatable {
     let createdAt: Date
     let content: String
     let coordinate: Coordinate
-    let address: String?
+    let address: String
     let placeTag: Place?
 
     func isRecent(recentInterval: TimeInterval = 60 * 20) -> Bool {
@@ -27,7 +27,7 @@ extension Message {
             return tagName
         }
         // 없다면 address (동부터? 그 뒤부터? 하여튼 포매팅)
-        if let address, !address.isEmpty {
+        if !address.isEmpty {
             return address
         }
         return nil

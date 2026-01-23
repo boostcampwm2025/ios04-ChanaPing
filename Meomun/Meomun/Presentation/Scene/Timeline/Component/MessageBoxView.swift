@@ -53,15 +53,16 @@ private extension MessageBoxView {
     var metaRowView: some View {
 
         HStack(spacing: 10) {
-            if let placeName = message.placeTag?.name {
-                Label {
-                    Text(placeName)
-                } icon: {
-                    Image(systemName: "mappin.and.ellipse")
-                }
-                .font(.footnote.bold())
-                .foregroundStyle(Color.meomunSecondaryColor)
+            let placeName = message.placeTag?.name ?? message.address
+
+            Label {
+                Text(placeName)
+            } icon: {
+                Image(systemName: "mappin.and.ellipse")
             }
+            .font(.footnote.bold())
+            .foregroundStyle(Color.meomunSecondaryColor)
+
             Spacer(minLength: 8)
 
             Text(MessageTimestampFormatter.string(from: message.createdAt))
@@ -89,6 +90,7 @@ private extension MessageBoxView {
             createdAt: Date().addingTimeInterval(-7 * 60),
             content: "[Case4] NoPlace 스택 메시지 1",
             coordinate: Coordinate.seoulCity,
+            address: "가람로 109",
             placeTag: nil
         ),
         Message(
@@ -96,6 +98,7 @@ private extension MessageBoxView {
             createdAt: Date().addingTimeInterval(-30 * 60),
             content: "[Case4] NoPlace 스택 메시지 2",
             coordinate: Coordinate.seoulCity,
+            address: "가람로 109",
             placeTag: nil
         ),
         Message(
@@ -103,6 +106,7 @@ private extension MessageBoxView {
             createdAt: Date().addingTimeInterval(-15000 * 60),
             content: "[Case4] NoPlace 스택 메시지 3",
             coordinate: Coordinate.seoulCity,
+            address: "가람로 109",
             placeTag: nil
         )
     ]
