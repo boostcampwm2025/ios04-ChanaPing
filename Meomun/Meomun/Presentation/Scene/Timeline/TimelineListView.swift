@@ -24,7 +24,17 @@ struct TimelineListView: View {
         VStack {
             if configuration.showsHeader { header }
 
-            content
+            if !store.state.messages.isEmpty {
+                content
+            }
+            
+            if configuration.showsFooter && store.state.messages.isEmpty {
+                Spacer()
+
+                footer
+
+                Spacer()
+            }
         }
         .background(Color.meomunBackgroundColor)
     }
@@ -79,7 +89,10 @@ private extension TimelineListView {
             .padding(.top, 30)
             .padding(.bottom, 16)
 
-            if configuration.showsFooter { footer }
+            if configuration.showsFooter && !store.state.messages.isEmpty {
+                footer
+            }
+
         }
     }
 
@@ -112,10 +125,10 @@ extension TimelineListView {
 }
 
 #Preview {
+    var emptyMessages: [Message] = []
     TimelineListView(
         store: TimelineListStore(
-            initialMessages: TimelineListStore
-                .getTimelineDummyMessages()
+            initialMessages: emptyMessages
         )
     )
 }
