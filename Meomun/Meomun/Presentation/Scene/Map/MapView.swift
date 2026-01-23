@@ -96,6 +96,7 @@ struct MapView: View {
                             navigationPath.append(MapDestination.messageComposer)
                         }
                     )
+                    .onAppear { setTabBarHidden(true) }
 
                 case .messageComposer:
                     MessageComposerView(
@@ -106,7 +107,6 @@ struct MapView: View {
                         )
                     )
                     .onAppear { setTabBarHidden(true) }
-                    .onDisappear { setTabBarHidden(false) }
                 }
             }
             .task {
