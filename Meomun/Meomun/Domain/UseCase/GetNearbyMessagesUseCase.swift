@@ -17,6 +17,6 @@ final class GetNearbyMessagesUseCaseImpl: GetNearbyMessagesUseCase {
     }
 
     func execute(location: Coordinate, limit: Int?) async throws -> [Message] {
-        try await messageRepository.getNearbyMessages(location: location, limit: limit)
+        try await messageRepository.fetchNearbyMessages(location: location, limit: limit)
     }
 }
