@@ -297,6 +297,15 @@ struct MapViewWrapper: UIViewControllerRepresentable {
         self.onCameraChangedByLocation = onCameraChangedByLocation
     }
 
+    func makeCoordinator() -> Coordinator {
+        Coordinator()
+    }
+
+    final class Coordinator {
+        var lastMessagesSnapshot: Int?
+        var didInitialLoad = false
+    }
+
     func makeUIViewController(context: Context) -> MapViewController {
         let viewController = MapViewController(
             messageMarkerManager: messageMarkerManager,
@@ -306,13 +315,33 @@ struct MapViewWrapper: UIViewControllerRepresentable {
             onCameraChangedByLocation: onCameraChangedByLocation
         )
 
+        // 초기 1회 loadMessages() 호출
         viewController.loadMessages(messages)
         viewController.updateUserLocation(userLocation)
+
+        context.coordinator.lastMessagesSnapshot = messagesSnapshot(messages)
+        context.coordinator.didInitialLoad = true
 
         return viewController
     }
 
     func updateUIViewController(_ uiViewController: MapViewController, context: Context) {
+        let snap = messagesSnapshot(messages)
+
+        // 동일 메시지인 경우 loadMessages() 호출 X
+        guard context.coordinator.lastMessagesSnapshot != snap else { return }
+
+        context.coordinator.lastMessagesSnapshot = snap
         uiViewController.loadMessages(messages)
+    }
+
+    private func messagesSnapshot(_ messages: [Message]) -> Int {
+        var hasher = Hasher()
+
+        for message in messages {
+            hasher.combine(message.id)
+        }
+
+        return hasher.finalize()
     }
 }

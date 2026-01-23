@@ -45,6 +45,7 @@ extension PlaceMessageResponseDTO {
             createdAt: createdAt,
             content: content,
             coordinate: coordinate,
+            address: "address",
             placeTag: placeTag
         )
     }

@@ -14,13 +14,18 @@ final class MapStore: Store {
         case onDisappear
         case cameraDidIdle(Coordinate)
         case cameraChangedByLocation(Coordinate)
+        case dismissAddMessage
         case updateMessages([Message])
+        case tapNoPlaceMarker([Message])
+        case dismissTimelineView
         case setToast(String?)
     }
 
     enum Action {
         case setCameraCoordinate(Coordinate)
+        case setShowAddMessage(Bool)
         case setMessages([Message])
+        case setSelectedNoPlace([Message])
         case setLoading(Bool)
         case setError(String)
         case setToastMessage(String?)
@@ -29,6 +34,8 @@ final class MapStore: Store {
     struct State {
         var messages: [Message] = []
         var cameraCoordinate: Coordinate?
+        var isShowingAddMessage: Bool = false
+        var selectedNoPlaceMessages: [Message] = []
         var isLoading: Bool = false
         var errorMessage: String = ""
         var toastMessage: String?
@@ -69,8 +76,20 @@ final class MapStore: Store {
                 continuation.yield(.setCameraCoordinate(coordinate))
                 self.getNearbyMessages(at: coordinate, continuation: continuation)
 
+            case .dismissAddMessage:
+                continuation.yield(.setShowAddMessage(false))
+                continuation.finish()
+
             case .updateMessages(let messages):
                 continuation.yield(.setMessages(messages))
+                continuation.finish()
+
+            case .tapNoPlaceMarker(let messages):
+                continuation.yield(.setSelectedNoPlace(messages))
+                continuation.finish()
+
+            case .dismissTimelineView:
+                continuation.yield(.setSelectedNoPlace([]))
                 continuation.finish()
 
             case .setToast(let message):
@@ -89,6 +108,12 @@ final class MapStore: Store {
 
         case .setCameraCoordinate(let coordinate):
             newState.cameraCoordinate = coordinate
+
+        case .setShowAddMessage(let isShown):
+            newState.isShowingAddMessage = isShown
+
+        case .setSelectedNoPlace(let messages):
+            newState.selectedNoPlaceMessages = messages
 
         case .setLoading(let isLoading):
             newState.isLoading = isLoading
@@ -134,6 +159,7 @@ final class MapStore: Store {
                     location: coordinate,
                     limit: nil
                 )
+//                let messages = self.getDummyMessages()
 
                 guard !Task.isCancelled else { return }
 

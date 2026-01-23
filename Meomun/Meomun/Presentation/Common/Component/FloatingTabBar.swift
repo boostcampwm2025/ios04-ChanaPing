@@ -21,11 +21,18 @@ struct FloatingTabBar: View {
             }
 
             FloatingTabItem(
-                systemImageName: "person",
-                isSelected: selectedTab == .myPage
+                systemImageName: "archivebox",
+                isSelected: selectedTab == .record
             ) {
-                onSelect(.myPage)
+                onSelect(.record)
             }
+
+//            FloatingTabItem(
+//                systemImageName: "person",
+//                isSelected: selectedTab == .myPage
+//            ) {
+//                onSelect(.myPage)
+//            }
         }
         .padding(.horizontal, 22)
         .padding(.vertical, 22)

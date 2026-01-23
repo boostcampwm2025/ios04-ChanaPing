@@ -10,7 +10,7 @@ struct PlaceDTO: Codable, Equatable {
     let name: String
     let latitude: Double
     let longitude: Double
-    let address: String?
+    let address: String
 
     enum CodingKeys: String, CodingKey {
         case placeId = "place_id"

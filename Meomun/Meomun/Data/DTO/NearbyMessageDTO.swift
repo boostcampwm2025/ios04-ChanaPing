@@ -38,6 +38,7 @@ extension NearbyMessageResponseDTO {
                 latitude: latitude,
                 longitude: longitude
             ),
+            address: "address",
             placeTag: place.map {
                 Place(
                     id: PlaceID(value: $0.placeId),

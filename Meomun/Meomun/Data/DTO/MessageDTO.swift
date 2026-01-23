@@ -13,6 +13,7 @@ struct MessageResponseDTO {
     let content: String
     let latitude: Double
     let longitude: Double
+    let address: String
     let place: PlaceDTO?
 }
 
@@ -23,6 +24,7 @@ extension MessageResponseDTO {
             createdAt: createdAt,
             content: content,
             coordinate: .init(latitude: latitude, longitude: longitude),
+            address: address,
             placeTag: place?.toDomain()
         )
     }

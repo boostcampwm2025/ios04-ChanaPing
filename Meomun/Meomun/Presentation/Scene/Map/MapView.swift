@@ -42,8 +42,9 @@ struct MapView: View {
                         navigationPath.append(MapDestination.space(place: place))
                     },
                     onTapNoPlace: { messages in
-                        // TODO: NoPlace 2개 이상 터치 시 UI(스택 펼치기 등) 연결 예정
-                        print("NoPlace messages tapped: \(messages.count)")
+                        Task {
+                            await store.send(intent: .tapNoPlaceMarker(messages))
+                        }
                     },
                     onCameraIdle: { coordinate in
                         Task {
@@ -79,6 +80,26 @@ struct MapView: View {
                 .padding(.top, 12)
                 .padding(.bottom, 96)
             }
+            .sheet(
+                isPresented: Binding(
+                    get: { store.state.selectedNoPlaceMessages.isEmpty == false },
+                    set: { isPresented in
+                        if !isPresented {
+                            Task { await store.send(intent: .dismissTimelineView)}
+                        }
+                    }
+                )
+            ) {
+                TimelineListView(
+                    store: TimelineListStore(
+                        initialMessages: store.state.selectedNoPlaceMessages,
+                        fetchRecentMessagesUseCase: FetchRecentMessagesUseCaseImpl(repository: MessageRepositoryImpl())
+                    ),
+                    configuration: .bottomSheet
+                )
+                    .presentationDetents(.init(arrayLiteral: .medium, .large))
+                    .presentationDragIndicator(.visible)
+            }
             .navigationDestination(for: MapDestination.self) { destination in
                 switch destination {
                 case .space(let place):
@@ -103,7 +124,9 @@ struct MapView: View {
                         store: .init(
                             locationProvider: locationProvider,
                             createMessage: CreateMessageUseCaseImpl(messageRepository: MessageRepositoryImpl()),
-                            onClose: { _ in }
+                            onClose: { _ in
+                                navigationPath.removeLast()
+                            }
                         )
                     )
                     .onAppear { setTabBarHidden(true) }

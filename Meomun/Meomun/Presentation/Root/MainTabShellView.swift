@@ -50,7 +50,13 @@ struct MainTabShellView: View {
             )
 
         case .record:
-            EmptyView()
+            TimelineListView(
+                store: TimelineListStore(
+                    initialMessages: TimelineListStore
+                        .getTimelineDummyMessages(),
+                    fetchRecentMessagesUseCase: FetchRecentMessagesUseCaseImpl(repository: MessageRepositoryImpl())
+                )
+            )
 
         case .myPage:
             EmptyView()
