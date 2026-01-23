@@ -23,6 +23,15 @@ enum MarkerPlaceholder {
     }()
 }
 
+private struct MarkerRenderSignature: Hashable {
+    enum Kind: Int, Hashable { case single, rotating, stack }
+
+    let kind: Kind
+    let firstMessageId: MessageID?      // 초기 아이콘에 쓰는 메시지(=single이면 그거, rotating/stack이면 first)
+    let count: Int                  // 표시 대상(messages: suffix(displayLimit)) 개수
+    let idsHash: Int                // 메시지 묶음 내용 변화 감지용
+}
+
 // MARK: - MessageMarkerManager
 
 /// 지도 위 메시지 마커의 생성, 업데이트, 애니메이션을 관리하는 객체입니다.
@@ -40,7 +49,7 @@ enum MarkerPlaceholder {
 ///
 /// ## 사용 흐름
 /// ```
-/// 1. loadMessages() -> 초기 메시지 로딩 (전체 마커 생성)
+/// 1. loadMessages() -> applySnapshot()으로 스토어 재구성 + diff 기반 마커 갱신
 /// 2. handleEvent() -> 실시간 이벤트 처리 (해당 좌표의 마커/상태 갱신 + 필요 시 아이콘 재렌더)
 /// 3. updateAnimations() -> 애니메이션 대상 마커는 매 프레임 iconImage 갱신 (60fps)
 /// ```
@@ -70,6 +79,8 @@ final class MessageMarkerManager {
 
     /// 마커 페이드인 여부 상태 플래그
     private var hasFadedIn: Set<MarkerGroupKey> = []
+
+    private var lastRenderedSignature: [MarkerGroupKey: MarkerRenderSignature] = [:]
 
     // MARK: - Dependencies
 
@@ -111,7 +122,7 @@ extension MessageMarkerManager {
 
     /// 초기 메시지 로딩 (앱 시작 또는 화면 진입 시 호출)
     ///
-    /// 기존 데이터를 모두 초기화하고 전달받은 메시지들로 마커를 새로 생성합니다.
+    /// 기존 상태(place/noPlace/markers) 대비 diff를 계산해 필요한 마커만 갱신합니다.
     /// Place 메시지를 먼저 저장한 후 NoPlace 메시지를 저장하여 좌표 겹침 시 오프셋을 적용합니다.
     ///
     /// - Parameters:
@@ -123,24 +134,12 @@ extension MessageMarkerManager {
         onTapPlace: ((Place) -> Void)?,
         onTapNoPlace: (([Message]) -> Void)?
     ) {
-        // 1. 기존 데이터 모두 제거
-        clearAll()
-
-        // 2. 메시지를 오래된 순으로 정렬 (suffix로 최신 N개를 가져오기 위함)
-        let sortedMessages = messages.sorted { $0.createdAt < $1.createdAt }
-
-        // 3. Place 메시지 먼저 저장 (좌표 확정)
-        for message in sortedMessages where message.placeTag != nil {
-            insertMessage(message)
-        }
-
-        // 4. NoPlace 메시지 저장 (Place 좌표와 겹치면 오프셋 적용)
-        for message in sortedMessages where message.placeTag == nil {
-            insertMessage(message)
-        }
-
-        // 5. 저장된 메시지 기반으로 모든 마커 생성
-        rebuildAllMarkers(mapView: mapView, onTapPlace: onTapPlace, onTapNoPlace: onTapNoPlace)
+        applySnapshot(
+            messages,
+            mapView: mapView,
+            onTapPlace: onTapPlace,
+            onTapNoPlace: onTapNoPlace
+        )
     }
 
     // TODO: - handleEvent 정리 (실시간 이벤트 없으므로)
@@ -169,6 +168,146 @@ extension MessageMarkerManager {
 
         // 2. 해당 좌표의 마커 업데이트
         updateMarkersForCoordinate(coord, mapView: mapView, onTapPlace: onTapPlace, onTapNoPlace: onTapNoPlace)
+    }
+}
+
+// MARK: - Diff
+extension MessageMarkerManager {
+    private func applySnapshot(
+        _ messages: [Message],
+        mapView: NMFMapView,
+        onTapPlace: ((Place) -> Void)?,
+        onTapNoPlace: (([Message]) -> Void)?
+    ) {
+        // 0) 이전 상태 기반 좌표 집합(Place + NoPlace)
+        let oldTotalCoordinates = Set(placeMessagesByCoord.keys).union(Set(noPlaceMessagesByCoord.keys))
+
+        // 1) 새 스토어를 로컬에서 구성
+        // - Place 먼저 저장 -> NoPlace 저장(Place 겹치면 offset 적용)
+        var newPlace: [Coordinate: [Message]] = [:]
+        var newNoPlace: [Coordinate: [Message]] = [:]
+
+        let sorted = messages.sorted { $0.createdAt < $1.createdAt }
+
+        // 1-1) Place
+        for message in sorted where message.placeTag != nil {
+            let coordinate = message.coordinate
+            newPlace[coordinate, default: []].append(message)
+        }
+
+        // 1-2) NoPlace (Place가 있는 좌표와 동일하면 offset 적용)
+        for message in sorted where message.placeTag == nil {
+            let originalCoordinate = message.coordinate
+            let displayCoordinate: Coordinate
+
+            if newPlace[originalCoordinate] != nil {
+                displayCoordinate = originalCoordinate.offset(for: message.id)
+            } else {
+                displayCoordinate = originalCoordinate
+            }
+            newNoPlace[displayCoordinate, default: []].append(message)
+        }
+
+        let newTotalCoordinates = Set(newPlace.keys).union(Set(newNoPlace.keys))
+
+        // 2) diff 계산
+        let removed = oldTotalCoordinates.subtracting(newTotalCoordinates)
+        let added = newTotalCoordinates.subtracting(oldTotalCoordinates)
+        let common = oldTotalCoordinates.intersection(newTotalCoordinates)
+
+        // 3) common 중 메시지 id 집합이 바뀐 coordinate만 추출
+        // (바뀐 coordinate만 updateMarkersForCoordinate 호출)
+        var changed: [Coordinate] = []
+        changed.reserveCapacity(common.count)
+
+        for coordinate in common {
+            let oldIDs = Set((placeMessagesByCoord[coordinate] ?? []).map { $0.id })
+                .union(Set((noPlaceMessagesByCoord[coordinate] ?? []).map { $0.id }))
+
+            let newIDs = Set((newPlace[coordinate] ?? []).map { $0.id })
+                .union(Set((newNoPlace[coordinate] ?? []).map { $0.id }))
+
+            if oldIDs != newIDs {
+                changed.append(coordinate)
+            }
+        }
+
+        // 4) 데이터 저장소 최신화 (updateMarkersForCoordinate가 새 데이터를 보도록)
+        placeMessagesByCoord = newPlace
+        noPlaceMessagesByCoord = newNoPlace
+
+        // 5) 지도에서 사라질 좌표의 마커 제거
+        for coordinate in removed {
+            removeMarker(for: MarkerGroupKey(coordinate: coordinate, isPlace: true))
+            removeMarker(for: MarkerGroupKey(coordinate: coordinate, isPlace: false))
+        }
+
+        // 6) added + changed 업데이트
+        for coordinate in added.union(Set(changed)) {
+            updateMarkersForCoordinate(
+                coordinate,
+                mapView: mapView,
+                onTapPlace: onTapPlace,
+                onTapNoPlace: onTapNoPlace
+            )
+        }
+    }
+
+    private func makeRenderSignature(
+        markerType: MarkerType,
+        messages: [Message]
+    ) -> MarkerRenderSignature {
+        let kind: MarkerRenderSignature.Kind
+        let firstId: MessageID?
+
+        switch markerType {
+        case .singleBubble(let message):
+            kind = .single
+            firstId = message.id
+        case .rotatingBubble(let messages):
+            kind = .rotating
+            firstId = messages.first?.id
+        case .stackBubble(let messages):
+            kind = .stack
+            firstId = messages.first?.id
+        }
+
+        let idsHash = idsHash(messages)
+
+        return MarkerRenderSignature(
+            kind: kind,
+            firstMessageId: firstId,
+            count: messages.count,
+            idsHash: idsHash
+        )
+    }
+
+    private func syncAnimationStateIfNeeded(
+        key: MarkerGroupKey,
+        markerType: MarkerType,
+        coordinate: Coordinate,
+        isPlace: Bool
+    ) {
+        // 회전 애니메이션 상태 정합성 확인 후 업데이트
+        switch markerType {
+        case .rotatingBubble, .stackBubble:
+            if animationStates[key] == nil {
+                let messagesProvider: () -> [Message] = { [weak self] in
+                    guard let self else { return [] }
+                    let source = isPlace
+                        ? self.placeMessagesByCoord[coordinate]
+                        : self.noPlaceMessagesByCoord[coordinate]
+                    return Array((source ?? []).suffix(self.displayLimit))
+                }
+
+                animationStates[key] = BubbleAnimationState(
+                    messagesProvider: messagesProvider,
+                    lastRotationTime: Date().timeIntervalSince1970
+                )
+            }
+        case .singleBubble:
+            animationStates.removeValue(forKey: key)
+        }
     }
 }
 
@@ -266,6 +405,8 @@ extension MessageMarkerManager {
         for (_, task) in fadeTasks { task.cancel() }
         fadeTasks.removeAll()
         hasFadedIn.removeAll()
+
+        lastRenderedSignature.removeAll()
     }
 }
 
@@ -301,43 +442,37 @@ extension MessageMarkerManager {
         onTapPlace: ((Place) -> Void)?,
         onTapNoPlace: (([Message]) -> Void)?
     ) {
-        // Place 마커 생성/업데이트
-        updateMarker(
-            coord: coord,
-            isPlace: true,
-            mapView: mapView,
-            onTap: { messages in
-                // 탭 시 실행될 로직
+        // Place가 없고, 기존 place 마커도 없다면 스킵
+        if (placeMessagesByCoord[coord]?.isEmpty ?? true)
+            && markers[.init(coordinate: coord, isPlace: true)] == nil {
+            // 아무 동작 X
+        } else {
+            updateMarker(coord: coord, isPlace: true, mapView: mapView) { messages in
                 guard let place = messages.first?.placeTag else { return }
-                let uniquePlaces = Set(messages.compactMap { $0.placeTag })
 
+                let uniquePlaces = Set(messages.compactMap(\.placeTag))
                 if uniquePlaces.count == 1 {
-                    // 장소가 1개 -> Space 화면으로 이동
                     onTapPlace?(place)
-                } else {
-                    // TODO: 장소가 여러 개 -> 선택 모달 표시
-                    print("장소 여러 개: \(uniquePlaces.count)")
                 }
             }
-        )
+        }
 
-        // NoPlace 마커 생성/업데이트
-        updateMarker(
-            coord: coord,
-            isPlace: false,
-            mapView: mapView,
-            onTap: { messages in
-                // 메시지가 2개 이상일 때만 콜백 실행 (스택 펼치기)
+        // NoPlace가 없고, 기존 noPlace 마커도 없다면 스킵
+        if (noPlaceMessagesByCoord[coord]?.isEmpty ?? true)
+            && markers[.init(coordinate: coord, isPlace: false)] == nil {
+            // 아무 동작 X
+        } else {
+            updateMarker(coord: coord, isPlace: false, mapView: mapView) { messages in
                 if messages.count >= 2 {
                     onTapNoPlace?(messages)
                 }
             }
-        )
+        }
     }
 
     /// 단일 마커가 없으면 생성하거나 있으면 재사용하고,
     /// 메시지 상태에 따라 아이콘을 비동기로 렌더링하여 갱신합니다.
-    /// (메시지가 없으면 markerType이 nil이므로 아이콘 갱신 없이 종료됩니다.)
+    /// MarkerType이 nil이면(메시지 없음) 해당 key의 마커를 제거하고 종료합니다.
     private func updateMarker(
         coord: Coordinate,
         isPlace: Bool,
@@ -365,10 +500,19 @@ extension MessageMarkerManager {
         // 3. MarkerType 결정 (메시지가 없으면 nil -> 마커 생성 안 함)
         guard let markerType = MarkerType.from(messages: messages, isPlace: isPlace) else {
             removeMarker(for: key)
+            lastRenderedSignature.removeValue(forKey: key)
             return
         }
 
-        // 4. 탭 핸들러 등록 (위에서 만든 마커 재사용)
+        // 애니메이션 상태 정합성 체크
+        syncAnimationStateIfNeeded(
+            key: key,
+            markerType: markerType,
+            coordinate: coord,
+            isPlace: isPlace
+        )
+
+        // 탭 핸들러 등록 (위에서 만든 마커 재사용)
         // - 탭 시점의 최신 메시지를 조회하여 콜백에 전달
         marker.touchHandler = { [weak self] _ in
             guard let self else { return true }
@@ -377,25 +521,17 @@ extension MessageMarkerManager {
             return true
         }
 
-        // 5. 초기 이미지 렌더 (key 기준 검증 + Task 누적 방지)
+        // 3-1. 현재 렌더 시그니처 계산
+        let signature = makeRenderSignature(markerType: markerType, messages: messages)
+
+        // 3-2. 기존 마커가 있고, 시그니처가 동일하면 아이콘 렌더 스킵
+        if let _ = markers[key], lastRenderedSignature[key] == signature { return }
+
+        // 시그니처 갱신
+        lastRenderedSignature[key] = signature
+
+        // 4. 초기 이미지 렌더 (key 기준 검증 + Task 누적 방지)
         scheduleInitialRender(for: key, marker: marker, markerType: markerType)
-
-        // 6. 회전 애니메이션 상태 등록 (rotatingBubble 또는 stackBubble인 경우)
-        switch markerType {
-        case .rotatingBubble, .stackBubble:
-            let messagesProvider: () -> [Message] = { [weak self] in
-                guard let self else { return [] }
-                let source = isPlace ? self.placeMessagesByCoord[coord] : self.noPlaceMessagesByCoord[coord]
-                return Array((source ?? []).suffix(self.displayLimit))
-            }
-
-            animationStates[key] = BubbleAnimationState(
-                messagesProvider: messagesProvider,
-                lastRotationTime: Date().timeIntervalSince1970
-            )
-        case .singleBubble:
-            break
-        }
     }
 
     /// 마커를 지도에서 제거하고 저장소에서 삭제합니다.
@@ -411,6 +547,8 @@ extension MessageMarkerManager {
         fadeTasks.removeValue(forKey: key)
 
         hasFadedIn.remove(key)
+
+        lastRenderedSignature.removeValue(forKey: key)
     }
 
     /// MarkerType에 맞는 마커를 생성하고 이미지를 설정합니다.
@@ -482,15 +620,18 @@ extension MessageMarkerManager {
             // 메시지가 2개 미만이면 애니메이션 불필요
             guard state.messages.count > 1 else { continue }
             // 해당 마커가 없으면 스킵
-            guard let marker = markers[groupKey] else { continue }
+            guard markers[groupKey] != nil else { continue }
 
             if state.isAnimating {
                 // 애니메이션 진행 중: 진행률 업데이트
                 rotationAnimator.updateAnimation(for: &state, currentTime: currentTime)
 
+                let current = state.currentMessage
+                let next = state.nextMessage
+                let progress = state.animationProgress
+
                 // 현재/다음 메시지로 회전 이미지 렌더링
-                if let current = state.currentMessage,
-                    let next = state.nextMessage {
+                if let current, let next {
 
                     // 기존 렌더 취소 (프레임 누적 방지)
                     renderTasks[groupKey]?.cancel()
@@ -502,7 +643,7 @@ extension MessageMarkerManager {
                         let image = await bubbleImageRenderer.renderRotatingBubble(
                             current: current,
                             next: next,
-                            progress: state.animationProgress
+                            progress: progress
                         )
 
                         guard !Task.isCancelled else { return }
@@ -549,5 +690,35 @@ extension MessageMarkerManager {
             }
             marker.alpha = 1.0
         }
+    }
+}
+
+// MARK: - Helpers
+
+private extension MessageMarkerManager {
+    func idsHash(_ messages: [Message]?) -> Int {
+        guard let messages, !messages.isEmpty else { return 0 }
+
+        var hasher = Hasher()
+        for message in messages {
+            hasher.combine(message.id)
+            hasher.combine(message.createdAt.timeIntervalSince1970)
+        }
+
+        return hasher.finalize()
+    }
+
+    func contentHash(_ messages: [Message]?) -> Int {
+        guard let messages, !messages.isEmpty else { return 0 }
+
+        var hasher = Hasher()
+        for message in messages {
+            hasher.combine(message.id)
+            hasher.combine(message.createdAt.timeIntervalSince1970)
+            hasher.combine(message.coordinate.latitude)
+            hasher.combine(message.coordinate.longitude)
+        }
+
+        return hasher.finalize()
     }
 }
