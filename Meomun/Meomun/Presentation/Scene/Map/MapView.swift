@@ -123,7 +123,14 @@ struct MapView: View {
                     MessageComposerView(
                         store: .init(
                             locationProvider: locationProvider,
-                            createMessage: CreateMessageUseCaseImpl(messageRepository: MessageRepositoryImpl()),
+                            createMessage: CreateMessageUseCaseImpl(
+                                messageRepository: MessageRepositoryImpl()
+                            ),
+                            reverseGeocoding: ReverseGeocodeUseCaseImpl(
+                                repository: ReverseGeocodeRepositoryImpl(
+                                    client: NetworkClientImpl()
+                                )
+                            ),
                             onClose: { _ in
                                 navigationPath.removeLast()
                             }

@@ -70,11 +70,7 @@ final class MessageComposerStore: Store {
     @Published var state: State
 
     private let createMessageUseCase: CreateMessageUseCase
-    private let reverseGeocodingUseCase: ReverseGeocodeUseCase = ReverseGeocodeUseCaseImpl(
-        repository: ReverseGeocodeRepositoryImpl(
-            client: NetworkClientImpl()
-        )
-    )
+    private let reverseGeocodingUseCase: ReverseGeocodeUseCase
     let locationProvider: LocationProvider
 
     private let onClose: (Bool) -> Void
@@ -82,11 +78,13 @@ final class MessageComposerStore: Store {
     init(
         locationProvider: LocationProvider,
         createMessage: CreateMessageUseCase,
+        reverseGeocoding: ReverseGeocodeUseCase,
         onClose: @escaping (Bool) -> Void
     ) {
         self.state = State()
         self.locationProvider = locationProvider
         self.createMessageUseCase = createMessage
+        self.reverseGeocodingUseCase = reverseGeocoding
         self.onClose = onClose
     }
 
