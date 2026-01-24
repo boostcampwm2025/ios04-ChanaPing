@@ -8,5 +8,9 @@
 	<string>$(NAVER_CLIENT_SECRET)</string>
 	<key>NMFNcpKeyId</key>
 	<string>$(NMF_NCP_KEY_ID)</string>
+	<key>X_NCP_APIGW_API_KEY</key>
+	<string>$(X_NCP_APIGW_API_KEY)</string>
+	<key>X_NCP_APIGW_API_KEY_ID</key>
+	<string>$(X_NCP_APIGW_API_KEY_ID)</string>
 </dict>
 </plist>
