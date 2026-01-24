@@ -130,7 +130,7 @@ extension TimelineListView {
 }
 
 #Preview {
-    var emptyMessages: [Message] = []
+    let emptyMessages: [Message] = []
     TimelineListView(
         store: TimelineListStore(
             initialMessages: emptyMessages,

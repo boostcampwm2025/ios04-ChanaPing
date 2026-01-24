@@ -71,7 +71,7 @@ struct MapView: View {
                         Spacer()
 
                         WriteButton {
-                            if let coordinate = locationProvider.current {
+                            if let _ = locationProvider.current {
                                 navigationPath.append(MapDestination.messageComposer)
                             }
                         }

@@ -41,7 +41,7 @@ struct TimelineIndicatorView: View {
 }
 
 #Preview {
-    var height: CGFloat = 120
+    let height: CGFloat = 120
     VStack(spacing: 0) {
         TimelineIndicatorView(height: height, showTopLine: false, showBottomLine: true)
         TimelineIndicatorView(height: height, showTopLine: true, showBottomLine: true)

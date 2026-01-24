@@ -19,7 +19,7 @@ struct ReverseGeocodeEndpoint: Endpoint {
     let longitude: Double
     let latitude: Double
 
-    var headers: [String : String]? {
+    var headers: [String: String]? {
         [
             "x-ncp-apigw-api-key-id": apiKeyId,
             "x-ncp-apigw-api-key": apiKey,
