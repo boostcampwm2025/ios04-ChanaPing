@@ -282,6 +282,11 @@ private extension MessageComposerView {
                 createMessage: CreateMessageUseCaseImpl(
                     messageRepository: MessageRepositoryImpl()
                 ),
+                reverseGeocoding: ReverseGeocodeUseCaseImpl(
+                    repository: ReverseGeocodeRepositoryImpl(
+                        client: NetworkClientImpl()
+                    )
+                ),
                 onClose: { _ in
                     print("close")
                 }

@@ -14,10 +14,6 @@ struct Message: Identifiable, Sendable, Equatable {
     let coordinate: Coordinate
     let address: String
     let placeTag: Place?
-
-    func isRecent(recentInterval: TimeInterval = 60 * 20) -> Bool {
-        Date().timeIntervalSince(createdAt) <= recentInterval
-    }
 }
 
 extension Message {
@@ -26,7 +22,7 @@ extension Message {
         if let tagName = placeTag?.name, !tagName.isEmpty {
             return tagName
         } else {
-            return address
+            return address.fromAddressSuffixStart()
         }
     }
 
