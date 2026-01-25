@@ -35,21 +35,16 @@ final class SpaceStore: Store {
 
     @Published var state: State
 
-    private let locationProvider: LocationProvider
-    private var oneShotTask: Task<Void, Never>?
-
     private let fetchPlaceMessagesUseCase: FetchPlaceMessagesUseCase
 
     private var fetchMessagesTask: Task<Void, Never>?
 
-    private let place: Place
+    let place: Place
 
     init(
-        locationProvider: LocationProvider,
         fetchPlaceMessagesUseCase: FetchPlaceMessagesUseCase,
         place: Place
     ) {
-        self.locationProvider = locationProvider
         self.state = State()
         self.fetchPlaceMessagesUseCase = fetchPlaceMessagesUseCase
         self.place = place
@@ -95,7 +90,10 @@ final class SpaceStore: Store {
         return newState
     }
 
-    private func fetchMessages(
+}
+
+private extension SpaceStore {
+    func fetchMessages(
         for placeID: PlaceID,
         continuation: AsyncStream<Action>.Continuation
     ) {

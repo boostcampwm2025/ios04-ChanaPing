@@ -71,8 +71,13 @@ struct MapView: View {
                         Spacer()
 
                         WriteButton {
-                            if let _ = locationProvider.current {
-                                navigationPath.append(MapDestination.messageComposer)
+                            if let current = locationProvider.current {
+                                navigationPath.append(
+                                    MapDestination.messageComposer(
+                                        location: current,
+                                        place: nil
+                                    )
+                                )
                             }
                         }
                     }
@@ -93,7 +98,9 @@ struct MapView: View {
                 TimelineListView(
                     store: TimelineListStore(
                         initialMessages: store.state.selectedNoPlaceMessages,
-                        fetchRecentMessagesUseCase: FetchRecentMessagesUseCaseImpl(repository: MessageRepositoryImpl())
+                        fetchRecentMessagesUseCase: FetchRecentMessagesUseCaseImpl(
+                            repository: MessageRepositoryImpl()
+                        )
                     ),
                     configuration: .bottomSheet
                 )
@@ -105,7 +112,6 @@ struct MapView: View {
                 case .space(let place):
                     SpaceView(
                         store: .init(
-                            locationProvider: locationProvider,
                             fetchPlaceMessagesUseCase: FetchPlaceMessagesUseCaseImpl(
                                 messageRepository: MessageRepositoryImpl()
                             ),
@@ -113,16 +119,22 @@ struct MapView: View {
                         ),
                         domeEnvironment: .init(dayPart: .afternoon),
                         place: place,
-                        onNavigate: { _ in
-                            navigationPath.append(MapDestination.messageComposer)
+                        onNavigate: { coordinate, place in
+                            navigationPath.append(
+                                MapDestination.messageComposer(
+                                    location: coordinate,
+                                    place: place
+                                )
+                            )
                         }
                     )
                     .onAppear { setTabBarHidden(true) }
 
-                case .messageComposer:
+                case .messageComposer(let location, let place):
                     MessageComposerView(
                         store: .init(
-                            locationProvider: locationProvider,
+                            currentLocation: location,
+                            currentPlace: place,
                             createMessage: CreateMessageUseCaseImpl(
                                 messageRepository: MessageRepositoryImpl()
                             ),

@@ -57,7 +57,6 @@ struct MessageComposerView: View {
             }
         }
         .onAppear { send(.onAppear) }
-        .onDisappear { send(.onDisappear) }
         .onChange(of: store.state.alert) { _, newValue in
             guard presentedAlert != newValue else { return }
             presentedAlert = newValue
@@ -163,7 +162,7 @@ private extension MessageComposerView {
 // MARK: Computed property
 private extension MessageComposerView {
     var placeFieldText: String {
-        store.state.selectedPlace?.name ?? Constants.placeContainerPlaceholder
+        store.state.selectedPlace?.name ?? store.state.startAddress.fromAddressSuffixStart()
     }
 
     var placeFieldColor: Color {
@@ -278,7 +277,15 @@ private extension MessageComposerView {
     NavigationStack {
         MessageComposerView(
             store: MessageComposerStore(
-                locationProvider: LocationProvider(),
+                currentLocation: Coordinate.seoulCity,
+                currentPlace: Place(
+                    id: PlaceID(value: "placeId"),
+                    name: "Place Name",
+                    coordinate: .init(
+                        latitude: 0,
+                        longitude: 0
+                    )
+                ),
                 createMessage: CreateMessageUseCaseImpl(
                     messageRepository: MessageRepositoryImpl()
                 ),

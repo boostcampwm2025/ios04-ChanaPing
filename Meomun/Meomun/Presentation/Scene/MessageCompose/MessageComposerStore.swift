@@ -16,7 +16,8 @@ enum EditorPolicy {
 
 final class MessageComposerStore: Store {
     struct State: Equatable {
-        var startLocation: Coordinate?  // TODO: 생성자 주입 고려
+        var startLocation: Coordinate?
+        var startAddress: String = "위치 없음"
 
         var message: String = ""
         var address: String = ""
@@ -50,11 +51,10 @@ final class MessageComposerStore: Store {
 
         case setAlert(AlertModel?)
         case setToast(String?)
-        case onDisappear
     }
 
     enum Action {
-        case setInitLocation(Coordinate?)
+        case setStartAddress(String)
         case updateMessage(String)
 
         case presentPlaceSearch(Bool)
@@ -71,18 +71,20 @@ final class MessageComposerStore: Store {
 
     private let createMessageUseCase: CreateMessageUseCase
     private let reverseGeocodingUseCase: ReverseGeocodeUseCase
-    let locationProvider: LocationProvider
 
     private let onClose: (Bool) -> Void
 
     init(
-        locationProvider: LocationProvider,
+        currentLocation: Coordinate,
+        currentPlace: Place?,
         createMessage: CreateMessageUseCase,
         reverseGeocoding: ReverseGeocodeUseCase,
         onClose: @escaping (Bool) -> Void
     ) {
-        self.state = State()
-        self.locationProvider = locationProvider
+        self.state = State(
+            startLocation: currentLocation,
+            selectedPlace: currentPlace
+        )
         self.createMessageUseCase = createMessage
         self.reverseGeocodingUseCase = reverseGeocoding
         self.onClose = onClose
@@ -92,8 +94,18 @@ final class MessageComposerStore: Store {
         AsyncStream<Action>(bufferingPolicy: .unbounded) { continuation in
             switch intent {
             case .onAppear:
-                locationProvider.startContinuous()
-                continuation.yield(.setInitLocation(locationProvider.current))
+                let coordinate = state.startLocation
+                Task { [weak self] in
+                    guard let self, let coordinate else {
+                        continuation.finish()
+                        return
+                    }
+
+                    let address = await self.fetchAddress(for: coordinate)
+                    continuation.yield(.setStartAddress(address))
+                    continuation.finish()
+                }
+                return
 
             case .setMessage(let message):
                 continuation.yield(.updateMessage(message))
@@ -134,9 +146,6 @@ final class MessageComposerStore: Store {
 
             case .setToast(let message):
                 continuation.yield(.presentToast(message))
-
-            case .onDisappear:
-                locationProvider.stopContinuous()
             }
 
             continuation.finish()
@@ -147,8 +156,8 @@ final class MessageComposerStore: Store {
         var newState = state
 
         switch action {
-        case .setInitLocation(let coordinate):
-            newState.startLocation = coordinate
+        case .setStartAddress(let address):
+            newState.startAddress = address
 
         case .updateMessage(let message):
             newState.message = message
@@ -180,6 +189,20 @@ final class MessageComposerStore: Store {
 }
 
 extension MessageComposerStore {
+    private func fetchAddress(for coordinate: Coordinate) async -> String {
+        let address: String
+        do {
+            address = try await reverseGeocodingUseCase.execute(
+                longitude: coordinate.longitude,
+                latitude: coordinate.latitude
+            )
+            return address
+
+        } catch {
+            AppLog.error("Failed to get address from coordinates: \(coordinate)", category: .store, error: error)
+            return "위치 없음"
+        }
+    }
     private func createMessage(continuation: AsyncStream<Action>.Continuation) {
         Task {
             continuation.yield(.setConfirmStatus(.loading))
@@ -195,7 +218,6 @@ extension MessageComposerStore {
 
                 try await Task.sleep(nanoseconds: 1_000_000_000)
 
-                locationProvider.stopContinuous()
                 continuation.yield(.close(isSuccess: true))
 
             } catch let error as CreateMessageError {
@@ -215,22 +237,10 @@ extension MessageComposerStore {
     private func makeCreateMessageRequest() async -> CreateMessageRequest? {
         guard let startLocation = state.startLocation else { return nil }
 
-        let address: String
-        do {
-            address = try await reverseGeocodingUseCase.execute(
-                longitude: startLocation.longitude,
-                latitude: startLocation.latitude
-            )
-
-        } catch {
-            AppLog.error("Failed to get address from coordinates: \(startLocation)", category: .store, error: error)
-            return nil
-        }
-
         return CreateMessageRequest(
             content: state.message,
             coordinate: startLocation,
-            address: address,
+            address: state.startAddress,
             place: state.selectedPlace
         )
     }

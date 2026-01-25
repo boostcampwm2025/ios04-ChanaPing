@@ -22,7 +22,7 @@ struct SpaceView: View {
     @State private var syncTask: Task<Void, Never>?
 
     private let place: Place
-    private let onNavigate: (Coordinate) -> Void
+    private let onNavigate: (Coordinate, Place) -> Void
 
     private let rotationCamera = RotationCamera(
         position: .init(x: 0, y: 0.7, z: 0),    // 카메라 시작 위치 (돔 중심에서 약간 위)
@@ -33,7 +33,7 @@ struct SpaceView: View {
         store: SpaceStore,
         domeEnvironment: DomeEnvironment,
         place: Place,
-        onNavigate: @escaping (Coordinate) -> Void
+        onNavigate: @escaping (Coordinate, Place) -> Void
     ) {
         _store = StateObject(wrappedValue: store)
         self.domeEnvironment = domeEnvironment
@@ -70,7 +70,7 @@ struct SpaceView: View {
 
                     WriteButton {   // TODO: - 위치 조정 필요
                         if let coordinate = locationProvider.current {
-                            onNavigate(coordinate)
+                            onNavigate(coordinate, store.place)
                         }
                     }
                 }
@@ -482,7 +482,6 @@ private struct BubblePlacer {
     NavigationStack {
         SpaceView(
             store: .init(
-                locationProvider: .init(),
                 fetchPlaceMessagesUseCase: FetchPlaceMessagesUseCaseImpl(
                     messageRepository: MessageRepositoryImpl()
                 ),
@@ -510,7 +509,7 @@ private struct BubblePlacer {
                     longitude: 0
                 )
             ),
-            onNavigate: { _ in }
+            onNavigate: { _, _ in }
         )
     }
 }
