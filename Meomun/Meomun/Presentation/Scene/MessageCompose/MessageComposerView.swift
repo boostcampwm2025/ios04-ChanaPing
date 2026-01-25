@@ -56,6 +56,7 @@ struct MessageComposerView: View {
                     .zIndex(1000)
             }
         }
+        .enableSwipeBack()
         .onAppear { send(.onAppear) }
         .onDisappear { send(.onDisappear) }
         .onChange(of: store.state.alert) { _, newValue in
