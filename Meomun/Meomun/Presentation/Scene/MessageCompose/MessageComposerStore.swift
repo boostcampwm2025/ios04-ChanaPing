@@ -199,10 +199,11 @@ extension MessageComposerStore {
             return address
 
         } catch {
-            AppLog.error("Failed to get address from coordinates: \(coordinate)", category: .store, error: error)
+            AppLog.error("Failed to get address from coordinates", category: .store, error: error)
             return "위치 없음"
         }
     }
+
     private func createMessage(continuation: AsyncStream<Action>.Continuation) {
         Task {
             continuation.yield(.setConfirmStatus(.loading))
@@ -211,21 +212,20 @@ extension MessageComposerStore {
             }
 
             do {
-                guard let createMessageRequest = await makeCreateMessageRequest() else { return }
+                guard let createMessageRequest = await makeCreateMessageRequest() else {
+                    await finish(isSuccess: false, continuation)
+                    return
+                }
 
                 try await createMessageUseCase.execute(createMessageRequest)
-                continuation.yield(.setConfirmStatus(.success))
-
-                try await Task.sleep(nanoseconds: 1_000_000_000)
-
-                continuation.yield(.close(isSuccess: true))
+                await finish(isSuccess: true, continuation)
 
             } catch let error as CreateMessageError {
-                continuation.yield(.setConfirmStatus(.fail))
-                continuation.yield(mapCreateMessageErrorToAlertAction(error))
+                AppLog.error("Failed to create message", category: .store, error: error)
+                await finish(isSuccess: false, continuation)
 
             } catch {
-                continuation.yield(.setConfirmStatus(.fail))
+                AppLog.error("Failed to create message with unknown error", category: .store, error: error)
                 continuation.yield(.presentAlert(.init(
                     title: "네트워크에 연결할 수 없어요.",
                     message: "네트워크 상태를 확인하고 다시 시도해 주세요."
@@ -234,8 +234,15 @@ extension MessageComposerStore {
         }
     }
 
+    private func finish(isSuccess: Bool, _ continuation: AsyncStream<Action>.Continuation) async {
+        continuation.yield(.setConfirmStatus(isSuccess ? .success : .fail))
+        try? await Task.sleep(nanoseconds: 1_000_000_000)
+        continuation.yield(.close(isSuccess: isSuccess))
+    }
+
     private func makeCreateMessageRequest() async -> CreateMessageRequest? {
-        guard let startLocation = state.startLocation else { return nil }
+        guard let startLocation = state.startLocation,
+              state.startAddress != "위치 없음" else { return nil }
 
         return CreateMessageRequest(
             content: state.message,
