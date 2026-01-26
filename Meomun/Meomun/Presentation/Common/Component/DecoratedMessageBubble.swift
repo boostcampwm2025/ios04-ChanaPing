@@ -61,7 +61,6 @@ struct DecoratedMessageBubble<Content: View>: View {
                 layout: layout,
                 content: content
             )
-            .zIndex(1)
             .overlay(alignment: .top) {
                 if hasPlaceTag {
                     placeIcon
@@ -69,7 +68,6 @@ struct DecoratedMessageBubble<Content: View>: View {
                 }
             }
         }
-        .compositingGroup()
     }
 }
 
@@ -86,7 +84,6 @@ private extension DecoratedMessageBubble {
                     .offset(y: 3)
                     .clipped(antialiased: true)
             )
-            .zIndex(2)
     }
 }
 

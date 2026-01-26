@@ -16,21 +16,19 @@ struct StackBack: View {
 
     var body: some View {
         ZStack {
-            Group {
-                RoundedRectangle(cornerRadius: 22, style: .continuous)
-                    .stroke(Color.gray)
-                    .fill(Color(hex: "E6E6E6"))
-                    .offset(offset1)
-
-                RoundedRectangle(cornerRadius: 22, style: .continuous)
-                    .stroke(Color.gray)
-                    .fill(Color(hex: "F4F4F4"))
-                    .offset(offset2)
-            }
-            .frame(width: bubbleWidth, height: bubbleHeight)
-            .allowsHitTesting(false)
-            .zIndex(0)
+            RoundedRectangle(cornerRadius: 22, style: .continuous)
+                .stroke(Color.gray)
+                .fill(Color(hex: "E6E6E6"))
+                .offset(offset1)
+            
+            RoundedRectangle(cornerRadius: 22, style: .continuous)
+                .stroke(Color.gray)
+                .fill(Color(hex: "F4F4F4"))
+                .offset(offset2)
         }
+        .frame(width: bubbleWidth, height: bubbleHeight)
+        .allowsHitTesting(false)
+        .zIndex(0)
     }
 }
 
