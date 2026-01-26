@@ -220,7 +220,7 @@ extension MessageComposerStore {
                 try await createMessageUseCase.execute(createMessageRequest)
                 await finish(isSuccess: true, continuation)
 
-            } catch let error as CreateMessageError {
+            } catch let error as CreateMessageRequestError {
                 AppLog.error("Failed to create message", category: .store, error: error)
                 await finish(isSuccess: false, continuation)
 
@@ -252,13 +252,15 @@ extension MessageComposerStore {
         )
     }
 
-    private func mapCreateMessageErrorToAlertAction(_ error: CreateMessageError) -> Action {
+    private func mapCreateMessageErrorToAlertAction(_ error: CreateMessageRequestError) -> Action {
         switch error {
         case .http(let code, let rawBody):
             return .presentAlert(.init(
                 title: "요청 실패 (\(code))",
                 message: rawBody.isEmpty ? "잠시 후 다시 시도해 주세요." : rawBody
             ))
+        case .persistentCreateFailed:
+            return .presentAlert(.init(title: "메시지 저장에 실패했어요.", message: "잠시 후 다시 시도해 주세요."))
         }
     }
 }
