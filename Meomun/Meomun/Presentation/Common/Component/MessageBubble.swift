@@ -46,9 +46,6 @@ struct MessageBubble<Content: View>: View {
             maxWidth: maxWidth
         )
         .background(bubbleBackground)
-        .overlay(alignment: .bottomLeading) {
-            dividerOverlay
-        }
     }
 }
 
@@ -83,10 +80,9 @@ private extension MessageBubble {
 
     var datePart: some View {
         Text(message.displayDateString)
-            .font(.system(size: 13, weight: .semibold))
+            .font(.system(size: 11, weight: .semibold))
             .foregroundStyle(Color.gray.opacity(0.8))
             .frame(maxWidth: .infinity, alignment: .trailing)
-            .padding(.top, 5)
     }
 
     var bubbleBackground: some View {
@@ -96,14 +92,6 @@ private extension MessageBubble {
                     radius: 12,
                     x: 0,
                     y: 6)
-    }
-
-    var dividerOverlay: some View {
-        Rectangle()
-            .fill(Color.black.opacity(0.8))
-            .frame(height: 1 / UIScreen.main.scale)
-            .padding(.horizontal, 12)
-            .padding(.bottom, 29)
     }
 }
 
