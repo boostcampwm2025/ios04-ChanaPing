@@ -83,17 +83,11 @@ struct MessageComposerView: View {
             guard store.state.alert != newValue else { return }
             send(.setAlert(newValue))
         }
-        .fullScreenCover(isPresented: Binding(
-            get: { store.state.isPlaceSearchPresented && store.state.confirmStatus == .idle },
-            set: { isPresented in if !isPresented { send(.dismissPlaceSearch) } }
-        )) {
+        .fullScreenCover(isPresented: isPlaceSearchPresentedBinding) {
             placeSearchOverlay
                 .presentationBackground(.clear)
         }
-        .fullScreenCover(isPresented: Binding(
-            get: { store.state.confirmStatus != .idle },
-            set: { _ in } // 사용자가 내리지 못하게 dismiss는 상태로만 제어
-        )) {
+        .fullScreenCover(isPresented: isLoadingOverlayPresentedBinding) {
             loadingOverlay
                 .presentationBackground(.clear)
                 .interactiveDismissDisabled(true)
@@ -235,6 +229,22 @@ private extension MessageComposerView {
         Binding(
             get: { store.state.toastMessage },
             set: { send(.setToast($0)) }
+        )
+    }
+
+    var isPlaceSearchPresentedBinding: Binding<Bool> {
+        Binding(
+            get: {
+                store.state.isPlaceSearchPresented && store.state.confirmStatus == .idle
+            },
+            set: { isPresented in if !isPresented { send(.dismissPlaceSearch) } }
+        )
+    }
+
+    var isLoadingOverlayPresentedBinding: Binding<Bool> {
+        Binding(
+            get: { store.state.confirmStatus != .idle },
+            set: { _ in }
         )
     }
 }
