@@ -55,6 +55,14 @@ struct MessageComposerView: View {
                     .transition(.opacity.animation(.easeInOut(duration: 0.2)))
                     .zIndex(1000)
             }
+
+            if !store.state.isNetworkConnected {
+                AlertView(type: .network) {
+                    Task {
+                        await store.send(intent: .tapNetworkRefresh)
+                    }
+                }
+            }
         }
         .enableSwipeBack(
             shouldBegin: {
@@ -324,6 +332,7 @@ private extension MessageComposerView {
                         client: NetworkClientImpl()
                     )
                 ),
+                networkMonitor: NetworkMonitor(),
                 onClose: { _ in
                     print("close")
                 }
