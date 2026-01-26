@@ -78,6 +78,10 @@ struct MapView: View {
                                         place: nil
                                     )
                                 )
+                            } else {
+                                Task {
+                                    await store.send(intent: .setToast("위치를 불러오지 못했어요. 잠시 후에 다시 시도해주세요."))
+                                }
                             }
                         }
                     }
