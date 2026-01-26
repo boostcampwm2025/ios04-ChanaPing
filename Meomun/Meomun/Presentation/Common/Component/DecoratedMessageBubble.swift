@@ -8,22 +8,8 @@
 import SwiftUI
 
 fileprivate enum Constants {
-    // 일반 버블
-    static let planeBubbleScale: CGFloat = 1.0
-    static let planeBubbleHeightRatio: CGFloat = 1.0
-    static let planeBubbleOffset: CGSize = .init(
-        width: -15,
-        height: 15
-    )
-
-    // 공간 버블
-    static let placeBubbleScale: CGFloat = 0.8
-    static let placeBubbleHeightRatio: CGFloat = 1.0
-    static let placeBubbleOffset: CGSize = .init(
-        width: 0,
-        height: 70
-    )
-    static let placeBubbleDecoAssetName: String = "placeBubbleBack"
+    static let placeIconSize: CGFloat = 30
+    static let placeIconOffsetY: CGFloat = -20
 }
 
 struct DecoratedMessageBubble<Content: View>: View {
@@ -79,7 +65,7 @@ struct DecoratedMessageBubble<Content: View>: View {
             .overlay(alignment: .top) {
                 if hasPlaceTag {
                     placeIcon
-                        .offset(y: -20)
+                        .offset(y: Constants.placeIconOffsetY)
                 }
             }
         }
@@ -92,7 +78,7 @@ private extension DecoratedMessageBubble {
         Image("spaceIcon")
             .resizable()
             .scaledToFit()
-            .frame(width: 30, height: 30)
+            .frame(width: Constants.placeIconSize, height: Constants.placeIconSize)
             .padding(1)
             .background(
                 Circle()
