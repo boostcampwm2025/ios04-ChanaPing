@@ -27,7 +27,7 @@ final class BubbleImageRenderer {
         message: Message,
         scale: CGFloat? = nil
     ) async -> UIImage {
-        let bubble = MessageBubble(
+        let bubble = DecoratedMessageBubble(
             message: message,
             layout: .flexible
         )
