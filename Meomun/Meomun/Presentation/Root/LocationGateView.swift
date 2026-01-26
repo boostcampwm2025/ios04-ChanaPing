@@ -11,12 +11,6 @@ import CoreLocation
 fileprivate enum Constants {
     // Title
     static let loadingMessage = "현재 위치 불러오는 중..."
-    static let permissionTitle = "위치 권한이 필요해요"
-    static let permissionMessage = "위치 접근을 허용하고 지도 위에 기록을 남겨봐요!"
-    static let settingsButtonTitle = "위치 권한 설정하기"
-
-    // Image
-    static let locationImage = "location.slash.fill"
 
     // UI
     static let dimOpacity: Double = 0.4
@@ -51,12 +45,10 @@ struct LocationGateView: View {
                 // TODO: - 타임아웃 처리 -> "현재 위치를 불러올 수 없어요. 잠시 후 다시 시도해주세요."
 
             case .denied, .restricted:
-                ZStack {
-                    Color.black.opacity(Constants.dimOpacity)
-                        .ignoresSafeArea()
-
-                    permissionRequestView
-
+                AlertView(type: .location) {
+                    if let url = URL(string: UIApplication.openSettingsURLString) {
+                        openURL(url)
+                    }
                 }
 
             default:
@@ -68,41 +60,5 @@ struct LocationGateView: View {
                 locationProvider.requestAuthorizationIfNeeded()
             }
         }
-    }
-}
-
-extension LocationGateView {
-    private var permissionRequestView: some View {
-        VStack(spacing: Constants.popupContentSpacing) {
-            Image(systemName: Constants.locationImage)
-                .font(.largeTitle)
-                .imageScale(.large)
-                .foregroundStyle(.secondary)
-
-            VStack(spacing: Constants.descriptionSpacing) {
-                Text(Constants.permissionTitle)
-                    .font(.title3)
-                    .fontWeight(.semibold)
-
-                Text(Constants.permissionMessage)
-                    .font(.body)
-                    .foregroundStyle(.secondary)
-                    .multilineTextAlignment(.center)
-            }
-
-            Button {
-                if let url = URL(string: UIApplication.openSettingsURLString) {
-                    openURL(url)
-                }
-            } label: {
-                Text(Constants.settingsButtonTitle)
-                    .frame(maxWidth: .infinity)
-            }
-            .buttonStyle(.borderedProminent)
-            .controlSize(.large)
-        }
-        .padding(Constants.popupInset)
-        .background(.regularMaterial, in: RoundedRectangle(cornerRadius: Constants.popupCornerRadius))
-        .padding(.horizontal, Constants.popupHorizontalPadding)
     }
 }
