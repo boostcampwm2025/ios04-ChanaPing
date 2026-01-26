@@ -95,9 +95,9 @@ struct DecoratedMessageBubble<Content: View>: View {
     }
 }
 
-extension DecoratedMessageBubble {
+private extension DecoratedMessageBubble {
     @ViewBuilder
-    private var decoration: some View {
+    var decoration: some View {
         if shouldShowDecoration, let width = bubbleWidth {
             if message.placeTag != nil {
                 let config = decorationSize
