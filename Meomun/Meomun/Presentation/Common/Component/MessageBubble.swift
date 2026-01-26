@@ -34,13 +34,19 @@ struct MessageBubble<Content: View>: View {
     }
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 5) {
-            locationPart
-            bodyPart
-            datePart
+        HStack {
+            VStack(alignment: .leading, spacing: 5) {
+                locationPart
+                bodyPart
+                datePart
+            }
+
+            if message.placeTag != nil {
+                chevron
+            }
         }
-        .padding(.vertical, 9)
-        .padding(.horizontal, 12)
+        .padding(.vertical, 7)
+        .padding(.horizontal, 10)
         .applyLayout(
             layout,
             maxWidth: maxWidth
@@ -92,6 +98,35 @@ private extension MessageBubble {
                     radius: 12,
                     x: 0,
                     y: 6)
+            .overlay {
+                RoundedRectangle(cornerRadius: 22, style: .continuous)
+                    .stroke(
+                        LinearGradient(
+                            colors: (message.placeTag != nil) ? [
+                                Color.tabActive.opacity(0.75),
+                                Color.tabActive.opacity(0.22)
+                            ] : [
+                                Color.gray.opacity(0.65),
+                                Color.gray.opacity(0.22)
+                            ],
+                            startPoint: .topLeading,
+                            endPoint: .bottomTrailing
+                        ),
+                        lineWidth: 1
+                    )
+            }
+    }
+
+    var chevron: some View {
+        Image(systemName: "chevron.right")
+            .font(.system(size: 15, weight: .semibold))
+            .foregroundStyle(Color.tabActive)
+            .opacity(0.75)
+            .background(
+                Circle()
+                    .fill(Color.tabActive.opacity(0.1))
+                    .frame(width: 20, height: 20)
+            )
     }
 }
 

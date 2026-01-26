@@ -1,17 +1,17 @@
 {
   "images" : [
     {
-      "filename" : "singleBubbleBack4.png",
+      "filename" : "igloo-3.png",
       "idiom" : "universal",
       "scale" : "1x"
     },
     {
-      "filename" : "singleBubbleBack4 1.png",
+      "filename" : "igloo-3 1.png",
       "idiom" : "universal",
       "scale" : "2x"
     },
     {
-      "filename" : "singleBubbleBack4 2.png",
+      "filename" : "igloo-3 2.png",
       "idiom" : "universal",
       "scale" : "3x"
     }

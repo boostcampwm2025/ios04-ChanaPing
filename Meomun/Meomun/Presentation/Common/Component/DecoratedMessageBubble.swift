@@ -45,9 +45,15 @@ struct DecoratedMessageBubble<Content: View>: View {
         self.content = content
     }
 
-    // 다중 메시지만 Decoration 보여주도록
-    private var shouldShowDecoration: Bool {
+    // 다중 메시지 여부
+    private var isMultiBubble: Bool {
         if case .fixedSize = layout { return true }
+        return false
+    }
+
+    // 장소 태그 존재 여부
+    private var hasPlaceTag: Bool {
+        if message.placeTag != nil { return true }
         return false
     }
 
@@ -58,31 +64,11 @@ struct DecoratedMessageBubble<Content: View>: View {
         return nil
     }
 
-    private var decorationSize: (
-        scale: CGFloat,
-        heightRatio: CGFloat,
-        offset: CGSize
-    ) {
-        if message.placeTag == nil {
-            // 일반 버블
-            return (
-                scale: Constants.planeBubbleScale,
-                heightRatio: Constants.planeBubbleHeightRatio,
-                offset: Constants.planeBubbleOffset
-            )
-        } else {
-            // 공간 버블
-            return (
-                scale: Constants.placeBubbleScale,
-                heightRatio: Constants.placeBubbleHeightRatio,
-                offset: Constants.placeBubbleOffset
-            )
-        }
-    }
-
     var body: some View {
         ZStack(alignment: .center) {
-            decoration
+            if !hasPlaceTag, isMultiBubble, let width = bubbleWidth {
+                StackBack(bubbleWidth: width)
+            }
 
             MessageBubble(
                 message: message,
@@ -90,31 +76,30 @@ struct DecoratedMessageBubble<Content: View>: View {
                 content: content
             )
             .zIndex(1)
+            .overlay(alignment: .top) {
+                if hasPlaceTag {
+                    placeIcon
+                        .offset(y: -20)
+                }
+            }
         }
         .compositingGroup()
     }
 }
 
 private extension DecoratedMessageBubble {
-    @ViewBuilder
-    var decoration: some View {
-        if shouldShowDecoration, let width = bubbleWidth {
-            if message.placeTag != nil {
-                let config = decorationSize
-                let decoWidth = width * config.scale
-                let decoHeight = decoWidth * config.heightRatio
-
-                Image(Constants.placeBubbleDecoAssetName)
-                    .resizable()
-                    .scaledToFit()
-                    .frame(width: decoWidth, height: decoHeight)
-                    .allowsHitTesting(false)
-                    .zIndex(0)
-                    .offset(config.offset)
-            } else {
-                StackBack(bubbleWidth: width)
-            }
-        }
+    var placeIcon: some View {
+        Image("spaceIcon")
+            .resizable()
+            .scaledToFit()
+            .frame(width: 30, height: 30)
+            .padding(1)
+            .background(
+                Circle()
+                    .fill(Color.white)
+                    .offset(y: 3)
+            )
+            .zIndex(2)
     }
 }
 
