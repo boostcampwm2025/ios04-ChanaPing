@@ -43,18 +43,6 @@ struct MessageComposerView: View {
         ZStack {
             content
                 .disabled(isInteractionDisabled)
-
-            if store.state.isPlaceSearchPresented {
-                placeSearchOverlay
-                    .transition(.opacity.combined(with: .scale(scale: 0.98)))
-                    .zIndex(999)
-            }
-
-            if store.state.confirmStatus != .idle {
-                loadingOverlay
-                    .transition(.opacity.animation(.easeInOut(duration: 0.2)))
-                    .zIndex(1000)
-            }
         }
         .enableSwipeBack(
             shouldBegin: {
@@ -95,6 +83,22 @@ struct MessageComposerView: View {
             guard store.state.alert != newValue else { return }
             send(.setAlert(newValue))
         }
+        .fullScreenCover(isPresented: Binding(
+            get: { store.state.isPlaceSearchPresented && store.state.confirmStatus == .idle },
+            set: { isPresented in if !isPresented { send(.dismissPlaceSearch) } }
+        )) {
+            placeSearchOverlay
+                .presentationBackground(.clear)
+        }
+        .fullScreenCover(isPresented: Binding(
+            get: { store.state.confirmStatus != .idle },
+            set: { _ in } // 사용자가 내리지 못하게 dismiss는 상태로만 제어
+        )) {
+            loadingOverlay
+                .presentationBackground(.clear)
+                .interactiveDismissDisabled(true)
+        }
+        .transaction { $0.disablesAnimations = true }
     }
 }
 
@@ -185,7 +189,8 @@ private extension MessageComposerView {
     var loadingOverlay: some View {
         LoadingOverlayView(
             status: store.state.confirmStatus,
-            message: loadingOverlayMessage)
+            message: loadingOverlayMessage
+        )
     }
 }
 
