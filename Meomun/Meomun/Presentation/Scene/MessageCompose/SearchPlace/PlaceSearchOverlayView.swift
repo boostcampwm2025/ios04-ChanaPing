@@ -131,6 +131,11 @@ extension PlaceSearchOverlayView {
                                     }
                                     Spacer()
                                 }
+                                .onAppear {
+                                    if place == results.last {
+                                        Task { await store.send(intent: .scrollReachedBottom) }
+                                    }
+                                }
                                 .foregroundStyle(Color.meomunPrimaryColor)
                                 .padding(.vertical, 5)
                                 .padding(.horizontal, 12)

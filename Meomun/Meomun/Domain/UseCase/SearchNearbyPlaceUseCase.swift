@@ -9,6 +9,7 @@ protocol SearchNearbyPlaceUseCase {
     func execute(
         query: String,
         userLocation: Coordinate,
+        start: Int
     ) async throws -> [Place]
 }
 
@@ -24,9 +25,10 @@ final class SearchNearbyPlaceUseCaseImpl: SearchNearbyPlaceUseCase {
     func execute(
         query: String,
         userLocation: Coordinate,
+        start: Int
     ) async throws -> [Place] {
 
-        let candidates = try await placeRepository.searchPlace(query: query)
+        let candidates = try await placeRepository.searchPlace(query: query, start: start)
 
         let places: [Place] = candidates.compactMap { item -> Place? in
             // mapx = longitude, mapy = latitude
