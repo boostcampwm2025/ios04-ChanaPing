@@ -32,6 +32,34 @@ private struct MarkerRenderSignature: Hashable {
     let idsHash: Int                // 메시지 묶음 내용 변화 감지용
 }
 
+// MARK: - ClusterItemKey
+
+final class ItemKey: NSObject, NMCClusteringKey {
+    let identifier: Int
+    let position: NMGLatLng
+
+    init(identifier: Int, position: NMGLatLng) {
+        self.identifier = identifier
+        self.position = position
+    }
+
+    static func markerKey(withIdentifier identifier: Int, position: NMGLatLng) -> ItemKey {
+        ItemKey(identifier: identifier, position: position)
+    }
+
+    override func isEqual(_ object: Any?) -> Bool {
+        guard let object = object as? ItemKey else { return false }
+        if self === object { return true }
+        return object.identifier == self.identifier
+    }
+
+    override var hash: Int { identifier }
+
+    func copy(with zone: NSZone? = nil) -> Any {
+        ItemKey(identifier: identifier, position: position)
+    }
+}
+
 // MARK: - MessageMarkerManager
 
 /// 지도 위 메시지 마커의 생성, 업데이트, 애니메이션을 관리하는 객체입니다.
@@ -81,6 +109,25 @@ final class MessageMarkerManager {
     private var hasFadedIn: Set<MarkerGroupKey> = []
 
     private var lastRenderedSignature: [MarkerGroupKey: MarkerRenderSignature] = [:]
+
+    // MARK: - Clustering
+
+    /// 클러스터가 활성화되는 최대 줌 레벨
+    private let clusterMaxZoom: Double = 16
+
+    /// 현재 클러스터 모드 여부
+    private var isClusterMode: Bool = false
+
+    /// 클러스터러
+    private var clusterer: NMCClusterer<ItemKey>?
+
+    /// 클러스터 아이템 identifier -> 현재 마커 그룹 키 매핑 (LeafUpdater에서 참조)
+    private var clusterGroupKeyById: [Int: MarkerGroupKey] = [:]
+
+    /// 외부 바인딩(카메라 이벤트에서 모드 전환용)
+    private weak var boundMapView: NMFMapView?
+    private var boundOnTapPlace: ((Place) -> Void)?
+    private var boundOnTapNoPlace: (([Message]) -> Void)?
 
     // MARK: - Dependencies
 
@@ -134,6 +181,14 @@ extension MessageMarkerManager {
         onTapPlace: ((Place) -> Void)?,
         onTapNoPlace: (([Message]) -> Void)?
     ) {
+        // 바인딩 저장
+        boundMapView = mapView
+        boundOnTapPlace = onTapPlace
+        boundOnTapNoPlace = onTapNoPlace
+
+        // 클러스터러 준비
+        setupClustererIfNeeded(mapView: mapView)
+
         applySnapshot(
             messages,
             mapView: mapView,
@@ -168,6 +223,19 @@ extension MessageMarkerManager {
 
         // 2. 해당 좌표의 마커 업데이트
         updateMarkersForCoordinate(coord, mapView: mapView, onTapPlace: onTapPlace, onTapNoPlace: onTapNoPlace)
+    }
+
+    func updateClusterModeIfNeeded(zoomLevel: Double) {
+        let shouldCluster = zoomLevel <= clusterMaxZoom
+
+        guard let mapView = boundMapView else {
+            isClusterMode = shouldCluster
+            return
+        }
+
+        if shouldCluster == isClusterMode { return }
+
+        setClusterMode(shouldCluster, mapView: mapView)
     }
 }
 
@@ -235,6 +303,10 @@ extension MessageMarkerManager {
         // 4) 데이터 저장소 최신화 (updateMarkersForCoordinate가 새 데이터를 보도록)
         placeMessagesByCoord = newPlace
         noPlaceMessagesByCoord = newNoPlace
+
+        if isClusterMode {
+            syncClusterItemsIfNeeded()
+        }
 
         // 5) 지도에서 사라질 좌표의 마커 제거
         for coordinate in removed {
@@ -611,6 +683,8 @@ extension MessageMarkerManager {
     /// 2. 애니메이션 중 -> animationDuration(1초) 동안 진행
     /// 3. 완료 -> 다음 메시지로 전환, 다시 대기
     func updateAnimations() {
+        if isClusterMode { return }
+
         let currentTime = Date().timeIntervalSince1970
 
         // 모든 애니메이션 상태를 순회
@@ -690,6 +764,97 @@ extension MessageMarkerManager {
             }
             marker.alpha = 1.0
         }
+    }
+}
+
+// MARK: - Clustering
+
+private extension MessageMarkerManager {
+    func setupClustererIfNeeded(mapView: NMFMapView) {
+        guard clusterer == nil else { return }
+
+        let builder = NMCBuilder<ItemKey>()
+        clusterer = builder.build()
+    }
+
+    /// 클러스터 모드 ON/OFF 전환
+    /// - ON: 기존 개별 마커 숨김 + clusterer를 mapView에 attach
+    /// - OFF: clusterer detach + 기존 개별 마커 복원
+    func setClusterMode(_ enabled: Bool, mapView: NMFMapView) {
+        AppLog.debug("[ClusterMode] set enabled=\(enabled) zoom=\(mapView.zoomLevel) markers=\(markers.count)", category: .location)
+        isClusterMode = enabled
+
+        // 클러스터러가 없으면 sync/addAll/attach가 모두 무의미해지므로 여기서 보장
+        setupClustererIfNeeded(mapView: mapView)
+
+        if enabled {
+            // 1) 개별 마커 숨김
+            for (_, marker) in markers {
+                marker.mapView = nil
+            }
+
+            AppLog.debug("[ClusterMode] clusterer is nil? \(clusterer == nil)", category: .location)
+
+            // 2) 클러스터러 attach (attach 이후 addAll/clear가 반영되도록 순서 고정)
+            clusterer?.mapView = mapView
+            AppLog.debug("[ClusterMode] clusterer attached mapView=\(clusterer?.mapView != nil)", category: .location)
+
+            // 3) 아이템 동기화
+            syncClusterItemsIfNeeded()
+        } else {
+            // 1) 클러스터 숨김
+            clusterer?.mapView = nil
+
+            // 2) 개별 마커 복원
+            for (_, marker) in markers {
+                marker.mapView = mapView
+            }
+
+            // 3) 정합성 보장: 모든 좌표에 대해 마커 재구성
+            rebuildAllMarkers(
+                mapView: mapView,
+                onTapPlace: boundOnTapPlace,
+                onTapNoPlace: boundOnTapNoPlace
+            )
+        }
+    }
+
+    func syncClusterItemsIfNeeded() {
+        guard let clusterer else { return }
+
+        let totalGroupCount = placeMessagesByCoord.count + noPlaceMessagesByCoord.count
+        AppLog.debug("[ClusterItems] sync start groups=\(totalGroupCount)", category: .location)
+
+        // 현재 표시 대상 그룹 키(place/noPlace)를 수집
+        var desiredGroupKeys: [MarkerGroupKey] = []
+
+        for coord in placeMessagesByCoord.keys where (placeMessagesByCoord[coord]?.isEmpty ?? true) == false {
+            desiredGroupKeys.append(MarkerGroupKey(coordinate: coord, isPlace: true))
+        }
+
+        for coord in noPlaceMessagesByCoord.keys where (noPlaceMessagesByCoord[coord]?.isEmpty ?? true) == false {
+            desiredGroupKeys.append(MarkerGroupKey(coordinate: coord, isPlace: false))
+        }
+
+        AppLog.debug("[ClusterItems] desired=\(desiredGroupKeys.count) placeKeys=\(placeMessagesByCoord.count) noPlaceKeys=\(noPlaceMessagesByCoord.count)", category: .location)
+
+        // 새 아이템 맵 구성
+        var nextIdToGroupKey: [Int: MarkerGroupKey] = [:]
+        var keyTagMap: [ItemKey: NSNull] = [:]
+
+        for (index, groupKey) in desiredGroupKeys.enumerated() {
+            let coord = groupKey.coordinate
+            let position = NMGLatLng(lat: coord.latitude, lng: coord.longitude)
+            let id = index
+
+            nextIdToGroupKey[id] = groupKey
+            keyTagMap[ItemKey(identifier: id, position: position)] = NSNull()
+        }
+
+        clusterer.addAll(keyTagMap)
+
+        // 매핑 갱신
+        clusterGroupKeyById = nextIdToGroupKey
     }
 }
 

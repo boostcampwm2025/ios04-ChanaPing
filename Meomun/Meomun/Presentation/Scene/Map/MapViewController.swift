@@ -250,6 +250,7 @@ extension MapViewController: NMFMapViewCameraDelegate {
         let center = mapView.cameraPosition.target
         let coordinate = Coordinate(latitude: center.lat, longitude: center.lng)
         onCameraIdle?(coordinate)
+        messageMarkerManager.updateClusterModeIfNeeded(zoomLevel: mapView.zoomLevel)
     }
 
     func mapView(_ mapView: NMFMapView, cameraDidChangeByReason reason: Int, animated: Bool) {
@@ -264,6 +265,7 @@ extension MapViewController: NMFMapViewCameraDelegate {
         let center = mapView.cameraPosition.target
         let coordinate = Coordinate(latitude: center.lat, longitude: center.lng)
         onCameraChangedByLocation?(coordinate)
+        messageMarkerManager.updateClusterModeIfNeeded(zoomLevel: mapView.zoomLevel)
     }
 }
 
