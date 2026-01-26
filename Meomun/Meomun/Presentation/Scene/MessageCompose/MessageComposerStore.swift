@@ -27,7 +27,6 @@ final class MessageComposerStore: Store {
         var alert: AlertModel?
         var toastMessage: String?
 
-        var isNetworkConnected: Bool = true
 
         var confirmStatus: LoadingStatus = .idle
 
@@ -50,7 +49,6 @@ final class MessageComposerStore: Store {
         case clearPlace
 
         case tapConfirm
-        case tapNetworkRefresh
 
         case setAlert(AlertModel?)
         case setToast(String?)
@@ -64,7 +62,6 @@ final class MessageComposerStore: Store {
         case updatePlace(Place)
         case clearPlace
 
-        case setNetworkConnected(Bool)
         case setConfirmStatus(LoadingStatus)
         case presentAlert(AlertModel?)
         case presentToast(String?)
@@ -75,7 +72,6 @@ final class MessageComposerStore: Store {
 
     private let createMessageUseCase: CreateMessageUseCase
     private let reverseGeocodingUseCase: ReverseGeocodeUseCase
-    private let networkMonitor: NetworkMonitor
 
     private let onClose: (Bool) -> Void
 
@@ -84,7 +80,6 @@ final class MessageComposerStore: Store {
         currentPlace: Place?,
         createMessage: CreateMessageUseCase,
         reverseGeocoding: ReverseGeocodeUseCase,
-        networkMonitor: NetworkMonitor,
         onClose: @escaping (Bool) -> Void
     ) {
         self.state = State(
@@ -93,7 +88,6 @@ final class MessageComposerStore: Store {
         )
         self.createMessageUseCase = createMessage
         self.reverseGeocodingUseCase = reverseGeocoding
-        self.networkMonitor = networkMonitor
         self.onClose = onClose
     }
 
@@ -145,11 +139,6 @@ final class MessageComposerStore: Store {
                     continuation.yield(.updateMessage(finalMessage))
                 }
 
-                let isConnected = networkMonitor.checkConnection()
-                continuation.yield(.setNetworkConnected(isConnected))
-                if !isConnected {
-                    break
-                }
 
                 createMessage(continuation: continuation)
                 return
@@ -188,8 +177,8 @@ final class MessageComposerStore: Store {
         case .clearPlace:
             newState.selectedPlace = nil
 
-        case .setNetworkConnected(let isConnected):
-            newState.isNetworkConnected = isConnected
+        case .setShowEmptyLocationAlert(let show):
+            newState.showEmptyLocationAlert = show
 
         case .setConfirmStatus(let status):
             newState.confirmStatus = status

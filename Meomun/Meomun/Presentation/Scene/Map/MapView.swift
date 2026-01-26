@@ -156,7 +156,6 @@ struct MapView: View {
                                     client: NetworkClientImpl()
                                 )
                             ),
-                            networkMonitor: NetworkMonitor(),
                             onClose: { _ in
                                 navigationPath.removeLast()
                             }
