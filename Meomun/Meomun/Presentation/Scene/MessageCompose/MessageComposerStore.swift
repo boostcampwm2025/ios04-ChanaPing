@@ -17,7 +17,7 @@ enum EditorPolicy {
 final class MessageComposerStore: Store {
     struct State: Equatable {
         var startLocation: Coordinate?
-        var startAddress: String = "위치 없음"
+        var startAddress: String = "위치 정보 없음"
 
         var message: String = ""
         var address: String = ""
