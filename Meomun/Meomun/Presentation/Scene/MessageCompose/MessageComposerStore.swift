@@ -242,9 +242,7 @@ extension MessageComposerStore {
     }
 
     private func makeCreateMessageRequest() async -> CreateMessageRequest? {
-        guard let startLocation = state.startLocation,
-              state.startAddress != MessageComposerPolicy.emptyStartAddress
-        else { return nil }
+        guard let startLocation = state.startLocation else { return nil }
 
         return CreateMessageRequest(
             content: state.message,
