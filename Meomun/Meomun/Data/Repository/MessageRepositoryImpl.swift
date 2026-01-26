@@ -6,7 +6,6 @@
 //
 
 import Foundation
-import Supabase
 
 final class MessageRepositoryImpl: MessageRepository {
     private let storage: MessageStorage
@@ -36,6 +35,30 @@ final class MessageRepositoryImpl: MessageRepository {
                 place: placeDTO
             )
         )
+    }
+
+    func updateMessage(_ request: Message) async throws {
+        let placeDTO: PlaceDTO? = request.placeTag.map { place in
+            PlaceDTO(
+                placeId: place.id.value,
+                name: place.name,
+                latitude: place.coordinate.latitude,
+                longitude: place.coordinate.longitude,
+                address: place.address
+            )
+        }
+
+        return try await storage.update(
+                for: .init(
+                    id: request.id.value,
+                    createAt: request.createdAt,
+                    content: request.content,
+                    latitude: request.coordinate.latitude,
+                    longitude: request.coordinate.longitude,
+                    address: request.address,
+                    place: placeDTO
+                )
+            )
     }
 
     func deleteMessages(messageIDs: [MessageID]) async throws {
