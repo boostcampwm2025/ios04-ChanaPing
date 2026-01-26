@@ -141,12 +141,12 @@ private extension MessageComposerView {
 
     var placeSection: some View {
         HStack(spacing: 8) {
-            PlaceSearchContainerView {
-                Button(action: onTapPlaceField) {
+            Button(action: onTapPlaceField) {
+                PlaceSearchContainerView {
                     Text(placeFieldText)
-                    .font(.system(size: 16, weight: .medium))
-                    .foregroundStyle(placeFieldColor)
-                    .frame(maxWidth: .infinity, alignment: .leading)
+                        .font(.system(size: 16, weight: .medium))
+                        .foregroundStyle(placeFieldColor)
+                        .frame(maxWidth: .infinity, alignment: .leading)
                 }
             }
 
