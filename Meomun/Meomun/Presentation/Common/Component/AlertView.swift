@@ -48,8 +48,6 @@ enum AlertType {
 }
 
 struct AlertView: View {
-    @Environment(\.openURL) private var openURL
-
     private let titleImage: Image
     private let title: String
     private let description: String
