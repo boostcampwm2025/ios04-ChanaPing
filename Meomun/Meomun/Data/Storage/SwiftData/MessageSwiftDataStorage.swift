@@ -8,11 +8,18 @@
 import SwiftData
 import Foundation
 
-final class MessageSwiftDataStorage: MessageStorage {
-    private let container: ModelContainer
-    private var context: ModelContext { ModelContext(container) }
+actor MessageSwiftDataStorage: MessageStorage {
+    static let shared = MessageSwiftDataStorage()
 
-    init(container: ModelContainer) {
+    private var container: ModelContainer?
+    private var context: ModelContext {
+        guard let container else { fatalError("SwiftDataStorage 구성 실패") }
+        return ModelContext(container)
+    }
+
+    private init() {}
+
+    func configure(container: ModelContainer) {
         self.container = container
     }
 

@@ -10,12 +10,14 @@ import Foundation
 final class MessageRepositoryImpl: MessageRepository {
     private let storage: MessageStorage
 
-    // TODO: MessageCoreDataStorage 구현 후 디폴트 파라미터 제거
-    init(storage: MessageStorage = MessageInMemoryStorage.shared) {
+    // TODO: DI 구현 후 디폴트 파라미터 제거
+    init(storage: MessageStorage = MessageSwiftDataStorage.shared) {
         self.storage = storage
     }
 
     func createMessage(_ request: CreateMessageRequest) async throws {
+        AppLog.debug("createMessage 진입", category: .repository)
+        AppLog.debug(String(describing: request), category: .repository)
         let placeDTO: PlaceDTO? = request.place.map { place in
             PlaceDTO(
                 placeId: place.id.value,
