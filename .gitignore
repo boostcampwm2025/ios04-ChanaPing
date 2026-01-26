@@ -120,3 +120,4 @@ claude.settings.json
 
 # End of https://www.toptal.com/developers/gitignore/api/swift,xcode,macos
 
+*.rcuserdata
