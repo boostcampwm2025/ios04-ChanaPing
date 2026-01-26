@@ -84,7 +84,7 @@ private extension MessageBoxView {
 }
 
 #Preview {
-    var messages: [Message] =  [
+    let messages: [Message] =  [
         Message(
             id: MessageID(value: UUID()),
             createdAt: Date().addingTimeInterval(-7 * 60),

@@ -70,6 +70,7 @@ final class MessageComposerStore: Store {
     @Published var state: State
 
     private let createMessageUseCase: CreateMessageUseCase
+    private let reverseGeocodingUseCase: ReverseGeocodeUseCase
     let locationProvider: LocationProvider
 
     private let onClose: (Bool) -> Void
@@ -77,11 +78,13 @@ final class MessageComposerStore: Store {
     init(
         locationProvider: LocationProvider,
         createMessage: CreateMessageUseCase,
+        reverseGeocoding: ReverseGeocodeUseCase,
         onClose: @escaping (Bool) -> Void
     ) {
         self.state = State()
         self.locationProvider = locationProvider
         self.createMessageUseCase = createMessage
+        self.reverseGeocodingUseCase = reverseGeocoding
         self.onClose = onClose
     }
 
@@ -185,15 +188,20 @@ extension MessageComposerStore {
             }
 
             do {
-                guard let createMessageRequest = makeCreateMessageRequest() else { return }
+                guard let createMessageRequest = await makeCreateMessageRequest() else { return }
+
                 try await createMessageUseCase.execute(createMessageRequest)
                 continuation.yield(.setConfirmStatus(.success))
+
                 try await Task.sleep(nanoseconds: 1_000_000_000)
+
                 locationProvider.stopContinuous()
                 continuation.yield(.close(isSuccess: true))
+
             } catch let error as CreateMessageError {
                 continuation.yield(.setConfirmStatus(.fail))
                 continuation.yield(mapCreateMessageErrorToAlertAction(error))
+
             } catch {
                 continuation.yield(.setConfirmStatus(.fail))
                 continuation.yield(.presentAlert(.init(
@@ -204,13 +212,25 @@ extension MessageComposerStore {
         }
     }
 
-    private func makeCreateMessageRequest() -> CreateMessageRequest? {
+    private func makeCreateMessageRequest() async -> CreateMessageRequest? {
         guard let startLocation = state.startLocation else { return nil }
+
+        let address: String
+        do {
+            address = try await reverseGeocodingUseCase.execute(
+                longitude: startLocation.longitude,
+                latitude: startLocation.latitude
+            )
+
+        } catch {
+            AppLog.error("Failed to get address from coordinates: \(startLocation)", category: .store, error: error)
+            return nil
+        }
 
         return CreateMessageRequest(
             content: state.message,
             coordinate: startLocation,
-            address: state.address,
+            address: address,
             place: state.selectedPlace
         )
     }

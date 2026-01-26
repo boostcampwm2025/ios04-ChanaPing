@@ -55,17 +55,16 @@ struct MessageBubble<Content: View>: View {
 private extension MessageBubble {
     @ViewBuilder
     var locationPart: some View {
-        if let locationName = message.displayLocationName {
-            HStack(spacing: 4) {
-                Image(systemName: "mappin.and.ellipse")
-                    .font(.system(size: 13, weight: .semibold))
-                    .foregroundStyle(Color(hex: "#53808C"))
+        HStack(spacing: 4) {
+            Image(systemName: "mappin.and.ellipse")
+                .font(.system(size: 13, weight: .semibold))
+                .foregroundStyle(Color(hex: "#53808C"))
 
-                Text(locationName)
-                    .font(.system(size: 13, weight: .semibold))
-                    .foregroundStyle(Color.gray.opacity(0.8))
-            }
+            Text(message.displayLocationName)
+                .font(.system(size: 13, weight: .semibold))
+                .foregroundStyle(Color.gray.opacity(0.8))
         }
+
     }
 
     @ViewBuilder

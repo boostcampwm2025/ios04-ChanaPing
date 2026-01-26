@@ -25,4 +25,22 @@ enum AppConfig {
         }
         return key
     }
+
+    static var naverGeocodingApiKeyId: String {
+        guard let key = Bundle.main.object(
+            forInfoDictionaryKey: "X_NCP_APIGW_API_KEY_ID"
+        ) as? String else {
+            fatalError("X_NCP_APIGW_API_KEY_ID not found")
+        }
+        return key
+    }
+
+    static var naverGeocodingApiKey: String {
+        guard let key = Bundle.main.object(
+            forInfoDictionaryKey: "X_NCP_APIGW_API_KEY"
+        ) as? String else {
+            fatalError("X_NCP_APIGW_API_KEY not found")
+        }
+        return key
+    }
 }

@@ -71,7 +71,7 @@ struct MapView: View {
                         Spacer()
 
                         WriteButton {
-                            if let coordinate = locationProvider.current {
+                            if let _ = locationProvider.current {
                                 navigationPath.append(MapDestination.messageComposer)
                             }
                         }
@@ -123,7 +123,14 @@ struct MapView: View {
                     MessageComposerView(
                         store: .init(
                             locationProvider: locationProvider,
-                            createMessage: CreateMessageUseCaseImpl(messageRepository: MessageRepositoryImpl()),
+                            createMessage: CreateMessageUseCaseImpl(
+                                messageRepository: MessageRepositoryImpl()
+                            ),
+                            reverseGeocoding: ReverseGeocodeUseCaseImpl(
+                                repository: ReverseGeocodeRepositoryImpl(
+                                    client: NetworkClientImpl()
+                                )
+                            ),
                             onClose: { _ in
                                 navigationPath.removeLast()
                             }
