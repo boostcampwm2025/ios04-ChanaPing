@@ -12,19 +12,25 @@ actor MessageSwiftDataStorage: MessageStorage {
     static let shared = MessageSwiftDataStorage()
 
     private var container: ModelContainer?
-    private var context: ModelContext {
-        guard let container else { fatalError("SwiftDataStorage 구성 실패") }
-        return ModelContext(container)
-    }
-
-    private init() {}
 
     func configure(container: ModelContainer) {
+        if self.container != nil {
+            AppLog.warn("configure가 2번 이상 호출됨", category: .storage)
+        }
         self.container = container
     }
 
-    // TODO: fetchNearby 파라미터 변경 필요
+    private func makeContext() -> ModelContext {
+        guard let container else {
+            fatalError("MessageSwiftDataStorage not configured. Call configure(container:) at app launch.")
+        }
+        return ModelContext(container)
+    }
+
+    // TODO: Usecase에 근처 메시지 조회 로직 추가 후 fetchNearby 파라미터 변경 필요
     func fetchNearby(at coordinate: Coordinate, limit: Int?) async throws -> [MessageResponseDTO] {
+        let context = makeContext()
+
         var descriptor = FetchDescriptor<MessageModel>(
             sortBy: [SortDescriptor(\.createdAt, order: .reverse)]
         )
@@ -35,6 +41,8 @@ actor MessageSwiftDataStorage: MessageStorage {
     }
 
     func fetchByPlace(at placeID: PlaceID, limit: Int?) async throws -> [MessageResponseDTO] {
+        let context = makeContext()
+
         let placeIdValue: String? = placeID.value
         var descriptor = FetchDescriptor<MessageModel>(
             predicate: #Predicate { message in
@@ -49,6 +57,8 @@ actor MessageSwiftDataStorage: MessageStorage {
     }
 
     func fetchRecent(page: Int, pageSize: Int) async throws -> [MessageResponseDTO] {
+        let context = makeContext()
+
         var descriptor = FetchDescriptor<MessageModel>(
             sortBy: [SortDescriptor(\.createdAt, order: .reverse)]
         )
@@ -60,6 +70,8 @@ actor MessageSwiftDataStorage: MessageStorage {
     }
 
     func create(for message: CreateMessageRequestDTO) async throws {
+        let context = makeContext()
+
         let placeData: PlaceModel?
         if let dto = message.place {
             placeData = try fetchOrCreatePlace(dto: dto, context: context)
@@ -74,6 +86,8 @@ actor MessageSwiftDataStorage: MessageStorage {
     }
 
     func delete(messageID: MessageID) async throws {
+        let context = makeContext()
+
         let messageIdValue: UUID = messageID.value
         var descriptor = FetchDescriptor<MessageModel>(
             predicate: #Predicate { $0.id == messageIdValue }
@@ -82,12 +96,15 @@ actor MessageSwiftDataStorage: MessageStorage {
 
         if let target = try context.fetch(descriptor).first {
             context.delete(target)
+            try context.save()
         } else {
             AppLog.warn("삭제할 대상 데이터가 없어요. MessageID : \(messageID)", category: .storage)
         }
     }
 
     func update(for message: UpdateMessageRequestDTO) async throws {
+        let context = makeContext()
+
         let messageId: UUID = message.id
         var descriptor = FetchDescriptor<MessageModel>(
             predicate: #Predicate { $0.id == messageId }
@@ -119,8 +136,10 @@ actor MessageSwiftDataStorage: MessageStorage {
 
 private extension MessageSwiftDataStorage {
     func fetchOrCreatePlace(dto: PlaceDTO, context: ModelContext) throws -> PlaceModel {
+        let placeId = dto.placeId
+
         var descriptor = FetchDescriptor<PlaceModel>(
-            predicate: #Predicate { $0.id == dto.placeId }
+            predicate: #Predicate { $0.id == placeId }
         )
         descriptor.fetchLimit = 1
 
@@ -136,6 +155,7 @@ private extension MessageSwiftDataStorage {
             address: dto.address
         )
         context.insert(createdPlace)
+
         return createdPlace
     }
 }
