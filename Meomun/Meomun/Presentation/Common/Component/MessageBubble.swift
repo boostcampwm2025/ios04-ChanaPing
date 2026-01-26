@@ -45,6 +45,7 @@ struct MessageBubble<Content: View>: View {
                 chevron
             }
         }
+        .padding(.top, 1)
         .padding(.vertical, 7)
         .padding(.horizontal, 10)
         .applyLayout(

@@ -98,6 +98,7 @@ private extension DecoratedMessageBubble {
                 Circle()
                     .fill(Color.white)
                     .offset(y: 3)
+                    .clipped(antialiased: true)
             )
             .zIndex(2)
     }
