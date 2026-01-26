@@ -48,6 +48,7 @@ struct LocationGateView: View {
                             onReady(coordinate)
                         }
                     }
+                // TODO: - 타임아웃 처리 -> "현재 위치를 불러올 수 없어요. 잠시 후 다시 시도해주세요."
 
             case .denied, .restricted:
                 ZStack {

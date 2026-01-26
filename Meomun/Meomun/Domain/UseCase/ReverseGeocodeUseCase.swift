@@ -51,7 +51,7 @@ final class ReverseGeocodeUseCaseImpl: ReverseGeocodeUseCase {
         throw ReverseGeocodeUseCaseError.emptyResult
     }
 
-    private func buildRoadAddress(from result: ResultDTO) -> String? {
+    private func buildRoadAddress(from result: ReverseGeocodeResponseDTO.ResultDTO) -> String? {
         guard let region = result.region else { return nil }
 
         let area1 = region.area1?.name
@@ -79,7 +79,7 @@ final class ReverseGeocodeUseCaseImpl: ReverseGeocodeUseCase {
         return address.isEmpty ? nil : address
     }
 
-    private func buildJibunAddress(from result: ResultDTO) -> String? {
+    private func buildJibunAddress(from result: ReverseGeocodeResponseDTO.ResultDTO) -> String? {
         guard let region = result.region else { return nil }
         let area1 = region.area1?.name
         let area2 = region.area2?.name
@@ -90,7 +90,7 @@ final class ReverseGeocodeUseCaseImpl: ReverseGeocodeUseCase {
         return address.isEmpty ? nil : address
     }
 
-    private func buildRegionOnly(from result: ResultDTO) -> String? {
+    private func buildRegionOnly(from result: ReverseGeocodeResponseDTO.ResultDTO) -> String? {
         guard let region = result.region else { return nil }
         let address = [
             region.area1?.name,
