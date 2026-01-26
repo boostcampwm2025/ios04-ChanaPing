@@ -56,6 +56,36 @@ struct MessageComposerView: View {
                     .zIndex(1000)
             }
         }
+        .enableSwipeBack(
+            shouldBegin: {
+                // 로딩 중이면 swipe back 금지
+                if store.state.confirmStatus == .loading { return false }
+
+                // 장소 검색 overlay가 떠있으면 pop 금지
+                if store.state.isPlaceSearchPresented { return false }
+
+                // draft 존재하면 pop 금지 (경고 띄우는 형태로 유도)
+                if !isDraftEmpty { return false }
+
+                return true
+            },
+            onAttempt: {
+                // swipe 시도했는데 막혔을 때
+                if store.state.isPlaceSearchPresented {
+                    send(.dismissPlaceSearch)
+                    return
+                }
+
+                if store.state.confirmStatus == .loading {
+                     send(.setToast("머문 흔적을 남기는 중이에요."))
+                    return
+                }
+
+                if !isDraftEmpty {
+                    send(.setAlert(exitAlert))
+                }
+            }
+        )
         .onAppear { send(.onAppear) }
         .onChange(of: store.state.alert) { _, newValue in
             guard presentedAlert != newValue else { return }
