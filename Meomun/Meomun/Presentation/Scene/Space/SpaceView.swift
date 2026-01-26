@@ -109,6 +109,7 @@ extension SpaceView {
                 domeEntity.name = "Dome"
                 root.addChild(domeEntity)
                 configureDomeSurface(domeEntity: domeEntity)
+                configureGroundSurface(domeEntity: domeEntity)
 
                 // 메시지 버블 로드
                 let messageEntity = try await Entity(named: "Message.usdz")
@@ -132,39 +133,87 @@ extension SpaceView {
         }
     }
 
-    private func configureDomeSurface(domeEntity: Entity) {
-        guard let surfaceEntity = domeEntity.findEntity(named: "Dome_01") else {
+    private func configureShaderMaterial(
+        on parent: Entity,
+        surfaceName: String,
+        category: LogCategory = .resource,
+        configure: (inout ShaderGraphMaterial) throws -> Void
+    ) {
+        guard let surfaceEntity = parent.findEntity(named: surfaceName) else {
             AppLog.warn(
-                "Dome surface entity 'Dome_01' not found",
-                category: .resource
+                "Surface entity '\(surfaceName)' not found",
+                category: category
             )
             return
         }
 
-        if var material = surfaceEntity.components[ModelComponent.self]?.materials.first as? ShaderGraphMaterial {
-            let gradientPair = DomeColor.colors(for: domeEnvironment.dayPart)
+        guard
+            let model = surfaceEntity.components[ModelComponent.self],
+            var material = model.materials.first as? ShaderGraphMaterial
+        else {
+            AppLog.warn(
+                "ShaderGraphMaterial not found on '\(surfaceName)'",
+                category: category
+            )
+            return
+        }
 
-            do {
-                try material.setParameter(
-                    name: "topColor",
-                    value: .color(gradientPair.top)
-                )
-
-                try material.setParameter(
-                    name: "bottomColor",
-                    value: .color(gradientPair.bottom)
-                )
-
-                surfaceEntity.components[ModelComponent.self]?.materials = [material]
-            } catch {
-                AppLog.error(
-                    "Failed to configure dome material",
-                    category: .resource,
-                    error: error
-                )
-            }
+        do {
+            try configure(&material)
+            surfaceEntity.components[ModelComponent.self]?.materials = [material]
+        } catch {
+            AppLog.error(
+                "Failed to configure material on '\(surfaceName)'",
+                category: category,
+                error: error
+            )
         }
     }
+
+    private func configureDomeSurface(domeEntity: Entity) {
+        let gradientPair = DomeColor.colors(for: domeEnvironment.dayPart)
+
+        configureShaderMaterial(
+            on: domeEntity,
+            surfaceName: "Dome_01",
+            category: .resource
+        ) { material in
+            try material.setParameter(
+                name: "topColor",
+                value: .color(gradientPair.top)
+            )
+
+            try material.setParameter(
+                name: "bottomColor",
+                value: .color(gradientPair.bottom)
+            )
+        }
+    }
+
+    private func configureGroundSurface(domeEntity: Entity) {
+        let gradientPair = DomeColor.colors(for: domeEnvironment.dayPart)
+
+        configureShaderMaterial(
+            on: domeEntity,
+            surfaceName: "Ground_01",
+            category: .resource
+        ) { material in
+            try material.setParameter(
+                name: "topColor",
+                value: .color(gradientPair.top)
+            )
+
+            try material.setParameter(
+                name: "bottomColor",
+                value: .color(gradientPair.bottom)
+            )
+
+            try material.setParameter(name: "Density", value: .float(0.6))
+            try material.setParameter(name: "Contrast", value: .float(0.2))
+            try material.setParameter(name: "TimeSpeed", value: .float(0.3))
+        }
+    }
+
 }
 
 // MARK: - Message Bubble UI (말풍선/텍스트 생성)

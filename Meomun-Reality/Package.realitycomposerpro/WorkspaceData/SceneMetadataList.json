@@ -1,0 +1,133 @@
+{
+  "FF64A1AC-277B-4E23-9810-F7D10D286661" : {
+    "objectMetadataList" : [
+      [
+        "FF64A1AC-277B-4E23-9810-F7D10D286661",
+        "Root",
+        "Dome",
+        "Looks",
+        "GroundMATSG"
+      ],
+      {
+        "disallowsFraming" : true,
+        "isExpanded" : true,
+        "isLocked" : false
+      },
+      [
+        "FF64A1AC-277B-4E23-9810-F7D10D286661",
+        "Root",
+        "Dome",
+        "Looks",
+        "GroundMaterial"
+      ],
+      {
+        "disallowsFraming" : true,
+        "isExpanded" : true,
+        "isLocked" : false
+      },
+      [
+        "FF64A1AC-277B-4E23-9810-F7D10D286661",
+        "Root",
+        "SkyDome"
+      ],
+      {
+        "disallowsFraming" : true,
+        "isExpanded" : false,
+        "isLocked" : false
+      },
+      [
+        "FF64A1AC-277B-4E23-9810-F7D10D286661",
+        "Root",
+        "Dome",
+        "Looks",
+        "GridMATSG"
+      ],
+      {
+        "disallowsFraming" : true,
+        "isExpanded" : false,
+        "isLocked" : false
+      },
+      [
+        "FF64A1AC-277B-4E23-9810-F7D10D286661",
+        "Root",
+        "Dome",
+        "Grid"
+      ],
+      {
+        "disallowsFraming" : true,
+        "isExpanded" : false,
+        "isLocked" : false
+      },
+      [
+        "FF64A1AC-277B-4E23-9810-F7D10D286661",
+        "Root",
+        "SkyDome",
+        "Looks",
+        "GroundMATSG"
+      ],
+      {
+        "isExpanded" : true,
+        "isLocked" : false
+      },
+      [
+        "FF64A1AC-277B-4E23-9810-F7D10D286661",
+        "Root",
+        "SkyDome",
+        "Looks"
+      ],
+      {
+        "isExpanded" : true,
+        "isLocked" : false
+      },
+      [
+        "FF64A1AC-277B-4E23-9810-F7D10D286661",
+        "Root"
+      ],
+      {
+        "isExpanded" : true,
+        "isLocked" : false
+      },
+      [
+        "FF64A1AC-277B-4E23-9810-F7D10D286661",
+        "Root",
+        "Dome",
+        "Looks",
+        "DomeMATSG"
+      ],
+      {
+        "isExpanded" : true,
+        "isLocked" : false
+      },
+      [
+        "FF64A1AC-277B-4E23-9810-F7D10D286661",
+        "Root",
+        "Dome",
+        "Looks",
+        "WaterGroundMaterial"
+      ],
+      {
+        "isExpanded" : true,
+        "isLocked" : false
+      },
+      [
+        "FF64A1AC-277B-4E23-9810-F7D10D286661",
+        "Root",
+        "Dome",
+        "Looks"
+      ],
+      {
+        "isExpanded" : true,
+        "isLocked" : false
+      },
+      [
+        "FF64A1AC-277B-4E23-9810-F7D10D286661",
+        "Root",
+        "Dome"
+      ],
+      {
+        "isExpanded" : true,
+        "isLocked" : false
+      }
+    ]
+  }
+}
