@@ -9,7 +9,7 @@ import Foundation
 
 struct UpdateMessageRequestDTO: Encodable, Equatable {
     let id: UUID
-    let createAt: Date
+    let createdAt: Date
     let content: String
     let latitude: Double
     let longitude: Double

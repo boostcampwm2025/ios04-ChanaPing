@@ -201,7 +201,7 @@ extension MessageComposerStore {
 
         } catch {
             AppLog.error("Failed to get address from coordinates", category: .store, error: error)
-            return "위치 없음"
+            return MessageComposerPolicy.emptyStartAddress
         }
     }
 
@@ -252,17 +252,5 @@ extension MessageComposerStore {
             address: state.startAddress,
             place: state.selectedPlace
         )
-    }
-
-    private func mapCreateMessageErrorToAlertAction(_ error: CreateMessageRequestError) -> Action {
-        switch error {
-        case .http(let code, let rawBody):
-            return .presentAlert(.init(
-                title: "요청 실패 (\(code))",
-                message: rawBody.isEmpty ? "잠시 후 다시 시도해 주세요." : rawBody
-            ))
-        case .persistentCreateFailed:
-            return .presentAlert(.init(title: "메시지 저장에 실패했어요.", message: "잠시 후 다시 시도해 주세요."))
-        }
     }
 }

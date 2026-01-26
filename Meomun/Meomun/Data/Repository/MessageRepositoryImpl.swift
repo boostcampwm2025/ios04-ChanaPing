@@ -53,7 +53,7 @@ final class MessageRepositoryImpl: MessageRepository {
         return try await storage.update(
                 for: .init(
                     id: request.id.value,
-                    createAt: request.createdAt,
+                    createdAt: request.createdAt,
                     content: request.content,
                     latitude: request.coordinate.latitude,
                     longitude: request.coordinate.longitude,
