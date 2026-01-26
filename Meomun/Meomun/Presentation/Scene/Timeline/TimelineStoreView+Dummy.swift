@@ -21,7 +21,7 @@ extension TimelineListStore {
                 Message(
                     id: MessageID(value: UUID()),
                     createdAt: Date().addingTimeInterval(-300 * 60),
-                    content: "그대의 마음 뒤흔들면, 포근한 저 바람되어 안아줄게 그댈. 그대는 밤 하늘에 놓인 작은 별 같아요. 매일 밤 마다 나를 찾아와 나의 맘을 흔들어 놓는 가까운듯 먼 그대여",
+                    content: "그대는 밤 하늘에 놓인 작은 별 같아요. 매일 밤 마다 나를 찾아와 나의 맘을 흔들어 놓는 가까운듯 먼 그대여",
                     coordinate: Coordinate.seoulCity,
                     address: "test address",
                     placeTag: nil

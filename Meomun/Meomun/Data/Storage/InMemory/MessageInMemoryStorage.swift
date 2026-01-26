@@ -63,7 +63,7 @@ actor MessageInMemoryStorage: MessageStorage {
     }
 
     func update(for message: UpdateMessageRequestDTO) async throws {
-        let updatedMessage = MessageResponseDTO(
+        _ = MessageResponseDTO(
             id: message.id,
             createdAt: message.createAt,
             content: message.content,
