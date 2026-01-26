@@ -109,6 +109,7 @@ extension SpaceView {
                 domeEntity.name = "Dome"
                 root.addChild(domeEntity)
                 configureDomeSurface(domeEntity: domeEntity)
+                configureGroundSurface(domeEntity: domeEntity)
 
                 // 메시지 버블 로드
                 let messageEntity = try await Entity(named: "Message.usdz")
@@ -163,6 +164,45 @@ extension SpaceView {
                     error: error
                 )
             }
+        }
+    }
+
+    private func configureGroundSurface(domeEntity: Entity) {
+        guard let surfaceEntity = domeEntity.findEntity(named: "Ground_01") else {
+            AppLog.warn("Dome surface entity 'Ground_01' not found", category: .resource)
+            return
+        }
+
+        if var material = surfaceEntity.components[ModelComponent.self]?.materials.first as?
+            ShaderGraphMaterial {
+            let gradientPair = DomeColor.colors(for: domeEnvironment.dayPart)
+
+            do {
+                try material.setParameter(
+                    name: "topColor",
+                    value: .color(gradientPair.top)
+                )
+
+                try material.setParameter(
+                    name: "bottomColor",
+                    value: .color(gradientPair.bottom)
+                )
+
+                try material.setParameter(name: "Density", value: .float(0.6))
+
+                try material.setParameter(name: "Contrast", value: .float(0.2))
+
+                try material.setParameter(name: "TimeSpeed", value: .float(0.3))
+
+                surfaceEntity.components[ModelComponent.self]?.materials = [material]
+            } catch {
+                AppLog.error(
+                    "Failed to configure ground material",
+                    category: .resource,
+                    error: error
+                )
+            }
+
         }
     }
 }
