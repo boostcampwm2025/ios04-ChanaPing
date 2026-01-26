@@ -11,14 +11,6 @@ import CoreLocation
 fileprivate enum Constants {
     // Title
     static let loadingMessage = "현재 위치 불러오는 중..."
-
-    // UI
-    static let dimOpacity: Double = 0.4
-    static let popupCornerRadius: CGFloat = 16
-    static let popupInset: CGFloat = 24
-    static let popupHorizontalPadding: CGFloat = 32
-    static let popupContentSpacing: CGFloat = 20
-    static let descriptionSpacing: CGFloat = 6
 }
 
 struct LocationGateView: View {
