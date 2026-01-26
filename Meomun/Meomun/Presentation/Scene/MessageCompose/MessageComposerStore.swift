@@ -10,14 +10,15 @@ import Combine
 import CoreLocation
 import Supabase
 
-enum EditorPolicy {
+enum MessageComposerPolicy {
     static let maxCount = 30
+    static let emptyStartAddress = "위치 정보 없음"
 }
 
 final class MessageComposerStore: Store {
     struct State: Equatable {
         var startLocation: Coordinate?
-        var startAddress: String = "위치 정보 없음"
+        var startAddress: String = MessageComposerPolicy.emptyStartAddress
 
         var message: String = ""
         var address: String = ""
@@ -132,7 +133,7 @@ final class MessageComposerStore: Store {
                     .replacingOccurrences(of: "\n", with: "")
                     .replacingOccurrences(of: "\r", with: "")
 
-                let finalMessage = String(normalized.prefix(EditorPolicy.maxCount))
+                let finalMessage = String(normalized.prefix(MessageComposerPolicy.maxCount))
 
                 if finalMessage != state.message {
                     continuation.yield(.updateMessage(finalMessage))
@@ -242,7 +243,8 @@ extension MessageComposerStore {
 
     private func makeCreateMessageRequest() async -> CreateMessageRequest? {
         guard let startLocation = state.startLocation,
-              state.startAddress != "위치 없음" else { return nil }
+              state.startAddress != MessageComposerPolicy.emptyStartAddress
+        else { return nil }
 
         return CreateMessageRequest(
             content: state.message,
