@@ -8,7 +8,6 @@
 import Foundation
 
 actor MessageInMemoryStorage: MessageStorage {
-
     private var storage: [MessageResponseDTO] = []
 
     static let shared = MessageInMemoryStorage()
@@ -61,5 +60,17 @@ actor MessageInMemoryStorage: MessageStorage {
         )
 
         storage.append(newMessage)
+    }
+
+    func update(for message: UpdateMessageRequestDTO) async throws {
+        let updatedMessage = MessageResponseDTO(
+            id: message.id,
+            createdAt: message.createAt,
+            content: message.content,
+            latitude: message.latitude,
+            longitude: message.longitude,
+            address: message.address,
+            place: message.place
+        )
     }
 }
