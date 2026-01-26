@@ -32,7 +32,11 @@ final class BubbleImageRenderer {
             layout: .flexible
         )
 
-        return await render(view: bubble.padding(4), scale: scale ?? UIScreen.main.scale)
+        let safeBubble = bubble
+            .padding(20)
+            .offset(y: 10)
+
+        return await render(view: safeBubble, scale: scale ?? UIScreen.main.scale)
     }
 
     /// 애니메이션 진행도에 따른 회전 버블의 이미지를 렌더링합니다.
@@ -47,7 +51,7 @@ final class BubbleImageRenderer {
         progress: Double,
         scale: CGFloat? = nil
     ) async -> UIImage {
-        let bubble = MessageBubble(
+        let bubble = DecoratedMessageBubble(
             message: current,
             layout: .fixedSize(rotatingBubbleWidth)
         ) { _ in
@@ -58,20 +62,13 @@ final class BubbleImageRenderer {
             )
         }
 
-        return await render(view: bubble.padding(4), scale: scale ?? UIScreen.main.scale)
-    }
+        let safeBubble = bubble
+            .padding(.horizontal, 30)
+            .padding(.vertical, 40)
+            .padding(.bottom, current.placeTag != nil ? 90 : 30)
+            .offset(y: current.placeTag != nil ? 80 : 0)
 
-    /// 스택 버블 이미지를 렌더링합니다.
-    /// - Parameters:
-    ///   - messages: 렌더링 할 메시지들
-    ///   - scale: 렌더링 스케일 (nil이면 화면 스케일 사용)
-    func renderStackBubble(
-        messages: [Message],
-        scale: CGFloat? = nil
-    ) async -> UIImage {
-        // TODO: MessageStackBubble 구현 후 교체
-        guard let first = messages.first else { return UIImage() }
-        return await renderSingleBubble(message: first, scale: scale)
+        return await render(view: safeBubble, scale: scale ?? UIScreen.main.scale)
     }
 }
 
