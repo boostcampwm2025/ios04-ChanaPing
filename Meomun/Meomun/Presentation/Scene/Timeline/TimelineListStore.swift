@@ -15,6 +15,7 @@ final class TimelineListStore: Store {
         var isEditing: Bool = false
 
         var selectedMessageIDs: Set<MessageID> = []     // 편집 모드 시 선택 된 메시지
+        var deleteAlert: AlertModel?
 
         var sections: [(key: YearMonth, value: [Message])] {
             MessageTimelineGrouper.groupByYearMonth(messages)
@@ -24,7 +25,9 @@ final class TimelineListStore: Store {
     enum Intent: Equatable {
         case onAppear
         case setMessages([Message])
-        case deleteSelectedMessages
+        case requestDeleteSelectedMessages          // 편집 모드 -> 삭제
+        case confirmDeleteSelectedMessages          // 얼럿 - 삭제
+        case dismissAlert                           // 얼럿 - 취소
 
         case tapMessage(MessageID)
         case tapSection(YearMonth)
@@ -39,6 +42,8 @@ final class TimelineListStore: Store {
         case setSelectedSection(YearMonth?)
         case setEditing(Bool)
         case deleteMessages(Set<MessageID>)
+        case showDeleteAlert(AlertModel)
+        case hideAlert
     }
 
     @Published var state: State
@@ -83,17 +88,35 @@ final class TimelineListStore: Store {
                 guard state.isEditing else { break }
                 continuation.yield(.toggleMessageSelection(messageID))
 
-            case .deleteSelectedMessages:
+            case .requestDeleteSelectedMessages:
+                let alert = AlertFactory.deleteMessage(
+                    count: state.selectedMessageIDs.count,
+                    onConfirm: { [weak self] in
+                        guard let self else { return }
+                        Task {
+                            await self.send(intent: .confirmDeleteSelectedMessages)
+                        }
+                    }
+                )
+                continuation.yield(.showDeleteAlert(alert))
+
+            case .confirmDeleteSelectedMessages:
                 Task {
                     do {
                         try await deleteMesagesUseCase.execute(for: state.selectedMessageIDs)
                         continuation.yield(.deleteMessages(state.selectedMessageIDs))
                         continuation.yield(.setEditing(false))
                         continuation.yield(.clearSelectedMessageIDs)
+                        continuation.yield(.hideAlert)
                     } catch {
-                        print("메시지 삭제 실패")
+                        AppLog.error("메시지 삭제 실패", category: .store, error: error)
                     }
+                    continuation.finish()
                 }
+                return
+
+            case .dismissAlert:
+                continuation.yield(.hideAlert)
 
             case .setMessages(let messages):
                 continuation.yield(.setMessages(messages))
@@ -136,6 +159,12 @@ final class TimelineListStore: Store {
             newState.messages.removeAll { messageIDs.contains($0.id) }
             newState.selectedMessageIDs.subtract(messageIDs)
             cleanupSectionIfNeeded(&newState)
+
+        case .showDeleteAlert(let alert):
+            newState.deleteAlert = alert
+
+        case .hideAlert:
+            newState.deleteAlert = nil
         }
 
         return newState

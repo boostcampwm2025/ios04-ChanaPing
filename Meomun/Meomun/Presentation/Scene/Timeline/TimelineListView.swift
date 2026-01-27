@@ -54,6 +54,23 @@ struct TimelineListView: View {
         }
         .animation(.spring(response: 0.25, dampingFraction: 0.9), value: store.state.isEditing)
         .background(Color.meomunBackgroundColor)
+        .customAlert(
+            deleteAlertBinding,
+            title: { $0.title },
+            message: { $0.message },
+            buttons: { $0.buttons }
+        )
+    }
+
+    private var deleteAlertBinding: Binding<AlertModel?> {
+        Binding(
+            get: { store.state.deleteAlert },
+            set: { _ in
+                Task {
+                    await store.send(intent: .dismissAlert)
+                }
+            }
+        )
     }
 }
 
@@ -150,7 +167,7 @@ private extension TimelineListView {
 
             Button {
                 Task {
-//                    await store.send(intent: .deleteSelectedMessages)
+                    await store.send(intent: .requestDeleteSelectedMessages)
                 }
             } label: {
                 Text("삭제")
