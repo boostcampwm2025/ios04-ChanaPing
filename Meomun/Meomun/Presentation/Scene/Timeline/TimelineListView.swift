@@ -73,6 +73,10 @@ struct TimelineListView: View {
                     .transition(.identity) // 애니메이션 없음
             }
         }
+        .fullScreenCover(isPresented: isSelectedSectionOverlayPresentedBinding) {
+            sectionOverlay
+                .presentationBackground(.clear)
+        }
     }
 }
 
@@ -129,6 +133,13 @@ private extension TimelineListView {
                         }
                     } header: {
                         TimelineSectionHeaderView(yearMonth: section.key)
+                            .contentShape(Rectangle())
+                            .onTapGesture {
+                                Task {
+                                    guard !store.state.isEditing else { return }
+                                    await store.send(intent: .tapSection(section.key))
+                                }
+                            }
                     }
                 }
             }
@@ -159,7 +170,7 @@ private extension TimelineListView {
     var selectionBar: some View {
         HStack {
             Text(
-                store.state.selectedMessageIDs.isEmpty 
+                store.state.selectedMessageIDs.isEmpty
                 ? "항목을 선택하세요"
                 : "\(store.state.selectedMessageIDs.count)개 항목 선택됨"
             )
