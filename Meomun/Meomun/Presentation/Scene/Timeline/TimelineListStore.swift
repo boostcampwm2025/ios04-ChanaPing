@@ -28,6 +28,8 @@ final class TimelineListStore: Store {
         case setMessages([Message])
         case requestDeleteSelectedMessages          // 편집 모드 -> 삭제
         case confirmDeleteSelectedMessages          // 얼럿 - 삭제
+        case requestDeleteMessage(MessageID)        // 단일 메시지 삭제 요청 (메뉴 버튼)
+        case confirmDeleteMessage(MessageID)        // 단일 메시지 삭제 확인 (메뉴 버튼)
         case dismissAlert                           // 얼럿 - 취소
 
         case tapMessage(MessageID)
@@ -101,6 +103,44 @@ final class TimelineListStore: Store {
                     }
                 )
                 continuation.yield(.showDeleteAlert(alert))
+
+            case .requestDeleteMessage(let messageID):
+                let alert = AlertFactory.deleteMessage(
+                    count: 1,
+                    onConfirm: { [weak self] in
+                        guard let self else { return }
+                        Task {
+                            await self.send(intent: .confirmDeleteMessage(messageID))
+                        }
+                    }
+                )
+                continuation.yield(.showDeleteAlert(alert))
+
+            case .confirmDeleteMessage(let messageID):
+                continuation.yield(.setDeleteStatus(.loading))
+                continuation.yield(.hideAlert)
+
+                Task {
+                    do {
+                        try await deleteMessagesUseCase.execute(for: [messageID])
+                        continuation.yield(.deleteMessages([messageID]))
+                        continuation.yield(.setDeleteStatus(.success))
+
+                        // 성공 메시지를 1초간 보여준 후 idle로 전환
+                        try? await Task.sleep(for: .seconds(1))
+                        continuation.yield(.setDeleteStatus(.idle))
+                    } catch {
+                        AppLog.error("메시지 삭제 실패", category: .store, error: error)
+                        continuation.yield(.setDeleteStatus(.fail))
+
+                        // 실패 메시지를 1초간 보여준 후 idle로 전환
+                        try? await Task.sleep(for: .seconds(1))
+                        continuation.yield(.setDeleteStatus(.idle))
+                    }
+
+                    continuation.finish()
+                }
+                return
 
             case .confirmDeleteSelectedMessages:
                 continuation.yield(.setDeleteStatus(.loading))
