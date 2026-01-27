@@ -52,7 +52,10 @@ struct MainTabShellView: View {
         case .record:
             TimelineListView(
                 store: TimelineListStore(
-                    fetchRecentMessagesUseCase: FetchRecentMessagesUseCaseImpl(repository: MessageRepositoryImpl())
+                    fetchRecentMessagesUseCase: FetchRecentMessagesUseCaseImpl(
+                        repository: MessageRepositoryImpl()
+                    ),
+                    deleteMesagesUseCase: DeleteMessageUseCaseImpl(messageRepository: MessageRepositoryImpl())
                 )
             )
 

@@ -24,7 +24,7 @@ final class TimelineListStore: Store {
     enum Intent: Equatable {
         case onAppear
         case setMessages([Message])
-        case deleteMessages([Message.ID])
+        case deleteSelectedMessages
 
         case tapMessage(MessageID)
         case tapSection(YearMonth)
@@ -38,16 +38,22 @@ final class TimelineListStore: Store {
         case clearSelectedMessageIDs
         case setSelectedSection(YearMonth?)
         case setEditing(Bool)
-        case deleteMessages([Message.ID])
+        case deleteMessages(Set<MessageID>)
     }
 
     @Published var state: State
 
     private let fetchRecentMessagesUseCase: FetchRecentMessagesUseCase
+    private let deleteMesagesUseCase: DeleteMessageUseCase
 
-    init(initialMessages: [Message] = [], fetchRecentMessagesUseCase: FetchRecentMessagesUseCase) {
+    init(
+        initialMessages: [Message] = [],
+        fetchRecentMessagesUseCase: FetchRecentMessagesUseCase,
+        deleteMesagesUseCase: DeleteMessageUseCase
+    ) {
         self.state = State(messages: initialMessages)
         self.fetchRecentMessagesUseCase = fetchRecentMessagesUseCase
+        self.deleteMesagesUseCase = deleteMesagesUseCase
     }
 
     func action(intent: Intent) -> AsyncStream<Action> {
@@ -77,9 +83,17 @@ final class TimelineListStore: Store {
                 guard state.isEditing else { break }
                 continuation.yield(.toggleMessageSelection(messageID))
 
-            case .deleteMessages(let ids):
-                // TODO: 메시지 삭제 동작 구현
-                continuation.yield(.deleteMessages(ids))
+            case .deleteSelectedMessages:
+                Task {
+                    do {
+                        try await deleteMesagesUseCase.execute(for: state.selectedMessageIDs)
+                        continuation.yield(.deleteMessages(state.selectedMessageIDs))
+                        continuation.yield(.setEditing(false))
+                        continuation.yield(.clearSelectedMessageIDs)
+                    } catch {
+                        print("메시지 삭제 실패")
+                    }
+                }
 
             case .setMessages(let messages):
                 continuation.yield(.setMessages(messages))
@@ -118,9 +132,9 @@ final class TimelineListStore: Store {
         case .setEditing(let isEditing):
             newState.isEditing = isEditing
 
-        case .deleteMessages(let ids):
-            let idSet = Set(ids)
-            newState.messages.removeAll { idSet.contains($0.id) }
+        case .deleteMessages(let messageIDs):
+            newState.messages.removeAll { messageIDs.contains($0.id) }
+            newState.selectedMessageIDs.subtract(messageIDs)
             cleanupSectionIfNeeded(&newState)
         }
 

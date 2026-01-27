@@ -151,7 +151,6 @@ private extension TimelineListView {
             Button {
                 Task {
 //                    await store.send(intent: .deleteSelectedMessages)
-                    print("store.삭제")
                 }
             } label: {
                 Text("삭제")
@@ -210,7 +209,8 @@ extension TimelineListView {
             initialMessages: messages,
             fetchRecentMessagesUseCase: FetchRecentMessagesUseCaseImpl(
                 repository: MessageRepositoryImpl(storage: MessageInMemoryStorage.shared)
-            )
+            ),
+            deleteMesagesUseCase: DeleteMessageUseCaseImpl(messageRepository: MessageRepositoryImpl())
         )
     )
 }
