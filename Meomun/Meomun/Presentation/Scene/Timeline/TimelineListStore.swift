@@ -98,7 +98,11 @@ final class TimelineListStore: Store {
 
         case .tapMessage(let messageID):
             return .init { continuation in
-                guard state.isEditing else { return }
+                guard state.isEditing else {
+                    continuation.finish()
+                    return
+                }
+
                 continuation.yield(.toggleMessageSelection(messageID))
                 continuation.finish()
             }
@@ -134,62 +138,16 @@ final class TimelineListStore: Store {
             }
 
         case .confirmDeleteMessage(let messageID):
-            return .init { continuation in
-                continuation.yield(.setDeleteStatus(.loading))
-                continuation.yield(.hideAlert)
-
-                Task {
-                    do {
-                        try await deleteMessagesUseCase.execute(for: [messageID])
-                        continuation.yield(.deleteMessages([messageID]))
-
-                        // 성공 메시지를 1초간 보여준 후 idle로 전환
-                        continuation.yield(.setDeleteStatus(.success))
-                        try? await Task.sleep(for: .seconds(1))
-                        continuation.yield(.setDeleteStatus(.idle))
-                    } catch {
-                        AppLog.error("메시지 삭제 실패", category: .store, error: error)
-                        continuation.yield(.setDeleteStatus(.fail))
-
-                        // 실패 메시지를 1초간 보여준 후 idle로 전환
-                        try? await Task.sleep(for: .seconds(1))
-                        continuation.yield(.setDeleteStatus(.idle))
-                    }
-
-                    continuation.finish()
-                }
-            }
+            return performDelete(messageIDs: [messageID])
 
         case .confirmDeleteSelectedMessages:
-            return .init { continuation in
-
-                continuation.yield(.setDeleteStatus(.loading))
-                continuation.yield(.hideAlert)
-
-                Task {
-                    do {
-                        try await deleteMessagesUseCase.execute(for: state.selectedMessageIDs)
-                        continuation.yield(.deleteMessages(state.selectedMessageIDs))
-
-                        continuation.yield(.setEditing(false))
-                        continuation.yield(.clearSelectedMessageIDs)
-
-                        // 성공 메시지를 1초간 보여준 후 idle로 전환
-                        continuation.yield(.setDeleteStatus(.success))
-                        try? await Task.sleep(for: .seconds(1))
-                        continuation.yield(.setDeleteStatus(.idle))
-                    } catch {
-                        AppLog.error("메시지 삭제 실패", category: .store, error: error)
-                        continuation.yield(.setDeleteStatus(.fail))
-
-                        // 실패 메시지를 1초간 보여준 후 idle로 전환
-                        try? await Task.sleep(for: .seconds(1))
-                        continuation.yield(.setDeleteStatus(.idle))
-                    }
-
-                    continuation.finish()
-                }
-            }
+            return performDelete(
+                messageIDs: state.selectedMessageIDs,
+                onSuccess: [
+                    .setEditing(false),
+                    .clearSelectedMessageIDs
+                ]
+            )
 
         case .dismissAlert:
             return .init { continuation in
@@ -253,6 +211,45 @@ final class TimelineListStore: Store {
     }
 }
 
+// MARK: - Side Effects
+
+private extension TimelineListStore {
+    func performDelete(
+        messageIDs: Set<MessageID>,
+        onSuccess: [Action] = []
+    ) -> AsyncStream<Action> {
+        AsyncStream { continuation in
+            continuation.yield(.setDeleteStatus(.loading))
+            continuation.yield(.hideAlert)
+
+            Task {
+                do {
+                    try await deleteMessagesUseCase.execute(for: messageIDs)
+                    continuation.yield(.deleteMessages(messageIDs))
+
+                    // 성공 시 추가 액션 실행
+                    onSuccess.forEach { continuation.yield($0) }
+
+                    // 성공 메시지를 1초간 보여준 후 idle로 전환
+                    continuation.yield(.setDeleteStatus(.success))
+                    try? await Task.sleep(for: .seconds(1))
+                    continuation.yield(.setDeleteStatus(.idle))
+                } catch {
+                    AppLog.error("메시지 삭제 실패", category: .store, error: error)
+                    // 실패 메시지를 1초간 보여준 후 idle로 전환
+                    continuation.yield(.setDeleteStatus(.fail))
+                    try? await Task.sleep(for: .seconds(1))
+                    continuation.yield(.setDeleteStatus(.idle))
+                }
+
+                continuation.finish()
+            }
+        }
+    }
+}
+
+// MARK: - Timeline Section
+
 private extension TimelineListStore {
     func isSectionAvailable(_ section: YearMonth, in messages: [Message]) -> Bool {
         MessageTimelineGrouper
@@ -272,6 +269,8 @@ private extension TimelineListStore {
         }
     }
 }
+
+// MARK: - View Helpers
 
 extension TimelineListStore {
     func selectionState(for message: Message) -> TimelineSelectionState {
