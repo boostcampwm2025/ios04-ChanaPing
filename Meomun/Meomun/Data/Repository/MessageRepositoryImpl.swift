@@ -63,12 +63,12 @@ final class MessageRepositoryImpl: MessageRepository {
             )
     }
 
-    func deleteMessages(messageIDs: [MessageID]) async throws {
-        return
+    func deleteMessages(messageIDs: Set<MessageID>) async throws {
+        try await storage.delete(messageIDs: messageIDs)
     }
 
-    func fetchNearbyMessages(location: Coordinate, limit: Int?) async throws -> [Message] {
-        try await storage.fetchNearby(at: location, limit: limit)
+    func fetchNearbyMessages(at location: Coordinate, bounds: BoundingBox, limit: Int?) async throws -> [Message] {
+        try await storage.fetchNearby(at: location, bounds: bounds, limit: limit)
             .map { $0.toDomain() }
     }
 

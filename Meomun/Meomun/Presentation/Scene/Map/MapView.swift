@@ -61,11 +61,11 @@ struct MapView: View {
                     onTapNoPlace: { messages in
                         send(.tapNoPlaceMarker(messages))
                     },
-                    onCameraIdle: { coordinate in
-                        send(.cameraDidIdle(coordinate))
+                    onCameraIdle: { coordinate, bounds in
+                        send(.cameraDidIdle(coordinate, bounds))
                     },
-                    onCameraChangedByLocation: { coordinate in
-                        send(.cameraChangedByLocation(coordinate))
+                    onCameraChangedByLocation: { coordinate, bounds in
+                        send(.cameraChangedByLocation(coordinate, bounds))
                     }
                 )
                 .ignoresSafeArea()
@@ -119,7 +119,8 @@ struct MapView: View {
                     store: TimelineListStore(
                         fetchRecentMessagesUseCase: FetchRecentMessagesUseCaseImpl(
                             repository: MessageRepositoryImpl()
-                        )
+                        ),
+                        deleteMessagesUseCase: DeleteMessagesUseCaseImpl(messageRepository: MessageRepositoryImpl())
                     ),
                     configuration: .bottomSheet
                 )

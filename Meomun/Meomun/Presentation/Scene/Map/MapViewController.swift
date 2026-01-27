@@ -27,8 +27,8 @@ final class MapViewController: UIViewController {
 
     private let onTapPlace: ((Place) -> Void)?
     private let onTapNoPlace: (([Message]) -> Void)?
-    private let onCameraIdle: ((Coordinate) -> Void)?
-    private let onCameraChangedByLocation: ((Coordinate) -> Void)?
+    private let onCameraIdle: ((Coordinate, BoundingBox) -> Void)?
+    private let onCameraChangedByLocation: ((Coordinate, BoundingBox) -> Void)?
 
     // MARK: - Dependencies
 
@@ -41,8 +41,8 @@ final class MapViewController: UIViewController {
         messageMarkerManager: MessageMarkerManager,
         onTapPlace: ((Place) -> Void)? = nil,
         onTapNoPlace: (([Message]) -> Void)? = nil,
-        onCameraIdle: ((Coordinate) -> Void)? = nil,
-        onCameraChangedByLocation: ((Coordinate) -> Void)? = nil
+        onCameraIdle: ((Coordinate, BoundingBox) -> Void)? = nil,
+        onCameraChangedByLocation: ((Coordinate, BoundingBox) -> Void)? = nil
     ) {
         self.messageMarkerManager = messageMarkerManager
         self.onTapPlace = onTapPlace
@@ -72,7 +72,7 @@ final class MapViewController: UIViewController {
         naverMapView.mapView.logoInteractionEnabled = true  // Naver Map 정책상 켜야 함.
 
         // 최소 및 최대 줌 레벨 설정
-        naverMapView.mapView.minZoomLevel = 15
+        naverMapView.mapView.minZoomLevel = 8
         naverMapView.mapView.maxZoomLevel = 18
 
         // 지도 스타일
@@ -274,7 +274,10 @@ extension MapViewController: NMFMapViewCameraDelegate {
     func mapViewCameraIdle(_ mapView: NMFMapView) {
         let center = mapView.cameraPosition.target
         let coordinate = Coordinate(latitude: center.lat, longitude: center.lng)
-        onCameraIdle?(coordinate)
+        let domainBounds = makeBoundingBox(from: mapView)
+
+        onCameraIdle?(coordinate, domainBounds)
+        messageMarkerManager.updateClusterModeIfNeeded(zoomLevel: mapView.zoomLevel)
     }
 
     func mapView(_ mapView: NMFMapView, cameraDidChangeByReason reason: Int, animated: Bool) {
@@ -288,7 +291,20 @@ extension MapViewController: NMFMapViewCameraDelegate {
         // 카메라 중심 좌표 추출 및 콜백 호출
         let center = mapView.cameraPosition.target
         let coordinate = Coordinate(latitude: center.lat, longitude: center.lng)
-        onCameraChangedByLocation?(coordinate)
+        let domainBounds = makeBoundingBox(from: mapView)
+
+        onCameraChangedByLocation?(coordinate, domainBounds)
+        messageMarkerManager.updateClusterModeIfNeeded(zoomLevel: mapView.zoomLevel)
+    }
+
+    private func makeBoundingBox(from mapView: NMFMapView) -> BoundingBox {
+        let nmfBounds = mapView.contentBounds
+        return BoundingBox(
+            minLatitude: nmfBounds.southWestLat,
+            maxLatitude: nmfBounds.northEastLat,
+            minLongitude: nmfBounds.southWestLng,
+            maxLongitude: nmfBounds.northEastLng
+        )
     }
 }
 
@@ -301,8 +317,8 @@ struct MapViewWrapper: UIViewControllerRepresentable {
     private let onCameraMoveConsumed: () -> Void
     private let onTapPlace: ((Place) -> Void)?
     private let onTapNoPlace: (([Message]) -> Void)?
-    private let onCameraIdle: ((Coordinate) -> Void)?
-    private let onCameraChangedByLocation: ((Coordinate) -> Void)?
+    private let onCameraIdle: ((Coordinate, BoundingBox) -> Void)?
+    private let onCameraChangedByLocation: ((Coordinate, BoundingBox) -> Void)?
 
     private let messageMarkerManager: MessageMarkerManager
 
@@ -314,8 +330,8 @@ struct MapViewWrapper: UIViewControllerRepresentable {
         onCameraMoveConsumed: @escaping () -> Void,
         onTapPlace: ((Place) -> Void)? = nil,
         onTapNoPlace: (([Message]) -> Void)? = nil,
-        onCameraIdle: ((Coordinate) -> Void)? = nil,
-        onCameraChangedByLocation: ((Coordinate) -> Void)? = nil
+        onCameraIdle: ((Coordinate, BoundingBox) -> Void)? = nil,
+        onCameraChangedByLocation: ((Coordinate, BoundingBox) -> Void)? = nil
     ) {
         self.userLocation = userLocation
         self.messageMarkerManager = markerManager

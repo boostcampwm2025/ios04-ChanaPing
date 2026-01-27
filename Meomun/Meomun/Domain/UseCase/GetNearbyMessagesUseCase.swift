@@ -5,8 +5,12 @@
 //  Created by 지연 on 1/15/26.
 //
 
+fileprivate enum Constants {
+    static let prefetchRatio: Double = 0.2
+}
+
 protocol GetNearbyMessagesUseCase {
-    func execute(location: Coordinate, limit: Int?) async throws -> [Message]
+    func execute(at location: Coordinate, bounds: BoundingBox, limit: Int?) async throws -> [Message]
 }
 
 final class GetNearbyMessagesUseCaseImpl: GetNearbyMessagesUseCase {
@@ -16,7 +20,9 @@ final class GetNearbyMessagesUseCaseImpl: GetNearbyMessagesUseCase {
         self.messageRepository = messageRepository
     }
 
-    func execute(location: Coordinate, limit: Int?) async throws -> [Message] {
-        try await messageRepository.fetchNearbyMessages(location: location, limit: limit)
+    func execute(at location: Coordinate, bounds: BoundingBox, limit: Int?) async throws -> [Message] {
+        let prefetchBounds = bounds.expanded(by: Constants.prefetchRatio)
+
+        return try await messageRepository.fetchNearbyMessages(at: location, bounds: prefetchBounds, limit: limit)
     }
 }

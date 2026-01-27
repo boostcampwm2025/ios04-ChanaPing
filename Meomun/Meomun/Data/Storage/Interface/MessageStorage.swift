@@ -11,7 +11,7 @@ protocol MessageStorage: Sendable {
     /// - Parameters:
     ///   - coordinate: 검색 기준이 되는 중심 좌표
     ///   - limit: 반환할 최대 메시지 개수. nil이면 모든 메시지를 반환합니다.
-    func fetchNearby(at coordinate: Coordinate, limit: Int?) async throws -> [MessageResponseDTO]
+    func fetchNearby(at location: Coordinate, bounds: BoundingBox, limit: Int?) async throws -> [MessageResponseDTO]
 
     /// 특정 장소의 메시지를 최신순으로 반환합니다.
     /// - Parameters:
@@ -28,4 +28,6 @@ protocol MessageStorage: Sendable {
     func create(for message: CreateMessageRequestDTO) async throws
 
     func update(for message: UpdateMessageRequestDTO) async throws
+
+    func delete(messageIDs: Set<MessageID>) async throws
 }
