@@ -58,7 +58,7 @@ struct PathRecordView: View {
     }
 }
 
-// MARK: Calculate Property
+// MARK: Computed Property
 private extension PathRecordView {
     var monthText: String {
         let date = yearMonth.startDate()

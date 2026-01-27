@@ -17,7 +17,6 @@ fileprivate enum Constants {
 
 struct TimelineListView: View {
     @Environment(\.setTabBarHidden) private var setTabBarHidden
-
     @StateObject private var store: TimelineListStore
     private let configuration: Configuration
 
@@ -36,14 +35,8 @@ struct TimelineListView: View {
 
             if !store.state.messages.isEmpty {
                 content
-            }
-
-            if configuration.showsFooter && store.state.messages.isEmpty {
-                Spacer()
-
-                footer
-
-                Spacer()
+            } else {
+                emptyContent
             }
         }
         .overlay(alignment: .bottom) {
@@ -54,10 +47,10 @@ struct TimelineListView: View {
         }
         .onAppear { send(.onAppear) }
         .onChange(of: store.state.isEditing) { _, _ in
-            setTabBarHidden(store.state.isEditing || store.state.deleteStatus != .idle)
+            setTabBarHidden(shouldHideTabBar)
         }
         .onChange(of: store.state.deleteStatus) { _, _ in
-            setTabBarHidden(store.state.isEditing || store.state.deleteStatus != .idle)
+            setTabBarHidden(shouldHideTabBar)
         }
         .animation(.spring(response: 0.25, dampingFraction: 0.9), value: store.state.isEditing)
         .background(Color.meomunBackgroundColor)
@@ -80,6 +73,7 @@ struct TimelineListView: View {
     }
 }
 
+// MARK: Subviews
 private extension TimelineListView {
     var header: some View {
         ZStack {
@@ -94,9 +88,7 @@ private extension TimelineListView {
                     Button { send(.tapEdit) } label: {
                         Text(store.state.isEditing ? "취소": "편집")
                             .font(.headline)
-                            .foregroundStyle(
-                                store.state.messages.isEmpty ? Color.tabInactive : Color.meomunPointColor
-                            )
+                            .foregroundStyle(editButtonColor)
                     }
                     .disabled(store.state.messages.isEmpty)
                 }
@@ -144,6 +136,16 @@ private extension TimelineListView {
         }
     }
 
+    var emptyContent: some View {
+        Group {
+            if configuration.showsFooter {
+                Spacer()
+                footer
+                Spacer()
+            }
+        }
+    }
+
     var footer: some View {
         VStack(spacing: 10) {
             Image(systemName: "book.pages")
@@ -161,27 +163,46 @@ private extension TimelineListView {
 
     var selectionBar: some View {
         HStack {
-            Text(
-                store.state.selectedMessageIDs.isEmpty
-                ? "항목을 선택하세요"
-                : "\(store.state.selectedMessageIDs.count)개 항목 선택됨"
-            )
+            Text(selectionBarText)
             .font(.body.weight(.semibold))
-            .foregroundStyle(
-                store.state.selectedMessageIDs.isEmpty ? Color.tabInactive : Color.meomunPrimaryColor
-            )
+            .foregroundStyle(selectionBarTextColor)
 
             Spacer()
 
             Button { send(.requestDeleteSelectedMessages) } label: {
                 Text("삭제")
                     .font(.headline)
-                    .foregroundStyle(store.state.selectedMessageIDs.isEmpty ? Color.tabInactive : Color.red)
+                    .foregroundStyle(deleteButtonColor)
                     .padding(.horizontal, 24)
             }
             .disabled(store.state.selectedMessageIDs.isEmpty)
         }
         .floatingContainer()
+    }
+}
+
+// MARK: - Computed Properties
+private extension TimelineListView {
+    var shouldHideTabBar: Bool {
+        store.state.isEditing || store.state.deleteStatus != .idle
+    }
+
+    var editButtonColor: Color {
+        store.state.messages.isEmpty ? Color.tabInactive : Color.meomunPointColor
+    }
+
+    var selectionBarText: String {
+        store.state.selectedMessageIDs.isEmpty
+        ? "항목을 선택하세요"
+        : "\(store.state.selectedMessageIDs.count)개 항목 선택됨"
+    }
+
+    var selectionBarTextColor: Color {
+        store.state.selectedMessageIDs.isEmpty ? Color.tabInactive : Color.meomunPrimaryColor
+    }
+
+    var deleteButtonColor: Color {
+        store.state.selectedMessageIDs.isEmpty ? Color.tabInactive : Color.red
     }
 }
 
