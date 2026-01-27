@@ -92,8 +92,11 @@ private extension TimelineListView {
                     } label: {
                         Text(store.state.isEditing ? "취소": "편집")
                             .font(.headline)
-                            .foregroundStyle(Color.meomunPointColor)
+                            .foregroundStyle(
+                                store.state.messages.isEmpty ? Color.tabInactive : Color.meomunPointColor
+                            )
                     }
+                    .disabled(store.state.messages.isEmpty)
                 }
             }
         }
