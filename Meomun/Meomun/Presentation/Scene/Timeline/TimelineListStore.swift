@@ -51,16 +51,16 @@ final class TimelineListStore: Store {
     @Published var state: State
 
     private let fetchRecentMessagesUseCase: FetchRecentMessagesUseCase
-    private let deleteMesagesUseCase: DeleteMessagesUseCaseImpl
+    private let deleteMessagesUseCase: DeleteMessagesUseCase
 
     init(
         initialMessages: [Message] = [],
         fetchRecentMessagesUseCase: FetchRecentMessagesUseCase,
-        deleteMessagesUseCase: DeleteMessagesUseCaseImpl
+        deleteMessagesUseCase: DeleteMessagesUseCase
     ) {
         self.state = State(messages: initialMessages)
         self.fetchRecentMessagesUseCase = fetchRecentMessagesUseCase
-        self.deleteMesagesUseCase = deleteMessagesUseCase
+        self.deleteMessagesUseCase = deleteMessagesUseCase
     }
 
     func action(intent: Intent) -> AsyncStream<Action> {
@@ -108,7 +108,7 @@ final class TimelineListStore: Store {
 
                 Task {
                     do {
-                        try await deleteMesagesUseCase.execute(for: state.selectedMessageIDs)
+                        try await deleteMessagesUseCase.execute(for: state.selectedMessageIDs)
                         continuation.yield(.deleteMessages(state.selectedMessageIDs))
                         continuation.yield(.setEditing(false))
                         continuation.yield(.clearSelectedMessageIDs)
