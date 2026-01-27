@@ -163,7 +163,7 @@ private extension TimelineListView {
             )
             .font(.body.weight(.semibold))
             .foregroundStyle(
-                store.state.selectedMessageIDs.isEmpty ? Color.meomunPrimaryColor : Color.meomunPrimaryColor
+                store.state.selectedMessageIDs.isEmpty ? Color.tabInactive : Color.meomunPrimaryColor
             )
 
             Spacer()
