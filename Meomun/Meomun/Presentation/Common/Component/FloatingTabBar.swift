@@ -34,24 +34,7 @@ struct FloatingTabBar: View {
 //                onSelect(.myPage)
 //            }
         }
-        .padding(.horizontal, 22)
-        .padding(.vertical, 22)
-        .background(
-            CornerRadiusShape(
-                topLeft: 24,
-                topRight: 24,
-                bottomLeft: 10,
-                bottomRight: 10
-            )
-            .fill(.white.opacity(0.76))
-            .shadow(
-                color: .black.opacity(0.12),
-                radius: 18,
-                x: 0,
-                y: 6
-            )
-        )
-        .padding(.horizontal, 30)
+        .floatingContainer()
         .animation(
             .spring(
                 response: 0.25,
@@ -59,7 +42,6 @@ struct FloatingTabBar: View {
             ),
             value: selectedTab
         )
-        .padding(.bottom, 5)
     }
 }
 
