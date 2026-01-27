@@ -52,8 +52,6 @@ struct MainTabShellView: View {
         case .record:
             TimelineListView(
                 store: TimelineListStore(
-                    initialMessages: TimelineListStore
-                        .getTimelineDummyMessages(),
                     fetchRecentMessagesUseCase: FetchRecentMessagesUseCaseImpl(repository: MessageRepositoryImpl())
                 )
             )

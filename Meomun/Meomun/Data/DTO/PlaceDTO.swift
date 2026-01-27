@@ -25,11 +25,21 @@ struct PlaceDTO: Codable, Equatable {
 
 extension PlaceDTO {
     func toDomain() -> Place {
-        Place(
+        .init(
             id: PlaceID(value: placeId),
             name: name,
             coordinate: Coordinate(latitude: latitude, longitude: longitude),
             address: ""
+        )
+    }
+
+    func toModel() -> PlaceModel {
+        .init(
+            id: placeId,
+            name: name,
+            latitude: latitude,
+            longitude: longitude,
+            address: address
         )
     }
 }

@@ -8,7 +8,6 @@
 import Foundation
 
 actor MessageInMemoryStorage: MessageStorage {
-
     private var storage: [MessageResponseDTO] = []
 
     static let shared = MessageInMemoryStorage()
@@ -30,8 +29,6 @@ actor MessageInMemoryStorage: MessageStorage {
     }
 
     func fetchRecent(page: Int, pageSize: Int) async throws -> [MessageResponseDTO] {
-        guard page >= 0, pageSize >= 0 else { return [] }
-
         // 1. 최신순 정렬
         let sorted = storage.sorted { $0.createdAt > $1.createdAt }
 
@@ -61,5 +58,17 @@ actor MessageInMemoryStorage: MessageStorage {
         )
 
         storage.append(newMessage)
+    }
+
+    func update(for message: UpdateMessageRequestDTO) async throws {
+        _ = MessageResponseDTO(
+            id: message.id,
+            createdAt: message.createdAt,
+            content: message.content,
+            latitude: message.latitude,
+            longitude: message.longitude,
+            address: message.address,
+            place: message.place
+        )
     }
 }

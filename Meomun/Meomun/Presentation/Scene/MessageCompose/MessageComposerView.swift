@@ -83,6 +83,11 @@ struct MessageComposerView: View {
             guard store.state.alert != newValue else { return }
             send(.setAlert(newValue))
         }
+        .onChange(of: store.state.showEmptyLocationAlert) { _, show in
+            if show {
+                presentedAlert = emptyLocationAlert
+            }
+        }
         .fullScreenCover(isPresented: isPlaceSearchPresentedBinding) {
             placeSearchOverlay
                 .presentationBackground(.clear)
@@ -132,7 +137,7 @@ private extension MessageComposerView {
         MessageTextEditor(
             text: messageBinding,
             isFocused: $isFocused,
-            maxCount: EditorPolicy.maxCount,
+            maxCount: MessageComposerPolicy.maxCount,
             placeholder: Constants.textEditorPlaceholder
         )
     }
@@ -315,6 +320,17 @@ private extension MessageComposerView {
                 )
             ]
         )
+    }
+
+    var emptyLocationAlert: AlertModel {
+        AlertModel(title: "위치 정보를 가져올 수 없어요.", message: "네트워크 연결을 확인해주세요.", buttons: [
+            .init(title: "그대로 작성", role: .normal, action: {
+                send(.confirmWithEmptyLocation)
+            }),
+            .init(title: "새로 고침", role: .cancel, action: {
+                send(.retryReverseGeocoding)
+            })
+        ])
     }
 }
 

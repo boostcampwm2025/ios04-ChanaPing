@@ -1,5 +1,5 @@
 //
-//  MessageDTO.swift
+//  MessageResponseDTO.swift
 //  Meomun
 //
 //  Created by MinwooJe on 1/22/26.
