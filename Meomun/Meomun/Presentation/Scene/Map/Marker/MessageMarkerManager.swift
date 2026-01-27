@@ -504,9 +504,7 @@ extension MessageMarkerManager {
             // 아무 동작 X
         } else {
             updateMarker(coord: coord, isPlace: false, mapView: mapView) { messages in
-                if messages.count >= 2 {
-                    onTapNoPlace?(messages)
-                }
+                onTapNoPlace?(messages)
             }
         }
     }
