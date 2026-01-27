@@ -11,6 +11,19 @@ struct TimelineRowView: View {
     let message: Message
     let showTopLine: Bool
     let showBottomLine: Bool
+    private let selectionState: TimelineSelectionState
+
+    init(
+        message: Message,
+        showTopLine: Bool,
+        showBottomLine: Bool,
+        selectionState: TimelineSelectionState
+    ) {
+        self.message = message
+        self.showTopLine = showTopLine
+        self.showBottomLine = showBottomLine
+        self.selectionState = selectionState
+    }
 
     @State private var messageBoxHeight: CGFloat = 0
 
@@ -23,7 +36,8 @@ struct TimelineRowView: View {
             TimelineIndicatorView(
                 height: indicatorHeight,
                 showTopLine: showTopLine,
-                showBottomLine: showBottomLine
+                showBottomLine: showBottomLine,
+                selectionState: selectionState
             )
 
             MessageBoxView(message: message)
@@ -38,6 +52,7 @@ struct TimelineRowView: View {
 }
 
 #Preview {
+    var selectionStates: [TimelineSelectionState]  = [.inactive, .unselected, .selected]
     let messages: [Message] =  [
         Message(
             id: MessageID(value: UUID()),
@@ -70,7 +85,8 @@ struct TimelineRowView: View {
             TimelineRowView(
                 message: message,
                 showTopLine: index != 0,
-                showBottomLine: index != messages.count - 1
+                showBottomLine: index != messages.count - 1,
+                selectionState: selectionStates[index % messages.count]
             )
         }
     }
