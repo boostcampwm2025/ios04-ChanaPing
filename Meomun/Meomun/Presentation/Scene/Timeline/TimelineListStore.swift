@@ -16,6 +16,7 @@ final class TimelineListStore: Store {
 
         var selectedMessageIDs: Set<MessageID> = []     // 편집 모드 시 선택 된 메시지
         var deleteAlert: AlertModel?
+        var deleteStatus: LoadingStatus = .idle
 
         var sections: [(key: YearMonth, value: [Message])] {
             MessageTimelineGrouper.groupByYearMonth(messages)
@@ -44,6 +45,7 @@ final class TimelineListStore: Store {
         case deleteMessages(Set<MessageID>)
         case showDeleteAlert(AlertModel)
         case hideAlert
+        case setDeleteStatus(LoadingStatus)
     }
 
     @Published var state: State
@@ -101,16 +103,29 @@ final class TimelineListStore: Store {
                 continuation.yield(.showDeleteAlert(alert))
 
             case .confirmDeleteSelectedMessages:
+                continuation.yield(.setDeleteStatus(.loading))
+                continuation.yield(.hideAlert)
+
                 Task {
                     do {
                         try await deleteMesagesUseCase.execute(for: state.selectedMessageIDs)
                         continuation.yield(.deleteMessages(state.selectedMessageIDs))
                         continuation.yield(.setEditing(false))
                         continuation.yield(.clearSelectedMessageIDs)
-                        continuation.yield(.hideAlert)
+                        continuation.yield(.setDeleteStatus(.success))
+
+                        // 성공 메시지를 1초간 보여준 후 idle로 전환
+                        try? await Task.sleep(for: .seconds(1))
+                        continuation.yield(.setDeleteStatus(.idle))
                     } catch {
                         AppLog.error("메시지 삭제 실패", category: .store, error: error)
+                        continuation.yield(.setDeleteStatus(.fail))
+
+                        // 실패 메시지를 1초간 보여준 후 idle로 전환
+                        try? await Task.sleep(for: .seconds(1))
+                        continuation.yield(.setDeleteStatus(.idle))
                     }
+
                     continuation.finish()
                 }
                 return
@@ -165,6 +180,9 @@ final class TimelineListStore: Store {
 
         case .hideAlert:
             newState.deleteAlert = nil
+
+        case .setDeleteStatus(let status):
+            newState.deleteStatus = status
         }
 
         return newState
