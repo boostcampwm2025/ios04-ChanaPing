@@ -28,6 +28,8 @@ final class MessageComposerStore: Store {
         var alert: AlertModel?
         var toastMessage: String?
 
+        var showEmptyLocationAlert: Bool = false
+
         var confirmStatus: LoadingStatus = .idle
 
         var isConfirmEnabled: Bool {
@@ -49,9 +51,11 @@ final class MessageComposerStore: Store {
         case clearPlace
 
         case tapConfirm
+        case confirmWithEmptyLocation
 
         case setAlert(AlertModel?)
         case setToast(String?)
+        case retryReverseGeocoding
     }
 
     enum Action {
@@ -62,6 +66,7 @@ final class MessageComposerStore: Store {
         case updatePlace(Place)
         case clearPlace
 
+        case setShowEmptyLocationAlert(Bool)
         case setConfirmStatus(LoadingStatus)
         case presentAlert(AlertModel?)
         case presentToast(String?)
@@ -95,16 +100,10 @@ final class MessageComposerStore: Store {
         AsyncStream<Action>(bufferingPolicy: .unbounded) { continuation in
             switch intent {
             case .onAppear:
-                let coordinate = state.startLocation
-                Task { [weak self] in
-                    guard let self, let coordinate else {
-                        continuation.finish()
-                        return
-                    }
-
+                executeWithCoordinate(continuation: continuation) { [weak self] coordinate, continuation in
+                    guard let self else { return }
                     let address = await self.fetchAddress(for: coordinate)
                     continuation.yield(.setStartAddress(address))
-                    continuation.finish()
                 }
                 return
 
@@ -139,7 +138,14 @@ final class MessageComposerStore: Store {
                     continuation.yield(.updateMessage(finalMessage))
                 }
 
-                createMessage(continuation: continuation)
+                // 케이스 1: startAddress가 "위치 없음"이면 얼럿 표시
+                if state.startAddress == "위치 없음" {
+                    continuation.yield(.setShowEmptyLocationAlert(true))
+                    break
+                }
+
+                // 케이스 2: startAddress가 정상이면 네트워크 체크 없이 진행
+                createMessage(continuation: continuation, allowEmptyLocation: false)
                 return
 
             case .setAlert(let alert):
@@ -147,6 +153,20 @@ final class MessageComposerStore: Store {
 
             case .setToast(let message):
                 continuation.yield(.presentToast(message))
+
+            case .confirmWithEmptyLocation:
+                continuation.yield(.setShowEmptyLocationAlert(false))
+                createMessage(continuation: continuation, allowEmptyLocation: true)
+                return
+
+            case .retryReverseGeocoding:
+                continuation.yield(.setShowEmptyLocationAlert(false))
+                executeWithCoordinate(continuation: continuation) { [weak self] coordinate, continuation in
+                    guard let self else { return }
+                    let address = await self.fetchAddress(for: coordinate)
+                    continuation.yield(.setStartAddress(address))
+                }
+                return
             }
 
             continuation.finish()
@@ -171,6 +191,9 @@ final class MessageComposerStore: Store {
 
         case .clearPlace:
             newState.selectedPlace = nil
+
+        case .setShowEmptyLocationAlert(let show):
+            newState.showEmptyLocationAlert = show
 
         case .setConfirmStatus(let status):
             newState.confirmStatus = status
@@ -205,7 +228,25 @@ extension MessageComposerStore {
         }
     }
 
-    private func createMessage(continuation: AsyncStream<Action>.Continuation) {
+    private func executeWithCoordinate(
+        continuation: AsyncStream<Action>.Continuation,
+        work: @escaping @Sendable (Coordinate, AsyncStream<Action>.Continuation) async -> Void
+    ) {
+        let coordinate = state.startLocation
+        Task {
+            guard let coordinate else {
+                continuation.finish()
+                return
+            }
+            await work(coordinate, continuation)
+            continuation.finish()
+        }
+    }
+
+    private func createMessage(
+        continuation: AsyncStream<Action>.Continuation,
+        allowEmptyLocation: Bool = false
+    ) {
         Task {
             continuation.yield(.setConfirmStatus(.loading))
             defer {
@@ -213,8 +254,10 @@ extension MessageComposerStore {
             }
 
             do {
-                guard let createMessageRequest = await makeCreateMessageRequest() else {
-                    await finish(isSuccess: false, continuation)
+                guard let createMessageRequest = await makeCreateMessageRequest(
+                    allowEmptyLocation: allowEmptyLocation
+                ) else {
+                    continuation.yield(.setConfirmStatus(.idle))
                     return
                 }
 
@@ -241,8 +284,11 @@ extension MessageComposerStore {
         continuation.yield(.close(isSuccess: isSuccess))
     }
 
-    private func makeCreateMessageRequest() async -> CreateMessageRequest? {
+    private func makeCreateMessageRequest(allowEmptyLocation: Bool = false) async -> CreateMessageRequest? {
         guard let startLocation = state.startLocation else { return nil }
+
+        // allowEmptyLocation이 false면 nil 반환
+        if !allowEmptyLocation { return nil }
 
         return CreateMessageRequest(
             content: state.message,

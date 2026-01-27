@@ -195,6 +195,8 @@ final class PlaceSearchStore: Store {
             }
 
             apply(.setPhase(.failed("검색 중 오류가 발생했습니다. (\(statusCode))")))
+        } else if case NetworkError.noConnection = error {
+            apply(.setPhase(.failed("네트워크 연결을 확인해주세요.")))
         } else {
             AppLog.error(
                 "LocalSearch unknown error",
