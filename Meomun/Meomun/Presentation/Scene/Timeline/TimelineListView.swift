@@ -26,6 +26,10 @@ struct TimelineListView: View {
         self.configuration = configuration
     }
 
+    private func send(_ intent: TimelineListStore.Intent) {
+        Task { await store.send(intent: intent) }
+    }
+
     var body: some View {
         VStack {
             if configuration.showsHeader { header }
@@ -48,11 +52,7 @@ struct TimelineListView: View {
                     .transition(.move(edge: .bottom).combined(with: .opacity))
             }
         }
-        .onAppear {
-            Task {
-                await store.send(intent: .onAppear)
-            }
-        }
+        .onAppear { send(.onAppear) }
         .onChange(of: store.state.isEditing) { _, _ in
             setTabBarHidden(store.state.isEditing || store.state.deleteStatus != .idle)
         }
@@ -91,11 +91,7 @@ private extension TimelineListView {
                 HStack {
                     Spacer()
 
-                    Button {
-                        Task {
-                            await store.send(intent: .tapEdit)
-                        }
-                    } label: {
+                    Button { send(.tapEdit) } label: {
                         Text(store.state.isEditing ? "취소": "편집")
                             .font(.headline)
                             .foregroundStyle(
@@ -125,11 +121,7 @@ private extension TimelineListView {
                                 selectionState: store.selectionState(for: message)
                             )
                             .animation(.spring(response: 0.3, dampingFraction: 0.6), value: store.state.isEditing)
-                            .onTapGesture {
-                                Task {
-                                    await store.send(intent: .tapMessage(message.id))
-                                }
-                            }
+                            .onTapGesture { send(.tapMessage(message.id)) }
                         }
                     } header: {
                         TimelineSectionHeaderView(yearMonth: section.key)
@@ -181,11 +173,7 @@ private extension TimelineListView {
 
             Spacer()
 
-            Button {
-                Task {
-                    await store.send(intent: .requestDeleteSelectedMessages)
-                }
-            } label: {
+            Button { send(.requestDeleteSelectedMessages) } label: {
                 Text("삭제")
                     .font(.headline)
                     .foregroundStyle(store.state.selectedMessageIDs.isEmpty ? Color.tabInactive : Color.red)
@@ -204,9 +192,7 @@ private extension TimelineListView {
             get: { store.state.selectedSection != nil },
             set: { isPresented in
                 guard isPresented == false else { return }
-                Task {
-                    await store.send(intent: .tapSection(nil))
-                }
+                send(.tapSection(nil))
             }
         )
     }
@@ -217,11 +203,7 @@ private extension TimelineListView {
             ZStack(alignment: .center) {
                 Color.black.opacity(0.35)
                     .ignoresSafeArea()
-                    .onTapGesture {
-                        Task {
-                            await store.send(intent: .tapSection(nil))
-                        }
-                    }
+                    .onTapGesture { send(.tapSection(nil)) }
 
                 PathRecordView(
                     yearMonth: section,
@@ -243,11 +225,7 @@ private extension TimelineListView {
     var deleteAlertBinding: Binding<AlertModel?> {
         Binding(
             get: { store.state.deleteAlert },
-            set: { _ in
-                Task {
-                    await store.send(intent: .dismissAlert)
-                }
-            }
+            set: { _ in send(.dismissAlert) }
         )
     }
 
