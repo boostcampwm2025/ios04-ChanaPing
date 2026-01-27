@@ -28,7 +28,13 @@ struct PlaceSearchOverlayView: View {
         ZStack {
             Color.black.opacity(0.35)
                 .ignoresSafeArea()
-                .onTapGesture { Task { await store.send(intent: .dismiss) } }
+                .onTapGesture {
+                    if isFocused {
+                        isFocused = false
+                    } else {
+                        Task { await store.send(intent: .dismiss) }
+                    }
+                }
 
             if isPresented {
                 VStack {
@@ -59,12 +65,24 @@ struct PlaceSearchOverlayView: View {
 
 extension PlaceSearchOverlayView {
     var header: some View {
-        HStack {
-            Spacer()
+        ZStack {
             Text(Constants.title)
                 .font(.headline.weight(.semibold))
                 .foregroundStyle(Color.meomunPrimaryColor)
-            Spacer()
+
+            HStack {
+                Spacer()
+
+                Button {
+                    Task { await store.send(intent: .dismiss) }
+                } label: {
+                    Image(systemName: "xmark")
+                        .font(.system(size: 14, weight: .semibold))
+                        .foregroundStyle(Color.meomunSecondaryColor)
+                        .padding(10)
+                        .contentShape(Rectangle())
+                }
+            }
         }
     }
 
