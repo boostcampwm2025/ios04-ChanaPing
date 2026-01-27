@@ -786,13 +786,6 @@ private extension MessageMarkerManager {
             for (_, marker) in markers {
                 marker.mapView = mapView
             }
-
-            // 3) 정합성 보장: 모든 좌표에 대해 마커 재구성
-            rebuildAllMarkers(
-                mapView: mapView,
-                onTapPlace: boundOnTapPlace,
-                onTapNoPlace: boundOnTapNoPlace
-            )
         }
     }
 
