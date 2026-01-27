@@ -7,6 +7,14 @@
 
 import SwiftUI
 
+fileprivate enum Constants {
+    static let navigationTitle = "머문"
+    static let locationToastMessage = "위치를 불러오지 못했어요. 잠시 후에 다시 시도해주세요."
+
+    static let placeSearchTitle = "장소로 이동"
+    static let placeSearchPlaceholder = "어디로 이동할까요?"
+}
+
 struct MapView: View {
     @Environment(\.setTabBarHidden) private var setTabBarHidden
 
@@ -64,7 +72,7 @@ struct MapView: View {
 
                 VStack {
                     FloatingNavigationBar(
-                        title: "머문",
+                        title: Constants.navigationTitle,
                         onTapSearch: { send(.tapSearch) }
                     )
 
@@ -82,7 +90,7 @@ struct MapView: View {
                                     )
                                 )
                             } else {
-                                send(.setToast("위치를 불러오지 못했어요. 잠시 후에 다시 시도해주세요."))
+                                send(.setToast(Constants.locationToastMessage))
                             }
                         }
                     }
@@ -198,14 +206,14 @@ private extension MapView {
                         send(.dismissPlaceSearch)
                     }
                 ),
-                title: "장소로 이동",
-                placeholder: "어디로 이동할까요?"
+                title: Constants.placeSearchTitle,
+                placeholder: Constants.placeSearchPlaceholder
             )
         } else {
             Color.clear
                 .onAppear {
-                        send(.setToast("위치를 불러오지 못했어요. 잠시 후에 다시 시도해주세요."))
-                        send(.dismissPlaceSearch)
+                    send(.setToast(Constants.locationToastMessage))
+                    send(.dismissPlaceSearch)
                 }
         }
     }
