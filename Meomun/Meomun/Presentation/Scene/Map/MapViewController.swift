@@ -249,14 +249,7 @@ extension MapViewController: NMFMapViewCameraDelegate {
     func mapViewCameraIdle(_ mapView: NMFMapView) {
         let center = mapView.cameraPosition.target
         let coordinate = Coordinate(latitude: center.lat, longitude: center.lng)
-
-        let nmfBounds = mapView.contentBounds
-        let domainBounds = BoundingBox(
-            minLatitude: nmfBounds.southWestLat,
-            maxLatitude: nmfBounds.northEastLat,
-            minLongitude: nmfBounds.southWestLng,
-            maxLongitude: nmfBounds.northEastLng
-        )
+        let domainBounds = makeBoundingBox(from: mapView)
 
         onCameraIdle?(coordinate, domainBounds)
     }
@@ -272,16 +265,19 @@ extension MapViewController: NMFMapViewCameraDelegate {
         // 카메라 중심 좌표 추출 및 콜백 호출
         let center = mapView.cameraPosition.target
         let coordinate = Coordinate(latitude: center.lat, longitude: center.lng)
+        let domainBounds = makeBoundingBox(from: mapView)
 
+        onCameraChangedByLocation?(coordinate, domainBounds)
+    }
+
+    private func makeBoundingBox(from mapView: NMFMapView) -> BoundingBox {
         let nmfBounds = mapView.contentBounds
-        let domainBounds = BoundingBox(
+        return BoundingBox(
             minLatitude: nmfBounds.southWestLat,
             maxLatitude: nmfBounds.northEastLat,
             minLongitude: nmfBounds.southWestLng,
             maxLongitude: nmfBounds.northEastLng
         )
-
-        onCameraChangedByLocation?(coordinate, domainBounds)
     }
 }
 
