@@ -9,6 +9,10 @@ import SwiftUI
 
 fileprivate enum Constants {
     static let navigationTitle = "머물렀던 순간들"
+
+    static let deleteLoadingMessage = "메시지를 삭제하고 있어요."
+    static let deleteSuccessMessage = "메시지를 삭제했어요."
+    static let deleteFailMessage = "메시지 삭제 실패\n다시 시도해주세요."
 }
 
 struct TimelineListView: View {
@@ -49,8 +53,11 @@ struct TimelineListView: View {
                 await store.send(intent: .onAppear)
             }
         }
-        .onChange(of: store.state.isEditing) { _, newValue in
-            setTabBarHidden(newValue)
+        .onChange(of: store.state.isEditing) { _, _ in
+            setTabBarHidden(store.state.isEditing || store.state.deleteStatus != .idle)
+        }
+        .onChange(of: store.state.deleteStatus) { _, _ in
+            setTabBarHidden(store.state.isEditing || store.state.deleteStatus != .idle)
         }
         .animation(.spring(response: 0.25, dampingFraction: 0.9), value: store.state.isEditing)
         .background(Color.meomunBackgroundColor)
@@ -60,17 +67,12 @@ struct TimelineListView: View {
             message: { $0.message },
             buttons: { $0.buttons }
         )
-    }
-
-    private var deleteAlertBinding: Binding<AlertModel?> {
-        Binding(
-            get: { store.state.deleteAlert },
-            set: { _ in
-                Task {
-                    await store.send(intent: .dismissAlert)
-                }
+        .overlay {
+            if store.state.deleteStatus != .idle {
+                deleteLoadingOverlay
+                    .transition(.identity) // 애니메이션 없음
             }
-        )
+        }
     }
 }
 
@@ -181,6 +183,44 @@ private extension TimelineListView {
             .disabled(store.state.selectedMessageIDs.isEmpty)
         }
         .floatingContainer()
+    }
+}
+
+// MARK: - Alert & LoadingOverlay
+
+private extension TimelineListView {
+    var deleteAlertBinding: Binding<AlertModel?> {
+        Binding(
+            get: { store.state.deleteAlert },
+            set: { _ in
+                Task {
+                    await store.send(intent: .dismissAlert)
+                }
+            }
+        )
+    }
+
+    var isDeleteLoadingOverlayPresentedBinding: Binding<Bool> {
+        Binding(
+            get: { store.state.deleteStatus != .idle },
+            set: { _ in }
+        )
+    }
+
+    var deleteLoadingOverlay: some View {
+        LoadingOverlayView(
+            status: store.state.deleteStatus,
+            message: deleteLoadingOverlayMessage
+        )
+    }
+
+    var deleteLoadingOverlayMessage: String {
+        switch store.state.deleteStatus {
+        case .loading: return Constants.deleteLoadingMessage
+        case .success: return Constants.deleteSuccessMessage
+        case .fail: return Constants.deleteFailMessage
+        case .idle: return ""
+        }
     }
 }
 
