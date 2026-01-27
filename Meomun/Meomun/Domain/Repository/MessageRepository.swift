@@ -12,7 +12,7 @@ protocol MessageRepository: Sendable {
     func updateMessage(_ request: Message) async throws
     func deleteMessages(messageIDs: Set<MessageID>) async throws
 
-    func fetchNearbyMessages(location: Coordinate, limit: Int?) async throws -> [Message]
+    func fetchNearbyMessages(at location: Coordinate, bounds: BoundingBox, limit: Int?) async throws -> [Message]
     func fetchPlaceMessages(placeID: PlaceID, limit: Int?) async throws -> [Message]
     func fetchRecentMessages(page: Int, pageSize: Int) async throws -> [Message]
 }

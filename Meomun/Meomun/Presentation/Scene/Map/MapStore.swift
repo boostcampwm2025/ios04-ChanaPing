@@ -12,8 +12,8 @@ final class MapStore: Store {
     enum Intent {
         case onAppear(Coordinate)
         case onDisappear
-        case cameraDidIdle(Coordinate)
-        case cameraChangedByLocation(Coordinate)
+        case cameraDidIdle(Coordinate, BoundingBox)
+        case cameraChangedByLocation(Coordinate, BoundingBox)
         case dismissAddMessage
         case updateMessages([Message])
         case tapNoPlaceMarker([Message])
@@ -70,21 +70,19 @@ final class MapStore: Store {
                 let isConnected = networkMonitor.checkConnection()
                 continuation.yield(.setNetworkConnected(isConnected))
 
-                self.getNearbyMessages(at: coordinate, continuation: continuation)
-
             case .onDisappear:
                 self.getNearbyMessageTask?.cancel()
                 self.getNearbyMessageTask = nil
                 continuation.yield(.setLoading(false))
                 continuation.finish()
 
-            case .cameraDidIdle(let coordinate):
+            case .cameraDidIdle(let coordinate, let boundingBox):
                 continuation.yield(.setCameraCoordinate(coordinate))
-                self.getNearbyMessages(at: coordinate, continuation: continuation)
+                self.getNearbyMessages(at: coordinate, bounds: boundingBox, continuation: continuation)
 
-            case .cameraChangedByLocation(let coordinate):
+            case .cameraChangedByLocation(let coordinate, let boundingBox):
                 continuation.yield(.setCameraCoordinate(coordinate))
-                self.getNearbyMessages(at: coordinate, continuation: continuation)
+                self.getNearbyMessages(at: coordinate, bounds: boundingBox, continuation: continuation)
 
             case .dismissAddMessage:
                 continuation.yield(.setShowAddMessage(false))
@@ -148,6 +146,7 @@ final class MapStore: Store {
 
     private func getNearbyMessages(
         at coordinate: Coordinate,
+        bounds: BoundingBox,
         continuation: AsyncStream<Action>.Continuation
     ) {
         getNearbyMessageTask?.cancel()
@@ -174,10 +173,10 @@ final class MapStore: Store {
 
             do {
                 let messages = try await self.getNearbyMessagesUseCase.execute(
-                    location: coordinate,
+                    at: coordinate,
+                    bounds: bounds,
                     limit: nil
                 )
-//                let messages = self.getDummyMessages()
 
                 guard !Task.isCancelled else { return }
 
