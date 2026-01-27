@@ -43,6 +43,10 @@ struct MapView: View {
                     userLocation: initialUserLocation,
                     markerManager: messageMarkerManager,
                     messages: store.state.messages,
+                    cameraMoveTarget: store.state.cameraMoveTarget,
+                    onCameraMoveConsumed: {
+                        send(.cameraMoveConsumed)
+                    },
                     onTapPlace: { place in
                         navigationPath.append(MapDestination.space(place: place))
                     },
@@ -187,8 +191,6 @@ private extension MapView {
                     ),
                     userLocation: current,
                     onSelect: { place in
-                        print("selected: \(place)")
-                        // 지도 시점 이동 추가해야함!!!!
                         send(.selectPlace(place))
                     },
                     onDismiss: {
