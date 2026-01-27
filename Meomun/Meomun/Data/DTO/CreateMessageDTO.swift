@@ -7,11 +7,6 @@
 
 import Foundation
 
-enum CreateMessageRequestError: Error, Equatable {
-    case http(code: Int, rawBody: String)
-    case persistentCreateFailed
-}
-
 struct CreateMessageRequestDTO: Encodable, Equatable {
     let content: String
     let latitude: Double

@@ -138,8 +138,8 @@ final class MessageComposerStore: Store {
                     continuation.yield(.updateMessage(finalMessage))
                 }
 
-                // 케이스 1: startAddress가 "위치 없음"이면 얼럿 표시
-                if state.startAddress == "위치 없음" {
+                // 케이스 1: startAddress가 "위치 정보 없음"이면 얼럿 표시
+                if state.startAddress == MessageComposerPolicy.emptyStartAddress {
                     continuation.yield(.setShowEmptyLocationAlert(true))
                     break
                 }
@@ -254,20 +254,17 @@ extension MessageComposerStore {
             }
 
             do {
+                AppLog.debug("createMessage 진입", category: .store)
                 guard let createMessageRequest = await makeCreateMessageRequest(
                     allowEmptyLocation: allowEmptyLocation
                 ) else {
-                    continuation.yield(.setConfirmStatus(.idle))
+                    continuation.yield(.setConfirmStatus(.fail))
                     return
                 }
 
+                AppLog.debug("\(createMessageRequest)", category: .store)
                 try await createMessageUseCase.execute(createMessageRequest)
                 await finish(isSuccess: true, continuation)
-
-            } catch let error as CreateMessageRequestError {
-                AppLog.error("Failed to create message", category: .store, error: error)
-                await finish(isSuccess: false, continuation)
-
             } catch {
                 AppLog.error("Failed to create message with unknown error", category: .store, error: error)
                 continuation.yield(.presentAlert(.init(
@@ -285,10 +282,8 @@ extension MessageComposerStore {
     }
 
     private func makeCreateMessageRequest(allowEmptyLocation: Bool = false) async -> CreateMessageRequest? {
+        AppLog.debug("makeCreateMessageRequest", category: .store)
         guard let startLocation = state.startLocation else { return nil }
-
-        // allowEmptyLocation이 false면 nil 반환
-        if !allowEmptyLocation { return nil }
 
         return CreateMessageRequest(
             content: state.message,
