@@ -186,8 +186,48 @@ private extension TimelineListView {
     }
 }
 
-// MARK: - Alert & LoadingOverlay
+// MARK: PathRecordOverlay
+private extension TimelineListView {
+    var isSelectedSectionOverlayPresentedBinding: Binding<Bool> {
+        Binding(
+            get: { store.state.selectedSection != nil },
+            set: { isPresented in
+                guard isPresented == false else { return }
+                Task {
+                    await store.send(intent: .tapSection(nil))
+                }
+            }
+        )
+    }
 
+    @ViewBuilder
+    var sectionOverlay: some View {
+        if let section = store.state.selectedSection {
+            ZStack(alignment: .center) {
+                Color.black.opacity(0.35)
+                    .ignoresSafeArea()
+                    .onTapGesture {
+                        Task {
+                            await store.send(intent: .tapSection(nil))
+                        }
+                    }
+
+                PathRecordView(
+                    yearMonth: section,
+                    messages: store.messages(in: section)
+                )
+                .clipShape(Rectangle())
+                .padding(.horizontal, 16)
+                .padding(.bottom, 16)
+                .transition(.move(edge: .bottom).combined(with: .opacity))
+            }
+            .zIndex(999)
+            .animation(.spring(response: 0.3, dampingFraction: 0.2, blendDuration: 0), value: section)
+        }
+    }
+}
+
+// MARK: - Alert & LoadingOverlay
 private extension TimelineListView {
     var deleteAlertBinding: Binding<AlertModel?> {
         Binding(
