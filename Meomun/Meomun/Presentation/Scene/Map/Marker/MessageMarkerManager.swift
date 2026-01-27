@@ -93,9 +93,6 @@ final class MessageMarkerManager {
     /// 클러스터러
     private var clusterer: NMCClusterer<ItemKey>?
 
-    /// 클러스터 아이템 identifier -> 현재 마커 그룹 키 매핑 (LeafUpdater에서 참조)
-    private var clusterGroupKeyById: [Int: MarkerGroupKey] = [:]
-
     /// 외부 바인딩(카메라 이벤트에서 모드 전환용)
     private weak var boundMapView: NMFMapView?
     private var boundOnTapPlace: ((Place) -> Void)?
@@ -822,9 +819,6 @@ private extension MessageMarkerManager {
         }
 
         clusterer.addAll(keyTagMap)
-
-        // 매핑 갱신
-        clusterGroupKeyById = nextIdToGroupKey
     }
 }
 
