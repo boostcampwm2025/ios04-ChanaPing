@@ -8,13 +8,11 @@
 import NMapsMap
 import UIKit
 
-class LeafMarkerUpdater: NMCDefaultLeafMarkerUpdater {
-    override func updateLeafMarker(_ info: NMCLeafMarkerInfo, _ marker: NMFMarker) {
-        super.updateLeafMarker(info, marker)
+final class LeafMarkerUpdater: NMCDefaultLeafMarkerUpdater {
+    private let diameter: CGFloat = 28 // 전체 크기
+    private let iconDiameter: CGFloat = 18 // 내부 아이콘 크기
 
-        let diameter: CGFloat = 28  // 전체 크기
-        let iconDiameter: CGFloat = 18  // 내부 아이콘 크기
-
+    private lazy var cachedIcon: NMFOverlayImage = {
         let image = Self.renderIconWithBackground(
             diameter: diameter,
             backgroundColor: .white.withAlphaComponent(0.9),
@@ -22,7 +20,13 @@ class LeafMarkerUpdater: NMCDefaultLeafMarkerUpdater {
             iconDiameter: iconDiameter
         )
 
-        marker.iconImage = NMFOverlayImage(image: image)
+        return NMFOverlayImage(image: image)
+    }()
+
+    override func updateLeafMarker(_ info: NMCLeafMarkerInfo, _ marker: NMFMarker) {
+        super.updateLeafMarker(info, marker)
+
+        marker.iconImage = cachedIcon
         marker.width = diameter
         marker.height = diameter
         marker.touchHandler = { overlay in

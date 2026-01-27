@@ -11,13 +11,16 @@ final class ClusterMarkerUpdater: NMCDefaultClusterMarkerUpdater {
     // 원 지름
     private let diameter: CGFloat = 30
 
+    // 캐싱된 아이콘 이미지
+    private lazy var cachedIcon: NMFOverlayImage = {
+        let image = Self.renderIcon(diameter: diameter)
+        return NMFOverlayImage(image: image)
+    }()
+
     override func updateClusterMarker(_ info: NMCClusterMarkerInfo, _ marker: NMFMarker) {
         super.updateClusterMarker(info, marker)
 
-        let image = Self.renderIcon(diameter: diameter)
-        let overlay = NMFOverlayImage(image: image)
-
-        marker.iconImage = overlay
+        marker.iconImage = cachedIcon
         marker.width = diameter
         marker.height = diameter
 
