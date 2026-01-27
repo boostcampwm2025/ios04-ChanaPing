@@ -71,4 +71,10 @@ actor MessageInMemoryStorage: MessageStorage {
             place: message.place
         )
     }
+
+    func delete(messageIDs: Set<MessageID>) async throws {
+        storage.removeAll { message in
+            messageIDs.contains(MessageID(value: message.id))
+        }
+    }
 }
