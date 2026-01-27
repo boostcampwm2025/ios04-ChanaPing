@@ -139,7 +139,7 @@ private extension MessageComposerView {
         MessageTextEditor(
             text: messageBinding,
             isFocused: $isFocused,
-            maxCount: EditorPolicy.maxCount,
+            maxCount: MessageComposerPolicy.maxCount,
             placeholder: Constants.textEditorPlaceholder
         )
     }

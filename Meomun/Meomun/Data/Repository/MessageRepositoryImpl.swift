@@ -6,17 +6,18 @@
 //
 
 import Foundation
-import Supabase
 
 final class MessageRepositoryImpl: MessageRepository {
     private let storage: MessageStorage
 
-    // TODO: MessageCoreDataStorage 구현 후 디폴트 파라미터 제거
-    init(storage: MessageStorage = MessageInMemoryStorage.shared) {
+    // TODO: DI 구현 후 디폴트 파라미터 제거
+    init(storage: MessageStorage = MessageSwiftDataStorage.shared) {
         self.storage = storage
     }
 
     func createMessage(_ request: CreateMessageRequest) async throws {
+        AppLog.debug("createMessage 진입", category: .repository)
+        AppLog.debug(String(describing: request), category: .repository)
         let placeDTO: PlaceDTO? = request.place.map { place in
             PlaceDTO(
                 placeId: place.id.value,
@@ -36,6 +37,30 @@ final class MessageRepositoryImpl: MessageRepository {
                 place: placeDTO
             )
         )
+    }
+
+    func updateMessage(_ request: Message) async throws {
+        let placeDTO: PlaceDTO? = request.placeTag.map { place in
+            PlaceDTO(
+                placeId: place.id.value,
+                name: place.name,
+                latitude: place.coordinate.latitude,
+                longitude: place.coordinate.longitude,
+                address: place.address
+            )
+        }
+
+        return try await storage.update(
+                for: .init(
+                    id: request.id.value,
+                    createdAt: request.createdAt,
+                    content: request.content,
+                    latitude: request.coordinate.latitude,
+                    longitude: request.coordinate.longitude,
+                    address: request.address,
+                    place: placeDTO
+                )
+            )
     }
 
     func deleteMessages(messageIDs: [MessageID]) async throws {

@@ -9,6 +9,7 @@ import Foundation
 
 protocol MessageRepository: Sendable {
     func createMessage(_ request: CreateMessageRequest) async throws
+    func updateMessage(_ request: Message) async throws
     func deleteMessages(messageIDs: [MessageID]) async throws
 
     func fetchNearbyMessages(location: Coordinate, limit: Int?) async throws -> [Message]

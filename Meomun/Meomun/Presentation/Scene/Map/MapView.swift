@@ -110,7 +110,6 @@ struct MapView: View {
             ) {
                 TimelineListView(
                     store: TimelineListStore(
-                        initialMessages: store.state.selectedNoPlaceMessages,
                         fetchRecentMessagesUseCase: FetchRecentMessagesUseCaseImpl(
                             repository: MessageRepositoryImpl()
                         )
