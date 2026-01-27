@@ -25,7 +25,8 @@ struct MapView: View {
         _store = StateObject(wrappedValue: MapStore(
             getNearbyMessagesUseCase: GetNearbyMessagesUseCaseImpl(
                 messageRepository: MessageRepositoryImpl()
-            )
+            ),
+            networkMonitor: NetworkMonitor()
         ))
         self.messageMarkerManager = messageMarkerManager
         self.initialUserLocation = userLocation
@@ -88,6 +89,14 @@ struct MapView: View {
                 }
                 .padding(.top, 12)
                 .padding(.bottom, 96)
+
+                if !store.state.isNetworkConnected {
+                    AlertView(type: .network) {
+                        Task {
+                            await store.send(intent: .tapNetworkRefresh)
+                        }
+                    }
+                }
             }
             .sheet(
                 isPresented: Binding(
@@ -101,7 +110,6 @@ struct MapView: View {
             ) {
                 TimelineListView(
                     store: TimelineListStore(
-                        initialMessages: store.state.selectedNoPlaceMessages,
                         fetchRecentMessagesUseCase: FetchRecentMessagesUseCaseImpl(
                             repository: MessageRepositoryImpl()
                         )

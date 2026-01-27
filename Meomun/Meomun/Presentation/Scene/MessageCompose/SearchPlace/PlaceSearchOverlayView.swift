@@ -18,6 +18,8 @@ struct PlaceSearchOverlayView: View {
     @FocusState private var isFocused: Bool
     @StateObject private var store: PlaceSearchStore
 
+    @State private var isPresented = false
+
     init(store: PlaceSearchStore) {
         _store = StateObject(wrappedValue: store)
     }
@@ -26,37 +28,61 @@ struct PlaceSearchOverlayView: View {
         ZStack {
             Color.black.opacity(0.35)
                 .ignoresSafeArea()
-                .onTapGesture { Task { await store.send(intent: .dismiss) } }
+                .onTapGesture {
+                    if isFocused {
+                        isFocused = false
+                    } else {
+                        Task { await store.send(intent: .dismiss) }
+                    }
+                }
 
-            VStack {
-                header
-                searchBar
-                searchResultList
-            }
-            .padding(28)
-            .frame(width: 320, height: 400)
-            .background(Color.white)
-            .cornerRadius(25)
-            .shadow(radius: 8)
-
-            .onTapGesture {
-                isFocused = false
-            }
-            .onAppear {
-                isFocused = true
+            if isPresented {
+                VStack {
+                    header
+                    searchBar
+                    searchResultList
+                }
+                .padding(28)
+                .frame(width: 320, height: 400)
+                .background(Color.white)
+                .cornerRadius(25)
+                .shadow(radius: 8)
+                .transition(.opacity.combined(with: .scale(scale: 0.98)))
+                .onTapGesture {
+                    isFocused = false
+                }
             }
         }
+        .onAppear {
+            isFocused = true
+            withAnimation(.easeInOut(duration: 0.3)) {
+                isPresented = true
+            }
+        }
+        .onDisappear { isPresented = false }
     }
 }
 
 extension PlaceSearchOverlayView {
     var header: some View {
-        HStack {
-            Spacer()
+        ZStack {
             Text(Constants.title)
                 .font(.headline.weight(.semibold))
                 .foregroundStyle(Color.meomunPrimaryColor)
-            Spacer()
+
+            HStack {
+                Spacer()
+
+                Button {
+                    Task { await store.send(intent: .dismiss) }
+                } label: {
+                    Image(systemName: "xmark")
+                        .font(.system(size: 14, weight: .semibold))
+                        .foregroundStyle(Color.meomunSecondaryColor)
+                        .padding(10)
+                        .contentShape(Rectangle())
+                }
+            }
         }
     }
 
@@ -122,6 +148,11 @@ extension PlaceSearchOverlayView {
                                             .foregroundStyle(Color.gray)
                                     }
                                     Spacer()
+                                }
+                                .onAppear {
+                                    if place == results.last {
+                                        Task { await store.send(intent: .scrollReachedBottom) }
+                                    }
                                 }
                                 .foregroundStyle(Color.meomunPrimaryColor)
                                 .padding(.vertical, 5)

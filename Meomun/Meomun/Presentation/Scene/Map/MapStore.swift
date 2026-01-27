@@ -18,6 +18,7 @@ final class MapStore: Store {
         case updateMessages([Message])
         case tapNoPlaceMarker([Message])
         case dismissTimelineView
+        case tapNetworkRefresh
         case setToast(String?)
     }
 
@@ -27,6 +28,7 @@ final class MapStore: Store {
         case setMessages([Message])
         case setSelectedNoPlace([Message])
         case setLoading(Bool)
+        case setNetworkConnected(Bool)
         case setError(String)
         case setToastMessage(String?)
     }
@@ -37,6 +39,7 @@ final class MapStore: Store {
         var isShowingAddMessage: Bool = false
         var selectedNoPlaceMessages: [Message] = []
         var isLoading: Bool = false
+        var isNetworkConnected = true
         var errorMessage: String = ""
         var toastMessage: String?
     }
@@ -47,12 +50,15 @@ final class MapStore: Store {
 
     private var getNearbyMessageTask: Task<Void, Never>?
     private let getNearbyMessagesUseCase: GetNearbyMessagesUseCase
+    private let networkMonitor: NetworkMonitor
 
     init(
-        getNearbyMessagesUseCase: GetNearbyMessagesUseCase
+        getNearbyMessagesUseCase: GetNearbyMessagesUseCase,
+        networkMonitor: NetworkMonitor
     ) {
         self.state = State()
         self.getNearbyMessagesUseCase = getNearbyMessagesUseCase
+        self.networkMonitor = networkMonitor
     }
 
     func action(intent: Intent) -> AsyncStream<Action> {
@@ -60,6 +66,10 @@ final class MapStore: Store {
             switch intent {
             case .onAppear(let coordinate):
                 continuation.yield(.setCameraCoordinate(coordinate))
+
+                let isConnected = networkMonitor.checkConnection()
+                continuation.yield(.setNetworkConnected(isConnected))
+
                 self.getNearbyMessages(at: coordinate, continuation: continuation)
 
             case .onDisappear:
@@ -92,6 +102,11 @@ final class MapStore: Store {
                 continuation.yield(.setSelectedNoPlace([]))
                 continuation.finish()
 
+            case .tapNetworkRefresh:
+                let isConnected = networkMonitor.checkConnection()
+                continuation.yield(.setNetworkConnected(isConnected))
+                continuation.finish()
+
             case .setToast(let message):
                 continuation.yield(.setToastMessage(message))
                 continuation.finish()
@@ -117,6 +132,9 @@ final class MapStore: Store {
 
         case .setLoading(let isLoading):
             newState.isLoading = isLoading
+
+        case .setNetworkConnected(let isConnected):
+            newState.isNetworkConnected = isConnected
 
         case .setError(let message):
             newState.errorMessage = message

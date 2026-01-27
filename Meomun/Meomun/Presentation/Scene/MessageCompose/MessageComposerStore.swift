@@ -10,14 +10,15 @@ import Combine
 import CoreLocation
 import Supabase
 
-enum EditorPolicy {
+enum MessageComposerPolicy {
     static let maxCount = 30
+    static let emptyStartAddress = "위치 정보 없음"
 }
 
 final class MessageComposerStore: Store {
     struct State: Equatable {
         var startLocation: Coordinate?
-        var startAddress: String = "위치 정보 없음"
+        var startAddress: String = MessageComposerPolicy.emptyStartAddress
 
         var message: String = ""
         var address: String = ""
@@ -26,6 +27,8 @@ final class MessageComposerStore: Store {
 
         var alert: AlertModel?
         var toastMessage: String?
+
+        var showEmptyLocationAlert: Bool = false
 
         var confirmStatus: LoadingStatus = .idle
 
@@ -48,9 +51,11 @@ final class MessageComposerStore: Store {
         case clearPlace
 
         case tapConfirm
+        case confirmWithEmptyLocation
 
         case setAlert(AlertModel?)
         case setToast(String?)
+        case retryReverseGeocoding
     }
 
     enum Action {
@@ -61,6 +66,7 @@ final class MessageComposerStore: Store {
         case updatePlace(Place)
         case clearPlace
 
+        case setShowEmptyLocationAlert(Bool)
         case setConfirmStatus(LoadingStatus)
         case presentAlert(AlertModel?)
         case presentToast(String?)
@@ -94,16 +100,10 @@ final class MessageComposerStore: Store {
         AsyncStream<Action>(bufferingPolicy: .unbounded) { continuation in
             switch intent {
             case .onAppear:
-                let coordinate = state.startLocation
-                Task { [weak self] in
-                    guard let self, let coordinate else {
-                        continuation.finish()
-                        return
-                    }
-
+                executeWithCoordinate(continuation: continuation) { [weak self] coordinate, continuation in
+                    guard let self else { return }
                     let address = await self.fetchAddress(for: coordinate)
                     continuation.yield(.setStartAddress(address))
-                    continuation.finish()
                 }
                 return
 
@@ -132,13 +132,20 @@ final class MessageComposerStore: Store {
                     .replacingOccurrences(of: "\n", with: "")
                     .replacingOccurrences(of: "\r", with: "")
 
-                let finalMessage = String(normalized.prefix(EditorPolicy.maxCount))
+                let finalMessage = String(normalized.prefix(MessageComposerPolicy.maxCount))
 
                 if finalMessage != state.message {
                     continuation.yield(.updateMessage(finalMessage))
                 }
 
-                createMessage(continuation: continuation)
+                // 케이스 1: startAddress가 "위치 정보 없음"이면 얼럿 표시
+                if state.startAddress == MessageComposerPolicy.emptyStartAddress {
+                    continuation.yield(.setShowEmptyLocationAlert(true))
+                    break
+                }
+
+                // 케이스 2: startAddress가 정상이면 네트워크 체크 없이 진행
+                createMessage(continuation: continuation, allowEmptyLocation: false)
                 return
 
             case .setAlert(let alert):
@@ -146,6 +153,20 @@ final class MessageComposerStore: Store {
 
             case .setToast(let message):
                 continuation.yield(.presentToast(message))
+
+            case .confirmWithEmptyLocation:
+                continuation.yield(.setShowEmptyLocationAlert(false))
+                createMessage(continuation: continuation, allowEmptyLocation: true)
+                return
+
+            case .retryReverseGeocoding:
+                continuation.yield(.setShowEmptyLocationAlert(false))
+                executeWithCoordinate(continuation: continuation) { [weak self] coordinate, continuation in
+                    guard let self else { return }
+                    let address = await self.fetchAddress(for: coordinate)
+                    continuation.yield(.setStartAddress(address))
+                }
+                return
             }
 
             continuation.finish()
@@ -170,6 +191,9 @@ final class MessageComposerStore: Store {
 
         case .clearPlace:
             newState.selectedPlace = nil
+
+        case .setShowEmptyLocationAlert(let show):
+            newState.showEmptyLocationAlert = show
 
         case .setConfirmStatus(let status):
             newState.confirmStatus = status
@@ -200,11 +224,29 @@ extension MessageComposerStore {
 
         } catch {
             AppLog.error("Failed to get address from coordinates", category: .store, error: error)
-            return "위치 없음"
+            return MessageComposerPolicy.emptyStartAddress
         }
     }
 
-    private func createMessage(continuation: AsyncStream<Action>.Continuation) {
+    private func executeWithCoordinate(
+        continuation: AsyncStream<Action>.Continuation,
+        work: @escaping @Sendable (Coordinate, AsyncStream<Action>.Continuation) async -> Void
+    ) {
+        let coordinate = state.startLocation
+        Task {
+            guard let coordinate else {
+                continuation.finish()
+                return
+            }
+            await work(coordinate, continuation)
+            continuation.finish()
+        }
+    }
+
+    private func createMessage(
+        continuation: AsyncStream<Action>.Continuation,
+        allowEmptyLocation: Bool = false
+    ) {
         Task {
             continuation.yield(.setConfirmStatus(.loading))
             defer {
@@ -212,18 +254,17 @@ extension MessageComposerStore {
             }
 
             do {
-                guard let createMessageRequest = await makeCreateMessageRequest() else {
-                    await finish(isSuccess: false, continuation)
+                AppLog.debug("createMessage 진입", category: .store)
+                guard let createMessageRequest = await makeCreateMessageRequest(
+                    allowEmptyLocation: allowEmptyLocation
+                ) else {
+                    continuation.yield(.setConfirmStatus(.fail))
                     return
                 }
 
+                AppLog.debug("\(createMessageRequest)", category: .store)
                 try await createMessageUseCase.execute(createMessageRequest)
                 await finish(isSuccess: true, continuation)
-
-            } catch let error as CreateMessageError {
-                AppLog.error("Failed to create message", category: .store, error: error)
-                await finish(isSuccess: false, continuation)
-
             } catch {
                 AppLog.error("Failed to create message with unknown error", category: .store, error: error)
                 continuation.yield(.presentAlert(.init(
@@ -240,9 +281,9 @@ extension MessageComposerStore {
         continuation.yield(.close(isSuccess: isSuccess))
     }
 
-    private func makeCreateMessageRequest() async -> CreateMessageRequest? {
-        guard let startLocation = state.startLocation,
-              state.startAddress != "위치 없음" else { return nil }
+    private func makeCreateMessageRequest(allowEmptyLocation: Bool = false) async -> CreateMessageRequest? {
+        AppLog.debug("makeCreateMessageRequest", category: .store)
+        guard let startLocation = state.startLocation else { return nil }
 
         return CreateMessageRequest(
             content: state.message,
@@ -250,15 +291,5 @@ extension MessageComposerStore {
             address: state.startAddress,
             place: state.selectedPlace
         )
-    }
-
-    private func mapCreateMessageErrorToAlertAction(_ error: CreateMessageError) -> Action {
-        switch error {
-        case .http(let code, let rawBody):
-            return .presentAlert(.init(
-                title: "요청 실패 (\(code))",
-                message: rawBody.isEmpty ? "잠시 후 다시 시도해 주세요." : rawBody
-            ))
-        }
     }
 }

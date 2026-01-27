@@ -43,18 +43,6 @@ struct MessageComposerView: View {
         ZStack {
             content
                 .disabled(isInteractionDisabled)
-
-            if store.state.isPlaceSearchPresented {
-                placeSearchOverlay
-                    .transition(.opacity.combined(with: .scale(scale: 0.98)))
-                    .zIndex(999)
-            }
-
-            if store.state.confirmStatus != .idle {
-                loadingOverlay
-                    .transition(.opacity.animation(.easeInOut(duration: 0.2)))
-                    .zIndex(1000)
-            }
         }
         .enableSwipeBack(
             shouldBegin: {
@@ -95,6 +83,21 @@ struct MessageComposerView: View {
             guard store.state.alert != newValue else { return }
             send(.setAlert(newValue))
         }
+        .onChange(of: store.state.showEmptyLocationAlert) { _, show in
+            if show {
+                presentedAlert = emptyLocationAlert
+            }
+        }
+        .fullScreenCover(isPresented: isPlaceSearchPresentedBinding) {
+            placeSearchOverlay
+                .presentationBackground(.clear)
+        }
+        .fullScreenCover(isPresented: isLoadingOverlayPresentedBinding) {
+            loadingOverlay
+                .presentationBackground(.clear)
+                .interactiveDismissDisabled(true)
+        }
+        .transaction { $0.disablesAnimations = true }
     }
 }
 
@@ -134,19 +137,19 @@ private extension MessageComposerView {
         MessageTextEditor(
             text: messageBinding,
             isFocused: $isFocused,
-            maxCount: EditorPolicy.maxCount,
+            maxCount: MessageComposerPolicy.maxCount,
             placeholder: Constants.textEditorPlaceholder
         )
     }
 
     var placeSection: some View {
         HStack(spacing: 8) {
-            PlaceSearchContainerView {
-                Button(action: onTapPlaceField) {
+            Button(action: onTapPlaceField) {
+                PlaceSearchContainerView {
                     Text(placeFieldText)
-                    .font(.system(size: 16, weight: .medium))
-                    .foregroundStyle(placeFieldColor)
-                    .frame(maxWidth: .infinity, alignment: .leading)
+                        .font(.system(size: 16, weight: .medium))
+                        .foregroundStyle(placeFieldColor)
+                        .frame(maxWidth: .infinity, alignment: .leading)
                 }
             }
 
@@ -185,7 +188,8 @@ private extension MessageComposerView {
     var loadingOverlay: some View {
         LoadingOverlayView(
             status: store.state.confirmStatus,
-            message: loadingOverlayMessage)
+            message: loadingOverlayMessage
+        )
     }
 }
 
@@ -230,6 +234,22 @@ private extension MessageComposerView {
         Binding(
             get: { store.state.toastMessage },
             set: { send(.setToast($0)) }
+        )
+    }
+
+    var isPlaceSearchPresentedBinding: Binding<Bool> {
+        Binding(
+            get: {
+                store.state.isPlaceSearchPresented && store.state.confirmStatus == .idle
+            },
+            set: { isPresented in if !isPresented { send(.dismissPlaceSearch) } }
+        )
+    }
+
+    var isLoadingOverlayPresentedBinding: Binding<Bool> {
+        Binding(
+            get: { store.state.confirmStatus != .idle },
+            set: { _ in }
         )
     }
 }
@@ -300,6 +320,17 @@ private extension MessageComposerView {
                 )
             ]
         )
+    }
+
+    var emptyLocationAlert: AlertModel {
+        AlertModel(title: "위치 정보를 가져올 수 없어요.", message: "네트워크 연결을 확인해주세요.", buttons: [
+            .init(title: "그대로 작성", role: .normal, action: {
+                send(.confirmWithEmptyLocation)
+            }),
+            .init(title: "새로 고침", role: .cancel, action: {
+                send(.retryReverseGeocoding)
+            })
+        ])
     }
 }
 

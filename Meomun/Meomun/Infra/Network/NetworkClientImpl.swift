@@ -50,6 +50,13 @@ final class NetworkClientImpl: NetworkClient, @unchecked Sendable {
                 throw NetworkError.decodingError(error)
             }
 
+        } catch let urlError as URLError {
+            switch urlError.code {
+            case .notConnectedToInternet, .networkConnectionLost, .timedOut:
+                throw NetworkError.noConnection
+            default:
+                throw NetworkError.transportError(urlError)
+            }
         } catch let networkError as NetworkError {
             throw networkError
         } catch {
