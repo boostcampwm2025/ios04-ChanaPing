@@ -66,9 +66,9 @@ final class TimelineListStore: Store {
     }
 
     func action(intent: Intent) -> AsyncStream<Action> {
-        AsyncStream { continuation in
-            switch intent {
-            case .onAppear:
+        switch intent {
+        case .onAppear:
+            return .init { continuation in
                 Task {
                     do {
                         // TODO: 페이지네이션 구현
@@ -77,22 +77,34 @@ final class TimelineListStore: Store {
                     } catch {
                         AppLog.debug(error.localizedDescription, category: .store)
                     }
+
+                    continuation.finish()
                 }
-                return
+            }
 
-            case .tapSection(let section):
-                // TODO: 섹션 탭 동작 구현
+            // TODO: 섹션 탭 동작 구현
+        case .tapSection(let section):
+            return .init { continuation in
                 continuation.yield(.setSelectedSection(section))
+                continuation.finish()
+            }
 
-            case .tapEdit:
+        case .tapEdit:
+            return .init { continuation in
                 continuation.yield(.setEditing(!state.isEditing))
                 continuation.yield(.clearSelectedMessageIDs)
+                continuation.finish()
+            }
 
-            case .tapMessage(let messageID):
-                guard state.isEditing else { break }
+        case .tapMessage(let messageID):
+            return .init { continuation in
+                guard state.isEditing else { return }
                 continuation.yield(.toggleMessageSelection(messageID))
+                continuation.finish()
+            }
 
-            case .requestDeleteSelectedMessages:
+        case .requestDeleteSelectedMessages:
+            return .init { continuation in
                 let alert = AlertFactory.deleteMessage(
                     count: state.selectedMessageIDs.count,
                     onConfirm: { [weak self] in
@@ -103,8 +115,11 @@ final class TimelineListStore: Store {
                     }
                 )
                 continuation.yield(.showDeleteAlert(alert))
+                continuation.finish()
+            }
 
-            case .requestDeleteMessage(let messageID):
+        case .requestDeleteMessage(let messageID):
+            return .init { continuation in
                 let alert = AlertFactory.deleteMessage(
                     count: 1,
                     onConfirm: { [weak self] in
@@ -115,8 +130,11 @@ final class TimelineListStore: Store {
                     }
                 )
                 continuation.yield(.showDeleteAlert(alert))
+                continuation.finish()
+            }
 
-            case .confirmDeleteMessage(let messageID):
+        case .confirmDeleteMessage(let messageID):
+            return .init { continuation in
                 continuation.yield(.setDeleteStatus(.loading))
                 continuation.yield(.hideAlert)
 
@@ -124,9 +142,9 @@ final class TimelineListStore: Store {
                     do {
                         try await deleteMessagesUseCase.execute(for: [messageID])
                         continuation.yield(.deleteMessages([messageID]))
-                        continuation.yield(.setDeleteStatus(.success))
 
                         // 성공 메시지를 1초간 보여준 후 idle로 전환
+                        continuation.yield(.setDeleteStatus(.success))
                         try? await Task.sleep(for: .seconds(1))
                         continuation.yield(.setDeleteStatus(.idle))
                     } catch {
@@ -140,9 +158,11 @@ final class TimelineListStore: Store {
 
                     continuation.finish()
                 }
-                return
+            }
 
-            case .confirmDeleteSelectedMessages:
+        case .confirmDeleteSelectedMessages:
+            return .init { continuation in
+
                 continuation.yield(.setDeleteStatus(.loading))
                 continuation.yield(.hideAlert)
 
@@ -150,11 +170,12 @@ final class TimelineListStore: Store {
                     do {
                         try await deleteMessagesUseCase.execute(for: state.selectedMessageIDs)
                         continuation.yield(.deleteMessages(state.selectedMessageIDs))
+
                         continuation.yield(.setEditing(false))
                         continuation.yield(.clearSelectedMessageIDs)
-                        continuation.yield(.setDeleteStatus(.success))
 
                         // 성공 메시지를 1초간 보여준 후 idle로 전환
+                        continuation.yield(.setDeleteStatus(.success))
                         try? await Task.sleep(for: .seconds(1))
                         continuation.yield(.setDeleteStatus(.idle))
                     } catch {
@@ -168,16 +189,19 @@ final class TimelineListStore: Store {
 
                     continuation.finish()
                 }
-                return
-
-            case .dismissAlert:
-                continuation.yield(.hideAlert)
-
-            case .setMessages(let messages):
-                continuation.yield(.setMessages(messages))
             }
 
-            continuation.finish()
+        case .dismissAlert:
+            return .init { continuation in
+                continuation.yield(.hideAlert)
+                continuation.finish()
+            }
+
+        case .setMessages(let messages):
+            return .init { continuation in
+                continuation.yield(.setMessages(messages))
+                continuation.finish()
+            }
         }
     }
 
