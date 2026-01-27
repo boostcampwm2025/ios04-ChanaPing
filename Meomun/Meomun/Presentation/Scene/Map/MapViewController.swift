@@ -27,8 +27,8 @@ final class MapViewController: UIViewController {
 
     private let onTapPlace: ((Place) -> Void)?
     private let onTapNoPlace: (([Message]) -> Void)?
-    private let onCameraIdle: ((Coordinate) -> Void)?
-    private let onCameraChangedByLocation: ((Coordinate) -> Void)?
+    private let onCameraIdle: ((Coordinate, BoundingBox) -> Void)?
+    private let onCameraChangedByLocation: ((Coordinate, BoundingBox) -> Void)?
 
     // MARK: - Dependencies
 
@@ -41,8 +41,8 @@ final class MapViewController: UIViewController {
         messageMarkerManager: MessageMarkerManager,
         onTapPlace: ((Place) -> Void)? = nil,
         onTapNoPlace: (([Message]) -> Void)? = nil,
-        onCameraIdle: ((Coordinate) -> Void)? = nil,
-        onCameraChangedByLocation: ((Coordinate) -> Void)? = nil
+        onCameraIdle: ((Coordinate, BoundingBox) -> Void)? = nil,
+        onCameraChangedByLocation: ((Coordinate, BoundingBox) -> Void)? = nil
     ) {
         self.messageMarkerManager = messageMarkerManager
         self.onTapPlace = onTapPlace
@@ -249,7 +249,16 @@ extension MapViewController: NMFMapViewCameraDelegate {
     func mapViewCameraIdle(_ mapView: NMFMapView) {
         let center = mapView.cameraPosition.target
         let coordinate = Coordinate(latitude: center.lat, longitude: center.lng)
-        onCameraIdle?(coordinate)
+
+        let nmfBounds = mapView.contentBounds
+        let domainBounds = BoundingBox(
+            minLatitude: nmfBounds.southWestLat,
+            maxLatitude: nmfBounds.northEastLat,
+            minLongitude: nmfBounds.southWestLng,
+            maxLongitude: nmfBounds.northEastLng
+        )
+
+        onCameraIdle?(coordinate, domainBounds)
     }
 
     func mapView(_ mapView: NMFMapView, cameraDidChangeByReason reason: Int, animated: Bool) {
@@ -263,7 +272,16 @@ extension MapViewController: NMFMapViewCameraDelegate {
         // 카메라 중심 좌표 추출 및 콜백 호출
         let center = mapView.cameraPosition.target
         let coordinate = Coordinate(latitude: center.lat, longitude: center.lng)
-        onCameraChangedByLocation?(coordinate)
+
+        let nmfBounds = mapView.contentBounds
+        let domainBounds = BoundingBox(
+            minLatitude: nmfBounds.southWestLat,
+            maxLatitude: nmfBounds.northEastLat,
+            minLongitude: nmfBounds.southWestLng,
+            maxLongitude: nmfBounds.northEastLng
+        )
+
+        onCameraChangedByLocation?(coordinate, domainBounds)
     }
 }
 
@@ -274,8 +292,8 @@ struct MapViewWrapper: UIViewControllerRepresentable {
     private let userLocation: Coordinate?
     private let onTapPlace: ((Place) -> Void)?
     private let onTapNoPlace: (([Message]) -> Void)?
-    private let onCameraIdle: ((Coordinate) -> Void)?
-    private let onCameraChangedByLocation: ((Coordinate) -> Void)?
+    private let onCameraIdle: ((Coordinate, BoundingBox) -> Void)?
+    private let onCameraChangedByLocation: ((Coordinate, BoundingBox) -> Void)?
 
     private let messageMarkerManager: MessageMarkerManager
 
@@ -285,8 +303,8 @@ struct MapViewWrapper: UIViewControllerRepresentable {
         messages: [Message],
         onTapPlace: ((Place) -> Void)? = nil,
         onTapNoPlace: (([Message]) -> Void)? = nil,
-        onCameraIdle: ((Coordinate) -> Void)? = nil,
-        onCameraChangedByLocation: ((Coordinate) -> Void)? = nil
+        onCameraIdle: ((Coordinate, BoundingBox) -> Void)? = nil,
+        onCameraChangedByLocation: ((Coordinate, BoundingBox) -> Void)? = nil
     ) {
         self.userLocation = userLocation
         self.messageMarkerManager = markerManager

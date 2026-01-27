@@ -47,12 +47,12 @@ struct MapView: View {
                             await store.send(intent: .tapNoPlaceMarker(messages))
                         }
                     },
-                    onCameraIdle: { coordinate in
+                    onCameraIdle: { coordinate, bounds in
                         Task {
                             await store.send(intent: .cameraDidIdle(coordinate))
                         }
                     },
-                    onCameraChangedByLocation: { coordinate in
+                    onCameraChangedByLocation: { coordinate, bounds in
                         Task {
                             await store.send(intent: .cameraChangedByLocation(coordinate))
                         }
