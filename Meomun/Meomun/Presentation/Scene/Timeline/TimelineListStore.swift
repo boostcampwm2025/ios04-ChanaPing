@@ -51,12 +51,12 @@ final class TimelineListStore: Store {
     @Published var state: State
 
     private let fetchRecentMessagesUseCase: FetchRecentMessagesUseCase
-    private let deleteMesagesUseCase: DeleteMessageUseCase
+    private let deleteMesagesUseCase: DeleteMessagesUseCaseImpl
 
     init(
         initialMessages: [Message] = [],
         fetchRecentMessagesUseCase: FetchRecentMessagesUseCase,
-        deleteMessagesUseCase: DeleteMessageUseCase
+        deleteMessagesUseCase: DeleteMessagesUseCaseImpl
     ) {
         self.state = State(messages: initialMessages)
         self.fetchRecentMessagesUseCase = fetchRecentMessagesUseCase

@@ -1,15 +1,15 @@
 //
-//  DeleteMessageUseCase.swift
+//  DeleteMessagesUseCase.swift
 //  Meomun
 //
 //  Created by MinwooJe on 1/27/26.
 //
 
-protocol DeleteMessageUseCase {
+protocol DeleteMessagesUseCase {
     func execute(for messageIDs: Set<MessageID>) async throws
 }
 
-final class DeleteMessageUseCaseImpl: DeleteMessageUseCase {
+final class DeleteMessagesUseCaseImpl: DeleteMessagesUseCase {
     private let messageRepository: MessageRepository
 
     init(messageRepository: MessageRepository) {

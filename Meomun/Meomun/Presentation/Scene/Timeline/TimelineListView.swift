@@ -270,7 +270,7 @@ extension TimelineListView {
             fetchRecentMessagesUseCase: FetchRecentMessagesUseCaseImpl(
                 repository: MessageRepositoryImpl(storage: MessageInMemoryStorage.shared)
             ),
-            deleteMessagesUseCase: DeleteMessageUseCaseImpl(messageRepository: MessageRepositoryImpl())
+            deleteMessagesUseCase: DeleteMessagesUseCaseImpl(messageRepository: MessageRepositoryImpl())
         )
     )
 }

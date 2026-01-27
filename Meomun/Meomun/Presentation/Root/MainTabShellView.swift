@@ -55,7 +55,7 @@ struct MainTabShellView: View {
                     fetchRecentMessagesUseCase: FetchRecentMessagesUseCaseImpl(
                         repository: MessageRepositoryImpl()
                     ),
-                    deleteMessagesUseCase: DeleteMessageUseCaseImpl(messageRepository: MessageRepositoryImpl())
+                    deleteMessagesUseCase: DeleteMessagesUseCaseImpl(messageRepository: MessageRepositoryImpl())
                 )
             )
 
