@@ -112,7 +112,8 @@ struct MapView: View {
                     store: TimelineListStore(
                         fetchRecentMessagesUseCase: FetchRecentMessagesUseCaseImpl(
                             repository: MessageRepositoryImpl()
-                        )
+                        ),
+                        deleteMessagesUseCase: DeleteMessagesUseCaseImpl(messageRepository: MessageRepositoryImpl())
                     ),
                     configuration: .bottomSheet
                 )
