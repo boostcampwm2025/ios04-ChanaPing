@@ -85,20 +85,29 @@ actor MessageSwiftDataStorage: MessageStorage {
         try context.save()
     }
 
-    func delete(messageID: MessageID) async throws {
+    func delete(messageIDs: Set<MessageID>) async throws {
         let context = makeContext()
 
-        let messageIdValue: UUID = messageID.value
-        var descriptor = FetchDescriptor<MessageModel>(
-            predicate: #Predicate { $0.id == messageIdValue }
-        )
-        descriptor.fetchLimit = 1
+        // Message.id: MessageID, MessageModel.id: UUID 이므로 타입을 맞추기 위해 map으로 변환
+        let messageIdValues: Set<UUID> = Set(messageIDs.map { $0.value })
 
-        if let target = try context.fetch(descriptor).first {
+        let descriptor = FetchDescriptor<MessageModel>(
+            predicate: #Predicate { message in
+                messageIdValues.contains(message.id)
+            }
+        )
+
+        let targets = try context.fetch(descriptor)
+
+        for target in targets {
             context.delete(target)
+        }
+
+        if !targets.isEmpty {
             try context.save()
+
         } else {
-            AppLog.warn("삭제할 대상 데이터가 없어요. MessageID : \(messageID)", category: .storage)
+            AppLog.warn("삭제할 대상 데이터가 없어요. MessageID : \(messageIDs)", category: .storage)
         }
     }
 
