@@ -31,22 +31,22 @@ struct PathRecordView: View {
                         VStack(alignment: .leading, spacing: 6) {
                             Text(message.content)
                                 .font(.footnote)
-                            
+
                             Text("위도: \(message.coordinate.latitude)")
                                 .font(.footnote)
                                 .foregroundStyle(.secondary)
-                            
+
                             Text("경도: \(message.coordinate.longitude)")
                                 .font(.footnote)
                                 .foregroundStyle(.secondary)
-                            
+
                             let day = calendar.component(.day, from: message.createdAt)
                             Text("일자: \(day.description)")
                                 .font(.caption)
                                 .foregroundStyle(.secondary)
                         }
                         .padding(.vertical, 8)
-                        
+
                         Divider()
                     }
                 }

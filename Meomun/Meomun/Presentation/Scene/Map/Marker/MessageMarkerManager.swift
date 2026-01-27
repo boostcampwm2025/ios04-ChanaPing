@@ -166,34 +166,6 @@ extension MessageMarkerManager {
         )
     }
 
-    // TODO: - handleEvent 정리 (실시간 이벤트 없으므로)
-
-    /// 실시간 이벤트 처리 (메시지 추가/삭제 시 호출)
-    /// - Parameters:
-    ///   - event: 메시지 이벤트 (insert 또는 delete)
-    ///   - onTapPlace: Place 마커 탭 시 콜백
-    ///   - onTapNoPlace: NoPlace 마커 탭 시 콜백
-    func handleEvent(
-        _ event: MessageEvent,
-        mapView: NMFMapView,
-        onTapPlace: ((Place) -> Void)?,
-        onTapNoPlace: (([Message]) -> Void)?
-    ) {
-        let coord = event.message.coordinate
-
-        // 1. 이벤트 타입에 따라 메시지 저장소 업데이트
-        switch event.type {
-        case .insert:
-            insertMessage(event.message)
-
-        case .delete:
-            removeMessage(event.message)
-        }
-
-        // 2. 해당 좌표의 마커 업데이트
-        updateMarkersForCoordinate(coord, mapView: mapView, onTapPlace: onTapPlace, onTapNoPlace: onTapNoPlace)
-    }
-
     func updateClusterModeIfNeeded(zoomLevel: Double) {
         let shouldCluster = zoomLevel <= clusterMaxZoom
 
