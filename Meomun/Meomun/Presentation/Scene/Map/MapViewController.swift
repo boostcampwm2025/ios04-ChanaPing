@@ -72,7 +72,7 @@ final class MapViewController: UIViewController {
         naverMapView.mapView.logoInteractionEnabled = true  // Naver Map 정책상 켜야 함.
 
         // 최소 및 최대 줌 레벨 설정
-        naverMapView.mapView.minZoomLevel = 15
+        naverMapView.mapView.minZoomLevel = 8
         naverMapView.mapView.maxZoomLevel = 18
 
         // 지도 스타일
@@ -252,6 +252,7 @@ extension MapViewController: NMFMapViewCameraDelegate {
         let domainBounds = makeBoundingBox(from: mapView)
 
         onCameraIdle?(coordinate, domainBounds)
+        messageMarkerManager.updateClusterModeIfNeeded(zoomLevel: mapView.zoomLevel)
     }
 
     func mapView(_ mapView: NMFMapView, cameraDidChangeByReason reason: Int, animated: Bool) {
@@ -268,6 +269,7 @@ extension MapViewController: NMFMapViewCameraDelegate {
         let domainBounds = makeBoundingBox(from: mapView)
 
         onCameraChangedByLocation?(coordinate, domainBounds)
+        messageMarkerManager.updateClusterModeIfNeeded(zoomLevel: mapView.zoomLevel)
     }
 
     private func makeBoundingBox(from mapView: NMFMapView) -> BoundingBox {
