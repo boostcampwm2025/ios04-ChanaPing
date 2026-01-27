@@ -61,7 +61,7 @@ private extension TimelineListView {
                             await store.send(intent: .tapEdit)
                         }
                     } label: {
-                        Text("편집")
+                        Text(store.state.isEditing ? "삭제": "편집")
                             .font(.headline)
                             .foregroundStyle(Color.meomunPointColor)
                     }
@@ -83,8 +83,15 @@ private extension TimelineListView {
                             TimelineRowView(
                                 message: message,
                                 showTopLine: index != 0,
-                                showBottomLine: index != monthMessages.count - 1
+                                showBottomLine: index != monthMessages.count - 1,
+                                selectionState: store.selectionState(for: message)
                             )
+                            .animation(.spring(response: 0.3, dampingFraction: 0.6), value: store.state.isEditing)
+                            .onTapGesture {
+                                Task {
+                                    await store.send(intent: .tapMessage(message.id))
+                                }
+                            }
                         }
                     } header: {
                         TimelineSectionHeaderView(yearMonth: section.key)
@@ -97,7 +104,6 @@ private extension TimelineListView {
             if configuration.showsFooter && !store.state.messages.isEmpty {
                 footer
             }
-
         }
     }
 
@@ -130,12 +136,38 @@ extension TimelineListView {
 }
 
 #Preview {
-    let emptyMessages: [Message] = []
+    let messages: [Message] =  [
+        Message(
+            id: MessageID(value: UUID()),
+            createdAt: Date().addingTimeInterval(-7 * 60),
+            content: "[Case4] NoPlace 스택 메시지 1",
+            coordinate: Coordinate.seoulCity,
+            address: "가람로 109",
+            placeTag: nil
+        ),
+        Message(
+            id: MessageID(value: UUID()),
+            createdAt: Date().addingTimeInterval(-30 * 60),
+            content: "[Case4] NoPlace 스택 메시지 2",
+            coordinate: Coordinate.seoulCity,
+            address: "가람로 109",
+            placeTag: nil
+        ),
+        Message(
+            id: MessageID(value: UUID()),
+            createdAt: Date().addingTimeInterval(-15000 * 60),
+            content: "[Case4] NoPlace 스택 메시지 3",
+            coordinate: Coordinate.seoulCity,
+            address: "가람로 109",
+            placeTag: nil
+        )
+    ]
+
     TimelineListView(
         store: TimelineListStore(
-            initialMessages: emptyMessages,
+            initialMessages: messages,
             fetchRecentMessagesUseCase: FetchRecentMessagesUseCaseImpl(
-                repository: MessageRepositoryImpl()
+                repository: MessageRepositoryImpl(storage: MessageInMemoryStorage.shared)
             )
         )
     )
