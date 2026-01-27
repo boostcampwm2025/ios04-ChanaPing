@@ -99,16 +99,10 @@ final class MessageComposerStore: Store {
         AsyncStream<Action>(bufferingPolicy: .unbounded) { continuation in
             switch intent {
             case .onAppear:
-                let coordinate = state.startLocation
-                Task { [weak self] in
-                    guard let self, let coordinate else {
-                        continuation.finish()
-                        return
-                    }
-
+                executeWithCoordinate(continuation: continuation) { [weak self] coordinate, continuation in
+                    guard let self else { return }
                     let address = await self.fetchAddress(for: coordinate)
                     continuation.yield(.setStartAddress(address))
-                    continuation.finish()
                 }
                 return
 
@@ -166,16 +160,10 @@ final class MessageComposerStore: Store {
 
             case .retryReverseGeocoding:
                 continuation.yield(.setShowEmptyLocationAlert(false))
-                let coordinate = state.startLocation
-                Task { [weak self] in
-                    guard let self, let coordinate else {
-                        continuation.finish()
-                        return
-                    }
-
+                executeWithCoordinate(continuation: continuation) { [weak self] coordinate, continuation in
+                    guard let self else { return }
                     let address = await self.fetchAddress(for: coordinate)
                     continuation.yield(.setStartAddress(address))
-                    continuation.finish()
                 }
                 return
             }
@@ -236,6 +224,21 @@ extension MessageComposerStore {
         } catch {
             AppLog.error("Failed to get address from coordinates", category: .store, error: error)
             return "위치 없음"
+        }
+    }
+
+    private func executeWithCoordinate(
+        continuation: AsyncStream<Action>.Continuation,
+        work: @escaping @Sendable (Coordinate, AsyncStream<Action>.Continuation) async -> Void
+    ) {
+        let coordinate = state.startLocation
+        Task {
+            guard let coordinate else {
+                continuation.finish()
+                return
+            }
+            await work(coordinate, continuation)
+            continuation.finish()
         }
     }
 
