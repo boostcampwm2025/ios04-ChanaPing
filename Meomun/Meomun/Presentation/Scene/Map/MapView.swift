@@ -113,7 +113,7 @@ struct MapView: View {
                         fetchRecentMessagesUseCase: FetchRecentMessagesUseCaseImpl(
                             repository: MessageRepositoryImpl()
                         ),
-                        deleteMesagesUseCase: DeleteMessageUseCaseImpl(messageRepository: MessageRepositoryImpl())
+                        deleteMessagesUseCase: DeleteMessageUseCaseImpl(messageRepository: MessageRepositoryImpl())
                     ),
                     configuration: .bottomSheet
                 )

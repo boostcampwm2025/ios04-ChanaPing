@@ -56,11 +56,11 @@ final class TimelineListStore: Store {
     init(
         initialMessages: [Message] = [],
         fetchRecentMessagesUseCase: FetchRecentMessagesUseCase,
-        deleteMesagesUseCase: DeleteMessageUseCase
+        deleteMessagesUseCase: DeleteMessageUseCase
     ) {
         self.state = State(messages: initialMessages)
         self.fetchRecentMessagesUseCase = fetchRecentMessagesUseCase
-        self.deleteMesagesUseCase = deleteMesagesUseCase
+        self.deleteMesagesUseCase = deleteMessagesUseCase
     }
 
     func action(intent: Intent) -> AsyncStream<Action> {
