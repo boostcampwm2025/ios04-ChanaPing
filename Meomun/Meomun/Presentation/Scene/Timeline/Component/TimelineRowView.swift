@@ -12,17 +12,20 @@ struct TimelineRowView: View {
     let showTopLine: Bool
     let showBottomLine: Bool
     private let selectionState: TimelineSelectionState
+    private let onDelete: (() -> Void)
 
     init(
         message: Message,
         showTopLine: Bool,
         showBottomLine: Bool,
-        selectionState: TimelineSelectionState
+        selectionState: TimelineSelectionState,
+        onDelete: @escaping (() -> Void)
     ) {
         self.message = message
         self.showTopLine = showTopLine
         self.showBottomLine = showBottomLine
         self.selectionState = selectionState
+        self.onDelete = onDelete
     }
 
     @State private var messageBoxHeight: CGFloat = 0
@@ -40,7 +43,7 @@ struct TimelineRowView: View {
                 selectionState: selectionState
             )
 
-            MessageBoxView(message: message)
+            MessageBoxView(message: message, onDelete: onDelete)
                 .readHeight { newHeight in
                     if newHeight > 0, abs(newHeight - messageBoxHeight) > 0.5 {
                         messageBoxHeight = newHeight
@@ -86,7 +89,8 @@ struct TimelineRowView: View {
                 message: message,
                 showTopLine: index != 0,
                 showBottomLine: index != messages.count - 1,
-                selectionState: selectionStates[index % messages.count]
+                selectionState: selectionStates[index % messages.count],
+                onDelete: { }
             )
         }
     }

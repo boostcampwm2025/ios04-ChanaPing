@@ -22,14 +22,20 @@ private enum Layout {
 
 struct MessageBoxView: View {
     private let message: Message
+    private let onDelete: (() -> Void)
 
-    init(message: Message) {
+    init(message: Message, onDelete: @escaping (() -> Void)) {
         self.message = message
+        self.onDelete = onDelete
     }
 
     var body: some View {
         VStack(alignment: .leading, spacing: 24) {
-            messageTextView
+            HStack {
+                messageTextView
+                Spacer()
+                menuButton
+            }
 
             metaRowView
         }
@@ -42,6 +48,21 @@ struct MessageBoxView: View {
 }
 
 private extension MessageBoxView {
+    var menuButton: some View {
+        Menu {
+            Button(role: .destructive) {
+                onDelete()
+            } label: {
+                Label("삭제", systemImage: "trash")
+            }
+        } label: {
+            Image(systemName: "ellipsis")
+                .frame(width: 44, height: 44)
+                .foregroundStyle(Color.meomunSecondaryColor)
+                .contentShape(Rectangle())
+        }
+    }
+
     var messageTextView: some View {
         Text(message.content)
             .font(.body)
@@ -108,12 +129,20 @@ private extension MessageBoxView {
             coordinate: Coordinate.seoulCity,
             address: "가람로 109",
             placeTag: nil
+        ),
+        Message(
+            id: MessageID(value: UUID()),
+            createdAt: Date().addingTimeInterval(-15000 * 60),
+            content: "12345678901234567890123456789012",
+            coordinate: Coordinate.seoulCity,
+            address: "가람로 109",
+            placeTag: nil
         )
     ]
 
     VStack(spacing: 10) {
         ForEach(messages) { message in
-            MessageBoxView(message: message)
+            MessageBoxView(message: message, onDelete: { })
         }
     }
 }

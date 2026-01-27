@@ -118,7 +118,8 @@ private extension TimelineListView {
                                 message: message,
                                 showTopLine: index != 0,
                                 showBottomLine: index != monthMessages.count - 1,
-                                selectionState: store.selectionState(for: message)
+                                selectionState: store.selectionState(for: message),
+                                onDelete: { }
                             )
                             .animation(.spring(response: 0.3, dampingFraction: 0.6), value: store.state.isEditing)
                             .onTapGesture {
