@@ -32,6 +32,10 @@ struct MapView: View {
         self.initialUserLocation = userLocation
     }
 
+    private func send(_ intent: MapStore.Intent) {
+        Task { await store.send(intent: intent) }
+    }
+
     var body: some View {
         NavigationStack(path: $navigationPath) {
             ZStack {
@@ -43,19 +47,13 @@ struct MapView: View {
                         navigationPath.append(MapDestination.space(place: place))
                     },
                     onTapNoPlace: { messages in
-                        Task {
-                            await store.send(intent: .tapNoPlaceMarker(messages))
-                        }
+                        send(.tapNoPlaceMarker(messages))
                     },
                     onCameraIdle: { coordinate in
-                        Task {
-                            await store.send(intent: .cameraDidIdle(coordinate))
-                        }
+                        send(.cameraDidIdle(coordinate))
                     },
                     onCameraChangedByLocation: { coordinate in
-                        Task {
-                            await store.send(intent: .cameraChangedByLocation(coordinate))
-                        }
+                        send(.cameraChangedByLocation(coordinate))
                     }
                 )
                 .ignoresSafeArea()
@@ -63,7 +61,7 @@ struct MapView: View {
                 VStack {
                     FloatingNavigationBar(
                         title: "머문",
-                        onTapSearch: {}
+                        onTapSearch: { send(.tapSearch) }
                     )
 
                     Spacer()
@@ -80,9 +78,7 @@ struct MapView: View {
                                     )
                                 )
                             } else {
-                                Task {
-                                    await store.send(intent: .setToast("위치를 불러오지 못했어요. 잠시 후에 다시 시도해주세요."))
-                                }
+                                send(.setToast("위치를 불러오지 못했어요. 잠시 후에 다시 시도해주세요."))
                             }
                         }
                     }
@@ -92,9 +88,7 @@ struct MapView: View {
 
                 if !store.state.isNetworkConnected {
                     AlertView(type: .network) {
-                        Task {
-                            await store.send(intent: .tapNetworkRefresh)
-                        }
+                        send(.tapNetworkRefresh)
                     }
                 }
             }
@@ -103,7 +97,7 @@ struct MapView: View {
                     get: { store.state.selectedNoPlaceMessages.isEmpty == false },
                     set: { isPresented in
                         if !isPresented {
-                            Task { await store.send(intent: .dismissTimelineView)}
+                            send(.dismissTimelineView)
                         }
                     }
                 )
@@ -164,27 +158,70 @@ struct MapView: View {
                 }
             }
             .task {
-                await store.send(intent: .onAppear(initialUserLocation))
+                send(.onAppear(initialUserLocation))
             }
             .onAppear { setTabBarHidden(false) }
             .onDisappear {
-                Task {
-                    await store.send(intent: .onDisappear)
-                }
+                send(.onDisappear)
             }
+            .fullScreenCover(isPresented: isPlaceSearchPresentedBinding) {
+                placeSearchOverlay
+                    .presentationBackground(.clear)
+            }
+            .transaction { $0.disablesAnimations = true }
         }
         .toast(toastBinding, bottomPadding: 100)
     }
 }
 
 private extension MapView {
+    @ViewBuilder
+    var placeSearchOverlay: some View {
+        if let current = locationProvider.current {
+            PlaceSearchOverlayView(
+                store: PlaceSearchStore(
+                    searchPlaces: SearchNearbyPlaceUseCaseImpl(
+                        placeRepository: NaverPlaceSearchRepositoryImpl(
+                            network: NetworkClientImpl()
+                        )
+                    ),
+                    userLocation: current,
+                    onSelect: { place in
+                        print("selected: \(place)")
+                        // 지도 시점 이동 추가해야함!!!!
+                        send(.selectPlace(place))
+                    },
+                    onDismiss: {
+                        send(.dismissPlaceSearch)
+                    }
+                ),
+                title: "장소로 이동",
+                placeholder: "어디로 이동할까요?"
+            )
+        } else {
+            Color.clear
+                .onAppear {
+                        send(.setToast("위치를 불러오지 못했어요. 잠시 후에 다시 시도해주세요."))
+                        send(.dismissPlaceSearch)
+                }
+        }
+    }
+
+    var isPlaceSearchPresentedBinding: Binding<Bool> {
+        Binding(
+            get: { store.state.isPlaceSearchPresented },
+            set: { isPresented in
+                if !isPresented {
+                    send(.dismissPlaceSearch)
+            }}
+        )
+    }
+
     var toastBinding: Binding<String?> {
         Binding(
             get: { store.state.toastMessage },
             set: { message in
-                Task {
-                    await store.send(intent: .setToast(message))
-                }
+                send(.setToast(message))
             }
         )
     }

@@ -14,6 +14,9 @@ final class MapStore: Store {
         case onDisappear
         case cameraDidIdle(Coordinate)
         case cameraChangedByLocation(Coordinate)
+        case tapSearch
+        case dismissPlaceSearch
+        case selectPlace(Place)
         case dismissAddMessage
         case updateMessages([Message])
         case tapNoPlaceMarker([Message])
@@ -24,6 +27,7 @@ final class MapStore: Store {
 
     enum Action {
         case setCameraCoordinate(Coordinate)
+        case presentPlaceSearch(Bool)
         case setShowAddMessage(Bool)
         case setMessages([Message])
         case setSelectedNoPlace([Message])
@@ -36,6 +40,7 @@ final class MapStore: Store {
     struct State {
         var messages: [Message] = []
         var cameraCoordinate: Coordinate?
+        var isPlaceSearchPresented: Bool = false
         var isShowingAddMessage: Bool = false
         var selectedNoPlaceMessages: [Message] = []
         var isLoading: Bool = false
@@ -86,6 +91,15 @@ final class MapStore: Store {
                 continuation.yield(.setCameraCoordinate(coordinate))
                 self.getNearbyMessages(at: coordinate, continuation: continuation)
 
+            case .tapSearch:
+                continuation.yield(.presentPlaceSearch(true))
+
+            case .dismissPlaceSearch:
+                continuation.yield(.presentPlaceSearch(false))
+
+            case .selectPlace(let place):
+                continuation.yield(.presentPlaceSearch(false))
+
             case .dismissAddMessage:
                 continuation.yield(.setShowAddMessage(false))
                 continuation.finish()
@@ -123,6 +137,9 @@ final class MapStore: Store {
 
         case .setCameraCoordinate(let coordinate):
             newState.cameraCoordinate = coordinate
+
+        case .presentPlaceSearch(let isPresented):
+            newState.isPlaceSearchPresented = isPresented
 
         case .setShowAddMessage(let isShown):
             newState.isShowingAddMessage = isShown

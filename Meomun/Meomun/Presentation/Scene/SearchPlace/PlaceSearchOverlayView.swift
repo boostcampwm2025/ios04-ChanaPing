@@ -7,7 +7,7 @@
 
 import SwiftUI
 
-fileprivate enum Constants {
+fileprivate enum Defaults {
     static let title = "장소 검색"
     static let searchTextFieldPlaceholder = "지금 어디에 있나요?"
     static let searchEmptyText = "검색 결과가 없어요."
@@ -20,8 +20,15 @@ struct PlaceSearchOverlayView: View {
 
     @State private var isPresented = false
 
-    init(store: PlaceSearchStore) {
+    private let title: String
+    private let placeholder: String
+
+    init(store: PlaceSearchStore,
+         title: String = Defaults.title,
+         placeholder: String = Defaults.searchTextFieldPlaceholder) {
         _store = StateObject(wrappedValue: store)
+        self.title = title
+        self.placeholder = placeholder
     }
 
     var body: some View {
@@ -66,7 +73,7 @@ struct PlaceSearchOverlayView: View {
 extension PlaceSearchOverlayView {
     var header: some View {
         ZStack {
-            Text(Constants.title)
+            Text(title)
                 .font(.headline.weight(.semibold))
                 .foregroundStyle(Color.meomunPrimaryColor)
 
@@ -88,7 +95,7 @@ extension PlaceSearchOverlayView {
 
     var searchBar: some View {
         PlaceSearchContainerView {
-            TextField(Constants.searchTextFieldPlaceholder, text: Binding(
+            TextField(placeholder, text: Binding(
                 get: { store.state.query },
                 set: { newValue in
                     Task { await store.send(intent: .queryChanged(newValue)) }
@@ -112,7 +119,7 @@ extension PlaceSearchOverlayView {
         Group {
             switch store.state.phase {
             case .idle:
-                emptyView(text: Constants.emptyText)
+                emptyView(text: Defaults.emptyText)
                 Spacer()
 
             case .loading:
@@ -120,7 +127,7 @@ extension PlaceSearchOverlayView {
                 Spacer()
 
             case .empty:
-                emptyView(text: Constants.searchEmptyText)
+                emptyView(text: Defaults.searchEmptyText)
                 Spacer()
 
             case .failed(let message):
