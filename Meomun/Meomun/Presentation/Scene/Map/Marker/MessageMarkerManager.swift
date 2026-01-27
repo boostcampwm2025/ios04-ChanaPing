@@ -32,34 +32,6 @@ private struct MarkerRenderSignature: Hashable {
     let idsHash: Int                // 메시지 묶음 내용 변화 감지용
 }
 
-// MARK: - ClusterItemKey
-
-final class ItemKey: NSObject, NMCClusteringKey {
-    let identifier: Int
-    let position: NMGLatLng
-
-    init(identifier: Int, position: NMGLatLng) {
-        self.identifier = identifier
-        self.position = position
-    }
-
-    static func markerKey(withIdentifier identifier: Int, position: NMGLatLng) -> ItemKey {
-        ItemKey(identifier: identifier, position: position)
-    }
-
-    override func isEqual(_ object: Any?) -> Bool {
-        guard let object = object as? ItemKey else { return false }
-        if self === object { return true }
-        return object.identifier == self.identifier
-    }
-
-    override var hash: Int { identifier }
-
-    func copy(with zone: NSZone? = nil) -> Any {
-        ItemKey(identifier: identifier, position: position)
-    }
-}
-
 // MARK: - MessageMarkerManager
 
 /// 지도 위 메시지 마커의 생성, 업데이트, 애니메이션을 관리하는 객체입니다.
@@ -775,10 +747,11 @@ private extension MessageMarkerManager {
 
         let builder = NMCBuilder<ItemKey>()
         let leafMarkerUpdater = LeafMarkerUpdater()
+        let clusterMarkerUpdater = ClusterMarkerUpdater()
 
         builder.leafMarkerUpdater = leafMarkerUpdater
+        builder.clusterMarkerUpdater = clusterMarkerUpdater
         clusterer = builder.build()
-        leafMarkerUpdater.clusterer = clusterer
     }
 
     /// 클러스터 모드 ON/OFF 전환
@@ -859,20 +832,6 @@ private extension MessageMarkerManager {
 
         // 매핑 갱신
         clusterGroupKeyById = nextIdToGroupKey
-    }
-}
-
-extension MessageMarkerManager {
-    class LeafMarkerUpdater: NMCDefaultLeafMarkerUpdater {
-        var clusterer: NMCClusterer<ItemKey>?
-
-        override func updateLeafMarker(_ info: NMCLeafMarkerInfo, _ marker: NMFMarker) {
-            super.updateLeafMarker(info, marker)
-            marker.iconImage = NMFOverlayImage(image: UIImage(systemName: "building.columns.circle")!)
-            marker.width = 24
-            marker.height = 24
-            marker.iconTintColor = .tabActive
-        }
     }
 }
 
