@@ -89,6 +89,7 @@ struct MapView: View {
                 }
                 .padding(.top, 12)
                 .padding(.bottom, 96)
+                .ignoresSafeArea(.keyboard, edges: .bottom)
 
                 if !store.state.isNetworkConnected {
                     AlertView(type: .network) {
