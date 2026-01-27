@@ -44,8 +44,6 @@ actor MessageSwiftDataStorage: MessageStorage {
                 message.longitude <= maxLongitude
             }
         )
-        if let limit { descriptor.fetchLimit = limit }
-
         let filteredData = try context.fetch(descriptor)
 
         // 2차: 거리 계산 정렬
@@ -55,9 +53,10 @@ actor MessageSwiftDataStorage: MessageStorage {
                 return (item, location.distance(to: other))
             }
             .sorted { $0.1 < $1.1 }
+            .map { $0.0 }
 
-        let results = sortedData
-        return results.map { $0.0.toDTO() }
+        let results = limit.map { Array(sortedData.prefix($0)) } ?? sortedData
+        return results.map { $0.toDTO() }
     }
 
     func fetchByPlace(at placeID: PlaceID, limit: Int?) async throws -> [MessageResponseDTO] {
