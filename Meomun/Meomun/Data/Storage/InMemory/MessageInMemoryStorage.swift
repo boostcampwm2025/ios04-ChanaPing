@@ -14,7 +14,7 @@ actor MessageInMemoryStorage: MessageStorage {
 
     private init() { }
 
-    func fetchNearby(at coordinate: Coordinate, limit: Int?) async throws -> [MessageResponseDTO] {
+    func fetchNearby(at location: Coordinate, bounds: BoundingBox, limit: Int?) async throws -> [MessageResponseDTO] {
         // 인메모리 임시 구현이므로 반경 필터링 생략
         storage
     }
@@ -70,5 +70,11 @@ actor MessageInMemoryStorage: MessageStorage {
             address: message.address,
             place: message.place
         )
+    }
+
+    func delete(messageIDs: Set<MessageID>) async throws {
+        storage.removeAll { message in
+            messageIDs.contains(MessageID(value: message.id))
+        }
     }
 }

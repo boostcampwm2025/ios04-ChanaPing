@@ -27,16 +27,35 @@ actor MessageSwiftDataStorage: MessageStorage {
         return ModelContext(container)
     }
 
-    // TODO: Usecase에 근처 메시지 조회 로직 추가 후 fetchNearby 파라미터 변경 필요
-    func fetchNearby(at coordinate: Coordinate, limit: Int?) async throws -> [MessageResponseDTO] {
+    func fetchNearby(at location: Coordinate, bounds: BoundingBox, limit: Int?) async throws -> [MessageResponseDTO] {
         let context = makeContext()
 
-        var descriptor = FetchDescriptor<MessageModel>(
-            sortBy: [SortDescriptor(\.createdAt, order: .reverse)]
-        )
-        if let limit { descriptor.fetchLimit = limit }
+        let minLatitude = bounds.minLatitude
+        let maxLatitude = bounds.maxLatitude
+        let minLongitude = bounds.minLongitude
+        let maxLongitude = bounds.maxLongitude
 
-        let results = try context.fetch(descriptor)
+        // 1차: BoundingBox 범위로 필터링
+        var descriptor = FetchDescriptor<MessageModel>(
+            predicate: #Predicate { message in
+                message.latitude >= minLatitude &&
+                message.latitude <= maxLatitude &&
+                message.longitude >= minLongitude &&
+                message.longitude <= maxLongitude
+            }
+        )
+        let filteredData = try context.fetch(descriptor)
+
+        // 2차: 거리 계산 정렬
+        let sortedData = filteredData
+            .map { item -> (MessageModel, Double) in
+                let other = Coordinate(latitude: item.latitude, longitude: item.longitude)
+                return (item, location.distance(to: other))
+            }
+            .sorted { $0.1 < $1.1 }
+            .map { $0.0 }
+
+        let results = limit.map { Array(sortedData.prefix($0)) } ?? sortedData
         return results.map { $0.toDTO() }
     }
 
@@ -85,20 +104,29 @@ actor MessageSwiftDataStorage: MessageStorage {
         try context.save()
     }
 
-    func delete(messageID: MessageID) async throws {
+    func delete(messageIDs: Set<MessageID>) async throws {
         let context = makeContext()
 
-        let messageIdValue: UUID = messageID.value
-        var descriptor = FetchDescriptor<MessageModel>(
-            predicate: #Predicate { $0.id == messageIdValue }
-        )
-        descriptor.fetchLimit = 1
+        // Message.id: MessageID, MessageModel.id: UUID 이므로 타입을 맞추기 위해 map으로 변환
+        let messageIdValues: Set<UUID> = Set(messageIDs.map { $0.value })
 
-        if let target = try context.fetch(descriptor).first {
+        let descriptor = FetchDescriptor<MessageModel>(
+            predicate: #Predicate { message in
+                messageIdValues.contains(message.id)
+            }
+        )
+
+        let targets = try context.fetch(descriptor)
+
+        for target in targets {
             context.delete(target)
+        }
+
+        if !targets.isEmpty {
             try context.save()
+
         } else {
-            AppLog.warn("삭제할 대상 데이터가 없어요. MessageID : \(messageID)", category: .storage)
+            AppLog.warn("삭제할 대상 데이터가 없어요. MessageID : \(messageIDs)", category: .storage)
         }
     }
 
