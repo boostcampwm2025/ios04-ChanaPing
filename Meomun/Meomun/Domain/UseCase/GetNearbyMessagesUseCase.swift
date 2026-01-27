@@ -6,7 +6,7 @@
 //
 
 protocol GetNearbyMessagesUseCase {
-    func execute(location: Coordinate, limit: Int?) async throws -> [Message]
+    func execute(at location: Coordinate, bounds: BoundingBox, limit: Int?) async throws -> [Message]
 }
 
 final class GetNearbyMessagesUseCaseImpl: GetNearbyMessagesUseCase {
@@ -16,7 +16,7 @@ final class GetNearbyMessagesUseCaseImpl: GetNearbyMessagesUseCase {
         self.messageRepository = messageRepository
     }
 
-    func execute(location: Coordinate, limit: Int?) async throws -> [Message] {
-        try await messageRepository.fetchNearbyMessages(location: location, limit: limit)
+    func execute(at location: Coordinate, bounds: BoundingBox, limit: Int?) async throws -> [Message] {
+        try await messageRepository.fetchNearbyMessages(at: location, bounds: bounds, limit: limit)
     }
 }

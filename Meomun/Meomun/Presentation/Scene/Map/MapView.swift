@@ -49,12 +49,12 @@ struct MapView: View {
                     },
                     onCameraIdle: { coordinate, bounds in
                         Task {
-                            await store.send(intent: .cameraDidIdle(coordinate))
+                            await store.send(intent: .cameraDidIdle(coordinate, bounds))
                         }
                     },
                     onCameraChangedByLocation: { coordinate, bounds in
                         Task {
-                            await store.send(intent: .cameraChangedByLocation(coordinate))
+                            await store.send(intent: .cameraChangedByLocation(coordinate, bounds))
                         }
                     }
                 )

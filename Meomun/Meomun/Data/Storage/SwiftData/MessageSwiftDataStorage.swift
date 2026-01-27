@@ -27,17 +27,37 @@ actor MessageSwiftDataStorage: MessageStorage {
         return ModelContext(container)
     }
 
-    // TODO: Usecase에 근처 메시지 조회 로직 추가 후 fetchNearby 파라미터 변경 필요
-    func fetchNearby(at coordinate: Coordinate, limit: Int?) async throws -> [MessageResponseDTO] {
+    func fetchNearby(at location: Coordinate, bounds: BoundingBox, limit: Int?) async throws -> [MessageResponseDTO] {
         let context = makeContext()
 
+        let minLatitude = bounds.minLatitude
+        let maxLatitude = bounds.maxLatitude
+        let minLongitude = bounds.minLongitude
+        let maxLongitude = bounds.maxLongitude
+
+        // 1차: BoundingBox 범위로 필터링
         var descriptor = FetchDescriptor<MessageModel>(
-            sortBy: [SortDescriptor(\.createdAt, order: .reverse)]
+            predicate: #Predicate { message in
+                message.latitude >= minLatitude &&
+                message.latitude <= maxLatitude &&
+                message.longitude >= minLongitude &&
+                message.longitude <= maxLongitude
+            }
         )
         if let limit { descriptor.fetchLimit = limit }
 
-        let results = try context.fetch(descriptor)
-        return results.map { $0.toDTO() }
+        let filteredData = try context.fetch(descriptor)
+
+        // 2차: 거리 계산 정렬
+        let sortedData = filteredData
+            .map { item -> (MessageModel, Double) in
+                let other = Coordinate(latitude: item.latitude, longitude: item.longitude)
+                return (item, location.distance(to: other))
+            }
+            .sorted { $0.1 < $1.1 }
+
+        let results = sortedData
+        return results.map { $0.0.toDTO() }
     }
 
     func fetchByPlace(at placeID: PlaceID, limit: Int?) async throws -> [MessageResponseDTO] {
