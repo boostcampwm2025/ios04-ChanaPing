@@ -7,6 +7,18 @@
 
 import SwiftUI
 
+/// 타임라인 행의 선택 상태를 의미합니다.
+enum TimelineSelectionState {
+    /// 편집 모드 비활성화 -> 기본 노드
+    case inactive
+
+    /// 편집 모드, 미선택 -> 회색 원
+    case unselected
+
+    /// 편집 모드, 선택됨 -> 체크 마크
+    case selected
+}
+
 struct TimelineIndicatorView: View {
     enum Layout {
         static let lineWidth: CGFloat = 1
