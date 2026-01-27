@@ -14,6 +14,8 @@ final class TimelineListStore: Store {
         var selectedSection: YearMonth?
         var isEditing: Bool = false
 
+        var selectedMessageIDs: Set<MessageID> = []     // 편집 모드 시 선택 된 메시지
+
         var sections: [(key: YearMonth, value: [Message])] {
             MessageTimelineGrouper.groupByYearMonth(messages)
         }
@@ -24,6 +26,7 @@ final class TimelineListStore: Store {
         case setMessages([Message])
         case deleteMessages([Message.ID])
 
+        case tapMessage(MessageID)
         case tapSection(YearMonth)
         case tapEdit
     }
@@ -31,6 +34,8 @@ final class TimelineListStore: Store {
     enum Action {
         case setMessages([Message])
         case addMessages([Message])
+        case toggleMessageSelection(MessageID)
+        case clearSelectedMessageIDs
         case setSelectedSection(YearMonth?)
         case setEditing(Bool)
         case deleteMessages([Message.ID])
@@ -65,8 +70,12 @@ final class TimelineListStore: Store {
                 continuation.yield(.setSelectedSection(section))
 
             case .tapEdit:
-                // TODO: 편집 버튼 탭 동작 구현
                 continuation.yield(.setEditing(!state.isEditing))
+                continuation.yield(.clearSelectedMessageIDs)
+
+            case .tapMessage(let messageID):
+                guard state.isEditing else { break }
+                continuation.yield(.toggleMessageSelection(messageID))
 
             case .deleteMessages(let ids):
                 // TODO: 메시지 삭제 동작 구현
@@ -90,6 +99,18 @@ final class TimelineListStore: Store {
 
         case .addMessages(let messages):
             newState.messages += messages
+
+        case .toggleMessageSelection(let messageID):
+            if newState.selectedMessageIDs.contains(messageID) {
+                // 이미 선택되어 있으면 -> 선택 해제
+                newState.selectedMessageIDs.remove(messageID)
+            } else {
+                // 선택되어 있지 않으면 -> 선택
+                newState.selectedMessageIDs.insert(messageID)
+            }
+
+        case .clearSelectedMessageIDs:
+            newState.selectedMessageIDs.removeAll()
 
         case .setSelectedSection(let section):
             newState.selectedSection = section
@@ -124,5 +145,15 @@ private extension TimelineListStore {
         if hasSection == false {
             state.selectedSection = nil
         }
+    }
+}
+
+extension TimelineListStore {
+    func selectionState(for message: Message) -> TimelineSelectionState {
+        if !state.isEditing {
+            return .inactive
+        }
+
+        return state.selectedMessageIDs.contains(message.id) ? .selected : .unselected
     }
 }
