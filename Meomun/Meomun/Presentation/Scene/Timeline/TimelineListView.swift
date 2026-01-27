@@ -12,6 +12,8 @@ fileprivate enum Constants {
 }
 
 struct TimelineListView: View {
+    @Environment(\.setTabBarHidden) private var setTabBarHidden
+
     @StateObject private var store: TimelineListStore
     private let configuration: Configuration
 
@@ -36,11 +38,21 @@ struct TimelineListView: View {
                 Spacer()
             }
         }
+        .overlay(alignment: .bottom) {
+            if store.state.isEditing {
+                selectionBar
+                    .transition(.move(edge: .bottom).combined(with: .opacity))
+            }
+        }
         .onAppear {
             Task {
                 await store.send(intent: .onAppear)
             }
         }
+        .onChange(of: store.state.isEditing) { _, newValue in
+            setTabBarHidden(newValue)
+        }
+        .animation(.spring(response: 0.25, dampingFraction: 0.9), value: store.state.isEditing)
         .background(Color.meomunBackgroundColor)
     }
 }
@@ -61,7 +73,7 @@ private extension TimelineListView {
                             await store.send(intent: .tapEdit)
                         }
                     } label: {
-                        Text(store.state.isEditing ? "삭제": "편집")
+                        Text(store.state.isEditing ? "취소": "편집")
                             .font(.headline)
                             .foregroundStyle(Color.meomunPointColor)
                     }
@@ -120,6 +132,36 @@ private extension TimelineListView {
         }
         .frame(maxWidth: .infinity)
         .padding(.bottom, 100)
+    }
+
+    var selectionBar: some View {
+        HStack {
+            Text(
+                store.state.selectedMessageIDs.isEmpty 
+                ? "항목을 선택하세요"
+                : "\(store.state.selectedMessageIDs.count)개 항목 선택됨"
+            )
+            .font(.body.weight(.semibold))
+            .foregroundStyle(
+                store.state.selectedMessageIDs.isEmpty ? Color.meomunPrimaryColor : Color.meomunPrimaryColor
+            )
+
+            Spacer()
+
+            Button {
+                Task {
+//                    await store.send(intent: .deleteSelectedMessages)
+                    print("store.삭제")
+                }
+            } label: {
+                Text("삭제")
+                    .font(.headline)
+                    .foregroundStyle(store.state.selectedMessageIDs.isEmpty ? Color.tabInactive : Color.red)
+                    .padding(.horizontal, 24)
+            }
+            .disabled(store.state.selectedMessageIDs.isEmpty)
+        }
+        .floatingContainer()
     }
 }
 
