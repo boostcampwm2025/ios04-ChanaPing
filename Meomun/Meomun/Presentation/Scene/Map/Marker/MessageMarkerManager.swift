@@ -774,7 +774,11 @@ private extension MessageMarkerManager {
         guard clusterer == nil else { return }
 
         let builder = NMCBuilder<ItemKey>()
+        let leafMarkerUpdater = LeafMarkerUpdater()
+
+        builder.leafMarkerUpdater = leafMarkerUpdater
         clusterer = builder.build()
+        leafMarkerUpdater.clusterer = clusterer
     }
 
     /// 클러스터 모드 ON/OFF 전환
@@ -855,6 +859,20 @@ private extension MessageMarkerManager {
 
         // 매핑 갱신
         clusterGroupKeyById = nextIdToGroupKey
+    }
+}
+
+extension MessageMarkerManager {
+    class LeafMarkerUpdater: NMCDefaultLeafMarkerUpdater {
+        var clusterer: NMCClusterer<ItemKey>?
+
+        override func updateLeafMarker(_ info: NMCLeafMarkerInfo, _ marker: NMFMarker) {
+            super.updateLeafMarker(info, marker)
+            marker.iconImage = NMFOverlayImage(image: UIImage(systemName: "building.columns.circle")!)
+            marker.width = 24
+            marker.height = 24
+            marker.iconTintColor = .tabActive
+        }
     }
 }
 
