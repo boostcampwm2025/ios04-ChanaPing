@@ -13,7 +13,7 @@ struct TimelineSectionHeaderView: View {
     var body: some View {
         let date = yearMonth.startDate()
 
-        HStack {
+        HStack(spacing: 10) {
             Text(date.formatted(.dateTime.month(.abbreviated)))
                 .font(.largeTitle.bold())
                 .foregroundStyle(Color.meomunPrimaryColor.opacity(0.75))
@@ -23,9 +23,15 @@ struct TimelineSectionHeaderView: View {
                 .foregroundStyle(Color.meomunPrimaryColor.opacity(0.45))
                 .padding(.leading, 6)
 
+            Image(systemName: "chevron.right")
+                .font(.system(size: 18, weight: .semibold))
+                .foregroundStyle(Color.tabActive)
+                .opacity(0.75)
+
             Spacer()
+
         }
-        .padding(.horizontal, 20)
+        .padding(.horizontal, 30)
         .padding(.top, 8)
         .padding(.bottom, 16)
         .background(Color.meomunBackgroundColor)
