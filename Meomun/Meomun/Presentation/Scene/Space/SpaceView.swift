@@ -53,6 +53,10 @@ struct SpaceView: View {
             .gesture(
                 DragGesture()
                     .onChanged { value in
+                        AppLog.debug(
+                            "Drag changed: start=\(value.startLocation) loc=\(value.location) translation=\(value.translation)",
+                            category: .space
+                        )
                         rotationCamera.handleDrag(
                             translationX: Float(value.translation.width),
                             translationY: Float(value.translation.height)
@@ -124,7 +128,9 @@ extension SpaceView {
                 }
 
                 // 카메라 추가
+                AppLog.debug("RotationCamera: will add to scene", category: .space)
                 rotationCamera.addToScene(content)
+                AppLog.debug("RotationCamera: did add to scene", category: .space)
             } catch {
                 AppLog.error(
                     "Failed to load dome entity",
