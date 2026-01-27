@@ -26,6 +26,8 @@ struct LoadingOverlayView: View {
     let status: LoadingStatus
     let message: String?
 
+    @State private var isPresented = false
+
     init(status: LoadingStatus = .loading, message: String? = nil) {
         self.status = status
         self.message = message
@@ -39,7 +41,15 @@ struct LoadingOverlayView: View {
             content
                 .frame(width: cardSize.width, height: cardSize.height)
                 .background(cardBackground)
+                .scaleEffect(isPresented ? 1.0 : 0.98)
+                .opacity(isPresented ? 1.0 : 0.0)
         }
+        .onAppear {
+            withAnimation(.easeInOut(duration: 0.2)) {
+                isPresented = true
+            }
+        }
+        .onDisappear { isPresented = false }
         .animation(.spring(duration: 0.3), value: status)
     }
 }

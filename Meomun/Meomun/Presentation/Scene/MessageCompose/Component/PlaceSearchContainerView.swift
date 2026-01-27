@@ -25,6 +25,7 @@ struct PlaceSearchContainerView<Content: View>: View {
                 .frame(width: 20, height: 20)
                 .clipped()
                 .foregroundStyle(Color(hex: "#53808C"))
+                .allowsHitTesting(false)
 
             content()
         }

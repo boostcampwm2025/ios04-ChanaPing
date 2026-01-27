@@ -18,6 +18,8 @@ struct PlaceSearchOverlayView: View {
     @FocusState private var isFocused: Bool
     @StateObject private var store: PlaceSearchStore
 
+    @State private var isPresented = false
+
     init(store: PlaceSearchStore) {
         _store = StateObject(wrappedValue: store)
     }
@@ -28,24 +30,30 @@ struct PlaceSearchOverlayView: View {
                 .ignoresSafeArea()
                 .onTapGesture { Task { await store.send(intent: .dismiss) } }
 
-            VStack {
-                header
-                searchBar
-                searchResultList
-            }
-            .padding(28)
-            .frame(width: 320, height: 400)
-            .background(Color.white)
-            .cornerRadius(25)
-            .shadow(radius: 8)
-
-            .onTapGesture {
-                isFocused = false
-            }
-            .onAppear {
-                isFocused = true
+            if isPresented {
+                VStack {
+                    header
+                    searchBar
+                    searchResultList
+                }
+                .padding(28)
+                .frame(width: 320, height: 400)
+                .background(Color.white)
+                .cornerRadius(25)
+                .shadow(radius: 8)
+                .transition(.opacity.combined(with: .scale(scale: 0.98)))
+                .onTapGesture {
+                    isFocused = false
+                }
             }
         }
+        .onAppear {
+            isFocused = true
+            withAnimation(.easeInOut(duration: 0.3)) {
+                isPresented = true
+            }
+        }
+        .onDisappear { isPresented = false }
     }
 }
 
