@@ -109,32 +109,65 @@ private extension PathRecordOverlayView {
 }
 
 #Preview {
-    let messages: [Message] =  [
+    let messages: [Message] = [
         Message(
             id: MessageID(value: UUID()),
-            createdAt: Date().addingTimeInterval(-7 * 60),
-            content: "[Case4] NoPlace 스택 메시지 1",
-            coordinate: Coordinate.seoulCity,
-            address: "가람로 109",
+            createdAt: Date().addingTimeInterval(-40 * 60),
+            content: "벤치에 앉아 잠깐 쉬어요",
+            coordinate: .init(latitude: 37.5698, longitude: 126.9775),
+            address: "서판교로29",
             placeTag: nil
         ),
         Message(
             id: MessageID(value: UUID()),
-            createdAt: Date().addingTimeInterval(-30 * 60),
-            content: "[Case4] NoPlace 스택 메시지 2",
-            coordinate: Coordinate.seoulCity,
-            address: "가람로 109",
+            createdAt: Date().addingTimeInterval(-4000 * 60),
+            content: "페이드인 되고 있어?",
+            coordinate: .init(latitude: 37.5665, longitude: 126.9780),
+            address: "서판교로29",
             placeTag: nil
         ),
         Message(
             id: MessageID(value: UUID()),
-            createdAt: Date().addingTimeInterval(-15000 * 60),
-            content: "[Case4] NoPlace 스택 메시지 3",
-            coordinate: Coordinate.seoulCity,
-            address: "가람로 109",
+            createdAt: Date().addingTimeInterval(-1000 * 60 * 60),
+            content: "따뜻한 커피 향이 지나간다☕️",
+            coordinate: .init(latitude: 37.5704, longitude: 126.9766),
+            address: "서판교로29",
+            placeTag: nil
+        ),
+        Message(
+            id: MessageID(value: UUID()),
+            createdAt: Date().addingTimeInterval(-300 * 60 * 60),
+            content: "멀리서 버스 브레이크 소리🚍",
+            coordinate: .init(latitude: 37.5718, longitude: 126.9792),
+            address: "서판교로29",
+            placeTag: nil
+        ),
+        Message(
+            id: MessageID(value: UUID()),
+            createdAt: Date().addingTimeInterval(-20000 * 60),
+            content: "바닥에 그림자가 길게 늘어져요🌒",
+            coordinate: .init(latitude: 37.5728, longitude: 126.9756),
+            address: "서판교로29",
+            placeTag: nil
+        ),
+        Message(
+            id: MessageID(value: UUID()),
+            createdAt: Date().addingTimeInterval(-1500 * 60),
+            content: "누군가 웃는 소리 지나갔다🙂",
+            coordinate: .init(latitude: 37.5709, longitude: 126.9786),
+            address: "서판교로29",
+            placeTag: nil
+        ),
+        Message(
+            id: MessageID(value: UUID()),
+            createdAt: Date().addingTimeInterval(-100 * 60 * 60),
+            content: "새벽 공기가 차갑고 맑다🌙",
+            coordinate: .init(latitude: 37.5692, longitude: 126.9798),
+            address: "서판교로29",
             placeTag: nil
         )
     ]
+
 
     PathRecordOverlayView(section: YearMonth(date: Date.now), messages: messages)
 }
