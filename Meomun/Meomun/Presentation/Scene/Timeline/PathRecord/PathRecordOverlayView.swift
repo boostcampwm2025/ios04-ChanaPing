@@ -13,7 +13,7 @@ fileprivate enum Constants {
     static let miniMapTopPadding: CGFloat = 36
 
     static let frameInnerBottomPadding: CGFloat = 14
-    static let frameHoriziontalPadding: CGFloat = 40
+    static let frameHorizontalPadding: CGFloat = 40
     static let frameVerticalPadding: CGFloat = 160
     static let frameCornerRadius: CGFloat = 3
 
@@ -73,7 +73,7 @@ private extension PathRecordOverlayView {
             RoundedRectangle(cornerRadius: Constants.frameCornerRadius, style: .continuous)
                 .stroke(Color.black.opacity(0.06), lineWidth: 1)
         )
-        .padding(.horizontal, Constants.frameHoriziontalPadding)
+        .padding(.horizontal, Constants.frameHorizontalPadding)
         .padding(.vertical, Constants.frameVerticalPadding)
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .center)
 
