@@ -57,11 +57,11 @@ struct MapView: View {
                     onTapNoPlace: { messages in
                         send(.tapNoPlaceMarker(messages))
                     },
-                    onCameraIdle: { coordinate, bounds in
-                        send(.cameraDidIdle(coordinate, bounds))
+                    onCameraIdle: { coordinate, bounds, snapshot in
+                        send(.cameraDidIdle(coordinate, bounds, snapshot))
                     },
-                    onCameraChangedByLocation: { coordinate, bounds in
-                        send(.cameraChangedByLocation(coordinate, bounds))
+                    onCameraChangedByLocation: { coordinate, bounds, snapshot in
+                        send(.cameraChangedByLocation(coordinate, bounds, snapshot))
                     }
                 )
                 .ignoresSafeArea()
