@@ -128,9 +128,9 @@ private extension PathRecordOverlayView {
         ),
         Message(
             id: MessageID(value: UUID()),
-            createdAt: Date().addingTimeInterval(-1000 * 60 * 60),
+            createdAt: Date().addingTimeInterval(-100 * 60 * 60),
             content: "따뜻한 커피 향이 지나간다☕️",
-            coordinate: .init(latitude: 37.5704, longitude: 126.9766),
+            coordinate: .init(latitude: 37.0724, longitude: 126.0746),
             address: "서판교로29",
             placeTag: nil
         ),
@@ -138,7 +138,7 @@ private extension PathRecordOverlayView {
             id: MessageID(value: UUID()),
             createdAt: Date().addingTimeInterval(-300 * 60 * 60),
             content: "멀리서 버스 브레이크 소리🚍",
-            coordinate: .init(latitude: 37.5718, longitude: 126.9792),
+            coordinate: .init(latitude: 37.508, longitude: 126.992),
             address: "서판교로29",
             placeTag: nil
         ),
@@ -146,7 +146,7 @@ private extension PathRecordOverlayView {
             id: MessageID(value: UUID()),
             createdAt: Date().addingTimeInterval(-20000 * 60),
             content: "바닥에 그림자가 길게 늘어져요🌒",
-            coordinate: .init(latitude: 37.5728, longitude: 126.9756),
+            coordinate: .init(latitude: 36.928, longitude: 126.656),
             address: "서판교로29",
             placeTag: nil
         ),
@@ -154,7 +154,7 @@ private extension PathRecordOverlayView {
             id: MessageID(value: UUID()),
             createdAt: Date().addingTimeInterval(-1500 * 60),
             content: "누군가 웃는 소리 지나갔다🙂",
-            coordinate: .init(latitude: 37.5709, longitude: 126.9786),
+            coordinate: .init(latitude: 37.5709, longitude: 125.9786),
             address: "서판교로29",
             placeTag: nil
         ),
@@ -162,12 +162,11 @@ private extension PathRecordOverlayView {
             id: MessageID(value: UUID()),
             createdAt: Date().addingTimeInterval(-100 * 60 * 60),
             content: "새벽 공기가 차갑고 맑다🌙",
-            coordinate: .init(latitude: 37.5692, longitude: 126.9798),
+            coordinate: .init(latitude: 36.5672, longitude: 126.9708),
             address: "서판교로29",
             placeTag: nil
         )
     ]
-
 
     PathRecordOverlayView(section: YearMonth(date: Date.now), messages: messages)
 }
