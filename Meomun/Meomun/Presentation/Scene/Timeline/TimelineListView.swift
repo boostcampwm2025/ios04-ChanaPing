@@ -70,6 +70,7 @@ struct TimelineListView: View {
             sectionOverlay
                 .presentationBackground(.clear)
         }
+        .transaction({ transaction in transaction.disablesAnimations = true })
     }
 }
 
@@ -221,22 +222,11 @@ private extension TimelineListView {
     @ViewBuilder
     var sectionOverlay: some View {
         if let section = store.state.selectedSection {
-            ZStack(alignment: .center) {
-                Color.black.opacity(0.35)
-                    .ignoresSafeArea()
-                    .onTapGesture { send(.tapSection(nil)) }
-
-                PathRecordView(
-                    yearMonth: section,
-                    messages: store.messages(in: section)
-                )
-                .clipShape(Rectangle())
-                .padding(.horizontal, 16)
-                .padding(.bottom, 16)
-                .transition(.move(edge: .bottom).combined(with: .opacity))
-            }
-            .zIndex(999)
-            .animation(.spring(response: 0.3, dampingFraction: 0.2, blendDuration: 0), value: section)
+            PathRecordOverlayView(
+                section: section,
+                messages: store.messages(in: section),
+                onDismiss: { send(.tapSection(nil)) }
+            )
         }
     }
 }
