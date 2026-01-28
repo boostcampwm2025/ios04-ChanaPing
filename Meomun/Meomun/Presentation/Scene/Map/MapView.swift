@@ -48,22 +48,34 @@ struct MapView: View {
 
                 VStack {
                     floatingNavigationBar
-
                     Spacer()
-
-                    HStack {
-                        Spacer()
-                        writeButton
-                    }
                 }
                 .padding(.top, 12)
-                .padding(.bottom, 96)
-                .ignoresSafeArea(.keyboard, edges: .bottom)
-
+            }
+            .overlay {
                 if !store.state.isNetworkConnected {
                     AlertView(type: .network) {
                         send(.tapNetworkRefresh)
                     }
+                    .ignoresSafeArea()
+                }
+            }
+            .safeAreaInset(edge: .bottom) {
+                if !store.state.carouselItems.isEmpty {
+                    PlaceCarousel(
+                        items: store.state.carouselItems,
+                        onTapped: { place in
+                            send(.dismissPlaceCarousel)
+                            setTabBarHidden(true)
+                            navigationPath.append(MapDestination.space(place: place))
+                        }
+                    )
+                } else {
+                    HStack {
+                        Spacer()
+                        writeButton
+                    }
+                    .padding(.bottom, 96)
                 }
             }
             .task {
@@ -75,6 +87,17 @@ struct MapView: View {
             .onDisappear {
                 send(.onDisappear)
             }
+            .onChange(of: store.state.carouselItems.isEmpty) { _, isEmpty in
+                if navigationPath.isEmpty {
+                    setTabBarHidden(!isEmpty)
+                }
+            }
+            .simultaneousGesture(
+                TapGesture()
+                    .onEnded { _ in
+                        send(.dismissPlaceCarousel)
+                    }
+            )
             .navigationDestination(for: MapDestination.self) { destination in
                 switch destination {
                 case .space(let place):
