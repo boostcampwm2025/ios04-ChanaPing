@@ -81,7 +81,7 @@ private extension PathRecordOverlayView {
 
     var title: some View {
         ZStack {
-            Text("\(monthText), 머문 흔적 따라가기")
+            Text("\(dateText)")
                 .font(.headline.italic())
 
             HStack {
@@ -102,9 +102,9 @@ private extension PathRecordOverlayView {
 
 // MARK: Computed Property
 private extension PathRecordOverlayView {
-    var monthText: String {
+    var dateText: String {
         let date = section.startDate()
-        return date.formatted(.dateTime.month(.abbreviated))
+        return date.formatted(.dateTime.year().month())
     }
 }
 
