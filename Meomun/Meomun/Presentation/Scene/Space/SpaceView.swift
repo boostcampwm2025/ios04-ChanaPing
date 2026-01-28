@@ -13,6 +13,7 @@ struct SpaceView: View {
     @EnvironmentObject private var locationProvider: LocationProvider
     @StateObject private var store: SpaceStore
     @State private var domeEnvironment: DomeEnvironment
+    @State private var rotationCamera: RotationCamera
 
     @State private var spaceRootEntity: Entity?
     @State private var messageBubbleTemplateEntity: Entity?
@@ -24,11 +25,6 @@ struct SpaceView: View {
     private let place: Place
     private let onNavigate: (Coordinate, Place) -> Void
 
-    private let rotationCamera = RotationCamera(
-        position: .init(x: 0, y: 0.7, z: 0),    // 카메라 시작 위치 (돔 중심에서 약간 위)
-        rotateSensitivity: 0.003                // 회전 민감도 (값이 클수록 더 빠르게 회전)
-    )
-
     init(
         store: SpaceStore,
         domeEnvironment: DomeEnvironment,
@@ -36,7 +32,13 @@ struct SpaceView: View {
         onNavigate: @escaping (Coordinate, Place) -> Void
     ) {
         _store = StateObject(wrappedValue: store)
-        self.domeEnvironment = domeEnvironment
+        _rotationCamera = State(
+            initialValue: RotationCamera(
+                position: .init(x: 0, y: 0.7, z: 0),    // 카메라 시작 위치 (돔 중심에서 약간 위)
+                rotateSensitivity: 0.003                // 회전 민감도 (값이 클수록 더 빠르게 회전)
+            )
+        )
+        _domeEnvironment = State(initialValue: domeEnvironment)
         self.place = place
         self.onNavigate = onNavigate
     }
@@ -51,6 +53,10 @@ struct SpaceView: View {
             .gesture(
                 DragGesture()
                     .onChanged { value in
+                        AppLog.debug(
+                            "Drag changed: start=\(value.startLocation) loc=\(value.location) translation=\(value.translation)",
+                            category: .space
+                        )
                         rotationCamera.handleDrag(
                             translationX: Float(value.translation.width),
                             translationY: Float(value.translation.height)
@@ -122,7 +128,9 @@ extension SpaceView {
                 }
 
                 // 카메라 추가
+                AppLog.debug("RotationCamera: will add to scene", category: .space)
                 rotationCamera.addToScene(content)
+                AppLog.debug("RotationCamera: did add to scene", category: .space)
             } catch {
                 AppLog.error(
                     "Failed to load dome entity",
