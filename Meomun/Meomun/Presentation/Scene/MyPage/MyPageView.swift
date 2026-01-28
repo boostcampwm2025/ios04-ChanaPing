@@ -10,6 +10,8 @@ import SwiftUI
 
 struct MyPageView: View {
     @StateObject private var store: MyPageStore
+    @Environment(\.scenePhase) private var scenePhase
+    @State private var permissionStatus = LocationPermissionStatus.current
 
     init(store: MyPageStore) {
         _store = .init(wrappedValue: store)
@@ -38,8 +40,8 @@ struct MyPageView: View {
             Section("권한") {
                 PermissionStatusRow(
                     title: "위치 권한",
-                    status: LocationPermissionStatus.current.displayText,
-                    statusKind: LocationPermissionStatus.current.kind
+                    status: permissionStatus.displayText,
+                    statusKind: permissionStatus.kind
                 )
 
                 Button("앱 설정으로 이동") {
@@ -67,6 +69,14 @@ struct MyPageView: View {
             }
         }
         .navigationTitle("마이페이지")
+        .onAppear {
+            permissionStatus = LocationPermissionStatus.current
+        }
+        .onChange(of: scenePhase) { _, newPhase in
+            if newPhase == .active {
+                permissionStatus = LocationPermissionStatus.current
+            }
+        }
     }
 }
 
