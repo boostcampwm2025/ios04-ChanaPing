@@ -17,7 +17,7 @@ final class MiniMapViewController: UIViewController {
         miniMapView.logoInteractionEnabled = false
 
         // 유저 상호작용
-        miniMapView.isUserInteractionEnabled = false
+        // miniMapView.isUserInteractionEnabled = false
 
         // 최소 및 최대 줌 레벨 설정
         miniMapView.minZoomLevel = 5
@@ -124,11 +124,15 @@ extension MiniMapViewController {
         for (index, position) in positions.enumerated() {
             let marker = NMFMarker(position: position)
 
-            marker.captionText = dayLabels[safe: index] ?? ""
-            marker.captionTextSize = 16
-            marker.captionMinZoom = 5
-            marker.captionMaxZoom = 18
+            marker.iconImage = MarkerAssets.pin
+            marker.iconTintColor = .tabActive
+            marker.angle = CGFloat(Int.random(in: 0...15))
 
+            marker.captionText = dayLabels[safe: index] ?? ""
+            marker.captionTextSize = 14
+            marker.captionHaloColor = .white
+
+            marker.isHideCollidedMarkers = true
             marker.mapView = miniMapView
 
             markers.append(marker)
@@ -136,14 +140,14 @@ extension MiniMapViewController {
     }
 
     private func addPath(positions: [NMGLatLng]) {
-        let overlay = NMFPath()
-        overlay.path = NMGLineString(points: positions)
+        guard let polyline = NMFPolylineOverlay(positions) else { return }
 
-         overlay.width = 4
-         overlay.outlineWidth = 2
-
-        overlay.mapView = miniMapView
-        self.pathOverlay = overlay
+        polyline.width = 2
+        polyline.color = UIColor.tabActive
+        polyline.pattern = [6, 3]
+        polyline.capType = .round
+        polyline.joinType = .round
+        polyline.mapView = miniMapView
     }
 
     private func fitCamera(messages: [Message], positions: [NMGLatLng]) {
@@ -160,20 +164,7 @@ extension MiniMapViewController {
             return
         }
 
-        // 메시지 분포 거리 계산
-        let spreadMeters = maxPairDistanceMeters(from: messages)
-
-        // Case 2. 가까운 경우 → 더 확대
-        if spreadMeters < 200 {
-            let update = NMFCameraUpdate(
-                scrollTo: firstPosition,
-                zoomTo: miniMapView.maxZoomLevel
-            )
-            miniMapView.moveCamera(update)
-            return
-        }
-
-        // Case 3. 더 먼 경우
+        // Case 2. 여러개 있다면 카메라 조정
         var south = firstPosition.lat
         var north = firstPosition.lat
         var west = firstPosition.lng
@@ -191,7 +182,7 @@ extension MiniMapViewController {
             northEast: NMGLatLng(lat: north, lng: east)
         )
 
-        let update = NMFCameraUpdate(fit: bounds)
+        let update = NMFCameraUpdate(fit: bounds, padding: 40)
         miniMapView.moveCamera(update)
     }
 }
@@ -215,4 +206,3 @@ extension MiniMapViewController {
         return maxDistance
     }
 }
-
