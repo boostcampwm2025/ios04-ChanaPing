@@ -36,7 +36,7 @@ actor MessageSwiftDataStorage: MessageStorage {
         let maxLongitude = bounds.maxLongitude
 
         // 1차: BoundingBox 범위로 필터링
-        var descriptor = FetchDescriptor<MessageModel>(
+        let descriptor = FetchDescriptor<MessageModel>(
             predicate: #Predicate { message in
                 message.latitude >= minLatitude &&
                 message.latitude <= maxLatitude &&
