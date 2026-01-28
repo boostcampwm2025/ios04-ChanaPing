@@ -15,7 +15,7 @@ enum MarkerAssets {
         let uiImage = UIImage(systemName: "mappin", withConfiguration: config)?
             .withTintColor(.systemRed, renderingMode: .alwaysOriginal)
 
-        return NMFOverlayImage(image: uiImage ?? UIImage.checkmark)
+        return NMFOverlayImage(image: uiImage ?? UIImage())
     }()
 
     static let pin: NMFOverlayImage = {
@@ -24,6 +24,6 @@ enum MarkerAssets {
         let uiImage = UIImage(systemName: "pin.fill", withConfiguration: config)?
             .withTintColor(.systemRed, renderingMode: .alwaysOriginal)
 
-        return NMFOverlayImage(image: uiImage ?? UIImage.checkmark)
+        return NMFOverlayImage(image: uiImage ?? UIImage())
     }()
 }
