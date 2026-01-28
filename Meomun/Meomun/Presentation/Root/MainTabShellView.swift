@@ -61,7 +61,11 @@ struct MainTabShellView: View {
 
         case .myPage:
             NavigationStack {
-                MyPageView(store: MyPageStore())
+                MyPageView(
+                    store: MyPageStore(
+                        appSettingsOpener: AppSettingsOpener()
+                    )
+                )
             }
         }
     }

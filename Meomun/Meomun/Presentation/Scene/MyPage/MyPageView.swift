@@ -72,7 +72,11 @@ struct MyPageView: View {
 
 #Preview {
     NavigationStack {
-        MyPageView(store: .init())
+        MyPageView(
+            store: .init(
+                appSettingsOpener: AppSettingsOpener()
+            )
+        )
     }
 }
 

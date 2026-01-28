@@ -20,9 +20,11 @@ struct RootView: View {
             } else {
                 MainTabShellView(userLocation: .seoulCity)
                     .overlay {
-                        LocationGateView { coordinate in
-                            self.userLocation = coordinate
-                        }
+                        LocationGateView(
+                            onReady: { coordinate in
+                                self.userLocation = coordinate
+                            },
+                            appSettingsOpener: AppSettingsOpener())
                     }
             }
         }

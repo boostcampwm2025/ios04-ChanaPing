@@ -7,7 +7,6 @@
 
 import Combine
 import Foundation
-import UIKit
 
 final class MyPageStore: Store {
     struct State: Equatable {
@@ -27,8 +26,11 @@ final class MyPageStore: Store {
 
     @Published var state: State
 
-    init() {
+    private let appSettingsOpener: AppSettingsOpening
+
+    init(appSettingsOpener: AppSettingsOpening) {
         self.state = State()
+        self.appSettingsOpener = appSettingsOpener
     }
 
     func action(intent: Intent) -> AsyncStream<Action> {
@@ -80,11 +82,7 @@ final class MyPageStore: Store {
     }
 
     private func openAppSettings() {
-        guard let url = URL(string: UIApplication.openSettingsURLString) else {
-            return
-        }
-
-        UIApplication.shared.open(url)
+        appSettingsOpener.openAppSettings()
     }
 }
 
