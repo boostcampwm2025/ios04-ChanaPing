@@ -43,52 +43,17 @@ struct MapView: View {
     var body: some View {
         NavigationStack(path: $navigationPath) {
             ZStack {
-                MapViewWrapper(
-                    userLocation: initialUserLocation,
-                    markerManager: messageMarkerManager,
-                    messages: store.state.messages,
-                    cameraMoveTarget: store.state.cameraMoveTarget,
-                    onCameraMoveConsumed: {
-                        send(.cameraMoveConsumed)
-                    },
-                    onTapPlace: { place in
-                        navigationPath.append(MapDestination.space(place: place))
-                    },
-                    onTapNoPlace: { messages in
-                        send(.tapNoPlaceMarker(messages))
-                    },
-                    onCameraIdle: { coordinate, bounds in
-                        send(.cameraDidIdle(coordinate, bounds))
-                    },
-                    onCameraChangedByLocation: { coordinate, bounds in
-                        send(.cameraChangedByLocation(coordinate, bounds))
-                    }
-                )
-                .ignoresSafeArea()
+                mapViewWrapper
+                    .ignoresSafeArea()
 
                 VStack {
-                    FloatingNavigationBar(
-                        title: Constants.navigationTitle,
-                        onTapSearch: { send(.tapSearch) }
-                    )
+                    floatingNavigationBar
 
                     Spacer()
 
                     HStack {
                         Spacer()
-
-                        WriteButton {
-                            if let current = locationProvider.current {
-                                navigationPath.append(
-                                    MapDestination.messageComposer(
-                                        location: current,
-                                        place: nil
-                                    )
-                                )
-                            } else {
-                                send(.setToast(Constants.locationToastMessage))
-                            }
-                        }
+                        writeButton
                     }
                 }
                 .padding(.top, 12)
@@ -101,78 +66,34 @@ struct MapView: View {
                     }
                 }
             }
-            .sheet(
-                isPresented: Binding(
-                    get: { store.state.selectedNoPlaceMessages.isEmpty == false },
-                    set: { isPresented in
-                        if !isPresented {
-                            send(.dismissTimelineView)
-                        }
-                    }
-                )
-            ) {
-                TimelineListView(
-                    store: TimelineListStore(
-                        fetchRecentMessagesUseCase: FetchRecentMessagesUseCaseImpl(
-                            repository: MessageRepositoryImpl()
-                        ),
-                        deleteMessagesUseCase: DeleteMessagesUseCaseImpl(messageRepository: MessageRepositoryImpl())
-                    ),
-                    configuration: .bottomSheet
-                )
-                    .presentationDetents(.init(arrayLiteral: .medium, .large))
-                    .presentationDragIndicator(.visible)
+            .task {
+                await store.send(intent: .onAppear(initialUserLocation))
+            }
+            .onAppear {
+                setTabBarHidden(false)
+            }
+            .onDisappear {
+                send(.onDisappear)
             }
             .navigationDestination(for: MapDestination.self) { destination in
                 switch destination {
                 case .space(let place):
-                    SpaceView(
-                        store: .init(
-                            fetchPlaceMessagesUseCase: FetchPlaceMessagesUseCaseImpl(
-                                messageRepository: MessageRepositoryImpl()
-                            ),
-                            place: place
-                        ),
-                        domeEnvironment: .init(dayPart: .afternoon),
-                        place: place,
-                        onNavigate: { coordinate, place in
-                            navigationPath.append(
-                                MapDestination.messageComposer(
-                                    location: coordinate,
-                                    place: place
-                                )
-                            )
-                        }
-                    )
+                    spaceView(place: place) { coordinate, place in
+                        navigationPath.append(MapDestination.messageComposer(location: coordinate, place: place))
+                    }
                     .onAppear { setTabBarHidden(true) }
 
                 case .messageComposer(let location, let place):
-                    MessageComposerView(
-                        store: .init(
-                            currentLocation: location,
-                            currentPlace: place,
-                            createMessage: CreateMessageUseCaseImpl(
-                                messageRepository: MessageRepositoryImpl()
-                            ),
-                            reverseGeocoding: ReverseGeocodeUseCaseImpl(
-                                repository: ReverseGeocodeRepositoryImpl(
-                                    client: NetworkClientImpl()
-                                )
-                            ),
-                            onClose: { _ in
-                                navigationPath.removeLast()
-                            }
-                        )
-                    )
+                    messageComposerView(location: location, place: place) {
+                        navigationPath.removeLast()
+                    }
                     .onAppear { setTabBarHidden(true) }
                 }
             }
-            .task {
-                await store.send(intent: .onAppear(initialUserLocation))
-            }
-            .onAppear { setTabBarHidden(false) }
-            .onDisappear {
-                send(.onDisappear)
+            .sheet(isPresented: isTimelineListPresentedBinding) {
+                timeLineListView
+                    .presentationDetents(.init(arrayLiteral: .medium, .large))
+                    .presentationDragIndicator(.visible)
             }
             .fullScreenCover(isPresented: isPlaceSearchPresentedBinding) {
                 placeSearchOverlay
@@ -183,6 +104,98 @@ struct MapView: View {
         .toast(toastBinding, bottomPadding: 100)
     }
 }
+
+// MARK: - SubViews
+
+private extension MapView {
+    var mapViewWrapper: some View {
+        MapViewWrapper(
+            userLocation: initialUserLocation,
+            markerManager: messageMarkerManager,
+            messages: store.state.messages,
+            cameraMoveTarget: store.state.cameraMoveTarget,
+            onCameraMoveConsumed: {
+                send(.cameraMoveConsumed)
+            },
+            onTapPlace: { place in
+                navigationPath.append(MapDestination.space(place: place))
+            },
+            onTapNoPlace: { messages in
+                send(.tapNoPlaceMarker(messages))
+            },
+            onCameraIdle: { coordinate, bounds in
+                send(.cameraDidIdle(coordinate, bounds))
+            },
+            onCameraChangedByLocation: { coordinate, bounds in
+                send(.cameraChangedByLocation(coordinate, bounds))
+            }
+        )
+    }
+
+    var floatingNavigationBar: some View {
+        FloatingNavigationBar(
+            title: Constants.navigationTitle,
+            onTapSearch: { send(.tapSearch) }
+        )
+    }
+
+    var writeButton: some View {
+        WriteButton {
+            if let current = locationProvider.current {
+                navigationPath.append(
+                    MapDestination.messageComposer(
+                        location: current,
+                        place: nil
+                    )
+                )
+            } else {
+                send(.setToast(Constants.locationToastMessage))
+            }
+        }
+    }
+}
+
+// MARK: - Navigation Destination
+
+private extension MapView {
+    private func messageComposerView(location: Coordinate, place: Place?, onClose: @escaping () -> Void) -> some View {
+        MessageComposerView(
+            store: .init(
+                currentLocation: location,
+                currentPlace: place,
+                createMessage: CreateMessageUseCaseImpl(
+                    messageRepository: MessageRepositoryImpl()
+                ),
+                reverseGeocoding: ReverseGeocodeUseCaseImpl(
+                    repository: ReverseGeocodeRepositoryImpl(
+                        client: NetworkClientImpl()
+                    )
+                ),
+                onClose: { _ in
+                    onClose()
+                }
+            )
+        )
+    }
+
+    private func spaceView(place: Place, onNavigate: @escaping (Coordinate, Place) -> Void) -> some View {
+        SpaceView(
+            store: .init(
+                fetchPlaceMessagesUseCase: FetchPlaceMessagesUseCaseImpl(
+                    messageRepository: MessageRepositoryImpl()
+                ),
+                place: place
+            ),
+            domeEnvironment: .init(dayPart: .afternoon),
+            place: place,
+            onNavigate: { coordinate, place in
+                onNavigate(coordinate, place)
+            }
+        )
+    }
+}
+
+// MARK: - Sheet & Overlay
 
 private extension MapView {
     @ViewBuilder
@@ -222,6 +235,28 @@ private extension MapView {
                 if !isPresented {
                     send(.dismissPlaceSearch)
             }}
+        )
+    }
+
+    var timeLineListView: some View {
+        TimelineListView(
+            store: TimelineListStore(
+                fetchRecentMessagesUseCase: FetchRecentMessagesUseCaseImpl(
+                    repository: MessageRepositoryImpl()
+                ),
+                deleteMessagesUseCase: DeleteMessagesUseCaseImpl(messageRepository: MessageRepositoryImpl())
+            ),
+            configuration: .bottomSheet
+        )
+    }
+    var isTimelineListPresentedBinding: Binding<Bool> {
+        Binding(
+            get: { store.state.selectedNoPlaceMessages.isEmpty == false },
+            set: { isPresented in
+                if !isPresented {
+                    send(.dismissTimelineView)
+                }
+            }
         )
     }
 
