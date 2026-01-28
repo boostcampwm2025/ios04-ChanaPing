@@ -27,15 +27,11 @@ struct MapView: View {
     private let initialUserLocation: Coordinate
 
     init(
+        store: MapStore,
         userLocation: Coordinate,
         messageMarkerManager: MessageMarkerManager
     ) {
-        _store = StateObject(wrappedValue: MapStore(
-            getNearbyMessagesUseCase: GetNearbyMessagesUseCaseImpl(
-                messageRepository: MessageRepositoryImpl()
-            ),
-            networkMonitor: NetworkMonitor()
-        ))
+        _store = StateObject(wrappedValue: store)
         self.messageMarkerManager = messageMarkerManager
         self.initialUserLocation = userLocation
     }
@@ -248,6 +244,10 @@ private extension MapView {
     )
 
     return MapView(
+        store: MapStore(
+            getNearbyMessagesUseCase: GetNearbyMessagesUseCaseImpl(messageRepository: MessageRepositoryImpl()),
+            networkMonitor: NetworkMonitor()
+        ),
         userLocation: .init(latitude: 37.5665, longitude: 126.9780),
         messageMarkerManager: messageMarkerManager
     )
