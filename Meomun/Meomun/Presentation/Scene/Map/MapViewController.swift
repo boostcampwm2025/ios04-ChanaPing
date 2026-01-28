@@ -188,6 +188,14 @@ extension MapViewController {
     }
 }
 
+// MARK: - Map UI
+
+extension MapViewController {
+    func setLocationButtonHidden(_ hidden: Bool) {
+        naverMapView.showLocationButton = !hidden
+    }
+}
+
 // MARK: - UserLocation
 
 extension MapViewController {
@@ -314,6 +322,7 @@ struct MapViewWrapper: UIViewControllerRepresentable {
     private let messages: [Message]
     private let userLocation: Coordinate?
     private let cameraMoveTarget: Coordinate?
+    private let isLocationButtonHidden: Bool
     private let onCameraMoveConsumed: () -> Void
     private let onTapPlace: (([Message]) -> Void)?
     private let onTapNoPlace: (([Message]) -> Void)?
@@ -327,6 +336,7 @@ struct MapViewWrapper: UIViewControllerRepresentable {
         markerManager: MessageMarkerManager,
         messages: [Message],
         cameraMoveTarget: Coordinate?,
+        isLocationButtonHidden: Bool = false,
         onCameraMoveConsumed: @escaping () -> Void,
         onTapPlace: (([Message]) -> Void)? = nil,
         onTapNoPlace: (([Message]) -> Void)? = nil,
@@ -337,6 +347,7 @@ struct MapViewWrapper: UIViewControllerRepresentable {
         self.messageMarkerManager = markerManager
         self.messages = messages
         self.cameraMoveTarget = cameraMoveTarget
+        self.isLocationButtonHidden = isLocationButtonHidden
         self.onCameraMoveConsumed = onCameraMoveConsumed
         self.onTapPlace = onTapPlace
         self.onTapNoPlace = onTapNoPlace
@@ -374,6 +385,9 @@ struct MapViewWrapper: UIViewControllerRepresentable {
     }
 
     func updateUIViewController(_ uiViewController: MapViewController, context: Context) {
+        // 위치 버튼 표시/숨김 업데이트
+        uiViewController.setLocationButtonHidden(isLocationButtonHidden)
+
         if let target = cameraMoveTarget {
             // 동일 target인 경우 호출 X
             if context.coordinator.lastCameraMoveTarget?.latitude != target.latitude ||

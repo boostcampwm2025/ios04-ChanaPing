@@ -114,6 +114,7 @@ private extension MapView {
             markerManager: messageMarkerManager,
             messages: store.state.messages,
             cameraMoveTarget: store.state.cameraMoveTarget,
+            isLocationButtonHidden: !store.state.carouselItems.isEmpty,
             onCameraMoveConsumed: {
                 send(.cameraMoveConsumed)
             },
