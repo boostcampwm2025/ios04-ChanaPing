@@ -117,8 +117,8 @@ private extension MapView {
             onCameraMoveConsumed: {
                 send(.cameraMoveConsumed)
             },
-            onTapPlace: { place in
-                navigationPath.append(MapDestination.space(place: place))
+            onTapPlace: { messages in
+                send(.tapPlaceMarker(messages))
             },
             onTapNoPlace: { messages in
                 send(.tapNoPlaceMarker(messages))

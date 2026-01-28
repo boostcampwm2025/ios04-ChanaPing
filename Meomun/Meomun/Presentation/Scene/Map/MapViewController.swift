@@ -25,7 +25,7 @@ final class MapViewController: UIViewController {
 
     // MARK: - Callback
 
-    private let onTapPlace: ((Place) -> Void)?
+    private let onTapPlace: (([Message]) -> Void)?
     private let onTapNoPlace: (([Message]) -> Void)?
     private let onCameraIdle: ((Coordinate, BoundingBox) -> Void)?
     private let onCameraChangedByLocation: ((Coordinate, BoundingBox) -> Void)?
@@ -39,7 +39,7 @@ final class MapViewController: UIViewController {
 
     init(
         messageMarkerManager: MessageMarkerManager,
-        onTapPlace: ((Place) -> Void)? = nil,
+        onTapPlace: (([Message]) -> Void)? = nil,
         onTapNoPlace: (([Message]) -> Void)? = nil,
         onCameraIdle: ((Coordinate, BoundingBox) -> Void)? = nil,
         onCameraChangedByLocation: ((Coordinate, BoundingBox) -> Void)? = nil
@@ -315,7 +315,7 @@ struct MapViewWrapper: UIViewControllerRepresentable {
     private let userLocation: Coordinate?
     private let cameraMoveTarget: Coordinate?
     private let onCameraMoveConsumed: () -> Void
-    private let onTapPlace: ((Place) -> Void)?
+    private let onTapPlace: (([Message]) -> Void)?
     private let onTapNoPlace: (([Message]) -> Void)?
     private let onCameraIdle: ((Coordinate, BoundingBox) -> Void)?
     private let onCameraChangedByLocation: ((Coordinate, BoundingBox) -> Void)?
@@ -328,7 +328,7 @@ struct MapViewWrapper: UIViewControllerRepresentable {
         messages: [Message],
         cameraMoveTarget: Coordinate?,
         onCameraMoveConsumed: @escaping () -> Void,
-        onTapPlace: ((Place) -> Void)? = nil,
+        onTapPlace: (([Message]) -> Void)? = nil,
         onTapNoPlace: (([Message]) -> Void)? = nil,
         onCameraIdle: ((Coordinate, BoundingBox) -> Void)? = nil,
         onCameraChangedByLocation: ((Coordinate, BoundingBox) -> Void)? = nil
