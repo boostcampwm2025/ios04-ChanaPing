@@ -172,7 +172,7 @@ struct MapView: View {
                 }
             }
             .task {
-                send(.onAppear(initialUserLocation))
+                await store.send(intent: .onAppear(initialUserLocation))
             }
             .onAppear { setTabBarHidden(false) }
             .onDisappear {
