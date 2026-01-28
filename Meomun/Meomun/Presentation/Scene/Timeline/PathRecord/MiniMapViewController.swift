@@ -16,12 +16,9 @@ final class MiniMapViewController: UIViewController {
         // 지도 UI 설정
         miniMapView.logoInteractionEnabled = false
 
-        // 유저 상호작용
-        // miniMapView.isUserInteractionEnabled = false
-
         // 최소 및 최대 줌 레벨 설정
         miniMapView.minZoomLevel = 5
-        miniMapView.maxZoomLevel = 18
+        miniMapView.maxZoomLevel = 16
 
         miniMapView.customStyleId = "bf0bd9ae-f750-4895-8246-2744297005d0"
 
@@ -29,7 +26,7 @@ final class MiniMapViewController: UIViewController {
     }()
 
     private var markers: [NMFMarker] = []
-    private var pathOverlay: NMFPath?
+    private var polyOverlay: NMFPolylineOverlay?
     private var pendingMessages: [Message] = []
     private var didApplyOnce = false
 
@@ -102,8 +99,8 @@ extension MiniMapViewController {
         markers.removeAll()
 
         // 경로선 삭제
-        pathOverlay?.mapView = nil
-        pathOverlay = nil
+        polyOverlay?.mapView = nil
+        polyOverlay = nil
     }
 
     func buildPaths(messages: [Message], calendar: Calendar = .current) -> PathMarkerModel {
@@ -148,6 +145,8 @@ extension MiniMapViewController {
         polyline.capType = .round
         polyline.joinType = .round
         polyline.mapView = miniMapView
+
+        polyOverlay = polyline
     }
 
     private func fitCamera(messages: [Message], positions: [NMGLatLng]) {
