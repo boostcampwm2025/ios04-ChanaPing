@@ -23,4 +23,18 @@ enum AlertFactory {
             ]
         )
     }
+
+    static func resetAllData(
+        onCancel: @escaping () -> Void,
+        onReset: @escaping () -> Void
+    ) -> AlertModel {
+        AlertModel(
+            title: "앱 데이터를 초기화할까요?",
+            message: "이 작업은 되돌릴 수 없습니다.\n로컬에 저장된 모든 데이터가 삭제됩니다.",
+            buttons: [
+                AlertButtonConfig(title: "취소", role: .cancel, action: onCancel),
+                AlertButtonConfig(title: "초기화", role: .destructive, action: onReset)
+            ]
+        )
+    }
 }
