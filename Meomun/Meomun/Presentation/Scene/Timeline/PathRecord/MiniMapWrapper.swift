@@ -15,8 +15,7 @@ struct MiniMapWrapper: UIViewControllerRepresentable {
     }
 
     func makeUIViewController(context: Context) -> MiniMapViewController {
-        let viewController = MiniMapViewController()
-        return viewController
+        MiniMapViewController()
     }
 
     func updateUIViewController(_ uiViewController: MiniMapViewController, context: Context) {
