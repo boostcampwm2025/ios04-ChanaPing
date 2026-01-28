@@ -203,6 +203,31 @@ extension MapViewController {
     }
 }
 
+// MARK: - Camera Moving
+
+extension MapViewController {
+    func moveCamera(to coordinate: Coordinate, zoom: Double? = nil) {
+        let latLng = NMGLatLng(lat: coordinate.latitude, lng: coordinate.longitude)
+        let update = NMFCameraUpdate(scrollTo: latLng)
+
+        update.animation = .easeIn
+        update.animationDuration = 0.35
+
+        guard let zoom else {
+            naverMapView.mapView.moveCamera(update)
+            return
+        }
+
+        let position = NMFCameraPosition(
+            latLng,
+            zoom: zoom,
+            tilt: 45,
+            heading: 0
+        )
+        naverMapView.mapView.moveCamera(NMFCameraUpdate(position: position))
+    }
+}
+
 // MARK: - Messages
 
 extension MapViewController {
@@ -288,6 +313,8 @@ extension MapViewController: NMFMapViewCameraDelegate {
 struct MapViewWrapper: UIViewControllerRepresentable {
     private let messages: [Message]
     private let userLocation: Coordinate?
+    private let cameraMoveTarget: Coordinate?
+    private let onCameraMoveConsumed: () -> Void
     private let onTapPlace: ((Place) -> Void)?
     private let onTapNoPlace: (([Message]) -> Void)?
     private let onCameraIdle: ((Coordinate, BoundingBox) -> Void)?
@@ -299,6 +326,8 @@ struct MapViewWrapper: UIViewControllerRepresentable {
         userLocation: Coordinate?,
         markerManager: MessageMarkerManager,
         messages: [Message],
+        cameraMoveTarget: Coordinate?,
+        onCameraMoveConsumed: @escaping () -> Void,
         onTapPlace: ((Place) -> Void)? = nil,
         onTapNoPlace: (([Message]) -> Void)? = nil,
         onCameraIdle: ((Coordinate, BoundingBox) -> Void)? = nil,
@@ -307,6 +336,8 @@ struct MapViewWrapper: UIViewControllerRepresentable {
         self.userLocation = userLocation
         self.messageMarkerManager = markerManager
         self.messages = messages
+        self.cameraMoveTarget = cameraMoveTarget
+        self.onCameraMoveConsumed = onCameraMoveConsumed
         self.onTapPlace = onTapPlace
         self.onTapNoPlace = onTapNoPlace
         self.onCameraIdle = onCameraIdle
@@ -319,6 +350,7 @@ struct MapViewWrapper: UIViewControllerRepresentable {
 
     final class Coordinator {
         var lastMessagesSnapshot: Int?
+        var lastCameraMoveTarget: Coordinate?
         var didInitialLoad = false
     }
 
@@ -342,6 +374,23 @@ struct MapViewWrapper: UIViewControllerRepresentable {
     }
 
     func updateUIViewController(_ uiViewController: MapViewController, context: Context) {
+        if let target = cameraMoveTarget {
+            // 동일 target인 경우 호출 X
+            if context.coordinator.lastCameraMoveTarget?.latitude != target.latitude ||
+                context.coordinator.lastCameraMoveTarget?.longitude != target.longitude {
+
+                context.coordinator.lastCameraMoveTarget = target
+                uiViewController.moveCamera(
+                    to: target,
+                    zoom: 17
+                )
+
+                DispatchQueue.main.async {
+                    onCameraMoveConsumed()
+                }
+            }
+        }
+
         let snap = messagesSnapshot(messages)
 
         // 동일 메시지인 경우 loadMessages() 호출 X

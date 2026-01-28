@@ -55,7 +55,7 @@ struct TimelineRowView: View {
 }
 
 #Preview {
-    var selectionStates: [TimelineSelectionState]  = [.inactive, .unselected, .selected]
+    let selectionStates: [TimelineSelectionState]  = [.inactive, .unselected, .selected]
     let messages: [Message] =  [
         Message(
             id: MessageID(value: UUID()),

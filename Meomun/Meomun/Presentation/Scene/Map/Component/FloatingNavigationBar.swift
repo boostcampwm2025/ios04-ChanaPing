@@ -12,25 +12,26 @@ struct FloatingNavigationBar: View {
     let onTapSearch: () -> Void
 
     var body: some View {
-        HStack(spacing: 0) {
-            Color.clear
-                .frame(width: 32, height: 32)
+        HStack(alignment: .center) {
+            Image("cloud")
+                .resizable()
+                .scaledToFit()
+                .frame(width: 32)
 
             Spacer()
 
             Text(title)
-                .font(.system(size: 18, weight: .semibold))
+                .font(.system(size: 18, weight: .regular))
                 .foregroundStyle(Color.black.opacity(0.9))
 
             Spacer()
 
             Button(action: onTapSearch) {
                 Image(systemName: "magnifyingglass")
-                    .font(.system(size: 17, weight: .semibold))
+                    .font(.system(size: 17, weight: .light))
                     .foregroundStyle(Color.black.opacity(0.9))
                     .frame(width: 36, height: 36)
             }
-            .buttonStyle(.plain)
         }
         .padding(.horizontal, 20)
         .padding(.vertical, 10)

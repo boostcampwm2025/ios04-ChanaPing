@@ -17,7 +17,6 @@ fileprivate enum Constants {
 
 struct TimelineListView: View {
     @Environment(\.setTabBarHidden) private var setTabBarHidden
-
     @StateObject private var store: TimelineListStore
     private let configuration: Configuration
 
@@ -26,20 +25,18 @@ struct TimelineListView: View {
         self.configuration = configuration
     }
 
+    private func send(_ intent: TimelineListStore.Intent) {
+        Task { await store.send(intent: intent) }
+    }
+
     var body: some View {
         VStack {
             if configuration.showsHeader { header }
 
             if !store.state.messages.isEmpty {
                 content
-            }
-
-            if configuration.showsFooter && store.state.messages.isEmpty {
-                Spacer()
-
-                footer
-
-                Spacer()
+            } else {
+                emptyContent
             }
         }
         .overlay(alignment: .bottom) {
@@ -48,16 +45,12 @@ struct TimelineListView: View {
                     .transition(.move(edge: .bottom).combined(with: .opacity))
             }
         }
-        .onAppear {
-            Task {
-                await store.send(intent: .onAppear)
-            }
-        }
+        .onAppear { send(.onAppear) }
         .onChange(of: store.state.isEditing) { _, _ in
-            setTabBarHidden(store.state.isEditing || store.state.deleteStatus != .idle)
+            setTabBarHidden(shouldHideTabBar)
         }
         .onChange(of: store.state.deleteStatus) { _, _ in
-            setTabBarHidden(store.state.isEditing || store.state.deleteStatus != .idle)
+            setTabBarHidden(shouldHideTabBar)
         }
         .animation(.spring(response: 0.25, dampingFraction: 0.9), value: store.state.isEditing)
         .background(Color.meomunBackgroundColor)
@@ -73,9 +66,15 @@ struct TimelineListView: View {
                     .transition(.identity) // 애니메이션 없음
             }
         }
+        .fullScreenCover(isPresented: isSelectedSectionOverlayPresentedBinding) {
+            sectionOverlay
+                .presentationBackground(.clear)
+        }
+        .transaction({ transaction in transaction.disablesAnimations = true })
     }
 }
 
+// MARK: Subviews
 private extension TimelineListView {
     var header: some View {
         ZStack {
@@ -87,16 +86,10 @@ private extension TimelineListView {
                 HStack {
                     Spacer()
 
-                    Button {
-                        Task {
-                            await store.send(intent: .tapEdit)
-                        }
-                    } label: {
+                    Button { send(.tapEdit) } label: {
                         Text(store.state.isEditing ? "취소": "편집")
                             .font(.headline)
-                            .foregroundStyle(
-                                store.state.messages.isEmpty ? Color.tabInactive : Color.meomunPointColor
-                            )
+                            .foregroundStyle(editButtonColor)
                     }
                     .disabled(store.state.messages.isEmpty)
                 }
@@ -126,14 +119,17 @@ private extension TimelineListView {
                                 }
                             )
                             .animation(.spring(response: 0.3, dampingFraction: 0.6), value: store.state.isEditing)
-                            .onTapGesture {
-                                Task {
-                                    await store.send(intent: .tapMessage(message.id))
-                                }
-                            }
+                            .onTapGesture { send(.tapMessage(message.id)) }
                         }
                     } header: {
                         TimelineSectionHeaderView(yearMonth: section.key)
+                            .contentShape(Rectangle())
+                            .onTapGesture {
+                                Task {
+                                    guard !store.state.isEditing else { return }
+                                    await store.send(intent: .tapSection(section.key))
+                                }
+                            }
                     }
                 }
             }
@@ -142,6 +138,16 @@ private extension TimelineListView {
 
             if configuration.showsFooter && !store.state.messages.isEmpty {
                 footer
+            }
+        }
+    }
+
+    var emptyContent: some View {
+        Group {
+            if configuration.showsFooter {
+                Spacer()
+                footer
+                Spacer()
             }
         }
     }
@@ -163,26 +169,16 @@ private extension TimelineListView {
 
     var selectionBar: some View {
         HStack {
-            Text(
-                store.state.selectedMessageIDs.isEmpty 
-                ? "항목을 선택하세요"
-                : "\(store.state.selectedMessageIDs.count)개 항목 선택됨"
-            )
+            Text(selectionBarText)
             .font(.body.weight(.semibold))
-            .foregroundStyle(
-                store.state.selectedMessageIDs.isEmpty ? Color.tabInactive : Color.meomunPrimaryColor
-            )
+            .foregroundStyle(selectionBarTextColor)
 
             Spacer()
 
-            Button {
-                Task {
-                    await store.send(intent: .requestDeleteSelectedMessages)
-                }
-            } label: {
+            Button { send(.requestDeleteSelectedMessages) } label: {
                 Text("삭제")
                     .font(.headline)
-                    .foregroundStyle(store.state.selectedMessageIDs.isEmpty ? Color.tabInactive : Color.red)
+                    .foregroundStyle(deleteButtonColor)
                     .padding(.horizontal, 24)
             }
             .disabled(store.state.selectedMessageIDs.isEmpty)
@@ -191,17 +187,61 @@ private extension TimelineListView {
     }
 }
 
-// MARK: - Alert & LoadingOverlay
+// MARK: - Computed Properties
+private extension TimelineListView {
+    var shouldHideTabBar: Bool {
+        store.state.isEditing || store.state.deleteStatus != .idle
+    }
 
+    var editButtonColor: Color {
+        store.state.messages.isEmpty ? Color.tabInactive : Color.meomunPointColor
+    }
+
+    var selectionBarText: String {
+        store.state.selectedMessageIDs.isEmpty
+        ? "항목을 선택하세요"
+        : "\(store.state.selectedMessageIDs.count)개 항목 선택됨"
+    }
+
+    var selectionBarTextColor: Color {
+        store.state.selectedMessageIDs.isEmpty ? Color.tabInactive : Color.meomunPrimaryColor
+    }
+
+    var deleteButtonColor: Color {
+        store.state.selectedMessageIDs.isEmpty ? Color.tabInactive : Color.red
+    }
+}
+
+// MARK: PathRecordOverlay
+private extension TimelineListView {
+    var isSelectedSectionOverlayPresentedBinding: Binding<Bool> {
+        Binding(
+            get: { store.state.selectedSection != nil },
+            set: { isPresented in
+                guard isPresented == false else { return }
+                send(.tapSection(nil))
+            }
+        )
+    }
+
+    @ViewBuilder
+    var sectionOverlay: some View {
+        if let section = store.state.selectedSection {
+            PathRecordOverlayView(
+                section: section,
+                messages: store.messages(in: section),
+                onDismiss: { send(.tapSection(nil)) }
+            )
+        }
+    }
+}
+
+// MARK: - Alert & LoadingOverlay
 private extension TimelineListView {
     var deleteAlertBinding: Binding<AlertModel?> {
         Binding(
             get: { store.state.deleteAlert },
-            set: { _ in
-                Task {
-                    await store.send(intent: .dismissAlert)
-                }
-            }
+            set: { _ in send(.dismissAlert) }
         )
     }
 

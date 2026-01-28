@@ -7,6 +7,14 @@
 
 import SwiftUI
 
+fileprivate enum Constants {
+    static let navigationTitle = "머문"
+    static let locationToastMessage = "위치를 불러오지 못했어요. 잠시 후에 다시 시도해주세요."
+
+    static let placeSearchTitle = "장소로 이동"
+    static let placeSearchPlaceholder = "어디로 이동할까요?"
+}
+
 struct MapView: View {
     @Environment(\.setTabBarHidden) private var setTabBarHidden
 
@@ -32,6 +40,10 @@ struct MapView: View {
         self.initialUserLocation = userLocation
     }
 
+    private func send(_ intent: MapStore.Intent) {
+        Task { await store.send(intent: intent) }
+    }
+
     var body: some View {
         NavigationStack(path: $navigationPath) {
             ZStack {
@@ -39,31 +51,29 @@ struct MapView: View {
                     userLocation: initialUserLocation,
                     markerManager: messageMarkerManager,
                     messages: store.state.messages,
+                    cameraMoveTarget: store.state.cameraMoveTarget,
+                    onCameraMoveConsumed: {
+                        send(.cameraMoveConsumed)
+                    },
                     onTapPlace: { place in
                         navigationPath.append(MapDestination.space(place: place))
                     },
                     onTapNoPlace: { messages in
-                        Task {
-                            await store.send(intent: .tapNoPlaceMarker(messages))
-                        }
+                        send(.tapNoPlaceMarker(messages))
                     },
                     onCameraIdle: { coordinate, bounds in
-                        Task {
-                            await store.send(intent: .cameraDidIdle(coordinate, bounds))
-                        }
+                        send(.cameraDidIdle(coordinate, bounds))
                     },
                     onCameraChangedByLocation: { coordinate, bounds in
-                        Task {
-                            await store.send(intent: .cameraChangedByLocation(coordinate, bounds))
-                        }
+                        send(.cameraChangedByLocation(coordinate, bounds))
                     }
                 )
                 .ignoresSafeArea()
 
                 VStack {
                     FloatingNavigationBar(
-                        title: "머문",
-                        onTapSearch: {}
+                        title: Constants.navigationTitle,
+                        onTapSearch: { send(.tapSearch) }
                     )
 
                     Spacer()
@@ -80,21 +90,18 @@ struct MapView: View {
                                     )
                                 )
                             } else {
-                                Task {
-                                    await store.send(intent: .setToast("위치를 불러오지 못했어요. 잠시 후에 다시 시도해주세요."))
-                                }
+                                send(.setToast(Constants.locationToastMessage))
                             }
                         }
                     }
                 }
                 .padding(.top, 12)
                 .padding(.bottom, 96)
+                .ignoresSafeArea(.keyboard, edges: .bottom)
 
                 if !store.state.isNetworkConnected {
                     AlertView(type: .network) {
-                        Task {
-                            await store.send(intent: .tapNetworkRefresh)
-                        }
+                        send(.tapNetworkRefresh)
                     }
                 }
             }
@@ -103,7 +110,7 @@ struct MapView: View {
                     get: { store.state.selectedNoPlaceMessages.isEmpty == false },
                     set: { isPresented in
                         if !isPresented {
-                            Task { await store.send(intent: .dismissTimelineView)}
+                            send(.dismissTimelineView)
                         }
                     }
                 )
@@ -169,23 +176,64 @@ struct MapView: View {
             }
             .onAppear { setTabBarHidden(false) }
             .onDisappear {
-                Task {
-                    await store.send(intent: .onDisappear)
-                }
+                send(.onDisappear)
             }
+            .fullScreenCover(isPresented: isPlaceSearchPresentedBinding) {
+                placeSearchOverlay
+                    .presentationBackground(.clear)
+            }
+            .transaction { $0.disablesAnimations = true }
         }
         .toast(toastBinding, bottomPadding: 100)
     }
 }
 
 private extension MapView {
+    @ViewBuilder
+    var placeSearchOverlay: some View {
+        if let current = locationProvider.current {
+            PlaceSearchOverlayView(
+                store: PlaceSearchStore(
+                    searchPlaces: SearchNearbyPlaceUseCaseImpl(
+                        placeRepository: NaverPlaceSearchRepositoryImpl(
+                            network: NetworkClientImpl()
+                        )
+                    ),
+                    userLocation: current,
+                    onSelect: { place in
+                        send(.selectPlace(place))
+                    },
+                    onDismiss: {
+                        send(.dismissPlaceSearch)
+                    }
+                ),
+                title: Constants.placeSearchTitle,
+                placeholder: Constants.placeSearchPlaceholder
+            )
+        } else {
+            Color.clear
+                .onAppear {
+                    send(.setToast(Constants.locationToastMessage))
+                    send(.dismissPlaceSearch)
+                }
+        }
+    }
+
+    var isPlaceSearchPresentedBinding: Binding<Bool> {
+        Binding(
+            get: { store.state.isPlaceSearchPresented },
+            set: { isPresented in
+                if !isPresented {
+                    send(.dismissPlaceSearch)
+            }}
+        )
+    }
+
     var toastBinding: Binding<String?> {
         Binding(
             get: { store.state.toastMessage },
             set: { message in
-                Task {
-                    await store.send(intent: .setToast(message))
-                }
+                send(.setToast(message))
             }
         )
     }

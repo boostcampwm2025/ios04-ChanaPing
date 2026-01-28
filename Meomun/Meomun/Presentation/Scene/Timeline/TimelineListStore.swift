@@ -33,7 +33,7 @@ final class TimelineListStore: Store {
         case dismissAlert                           // 얼럿 - 취소
 
         case tapMessage(MessageID)
-        case tapSection(YearMonth)
+        case tapSection(YearMonth?)
         case tapEdit
     }
 
@@ -82,7 +82,6 @@ final class TimelineListStore: Store {
                 }
             }
 
-            // TODO: 섹션 탭 동작 구현
         case .tapSection(let section):
             return .init { continuation in
                 continuation.yield(.setSelectedSection(section))
@@ -248,7 +247,7 @@ private extension TimelineListStore {
     }
 }
 
-// MARK: - Timeline Section
+// MARK: Section Helper
 
 private extension TimelineListStore {
     func isSectionAvailable(_ section: YearMonth, in messages: [Message]) -> Bool {
@@ -279,5 +278,9 @@ extension TimelineListStore {
         }
 
         return state.selectedMessageIDs.contains(message.id) ? .selected : .unselected
+    }
+
+    func messages(in section: YearMonth) -> [Message] {
+        state.sections.first(where: { $0.key == section })?.value ?? []
     }
 }
