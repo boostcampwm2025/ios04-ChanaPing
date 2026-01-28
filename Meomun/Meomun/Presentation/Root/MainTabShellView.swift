@@ -46,6 +46,12 @@ struct MainTabShellView: View {
                 messageMarkerManager: MessageMarkerManager(
                     rotationAnimator: .init(),
                     bubbleImageRenderer: .init()
+                ),
+                store: .init(
+                    getNearbyMessagesUseCase: GetNearbyMessagesUseCaseImpl(
+                        messageRepository: MessageRepositoryImpl()
+                    ),
+                    networkMonitor: .init()
                 )
             )
 

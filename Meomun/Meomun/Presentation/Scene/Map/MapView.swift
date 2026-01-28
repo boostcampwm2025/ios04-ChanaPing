@@ -28,14 +28,10 @@ struct MapView: View {
 
     init(
         userLocation: Coordinate,
-        messageMarkerManager: MessageMarkerManager
+        messageMarkerManager: MessageMarkerManager,
+        store: MapStore
     ) {
-        _store = StateObject(wrappedValue: MapStore(
-            getNearbyMessagesUseCase: GetNearbyMessagesUseCaseImpl(
-                messageRepository: MessageRepositoryImpl()
-            ),
-            networkMonitor: NetworkMonitor()
-        ))
+        self._store = .init(wrappedValue: store)
         self.messageMarkerManager = messageMarkerManager
         self.initialUserLocation = userLocation
     }
@@ -247,8 +243,14 @@ private extension MapView {
         bubbleImageRenderer: bubbleImageRenderer
     )
 
-    return MapView(
+    MapView(
         userLocation: .init(latitude: 37.5665, longitude: 126.9780),
-        messageMarkerManager: messageMarkerManager
+        messageMarkerManager: messageMarkerManager,
+        store: .init(
+            getNearbyMessagesUseCase: GetNearbyMessagesUseCaseImpl(
+                messageRepository: MessageRepositoryImpl(storage: MessageInMemoryStorage.shared)
+            ),
+            networkMonitor: .init()
+        )
     )
 }
