@@ -60,7 +60,9 @@ struct MainTabShellView: View {
             )
 
         case .myPage:
-            EmptyView()
+            NavigationStack {
+                MyPageView()
+            }
         }
     }
 }

@@ -27,12 +27,12 @@ struct FloatingTabBar: View {
                 onSelect(.record)
             }
 
-//            FloatingTabItem(
-//                systemImageName: "person",
-//                isSelected: selectedTab == .myPage
-//            ) {
-//                onSelect(.myPage)
-//            }
+            FloatingTabItem(
+                systemImageName: "person",
+                isSelected: selectedTab == .myPage
+            ) {
+                onSelect(.myPage)
+            }
         }
         .floatingContainer()
         .animation(
