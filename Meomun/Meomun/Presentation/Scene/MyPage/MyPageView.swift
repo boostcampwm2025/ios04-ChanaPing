@@ -9,8 +9,11 @@ import CoreLocation
 import SwiftUI
 
 struct MyPageView: View {
-    @State private var isResetAlertPresented = false
-    @Environment(\.openURL) private var openURL
+    @StateObject private var store: MyPageStore
+
+    init(store: MyPageStore) {
+        _store = .init(wrappedValue: store)
+    }
 
     var body: some View {
         List {
@@ -40,11 +43,7 @@ struct MyPageView: View {
                 )
 
                 Button("앱 설정으로 이동") {
-                    guard let url = URL(string: UIApplication.openSettingsURLString) else {
-                        return
-                    }
-
-                    openURL(url)
+                    Task { await store.send(intent: .tapOpenAppSettings) }
                 }
             }
 
@@ -55,28 +54,40 @@ struct MyPageView: View {
                     .foregroundColor(.secondary)
 
                 Button(role: .destructive) {
-                    isResetAlertPresented = true
+                    Task { await store.send(intent: .tapResetAppData) }
                 } label: {
                     Text("앱 데이터 초기화")
                 }
-                .alert("앱 데이터를 초기화할까요?", isPresented: $isResetAlertPresented) {
-                    Button("초기화", role: .destructive) {
-                        AppDataResetter.resetLocalData()
-                    }
-                    Button("취소", role: .cancel) {}
-                } message: {
-                    Text("이 작업은 되돌릴 수 없습니다.\n로컬에 저장된 데이터가 삭제됩니다.")
-                }
+                .customAlert(
+                    resetAlertBinding,
+                    title: { $0.title },
+                    message: { $0.message },
+                    buttons: { $0.buttons }
+                )
             }
         }
-        .scrollDisabled(true)
         .navigationTitle("마이페이지")
     }
 }
 
 #Preview {
     NavigationStack {
-        MyPageView()
+        MyPageView(store: .init())
+    }
+}
+
+// MARK: - Alert
+
+private extension MyPageView {
+    var resetAlertBinding: Binding<AlertModel?> {
+        Binding(
+            get: { store.state.resetAlert },
+            set: { newValue in
+                if newValue == nil {
+                    Task { await store.send(intent: .dismissResetAlert) }
+                }
+            }
+        )
     }
 }
 
@@ -135,24 +146,6 @@ private enum LocationPermissionStatus {
         case .unknown:
             return .unknown
         }
-    }
-}
-
-// MARK: - Data Reset
-
-private enum AppDataResetter {
-    static func resetLocalData() {
-        // 1) UserDefaults
-        if let bundleIdentifier = Bundle.main.bundleIdentifier {
-            UserDefaults.standard.removePersistentDomain(forName: bundleIdentifier)
-            UserDefaults.standard.synchronize()
-        }
-
-        // 2) URLCache (이미지/응답 캐시 등)
-        URLCache.shared.removeAllCachedResponses()
-
-        // 3) SwiftData
-        // TODO: - SwiftData 초기화
     }
 }
 
