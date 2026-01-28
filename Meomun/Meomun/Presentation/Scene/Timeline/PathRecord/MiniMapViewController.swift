@@ -30,11 +30,18 @@ final class MiniMapViewController: UIViewController {
 
     private var markers: [NMFMarker] = []
     private var pathOverlay: NMFPath?
+    private var pendingMessages: [Message] = []
+    private var didApplyOnce = false
 
     override func viewDidLoad() {
         super.viewDidLoad()
         configureSubviews()
         configureLayout()
+    }
+
+    override func viewDidLayoutSubviews() {
+        super.viewDidLayoutSubviews()
+        applyIfPossible()
     }
 }
 
@@ -53,6 +60,159 @@ extension MiniMapViewController {
             miniMapView.trailingAnchor.constraint(equalTo: view.trailingAnchor),
             miniMapView.bottomAnchor.constraint(equalTo: view.bottomAnchor)
         ])
+    }
+}
+
+// MARK: - Route Overlay
+extension MiniMapViewController {
+    func render(messages: [Message]) {
+        pendingMessages = messages
+        applyIfPossible()
+    }
+
+    private func applyIfPossible() {
+        guard view.bounds.width > 0, view.bounds.height > 0 else { return }
+        guard miniMapView.bounds.width > 0, miniMapView.bounds.height > 0 else { return }
+
+        guard !didApplyOnce else { return }
+        didApplyOnce = true
+
+        DispatchQueue.main.async { [weak self] in
+            guard let self else { return }
+            self.apply(messages: self.pendingMessages)
+        }
+    }
+
+    private func apply(messages: [Message]) {
+        clearOverlays()
+
+        let record = buildPaths(messages: messages)
+        addMarkers(positions: record.positions, dayLabels: record.dayLabels)
+
+        if record.positions.count >= 2 {
+            addPath(positions: record.positions)
+        }
+
+        fitCamera(messages: messages, positions: record.positions)
+    }
+
+    private func clearOverlays() {
+        // 마커 삭제
+        markers.forEach { $0.mapView = nil }
+        markers.removeAll()
+
+        // 경로선 삭제
+        pathOverlay?.mapView = nil
+        pathOverlay = nil
+    }
+
+    func buildPaths(messages: [Message], calendar: Calendar = .current) -> PathMarkerModel {
+        let sortedMessages = messages.sorted { $0.createdAt < $1.createdAt }
+
+        let positions = sortedMessages.map {
+            NMGLatLng(
+                lat: $0.coordinate.latitude,
+                lng: $0.coordinate.longitude
+            )
+        }
+        let dayLabels = sortedMessages.map { "\(calendar.component(.day, from: $0.createdAt))" }
+
+        return PathMarkerModel(positions: positions, dayLabels: dayLabels)
+    }
+
+    private func addMarkers(positions: [NMGLatLng], dayLabels: [String]) {
+        for (index, position) in positions.enumerated() {
+            let marker = NMFMarker(position: position)
+
+            marker.captionText = dayLabels[safe: index] ?? ""
+            marker.captionTextSize = 16
+            marker.captionMinZoom = 5
+            marker.captionMaxZoom = 18
+
+            marker.mapView = miniMapView
+
+            markers.append(marker)
+        }
+    }
+
+    private func addPath(positions: [NMGLatLng]) {
+        let overlay = NMFPath()
+        overlay.path = NMGLineString(points: positions)
+
+         overlay.width = 4
+         overlay.outlineWidth = 2
+
+        overlay.mapView = miniMapView
+        self.pathOverlay = overlay
+    }
+
+    private func fitCamera(messages: [Message], positions: [NMGLatLng]) {
+        guard let firstPosition = positions.first else { return }
+
+        // Case 1. 메시지 1개 → 고정 확대
+        if messages.count == 1 {
+            let zoom = miniMapView.maxZoomLevel
+            let update = NMFCameraUpdate(
+                scrollTo: firstPosition,
+                zoomTo: zoom
+            )
+            miniMapView.moveCamera(update)
+            return
+        }
+
+        // 메시지 분포 거리 계산
+        let spreadMeters = maxPairDistanceMeters(from: messages)
+
+        // Case 2. 가까운 경우 → 더 확대
+        if spreadMeters < 200 {
+            let update = NMFCameraUpdate(
+                scrollTo: firstPosition,
+                zoomTo: miniMapView.maxZoomLevel
+            )
+            miniMapView.moveCamera(update)
+            return
+        }
+
+        // Case 3. 더 먼 경우
+        var south = firstPosition.lat
+        var north = firstPosition.lat
+        var west = firstPosition.lng
+        var east = firstPosition.lng
+
+        for point in positions {
+            south = min(south, point.lat)
+            north = max(north, point.lat)
+            west = min(west, point.lng)
+            east = max(east, point.lng)
+        }
+
+        let bounds = NMGLatLngBounds(
+            southWest: NMGLatLng(lat: south, lng: west),
+            northEast: NMGLatLng(lat: north, lng: east)
+        )
+
+        let update = NMFCameraUpdate(fit: bounds)
+        miniMapView.moveCamera(update)
+    }
+}
+
+// MARK: - Marker Distance Helper
+extension MiniMapViewController {
+    private func maxPairDistanceMeters(from messages: [Message]) -> Double {
+        guard messages.count >= 2 else { return 0 }
+
+        var maxDistance: Double = 0
+
+        for i in 0..<(messages.count - 1) {
+            let target = messages[i].coordinate
+            for j in (i + 1)..<messages.count {
+                let compare = messages[j].coordinate
+                let distance = target.distance(to: compare)
+                maxDistance = max(maxDistance, distance)
+            }
+        }
+
+        return maxDistance
     }
 }
 

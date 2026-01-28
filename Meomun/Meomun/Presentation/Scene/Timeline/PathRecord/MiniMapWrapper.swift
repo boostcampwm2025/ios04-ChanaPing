@@ -19,5 +19,6 @@ struct MiniMapWrapper: UIViewControllerRepresentable {
     }
 
     func updateUIViewController(_ uiViewController: MiniMapViewController, context: Context) {
+        uiViewController.render(messages: messages)
     }
 }
