@@ -8,6 +8,18 @@
 import SwiftUI
 import Foundation
 
+fileprivate enum Constants {
+    static let miniMapPadding: CGFloat = 20
+    static let miniMapTopPadding: CGFloat = 36
+
+    static let frameInnerBottomPadding: CGFloat = 14
+    static let frameHoriziontalPadding: CGFloat = 40
+    static let frameVerticalPadding: CGFloat = 160
+    static let frameCornerRadius: CGFloat = 3
+
+    static let titlePadding: CGFloat = 14
+}
+
 struct PathRecordOverlayView: View {
     private let section: YearMonth
     private let messages: [Message]
@@ -32,32 +44,45 @@ struct PathRecordOverlayView: View {
                 .onTapGesture { onDismiss() }
 
             if isPresented {
-                VStack {
-                    header
-                    content
-                }
-                .padding(28)
-                .frame(width: 320, height: 400)
-                .background(Color.white)
-                .transition(.opacity.combined(with: .scale(scale: 0.98)))
-                .onTapGesture { }
+                content
+                    .transition(.opacity.combined(with: .scale(scale: 0.98)))
             }
         }
         .onAppear {
-            withAnimation(.easeInOut(duration: 0.3)) {
-                isPresented = true
-            }
+            withAnimation(.easeInOut(duration: 0.3)) { isPresented = true }
         }
         .onDisappear { isPresented = false }
     }
 }
 
 private extension PathRecordOverlayView {
-    var header: some View {
+    var content: some View {
+        VStack(spacing: 12) {
+            PathRecordMiniMapView(messages: messages)
+                .padding(.top, Constants.miniMapTopPadding)
+                .padding(.bottom, Constants.miniMapPadding)
+                .padding(.horizontal, Constants.miniMapPadding)
+                .background(Color.black.opacity(0.02))
+            title
+        }
+        .padding(.bottom, Constants.frameInnerBottomPadding)
+        .background(Color.white)
+        .clipShape(RoundedRectangle(cornerRadius: Constants.frameCornerRadius, style: .continuous))
+        .shadow(color: .black.opacity(0.08), radius: 8, x: 0, y: 4)
+        .overlay(
+            RoundedRectangle(cornerRadius: Constants.frameCornerRadius, style: .continuous)
+                .stroke(Color.black.opacity(0.06), lineWidth: 1)
+        )
+        .padding(.horizontal, Constants.frameHoriziontalPadding)
+        .padding(.vertical, Constants.frameVerticalPadding)
+        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .center)
+
+    }
+
+    var title: some View {
         ZStack {
             Text("\(monthText), 머문 흔적 따라가기")
-                .font(.headline)
-                .padding(.bottom, 8)
+                .font(.headline.italic())
 
             HStack {
                 Spacer()
@@ -66,41 +91,12 @@ private extension PathRecordOverlayView {
                     Image(systemName: "xmark")
                         .font(.system(size: 14, weight: .semibold))
                         .foregroundStyle(Color.meomunSecondaryColor)
-                        .padding(10)
                         .contentShape(Rectangle())
                 }
+                .padding(.horizontal, 16)
             }
         }
-    }
-    var content: some View {
-        let calendar = Calendar.current
-
-        return ScrollView {
-            VStack {
-                ForEach(messages) { message in
-                    VStack(alignment: .leading, spacing: 6) {
-                        Text(message.content)
-                            .font(.footnote)
-
-                        Text("위도: \(message.coordinate.latitude)")
-                            .font(.footnote)
-                            .foregroundStyle(.secondary)
-
-                        Text("경도: \(message.coordinate.longitude)")
-                            .font(.footnote)
-                            .foregroundStyle(.secondary)
-
-                        let day = calendar.component(.day, from: message.createdAt)
-                        Text("일자: \(day.description)")
-                            .font(.caption)
-                            .foregroundStyle(.secondary)
-                    }
-                    .padding(.vertical, 8)
-
-                    Divider()
-                }
-            }
-        }
+        .padding(Constants.titlePadding)
     }
 }
 
