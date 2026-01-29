@@ -227,21 +227,7 @@ extension SpaceView {
 // MARK: - Message Bubble UI (말풍선/텍스트 생성)
 
 extension SpaceView {
-    private enum BubbleSizingTuning {
-        static let baseBubbleScale: Float = 0.10                    // 버블 스케일 표준
-        static let textScale: Float = 0.50                          // 텍스트 엔티티 스케일
-        static let paddingX: Float = 0.10                           // 텍스트 좌우 여백
-        static let paddingY: Float = 0.02                           // 텍스트 상하 여백
-        static let minUniform: Float = 0.85                         // 버블 최소 크기 제한
-        static let maxUniform: Float = 2.2                          // 버블 최대 크기 제한
-        static let textContainerWidth: Float = 0.55                 // 텍스트 최대 넓이
-        static let textContainerHeight: Float = 0.18                // 텍스트 최대 높이
-        static let statusLineHeight: Float = 0.006                  // 상태 라인 두께
-        static let statusLineWidthRatioToBubble: Float = 0.20       // 버블 폭 대비 라인 폭 비율
-        static let statusLineTopInsetRatioToBubble: Float = 0.20    // 버블 상단에서 아래로 내릴 비율
-        static let entityForwardPadding: Float = 0.01               // 텍스트보다 약간 앞(z+)으로
-        static let recentThresholdSeconds: TimeInterval = 20 * 60
-    }
+
 
     private func syncIfPossible(messages: [Message]) {
         guard let root = spaceRootEntity else { return }
@@ -319,7 +305,7 @@ extension SpaceView {
         )
 
         // 엔티티 크기 조절
-        let finalScale = BubbleSizingTuning.baseBubbleScale * multiplier
+        let finalScale = SpaceBubbleLayoutPolicy.baseBubbleScale * multiplier
         bubbleBubbleEntity.scale = SIMD3<Float>(repeating: finalScale)
 
         // Entity 계층 구성: (루트) - (버블) + (텍스트)
@@ -348,8 +334,8 @@ extension SpaceView {
             containerFrame: CGRect(
                 x: 0,
                 y: 0,
-                width: CGFloat(BubbleSizingTuning.textContainerWidth),
-                height: CGFloat(BubbleSizingTuning.textContainerHeight)
+                width: CGFloat(SpaceBubbleLayoutPolicy.textContainerWidth),
+                height: CGFloat(SpaceBubbleLayoutPolicy.textContainerHeight)
             ),
             alignment: .center,
             lineBreakMode: .byWordWrapping
@@ -363,7 +349,7 @@ extension SpaceView {
         let textEntity = ModelEntity(mesh: mesh, materials: [material])
 
         // 메시지 텍스트 크기 조절
-        textEntity.scale = SIMD3<Float>(repeating: BubbleSizingTuning.textScale)
+        textEntity.scale = SIMD3<Float>(repeating: SpaceBubbleLayoutPolicy.textScale)
 
         return textEntity
     }
@@ -388,20 +374,20 @@ extension SpaceView {
         let baseWidth = max(base.x, 0.0001)
         let baseHeight = max(base.y, 0.0001)
 
-        let neededWidth = text.x + BubbleSizingTuning.paddingX
-        let neededHeight = text.y + BubbleSizingTuning.paddingY
+        let neededWidth = text.x + SpaceBubbleLayoutPolicy.paddingX
+        let neededHeight = text.y + SpaceBubbleLayoutPolicy.paddingY
 
         let widthMultiplier = neededWidth / baseWidth
         let heightMultiplier = neededHeight / baseHeight
 
         let raw = max(widthMultiplier, heightMultiplier)
 
-        return min(max(raw, BubbleSizingTuning.minUniform), BubbleSizingTuning.maxUniform)
+        return min(max(raw, SpaceBubbleLayoutPolicy.minUniform), SpaceBubbleLayoutPolicy.maxUniform)
     }
 
     private func bubbleBaseSize(entity: Entity) -> SIMD2<Float> {
         let bubble = entity.clone(recursive: true)
-        bubble.scale = SIMD3<Float>(repeating: BubbleSizingTuning.baseBubbleScale)
+        bubble.scale = SIMD3<Float>(repeating: SpaceBubbleLayoutPolicy.baseBubbleScale)
 
         let bounds = bubble.visualBounds(relativeTo: nil)
         let extents = bounds.extents
@@ -414,13 +400,13 @@ extension SpaceView {
         let extents = bounds.extents
 
         // 모델의 ‘두께(깊이)’ 절반 정도 + 패딩만큼 앞으로
-        let frontOffset = (extents.z * 0.5) + BubbleSizingTuning.entityForwardPadding
+        let frontOffset = (extents.z * 0.5) + SpaceBubbleLayoutPolicy.entityForwardPadding
 
         textEntity.position += SIMD3<Float>(0, 0, frontOffset)
     }
 
     private func isRecentMessage(_ message: Message, now: Date = .now) -> Bool {
-        now.timeIntervalSince(message.createdAt) < BubbleSizingTuning.recentThresholdSeconds
+        now.timeIntervalSince(message.createdAt) < SpaceBubbleLayoutPolicy.recentThresholdSeconds
     }
 
     private func attachStatusLine(
@@ -437,11 +423,11 @@ extension SpaceView {
         let bubbleBounds = bubbleEntity.visualBounds(relativeTo: nil)
         let bubbleExtents = bubbleBounds.extents
 
-        let lineWidth = bubbleExtents.x * BubbleSizingTuning.statusLineWidthRatioToBubble
+        let lineWidth = bubbleExtents.x * SpaceBubbleLayoutPolicy.statusLineWidthRatioToBubble
         let lineEntity = makeStatusLineEntity(isRecent: isRecent, width: lineWidth)
 
-        let lineY = (bubbleExtents.y * 0.5) - (bubbleExtents.y * BubbleSizingTuning.statusLineTopInsetRatioToBubble)
-        let lineZ = (bubbleExtents.z * 0.5) + BubbleSizingTuning.entityForwardPadding
+        let lineY = (bubbleExtents.y * 0.5) - (bubbleExtents.y * SpaceBubbleLayoutPolicy.statusLineTopInsetRatioToBubble)
+        let lineZ = (bubbleExtents.z * 0.5) + SpaceBubbleLayoutPolicy.entityForwardPadding
 
         lineEntity.position = SIMD3<Float>(0, lineY, lineZ)
         bubbleRootEntity.addChild(lineEntity)
@@ -450,8 +436,8 @@ extension SpaceView {
     private func makeStatusLineEntity(isRecent: Bool, width: Float) -> ModelEntity {
         let mesh = MeshResource.generatePlane(
             width: max(width, 0.001),
-            height: BubbleSizingTuning.statusLineHeight,
-            cornerRadius: BubbleSizingTuning.statusLineHeight * 0.5
+            height: SpaceBubbleLayoutPolicy.statusLineHeight,
+            cornerRadius: SpaceBubbleLayoutPolicy.statusLineHeight * 0.5
         )
 
         let tint: UIColor = isRecent ? .orange : .blue
