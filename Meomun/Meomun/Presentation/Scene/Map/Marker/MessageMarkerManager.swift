@@ -156,6 +156,9 @@ extension MessageMarkerManager {
         onTapPlace: (([Message]) -> Void)?,
         onTapNoPlace: (([Message]) -> Void)?
     ) {
+        guard messages.isEmpty == false else {
+            return
+        }
         // 바인딩 저장
         boundMapView = mapView
 
@@ -168,8 +171,6 @@ extension MessageMarkerManager {
             onTapPlace: onTapPlace,
             onTapNoPlace: onTapNoPlace
         )
-
-        updateClusterModeIfNeeded(zoomLevel: mapView.zoomLevel)
     }
 
     func updateClusterModeIfNeeded(zoomLevel: Double) {
