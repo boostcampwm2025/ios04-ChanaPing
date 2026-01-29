@@ -12,9 +12,11 @@ struct SpaceView: View {
 
     @EnvironmentObject private var locationProvider: LocationProvider
     @StateObject private var store: SpaceStore
+
     @State private var domeEnvironment: DomeEnvironment
     @State private var rotationCamera: RotationCamera
 
+    @State private var messageBubbleFactory = SpaceMessageBubbleFactory()
     @State private var spaceRootEntity: Entity?
     @State private var messageBubbleTemplateEntity: Entity?
 
@@ -227,8 +229,6 @@ extension SpaceView {
 // MARK: - Message Bubble UI (말풍선/텍스트 생성)
 
 extension SpaceView {
-
-
     private func syncIfPossible(messages: [Message]) {
         guard let root = spaceRootEntity else { return }
         guard messageBubbleTemplateEntity != nil else { return }
@@ -256,11 +256,16 @@ extension SpaceView {
         for messageID in messageIDSetToAdd {
             guard let message = messages.first(where: { $0.id == messageID }) else { continue }
 
-            addMessageBubble(
-                to: root,
+            let bubbleRoot = messageBubbleFactory.makeBubbleRoot(
                 message: message,
-                messageBubbleTemplateEntity: messageBubbleTemplateEntity
+                templateEntity: messageBubbleTemplateEntity
             )
+
+            // 씬에 추가
+            root.addChild(bubbleRoot)
+
+            // 추적 저장
+            messageBubbleRootByID[message.id] = bubbleRoot
         }
     }
 
@@ -268,187 +273,6 @@ extension SpaceView {
         guard let bubbleRootEntity = messageBubbleRootByID[messageID] else { return }
         bubbleRootEntity.removeFromParent()
         messageBubbleRootByID[messageID] = nil
-    }
-
-    private func addMessageBubble(to root: Entity, message: Message, messageBubbleTemplateEntity: Entity) {
-        let bubblePlacer = BubblePlacer()
-
-        // 텍스트 가공 및 생성
-        let processedText = TextArranger.arrangeText(message.content)
-        let textEntity = makeTextEntity(processedText)
-
-        // 중앙 정렬 보정
-        centerTextEntity(textEntity)
-
-        // 버블 루트 (전체 billboard 대상)
-        let bubbleRootEntity = Entity()
-        bubbleRootEntity.name = "MessageBubble-\(message.id.value.uuidString)"
-        bubbleRootEntity.components.set(BillboardComponent())
-
-        // 버블 랜덤 배치
-        bubbleRootEntity.position = bubblePlacer.randomPositionInsideHemisphere(
-            radiusRange: 1.4...1.7,
-            yRange: 0.5...1.1,
-            minimumDistanceFromCenter: 1.3,
-            minimumDistanceFromViewAxis: 0.25,
-            maxAttempts: 60
-        )
-
-        // messageBubbleTemplateEntity 복제
-        let bubbleBubbleEntity = messageBubbleTemplateEntity.clone(recursive: true)
-        bubbleBubbleEntity.name = "MessageModel-\(message.id.value.uuidString)"
-
-        // 텍스트에 맞는 uniform 배율 계산
-        let multiplier = uniformMultiplierToFitText(
-            textEntity: textEntity,
-            bubbleEntity: messageBubbleTemplateEntity
-        )
-
-        // 엔티티 크기 조절
-        let finalScale = SpaceBubbleLayoutPolicy.baseBubbleScale * multiplier
-        bubbleBubbleEntity.scale = SIMD3<Float>(repeating: finalScale)
-
-        // Entity 계층 구성: (루트) - (버블) + (텍스트)
-        bubbleRootEntity.addChild(bubbleBubbleEntity)
-        bubbleRootEntity.addChild(textEntity)
-
-        // 텍스트를 버블 앞쪽으로 배치
-        placeTextInFrontOfBubble(textEntity, bubbleEntity: bubbleBubbleEntity)
-
-        // 최근/일반 메시지 상태 라인 추가 (버블 내부)
-        let isRecent = isRecentMessage(message)
-        attachStatusLine(to: bubbleRootEntity, bubbleEntity: bubbleBubbleEntity, isRecent: isRecent)
-
-        // 씬에 추가
-        root.addChild(bubbleRootEntity)
-
-        // 추적 저장
-        messageBubbleRootByID[message.id] = bubbleRootEntity
-    }
-
-    private func makeTextEntity(_ text: String) -> ModelEntity {
-        let mesh = MeshResource.generateText(
-            text,
-            extrusionDepth: 0.001,
-            font: .systemFont(ofSize: 0.05, weight: .semibold),
-            containerFrame: CGRect(
-                x: 0,
-                y: 0,
-                width: CGFloat(SpaceBubbleLayoutPolicy.textContainerWidth),
-                height: CGFloat(SpaceBubbleLayoutPolicy.textContainerHeight)
-            ),
-            alignment: .center,
-            lineBreakMode: .byWordWrapping
-        )
-
-        var material = SimpleMaterial()
-        material.color = .init(tint: .black.withAlphaComponent(0.95), texture: nil)
-        material.roughness = .float(1.0)
-        material.metallic = .float(0.0)
-
-        let textEntity = ModelEntity(mesh: mesh, materials: [material])
-
-        // 메시지 텍스트 크기 조절
-        textEntity.scale = SIMD3<Float>(repeating: SpaceBubbleLayoutPolicy.textScale)
-
-        return textEntity
-    }
-
-    private func centerTextEntity(_ textEntity: ModelEntity) {
-        let bounds = textEntity.visualBounds(relativeTo: nil)
-        let center = bounds.center
-
-        // 텍스트 로컬 중심을 원점으로 오게 보정
-        textEntity.position = SIMD3<Float>(
-            -center.x,
-            -center.y,
-            -center.z
-        )
-    }
-
-    private func uniformMultiplierToFitText(textEntity: ModelEntity, bubbleEntity: Entity) -> Float {
-        let textBounds = textEntity.visualBounds(relativeTo: nil)
-        let text = textBounds.extents
-
-        let base = bubbleBaseSize(entity: bubbleEntity)
-        let baseWidth = max(base.x, 0.0001)
-        let baseHeight = max(base.y, 0.0001)
-
-        let neededWidth = text.x + SpaceBubbleLayoutPolicy.paddingX
-        let neededHeight = text.y + SpaceBubbleLayoutPolicy.paddingY
-
-        let widthMultiplier = neededWidth / baseWidth
-        let heightMultiplier = neededHeight / baseHeight
-
-        let raw = max(widthMultiplier, heightMultiplier)
-
-        return min(max(raw, SpaceBubbleLayoutPolicy.minUniform), SpaceBubbleLayoutPolicy.maxUniform)
-    }
-
-    private func bubbleBaseSize(entity: Entity) -> SIMD2<Float> {
-        let bubble = entity.clone(recursive: true)
-        bubble.scale = SIMD3<Float>(repeating: SpaceBubbleLayoutPolicy.baseBubbleScale)
-
-        let bounds = bubble.visualBounds(relativeTo: nil)
-        let extents = bounds.extents
-
-        return SIMD2<Float>(extents.x, extents.y)
-    }
-
-    private func placeTextInFrontOfBubble(_ textEntity: ModelEntity, bubbleEntity: Entity) {
-        let bounds = bubbleEntity.visualBounds(relativeTo: nil)
-        let extents = bounds.extents
-
-        // 모델의 ‘두께(깊이)’ 절반 정도 + 패딩만큼 앞으로
-        let frontOffset = (extents.z * 0.5) + SpaceBubbleLayoutPolicy.entityForwardPadding
-
-        textEntity.position += SIMD3<Float>(0, 0, frontOffset)
-    }
-
-    private func isRecentMessage(_ message: Message, now: Date = .now) -> Bool {
-        now.timeIntervalSince(message.createdAt) < SpaceBubbleLayoutPolicy.recentThresholdSeconds
-    }
-
-    private func attachStatusLine(
-        to bubbleRootEntity: Entity,
-        bubbleEntity: Entity,
-        isRecent: Bool
-    ) {
-        // 최근/일반 전환 대응
-        for child in bubbleRootEntity.children where child.name == "StatusLine" {
-            child.removeFromParent()
-        }
-
-        // 버블 bounds를 기준으로 라인 폭/위치 계산
-        let bubbleBounds = bubbleEntity.visualBounds(relativeTo: nil)
-        let bubbleExtents = bubbleBounds.extents
-
-        let lineWidth = bubbleExtents.x * SpaceBubbleLayoutPolicy.statusLineWidthRatioToBubble
-        let lineEntity = makeStatusLineEntity(isRecent: isRecent, width: lineWidth)
-
-        let lineY = (bubbleExtents.y * 0.5) - (bubbleExtents.y * SpaceBubbleLayoutPolicy.statusLineTopInsetRatioToBubble)
-        let lineZ = (bubbleExtents.z * 0.5) + SpaceBubbleLayoutPolicy.entityForwardPadding
-
-        lineEntity.position = SIMD3<Float>(0, lineY, lineZ)
-        bubbleRootEntity.addChild(lineEntity)
-    }
-
-    private func makeStatusLineEntity(isRecent: Bool, width: Float) -> ModelEntity {
-        let mesh = MeshResource.generatePlane(
-            width: max(width, 0.001),
-            height: SpaceBubbleLayoutPolicy.statusLineHeight,
-            cornerRadius: SpaceBubbleLayoutPolicy.statusLineHeight * 0.5
-        )
-
-        let tint: UIColor = isRecent ? .orange : .blue
-        var material = SimpleMaterial()
-        material.color = .init(tint: tint, texture: nil)
-        material.roughness = .float(0.1)
-        material.metallic = .float(0.0)
-
-        let entity = ModelEntity(mesh: mesh, materials: [material])
-        entity.name = "StatusLine"
-        return entity
     }
 }
 
