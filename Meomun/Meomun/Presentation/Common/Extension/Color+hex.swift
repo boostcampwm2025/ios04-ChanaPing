@@ -9,11 +9,11 @@ import SwiftUI
 
 extension Color {
     static let meomunWriteButton = Color(hex: "#5C9397")
-    static let meomunPrimaryColor = Color(hex: "#0E1B1A")
-    static let meomunSecondaryColor = Color(hex: "#789290")
-    static let meomunPointColor = Color(hex: "#1DC9C0")
-    static let meomunMessageBackgroundColor = Color(hex: "#FAFAFA")
-    static let meomunBackgroundColor = Color(hex: "#F4F4F4")
+    static let meomunPrimary = Color(hex: "#0E1B1A")
+    static let meomunSecondary = Color(hex: "#789290")
+    static let meomunPoint = Color(hex: "#1DC9C0")
+    static let meomunMessageBackground = Color(hex: "#FAFAFA")
+    static let meomunBackground = Color(hex: "#F4F4F4")
 }
 
 extension Color {

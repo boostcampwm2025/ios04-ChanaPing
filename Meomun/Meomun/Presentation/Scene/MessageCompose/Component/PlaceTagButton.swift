@@ -15,14 +15,14 @@ struct PlaceTagButton: View {
         Button(action: action) {
             Text(title)
                 .font(.footnote.weight(.semibold))
-                .foregroundColor(Color.meomunPrimaryColor)
+                .foregroundColor(Color.meomunPrimary)
                 .padding(.horizontal, 16)
                 .padding(.vertical, 8)
         }
         .background(.white.opacity(0.6), in: Capsule())
         .overlay(
             Capsule()
-                .strokeBorder(Color.meomunPrimaryColor.opacity(0.15), lineWidth: 0.5)
+                .strokeBorder(Color.meomunPrimary.opacity(0.15), lineWidth: 0.5)
         )
         .shadow(color: .black.opacity(0.05), radius: 2)
         .shadow(color: .black.opacity(0.05), radius: 0, x: 1, y: 1)

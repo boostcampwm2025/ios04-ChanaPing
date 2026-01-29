@@ -41,14 +41,14 @@ struct TimelineIndicatorView: View {
     var body: some View {
         VStack(spacing: 0) {
             Rectangle()
-                .fill(Color.meomunSecondaryColor.opacity(showTopLine ? 0.35 : 0))
+                .fill(Color.meomunSecondary.opacity(showTopLine ? 0.35 : 0))
                 .frame(width: Layout.lineWidth)
                 .frame(maxHeight: .infinity)
 
             indicator
 
             Rectangle()
-                .fill(Color.meomunSecondaryColor.opacity(showBottomLine ? 0.35 : 0))
+                .fill(Color.meomunSecondary.opacity(showBottomLine ? 0.35 : 0))
                 .frame(width: Layout.lineWidth)
                 .frame(maxHeight: .infinity)
         }
@@ -62,20 +62,20 @@ extension TimelineIndicatorView {
             switch selectionState {
             case .inactive:
                 Circle()
-                    .strokeBorder(Color.meomunPointColor.opacity(0.7), lineWidth: 2)
+                    .strokeBorder(Color.meomunPoint.opacity(0.7), lineWidth: 2)
                     .background(Circle().fill(Color.clear))
                     .frame(width: Layout.nodeSize, height: Layout.nodeSize)
                     .padding(.vertical, 6)
 
             case .unselected:
                 Circle()
-                    .strokeBorder(Color.meomunSecondaryColor, lineWidth: 1.5)
+                    .strokeBorder(Color.meomunSecondary, lineWidth: 1.5)
                     .frame(width: Layout.nodeSize * 2.5, height: Layout.nodeSize * 2.5)
 
             case .selected:
                 Image(systemName: "checkmark.circle")
                     .resizable()
-                    .foregroundStyle(Color.meomunPointColor.opacity(0.7))
+                    .foregroundStyle(Color.meomunPoint.opacity(0.7))
                     .frame(width: Layout.nodeSize * 2.5, height: Layout.nodeSize * 2.5)
             }
         }

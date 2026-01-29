@@ -60,11 +60,11 @@ private extension LoadingOverlayView {
         case .loading:
             ProgressView()
                 .controlSize(.large)
-                .tint(.meomunPointColor)
+                .tint(.meomunPoint)
         case .success:
             Image(systemName: "checkmark.circle.fill")
                 .font(.system(size: Layout.iconSize))
-                .foregroundStyle(Color.meomunPointColor)
+                .foregroundStyle(Color.meomunPoint)
                 .transition(.scale.combined(with: .opacity))
         case .fail:
             Image(systemName: "xmark.circle.fill")
@@ -106,7 +106,7 @@ private extension LoadingOverlayView {
 
             Text(message ?? "")
                 .font(.subheadline.bold())
-                .foregroundStyle(Color.meomunPrimaryColor)
+                .foregroundStyle(Color.meomunPrimary)
                 .multilineTextAlignment(.center)
                 .lineLimit(2)
                 .fixedSize(horizontal: false, vertical: false)

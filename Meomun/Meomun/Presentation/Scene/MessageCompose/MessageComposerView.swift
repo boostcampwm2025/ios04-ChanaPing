@@ -131,7 +131,7 @@ private extension MessageComposerView {
     var editorSection: some View {
         Text(Constants.textEditorTitle)
             .font(.headline.bold())
-            .foregroundStyle(Color.meomunSecondaryColor)
+            .foregroundStyle(Color.meomunSecondary)
             .frame(maxWidth: .infinity, alignment: .leading)
 
         MessageTextEditor(
@@ -272,7 +272,7 @@ private extension MessageComposerView {
         ToolbarItem(placement: .principal) {
             Text(Constants.navigationTitle)
                 .font(.headline.weight(.semibold))
-                .foregroundStyle(Color.meomunPrimaryColor)
+                .foregroundStyle(Color.meomunPrimary)
         }
     }
 

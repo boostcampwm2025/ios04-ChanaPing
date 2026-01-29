@@ -33,11 +33,11 @@ struct PlaceSearchContainerView<Content: View>: View {
         .frame(height: 44)
         .background(
             RoundedRectangle(cornerRadius: 12, style: .continuous)
-                .fill(Color.meomunMessageBackgroundColor.opacity(0.7))
+                .fill(Color.meomunMessageBackground.opacity(0.7))
         )
         .overlay(
             RoundedRectangle(cornerRadius: 12, style: .continuous)
-                .strokeBorder(Color.meomunPrimaryColor.opacity(0.15), lineWidth: 0.5)
+                .strokeBorder(Color.meomunPrimary.opacity(0.15), lineWidth: 0.5)
         )
         .shadow(color: .black.opacity(0.05), radius: 2)
         .shadow(color: .black.opacity(0.05), radius: 0, x: 1, y: 1)

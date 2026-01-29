@@ -53,7 +53,7 @@ private extension MessageBoxView {
     var messageTextView: some View {
         Text(message.content)
             .font(.body)
-            .foregroundStyle(Color.meomunPrimaryColor.opacity(0.8))
+            .foregroundStyle(Color.meomunPrimary.opacity(0.8))
             .frame(maxHeight: .infinity, alignment: .leading)
             .fixedSize(horizontal: false, vertical: true)
     }
@@ -64,14 +64,14 @@ private extension MessageBoxView {
             Text(message.placeTag?.name ?? message.address)
         }
         .font(.footnote.bold())
-        .foregroundStyle(Color.meomunSecondaryColor)
+        .foregroundStyle(Color.meomunSecondary)
     }
 
     var metaRowView: some View {
         HStack {
             Text(MessageTimestampFormatter.string(from: message.createdAt))
                 .font(.footnote.weight(.semibold))
-                .foregroundStyle(Color.meomunSecondaryColor)
+                .foregroundStyle(Color.meomunSecondary)
 
             Spacer()
 
@@ -84,7 +84,7 @@ private extension MessageBoxView {
             } label: {
                 VStack(alignment: .trailing) {
                     Image(systemName: "ellipsis.circle")
-                        .foregroundStyle(Color.meomunSecondaryColor)
+                        .foregroundStyle(Color.meomunSecondary)
                         .contentShape(Rectangle())
                 }
             }
@@ -93,10 +93,10 @@ private extension MessageBoxView {
 
     var backgroundView: some View {
         RoundedRectangle(cornerRadius: Layout.cornerRadius, style: .continuous)
-            .fill(Color.meomunMessageBackgroundColor)
+            .fill(Color.meomunMessageBackground)
             .overlay(
                 RoundedRectangle(cornerRadius: Layout.cornerRadius, style: .continuous)
-                    .strokeBorder(Color.meomunPrimaryColor.opacity(0.15), lineWidth: 0.5)
+                    .strokeBorder(Color.meomunPrimary.opacity(0.15), lineWidth: 0.5)
             )
             .shadow(color: .black.opacity(0.05), radius: 2)
             .shadow(color: .black.opacity(0.05), radius: 0, x: 1, y: 1)
