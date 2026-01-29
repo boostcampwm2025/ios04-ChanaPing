@@ -56,16 +56,30 @@ final class SpaceController {
                 AppLog.debug("S3. Dome loaded", category: .space)
                 let domeEntity = try await Entity(named: "Dome.usdz")
                 domeEntity.name = "Dome"
-                root.addChild(domeEntity)
                 self.domeEntity = domeEntity
 
+                // 머테리얼 세팅
+                if let domeEnvironment = domeEnvironment {
+                    AppLog.debug("S4. Materials configured", category: .space)
+                    materialConfigurator.configureDome(
+                        domeEntity: domeEntity,
+                        dayPart: domeEnvironment.dayPart
+                    )
+
+                    materialConfigurator.configureGround(
+                        domeEntity: domeEntity,
+                        dayPart: domeEnvironment.dayPart
+                    )
+                }
+
+                root.addChild(domeEntity)
+
                 // Message template 로드
-                AppLog.debug("S4. Message template loaded", category: .space)
+                AppLog.debug("S5. Message template loaded", category: .space)
                 let messageEntity = try await Entity(named: "Message.usdz")
                 messageEntity.name = "MessageBubble"
                 messageBubbleTemplateEntity = messageEntity
                 trySyncIfPossible()
-
             } catch {
                 AppLog.error(
                     "Failed to configure Space scene",
@@ -92,8 +106,8 @@ extension SpaceController {
 
         guard let domeEntity else { return }
 
-        // 머테리얼 세팅
-        AppLog.debug("S5. Materials configured", category: .space)
+        // 머테리얼 업데이트
+        AppLog.debug("Dome Materials updated", category: .space)
         materialConfigurator.configureDome(
             domeEntity: domeEntity,
             dayPart: domeEnvironment.dayPart
