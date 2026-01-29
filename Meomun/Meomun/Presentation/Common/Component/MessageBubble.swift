@@ -68,7 +68,7 @@ private extension MessageBubble {
                 .font(.system(size: 13, weight: .semibold))
                 .foregroundStyle(Color.gray.opacity(0.8))
         }
-
+        .padding(.top, 3)
     }
 
     @ViewBuilder
