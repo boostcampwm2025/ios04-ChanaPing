@@ -16,13 +16,11 @@ struct SpaceView: View {
     @State private var domeEnvironment: DomeEnvironment
     @State private var rotationCamera: RotationCamera
 
-    @State private var messageBubbleFactory = SpaceMessageBubbleFactory()
     @State private var spaceRootEntity: Entity?
     @State private var messageBubbleTemplateEntity: Entity?
 
-    @State private var messageBubbleRootByID: [MessageID: Entity] = [:]
-
     @State private var syncTask: Task<Void, Never>?
+    @State private var bubbleSynchronizer = SpaceMessageBubbleSynchronizer()
 
     private let place: Place
     private let onNavigate: (Coordinate, Place) -> Void
@@ -231,48 +229,18 @@ extension SpaceView {
 extension SpaceView {
     private func syncIfPossible(messages: [Message]) {
         guard let root = spaceRootEntity else { return }
-        guard messageBubbleTemplateEntity != nil else { return }
+        guard let template = messageBubbleTemplateEntity else { return }
 
         syncTask?.cancel()
 
         syncTask = Task { @MainActor in
             guard !Task.isCancelled else { return }
-            syncMessageBubbles(to: root, messages: messages)
-        }
-    }
-
-    private func syncMessageBubbles(to root: Entity, messages: [Message]) {
-        guard let messageBubbleTemplateEntity = messageBubbleTemplateEntity else { return }
-
-        let incomingMessageIDSet = Set(messages.map(\.id))
-        let existingMessageIDSet = Set(messageBubbleRootByID.keys)
-        let messageIDSetToRemove = existingMessageIDSet.subtracting(incomingMessageIDSet)
-        let messageIDSetToAdd = incomingMessageIDSet.subtracting(existingMessageIDSet)
-
-        for messageID in messageIDSetToRemove {
-            removeMessageBubble(messageID: messageID)
-        }
-
-        for messageID in messageIDSetToAdd {
-            guard let message = messages.first(where: { $0.id == messageID }) else { continue }
-
-            let bubbleRoot = messageBubbleFactory.makeBubbleRoot(
-                message: message,
-                templateEntity: messageBubbleTemplateEntity
+            bubbleSynchronizer.sync(
+                to: root,
+                messages: messages,
+                templateEntity: template
             )
-
-            // 씬에 추가
-            root.addChild(bubbleRoot)
-
-            // 추적 저장
-            messageBubbleRootByID[message.id] = bubbleRoot
         }
-    }
-
-    private func removeMessageBubble(messageID: MessageID) {
-        guard let bubbleRootEntity = messageBubbleRootByID[messageID] else { return }
-        bubbleRootEntity.removeFromParent()
-        messageBubbleRootByID[messageID] = nil
     }
 }
 
