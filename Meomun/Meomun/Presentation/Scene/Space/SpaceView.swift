@@ -20,13 +20,12 @@ struct SpaceView: View {
 
     init(
         store: SpaceStore,
-        domeEnvironment: DomeEnvironment,
         place: Place,
         onNavigate: @escaping (Coordinate, Place) -> Void
     ) {
         _store = StateObject(wrappedValue: store)
         _spaceController = State(
-            wrappedValue: SpaceController(domeEnvironment: domeEnvironment)
+            wrappedValue: SpaceController()
         )
         self.place = place
         self.onNavigate = onNavigate
@@ -96,6 +95,10 @@ struct SpaceView: View {
         }
         .onChange(of: store.state.messages.map(\.id)) {
             spaceController.sync(messages: store.state.messages)
+        }
+        .onChange(of: store.state.domeEnvironment) { _, newValue in
+            guard let newValue else { return }
+            spaceController.update(domeEnvironment: newValue)
         }
     }
 }
@@ -232,7 +235,6 @@ private extension SpaceView {
                     coordinate: .init(latitude: 0, longitude: 0)
                 )
             ),
-            domeEnvironment: .init(dayPart: .afternoon),
             place: .init(
                 id: .init(value: .init()),
                 name: "광화문",
