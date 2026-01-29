@@ -19,6 +19,7 @@ struct MapView: View {
     @Environment(\.setTabBarHidden) private var setTabBarHidden
 
     @State private var navigationPath = NavigationPath()
+    @State private var didApplyResolvedUserLocation = false
 
     @ObservedObject private var store: MapStore
     @EnvironmentObject private var locationProvider: LocationProvider
@@ -96,6 +97,13 @@ struct MapView: View {
             }
             .task {
                 send(.onAppear(.seoulCity))
+            }
+            .onChange(of: locationProvider.current) { _, newValue in
+                guard didApplyResolvedUserLocation == false else { return }
+                guard let coordinate = newValue else { return }
+
+                didApplyResolvedUserLocation = true
+                send(.userLocationReady(coordinate))
             }
             .onAppear {
                 setTabBarHidden(false)
