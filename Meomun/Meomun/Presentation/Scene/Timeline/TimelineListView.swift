@@ -122,14 +122,15 @@ private extension TimelineListView {
                             .onTapGesture { send(.tapMessage(message.id)) }
                         }
                     } header: {
-                        TimelineSectionHeaderView(yearMonth: section.key)
-                            .contentShape(Rectangle())
-                            .onTapGesture {
+                        TimelineSectionHeaderView(
+                            yearMonth: section.key,
+                            onTapButton: {
                                 Task {
                                     guard !store.state.isEditing else { return }
                                     await store.send(intent: .tapSection(section.key))
                                 }
                             }
+                        )
                     }
                 }
             }
