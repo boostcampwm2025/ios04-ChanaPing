@@ -212,11 +212,9 @@ extension MapViewController {
         overlay.hidden = false
         overlay.location = latLng
 
-        naverMapView.mapView.positionMode = .direction
-
-        let cameraUpdate = NMFCameraUpdate(scrollTo: latLng)
-        cameraUpdate.animation = .easeIn
-        naverMapView.mapView.moveCamera(cameraUpdate)
+        if naverMapView.mapView.positionMode != .direction {
+            naverMapView.mapView.positionMode = .direction
+        }
     }
 
     func updateUserLocationOverlayOnly(_ coordinate: Coordinate?) {

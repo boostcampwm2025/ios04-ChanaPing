@@ -168,6 +168,8 @@ extension MessageMarkerManager {
             onTapPlace: onTapPlace,
             onTapNoPlace: onTapNoPlace
         )
+
+        updateClusterModeIfNeeded(zoomLevel: mapView.zoomLevel)
     }
 
     func updateClusterModeIfNeeded(zoomLevel: Double) {
@@ -528,8 +530,6 @@ extension MessageMarkerManager {
     ) {
         // 마커 식별 키 생성
         let key = MarkerGroupKey(coordinate: coord, isPlace: isPlace)
-
-        AppLog.debug("updateMarker key=\(key) count(place)=\(placeMessagesByCoord[coord]?.count ?? 0) count(noPlace)=\(noPlaceMessagesByCoord[coord]?.count ?? 0)", category: .location)
 
         // 1. 기존 마커가 있다면 그대로 쓰고, 없으면 새로 만들기
         let marker: NMFMarker
