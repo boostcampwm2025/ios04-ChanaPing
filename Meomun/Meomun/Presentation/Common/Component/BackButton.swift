@@ -18,7 +18,7 @@ struct BackButton: View {
                 .frame(width: 44, height: 44)
                 .background(
                     Circle()
-                        .fill(Color.white)
+                        .fill(Color.meomunBackgroundColor.opacity(0.8))
                 )
                 .shadow(color: .black.opacity(0.15), radius: 6, y: 4)
         }

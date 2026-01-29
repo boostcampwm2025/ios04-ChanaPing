@@ -10,15 +10,22 @@ import Foundation
 import UIKit
 
 final class SpaceMessageBubbleFactory {
+    enum BubbleTextType { case content, date }
+    enum TextAlignment { case center, above, below }
+
     func makeBubbleRoot(message: Message, templateEntity: Entity) -> Entity {
         let bubblePlacer = BubblePlacer()
 
-        // 텍스트 가공 및 생성
-        let processedText = TextArranger.arrangeText(message.content)
-        let textEntity = makeTextEntity(processedText)
+        // 텍스트 가공 및 entity 생성
+        let contentText = TextArranger.arrangeText(message.content)
+        let dateText = MessageTimestampFormatter.string(from: message.createdAt)
 
-        // 텍스트 중앙 정렬 보정
-        centerTextEntity(textEntity)
+        let contentTextEntity = makeTextEntity(contentText, type: .content)
+        let dateTextEntity = makeTextEntity(dateText, type: .date)
+
+        // 텍스트 정렬 보정
+        alignTextEntity(contentTextEntity, align: .center)
+        alignTextEntity(dateTextEntity, align: .above)
 
         // 버블 루트 (전체 billboard 대상)
         let bubbleRootEntity = Entity()
@@ -28,7 +35,7 @@ final class SpaceMessageBubbleFactory {
         // 버블 랜덤 배치
         bubbleRootEntity.position = bubblePlacer.randomPositionInsideHemisphere(
             radiusRange: 1.4...1.7,
-            yRange: 0.5...1.1,
+            yRange: 0.7...1.2,
             minimumDistanceFromCenter: 1.3,
             minimumDistanceFromViewAxis: 0.25,
             maxAttempts: 60
@@ -40,7 +47,7 @@ final class SpaceMessageBubbleFactory {
 
         // 텍스트에 맞는 uniform 배율 계산
         let multiplier = uniformMultiplierToFitText(
-            textEntity: textEntity,
+            textEntity: contentTextEntity,
             bubbleEntity: templateEntity
         )
 
@@ -50,10 +57,12 @@ final class SpaceMessageBubbleFactory {
 
         // Entity 계층 구성: (루트) - (버블) + (텍스트)
         bubbleRootEntity.addChild(bubbleBubbleEntity)
-        bubbleRootEntity.addChild(textEntity)
+        bubbleRootEntity.addChild(contentTextEntity)
+        bubbleRootEntity.addChild(dateTextEntity)
 
         // 텍스트를 버블 앞쪽으로 배치
-        placeTextInFrontOfBubble(textEntity, bubbleEntity: bubbleBubbleEntity)
+        placeTextInFrontOfBubble(contentTextEntity, bubbleEntity: bubbleBubbleEntity)
+        placeTextInFrontOfBubble(dateTextEntity, bubbleEntity: bubbleBubbleEntity)
 
         return bubbleRootEntity
     }
@@ -71,7 +80,7 @@ final class SpaceMessageBubbleFactory {
 
 // MARK: - Text Entity
 private extension SpaceMessageBubbleFactory {
-    func makeTextEntity(_ text: String) -> ModelEntity {
+    func makeTextEntity(_ text: String, type: BubbleTextType) -> ModelEntity {
         let mesh = MeshResource.generateText(
             text,
             extrusionDepth: 0.001,
@@ -87,28 +96,50 @@ private extension SpaceMessageBubbleFactory {
         )
 
         var material = SimpleMaterial()
-        material.color = .init(tint: .black.withAlphaComponent(0.95), texture: nil)
+        material.color = .init(
+            tint: type == .content ? .black.withAlphaComponent(0.90) : .gray.withAlphaComponent(0.95),
+            texture: nil)
         material.roughness = .float(1.0)
         material.metallic = .float(0.0)
 
         let textEntity = ModelEntity(mesh: mesh, materials: [material])
 
         // 메시지 텍스트 크기 조절
-        textEntity.scale = SIMD3<Float>(repeating: SpaceBubbleLayoutPolicy.textScale)
+        let textEntityScale = type == .content
+        ? SpaceBubbleLayoutPolicy.contentTextScale
+        : SpaceBubbleLayoutPolicy.dateTextScale
+
+        textEntity.scale = SIMD3<Float>(repeating: textEntityScale)
 
         return textEntity
     }
 
-    func centerTextEntity(_ textEntity: ModelEntity) {
+    func alignTextEntity(_ textEntity: ModelEntity, align: TextAlignment) {
         let bounds = textEntity.visualBounds(relativeTo: nil)
         let center = bounds.center
 
         // 텍스트 로컬 중심을 원점으로 오게 보정
-        textEntity.position = SIMD3<Float>(
-            -center.x,
-            -center.y,
-            -center.z
-        )
+        switch align {
+        case .center:
+            textEntity.position = SIMD3<Float>(
+                -center.x,
+                -center.y,
+                -center.z
+            )
+        case .above:
+            textEntity.position = SIMD3<Float>(
+                -center.x,
+                 -center.y + SpaceBubbleLayoutPolicy.textAlignY,
+                -center.z
+            )
+
+        case .below:
+            textEntity.position = SIMD3<Float>(
+                -center.x,
+                -center.y - SpaceBubbleLayoutPolicy.textAlignY,
+                -center.z
+            )
+        }
     }
 
     func uniformMultiplierToFitText(textEntity: ModelEntity, bubbleEntity: Entity) -> Float {
