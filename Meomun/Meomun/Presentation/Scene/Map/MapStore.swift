@@ -136,7 +136,6 @@ final class MapStore: Store {
                 self.getNearbyMessageTask?.cancel()
                 self.getNearbyMessageTask = nil
                 continuation.yield(.setLoading(false))
-                continuation.finish()
 
             case .userDidInteractMap:
                 continuation.yield(.setFollowingUser(false))
@@ -154,6 +153,7 @@ final class MapStore: Store {
                     bounds: boundingBox,
                     continuation: continuation
                 )
+                return
 
             case .cameraChangedByLocation(let coordinate, let boundingBox, let snapshot):
                 continuation.yield(.setCameraCoordinate(coordinate))
@@ -163,19 +163,17 @@ final class MapStore: Store {
                     bounds: boundingBox,
                     continuation: continuation
                 )
+                return
 
             case .cameraMoveConsumed:
                 continuation.yield(.setCameraMoveTarget(nil))
                 continuation.yield(.presentPlaceSearch(false))
-                continuation.finish()
 
             case .tapSearch:
                 continuation.yield(.presentPlaceSearch(true))
-                continuation.finish()
 
             case .dismissPlaceSearch:
                 continuation.yield(.presentPlaceSearch(false))
-                continuation.finish()
 
             case .selectPlace(let place):
                 let target = MapCameraMoveCommand(
@@ -183,19 +181,15 @@ final class MapStore: Store {
                     reason: .userAction
                 )
                 continuation.yield(.setCameraMoveTarget(target))
-                continuation.finish()
 
             case .dismissAddMessage:
                 continuation.yield(.setShowAddMessage(false))
-                continuation.finish()
 
             case .updateMessages(let messages):
                 continuation.yield(.setMessages(messages))
-                continuation.finish()
 
             case .tapNoPlaceMarker(let messages):
                 continuation.yield(.setSelectedNoPlace(messages))
-                continuation.finish()
 
             case .tapPlaceMarker(let messages):
                 let items = self.groupMessagesByPlace(messages)
@@ -208,17 +202,15 @@ final class MapStore: Store {
 
             case .dismissTimelineView:
                 continuation.yield(.setSelectedNoPlace([]))
-                continuation.finish()
 
             case .tapNetworkRefresh:
                 let isConnected = networkMonitor.checkConnection()
                 continuation.yield(.setNetworkConnected(isConnected))
-                continuation.finish()
 
             case .setToast(let message):
                 continuation.yield(.setToastMessage(message))
-                continuation.finish()
             }
+            continuation.finish()
         }
     }
 

@@ -7,6 +7,11 @@
 
 import NMapsMap
 
+enum ClusterItemTag {
+    static let place = NSNumber(value: 1)
+    static let noPlace = NSNumber(value: 0)
+}
+
 // MARK: - ClusterItemKey
 
 final class ItemKey: NSObject, NMCClusteringKey {
