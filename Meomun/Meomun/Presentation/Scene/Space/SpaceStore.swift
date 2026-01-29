@@ -9,7 +9,6 @@ import Combine
 import Foundation
 
 final class SpaceStore: Store {
-
     enum Intent {
         case onAppear(placeID: PlaceID)
         case setToast(String?)

@@ -9,22 +9,12 @@ import RealityKit
 import SwiftUI
 
 struct SpaceView: View {
-
     @EnvironmentObject private var locationProvider: LocationProvider
     @StateObject private var store: SpaceStore
-
-    @State private var domeEnvironment: DomeEnvironment
-    @State private var rotationCamera: RotationCamera
-
-    @State private var spaceRootEntity: Entity?
-    @State private var messageBubbleTemplateEntity: Entity?
-
-    @State private var syncTask: Task<Void, Never>?
-    @State private var bubbleSynchronizer = SpaceMessageBubbleSynchronizer()
+    @State private var spaceController: SpaceController
 
     private let place: Place
     private let onNavigate: (Coordinate, Place) -> Void
-    private let spaceMaterialConfigurator = SpaceMaterialConfigurator()
 
     init(
         store: SpaceStore,
@@ -33,13 +23,9 @@ struct SpaceView: View {
         onNavigate: @escaping (Coordinate, Place) -> Void
     ) {
         _store = StateObject(wrappedValue: store)
-        _rotationCamera = State(
-            initialValue: RotationCamera(
-                position: .init(x: 0, y: 0.7, z: 0),    // 카메라 시작 위치 (돔 중심에서 약간 위)
-                rotateSensitivity: 0.003                // 회전 민감도 (값이 클수록 더 빠르게 회전)
-            )
+        _spaceController = State(
+            wrappedValue: SpaceController(domeEnvironment: domeEnvironment)
         )
-        _domeEnvironment = State(initialValue: domeEnvironment)
         self.place = place
         self.onNavigate = onNavigate
     }
@@ -49,23 +35,12 @@ struct SpaceView: View {
             RealityView { content in
                 // 가상 카메라 모드 설정 (AR이 아닌 3D 공간)
                 content.camera = .virtual
-                configureSpace(content: content)
+                spaceController.configureSpace(content: content)
             }
             .gesture(
                 DragGesture()
-                    .onChanged { value in
-                        AppLog.debug(
-                            "Drag changed: start=\(value.startLocation) loc=\(value.location) translation=\(value.translation)",
-                            category: .space
-                        )
-                        rotationCamera.handleDrag(
-                            translationX: Float(value.translation.width),
-                            translationY: Float(value.translation.height)
-                        )
-                    }
-                    .onEnded { _ in
-                        rotationCamera.endDrag()
-                    }
+                    .onChanged { spaceController.handleDrag($0.translation) }
+                    .onEnded { _ in spaceController.endDrag()}
             )
             .ignoresSafeArea()
 
@@ -88,75 +63,7 @@ struct SpaceView: View {
             await store.send(intent: .onAppear(placeID: place.id))
         }
         .onChange(of: store.state.messages.map(\.id)) {
-            let snapshot = store.state.messages
-            syncIfPossible(messages: snapshot)
-        }
-    }
-}
-
-// MARK: - Dome UI (배경 돔 로딩/표현)
-extension SpaceView {
-    private func configureSpace(content: RealityViewCameraContent) {
-        guard spaceRootEntity == nil else { return }
-
-        Task {
-            do {
-                // SpaceRoot 생성: 돔/버블 오브젝트를 한 곳에 묶는 컨테이너
-                let root = Entity()
-                root.name = "SpaceRoot"
-                content.add(root)
-
-                await MainActor.run {
-                    spaceRootEntity = root
-                }
-
-                // 돔 배경 로드
-                let domeEntity = try await Entity(named: "Dome.usdz")
-                domeEntity.name = "Dome"
-                root.addChild(domeEntity)
-                spaceMaterialConfigurator.configureDome(domeEntity: domeEntity, dayPart: .daybreak)
-                spaceMaterialConfigurator.configureGround(domeEntity: domeEntity, dayPart: .daybreak)
-
-                // 메시지 버블 로드
-                let messageEntity = try await Entity(named: "Message.usdz")
-                messageEntity.name = "MessageBubble"
-
-                await MainActor.run {
-                    messageBubbleTemplateEntity = messageEntity
-                    let snapshot = store.state.messages
-                    syncIfPossible(messages: snapshot)
-                }
-
-                // 카메라 추가
-                AppLog.debug("RotationCamera: will add to scene", category: .space)
-                rotationCamera.addToScene(content)
-                AppLog.debug("RotationCamera: did add to scene", category: .space)
-            } catch {
-                AppLog.error(
-                    "Failed to load dome entity",
-                    category: .space,
-                    error: error
-                )
-            }
-        }
-    }
-}
-
-// MARK: - Message Bubble UI (말풍선/텍스트 생성)
-extension SpaceView {
-    private func syncIfPossible(messages: [Message]) {
-        guard let root = spaceRootEntity else { return }
-        guard let template = messageBubbleTemplateEntity else { return }
-
-        syncTask?.cancel()
-
-        syncTask = Task { @MainActor in
-            guard !Task.isCancelled else { return }
-            bubbleSynchronizer.sync(
-                to: root,
-                messages: messages,
-                templateEntity: template
-            )
+            spaceController.sync(messages: store.state.messages)
         }
     }
 }
