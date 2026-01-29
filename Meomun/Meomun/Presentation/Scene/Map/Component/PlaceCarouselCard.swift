@@ -25,12 +25,16 @@ struct PlaceCarouselCard: View {
     }
 
     var body: some View {
-        VStack(alignment: .leading, spacing: Constants.verticalSpacing) {
-            nameText
+        HStack {
+            VStack(alignment: .leading, spacing: Constants.verticalSpacing) {
+                nameText
+                addressText
+                messageCountText
+            }
+            .frame(maxWidth: .infinity, alignment: .leading)
 
-            addressText
-
-            messageCountText
+            Image(systemName: "chevron.right")
+                .foregroundStyle(Color.meomunPrimaryColor.opacity(0.4))
         }
         .padding(Constants.padding)
         .frame(maxWidth: .infinity, alignment: .leading)
@@ -80,17 +84,30 @@ private extension PlaceCarouselCard {
 }
 
 #Preview {
-    PlaceCarouselCard(
-        item: PlaceCarouselDisplayModel(
-            place: Place(
-                id: PlaceID(value: "1"),
-                name: "스타벅스 양재점",
-                coordinate: Coordinate(latitude: 37.5, longitude: 127.0),
-                address: "서울시 서초구 양재대로 123"
-            ),
-            messageCount: 12
+    VStack {
+        PlaceCarouselCard(
+            item: PlaceCarouselDisplayModel(
+                place: Place(
+                    id: PlaceID(value: "1"),
+                    name: "스타벅스 양재점",
+                    coordinate: Coordinate(latitude: 37.5, longitude: 127.0),
+                    address: "서울시 서초구 양재대로 123"
+                ),
+                messageCount: 12
+            )
         )
-    )
+        PlaceCarouselCard(
+            item: PlaceCarouselDisplayModel(
+                place: Place(
+                    id: PlaceID(value: "1"),
+                    name: "이름이 길어요 두 줄 정도 된다면? 어떻게 나올까요 스타벅스 양재점",
+                    coordinate: Coordinate(latitude: 37.5, longitude: 127.0),
+                    address: "주소는 짧게 보여주지만 혹시나 두 줄이 된다면? 서울시 서초구 양재대로 123"
+                ),
+                messageCount: 12
+            )
+        )
+    }
     .padding()
     .background(Color.gray.opacity(0.2))
 }
