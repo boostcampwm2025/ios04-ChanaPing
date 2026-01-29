@@ -22,9 +22,6 @@ enum SpaceBubbleLayoutPolicy {
     static let textContainerWidth: Float = 0.55                 // 텍스트 최대 넓이
     static let textContainerHeight: Float = 0.18                // 텍스트 최대 높이
 
-    static let dateInsetInBubbleLocal: Float = 0.08
-    static let minContentDateClearance: Float = 0.02
-
     static let entityForwardPadding: Float = 0.01               // 텍스트보다 약간 앞(z+)으로
     static let recentThresholdSeconds: TimeInterval = 20 * 60
 
