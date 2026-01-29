@@ -350,7 +350,6 @@ extension MapViewController: NMFMapViewCameraDelegate {
         let snapshot = currentSnapshot(from: mapView)
 
         onCameraChangedByLocation?(coordinate, domainBounds, snapshot)
-        messageMarkerManager.updateClusterModeIfNeeded(zoomLevel: mapView.zoomLevel)
     }
 
     private func makeBoundingBox(from mapView: NMFMapView) -> BoundingBox {
