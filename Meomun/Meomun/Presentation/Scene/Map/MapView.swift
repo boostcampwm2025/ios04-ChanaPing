@@ -20,7 +20,7 @@ struct MapView: View {
 
     @State private var navigationPath = NavigationPath()
 
-    @StateObject private var store: MapStore
+    @ObservedObject private var store: MapStore
     @EnvironmentObject private var locationProvider: LocationProvider
 
     private let messageMarkerManager: MessageMarkerManager
@@ -31,7 +31,7 @@ struct MapView: View {
         userLocation: Coordinate,
         messageMarkerManager: MessageMarkerManager,
     ) {
-        _store = StateObject(wrappedValue: store)
+        self.store = store
         self.messageMarkerManager = messageMarkerManager
         self.initialUserLocation = userLocation
     }

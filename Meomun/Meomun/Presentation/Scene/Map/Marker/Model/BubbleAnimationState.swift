@@ -69,4 +69,34 @@ struct BubbleAnimationState {
         animationStartTime = currentTime
         animationProgress = 0.0
     }
+
+    /// 메시지 동기화
+    mutating func syncMessagesKeepingIndex(currentTime: TimeInterval = Date().timeIntervalSince1970) {
+        let count = messagesProvider().count
+
+        // 메시지 없음 -> 상태 리셋
+        guard count > 0 else {
+            currentIndex = 0
+            isAnimating = false
+            animationProgress = 0.0
+            animationStartTime = nil
+            lastRotationTime = currentTime
+            return
+        }
+
+        // 인덱스 범위 보정 (기존 인덱스 최대한 유지)
+        if currentIndex >= count {
+            currentIndex = count - 1
+        } else if currentIndex < 0 {
+            currentIndex = 0
+        }
+
+        // 메시지가 1개면 애니메이션 불필요 -> 상태 정리
+        if count == 1 {
+            isAnimating = false
+            animationProgress = 0.0
+            animationStartTime = nil
+            lastRotationTime = currentTime
+        }
+    }
 }
