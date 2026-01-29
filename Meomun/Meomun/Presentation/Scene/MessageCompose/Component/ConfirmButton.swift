@@ -18,7 +18,7 @@ struct ConfirmButton: View {
                 .frame(width: 44, height: 44)
                 .background(
                     Circle()
-                        .fill(Color.meomunPoint)
+                        .fill(Color.mmPoint)
                 )
                 .shadow(color: .black.opacity(0.15), radius: 6, y: 4)
         }

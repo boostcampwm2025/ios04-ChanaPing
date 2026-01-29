@@ -75,7 +75,7 @@ extension PlaceSearchOverlayView {
         ZStack {
             Text(title)
                 .font(.headline.weight(.semibold))
-                .foregroundStyle(Color.meomunPrimary)
+                .foregroundStyle(Color.mmPrimary)
 
             HStack {
                 Spacer()
@@ -85,7 +85,7 @@ extension PlaceSearchOverlayView {
                 } label: {
                     Image(systemName: "xmark")
                         .font(.system(size: 14, weight: .semibold))
-                        .foregroundStyle(Color.meomunSecondary)
+                        .foregroundStyle(Color.mmSecondary)
                         .padding(10)
                         .contentShape(Rectangle())
                 }
@@ -103,7 +103,7 @@ extension PlaceSearchOverlayView {
             ))
                 .focused($isFocused)
                 .font(.system(size: 16, weight: .medium))
-                .foregroundStyle(Color.meomunPrimary)
+                .foregroundStyle(Color.mmPrimary)
                 .submitLabel(.search)
                 .onSubmit {
                     Task { await store.send(intent: .submit) }
@@ -161,7 +161,7 @@ extension PlaceSearchOverlayView {
                                         Task { await store.send(intent: .scrollReachedBottom) }
                                     }
                                 }
-                                .foregroundStyle(Color.meomunPrimary)
+                                .foregroundStyle(Color.mmPrimary)
                                 .padding(.vertical, 5)
                                 .padding(.horizontal, 12)
                                 .background(Color.white.opacity(0.08))
@@ -179,7 +179,7 @@ extension PlaceSearchOverlayView {
     func emptyView(text: String) -> some View {
         Text(text)
             .font(.system(size: 15, weight: .medium))
-            .foregroundStyle(Color.meomunSecondary)
+            .foregroundStyle(Color.mmSecondary)
             .frame(maxWidth: .infinity, alignment: .center)
             .padding(.vertical, 24)
     }

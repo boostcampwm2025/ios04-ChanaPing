@@ -32,10 +32,10 @@ struct MessageTextEditor: View {
         ZStack(alignment: .bottom) {
             // Background
             RoundedRectangle(cornerRadius: 12, style: .continuous)
-                .fill(Color.meomunMessageBackground.opacity(0.8))
+                .fill(Color.mmMessageBackground.opacity(0.8))
                 .overlay(
                     RoundedRectangle(cornerRadius: 12, style: .continuous)
-                        .strokeBorder(Color.meomunPrimary.opacity(0.15), lineWidth: 0.5)
+                        .strokeBorder(Color.mmPrimary.opacity(0.15), lineWidth: 0.5)
                 )
                 .shadow(color: .black.opacity(0.05), radius: 2)
                 .shadow(color: .black.opacity(0.05), radius: 0, x: 1, y: 1)
@@ -46,7 +46,7 @@ struct MessageTextEditor: View {
                     TextEditor(text: $localText)
                         .focused($isFocused)
                         .font(.body.bold())
-                        .foregroundStyle(Color.meomunPrimary.opacity(0.8))
+                        .foregroundStyle(Color.mmPrimary.opacity(0.8))
                         .padding(.horizontal, 18)
                         .padding(.top, 18)
                         .padding(.bottom, 22)
@@ -79,7 +79,7 @@ struct MessageTextEditor: View {
                     if text.isEmpty {
                         Text(placeholder)
                             .font(.body.bold())
-                            .foregroundStyle(Color.meomunPrimary.opacity(0.3))
+                            .foregroundStyle(Color.mmPrimary.opacity(0.3))
                             .padding(.horizontal, 24)
                             .padding(.top, 26)
                             .allowsHitTesting(false)
@@ -90,10 +90,10 @@ struct MessageTextEditor: View {
                     // Counter pill
                     Text("\(text.count) / \(maxCount)")
                         .font(.footnote.bold())
-                        .foregroundStyle(Color.meomunSecondary)
+                        .foregroundStyle(Color.mmSecondary)
                         .padding(.horizontal, 12)
                         .padding(.vertical, 6)
-                        .background(Color.meomunPrimary.opacity(0.05), in: Capsule())
+                        .background(Color.mmPrimary.opacity(0.05), in: Capsule())
 
                     Spacer()
 
@@ -103,7 +103,7 @@ struct MessageTextEditor: View {
                         Image(systemName: "xmark.circle")
                             .resizable()
                             .frame(width: 24, height: 24)
-                            .foregroundStyle(Color.meomunSecondary)
+                            .foregroundStyle(Color.mmSecondary)
                     }
                 }
                 .padding(.horizontal, 12)

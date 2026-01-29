@@ -90,7 +90,7 @@ private extension PathRecordOverlayView {
                 Button(action: onDismiss) {
                     Image(systemName: "xmark")
                         .font(.system(size: 14, weight: .semibold))
-                        .foregroundStyle(Color.meomunSecondary)
+                        .foregroundStyle(Color.mmSecondary)
                         .contentShape(Rectangle())
                 }
                 .padding(.horizontal, 16)

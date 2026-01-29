@@ -53,8 +53,8 @@ private extension PlaceCarousel {
                 Circle()
                     .fill(
                         index == currentIndex
-                            ? Color.meomunPoint
-                            : Color.meomunPrimary.opacity(0.2)
+                            ? Color.mmPoint
+                            : Color.mmPrimary.opacity(0.2)
                     )
                     .frame(width: Constants.pageIndicatorSize, height: Constants.pageIndicatorSize)
             }
