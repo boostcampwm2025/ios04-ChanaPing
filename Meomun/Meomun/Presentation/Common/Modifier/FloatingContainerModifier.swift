@@ -8,6 +8,14 @@
 import SwiftUI
 
 struct FloatingContainerModifier: ViewModifier {
+    private let color: Color
+    private let opacity: CGFloat
+
+    init(color: Color, opacity: CGFloat) {
+        self.color = color
+        self.opacity = opacity
+    }
+
     func body(content: Content) -> some View {
         content
             .frame(minHeight: 25)  // FloatingTabItem 내용물 기준 최소 높이
@@ -20,7 +28,7 @@ struct FloatingContainerModifier: ViewModifier {
                     bottomLeft: 10,
                     bottomRight: 10
                 )
-                .fill(Color.mmFloatingBackground)
+                .fill(color.opacity(opacity))
                 .shadow(
                     color: .black.opacity(0.12),
                     radius: 18,
@@ -34,7 +42,10 @@ struct FloatingContainerModifier: ViewModifier {
 }
 
 extension View {
-    func floatingContainer() -> some View {
-        modifier(FloatingContainerModifier())
+    func floatingContainer(
+        color: Color = Color.mmFloatingBackground,
+        opacity: CGFloat = 0.85
+    ) -> some View {
+        modifier(FloatingContainerModifier(color: color, opacity: opacity))
     }
 }
