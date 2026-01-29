@@ -75,6 +75,9 @@ struct SpaceView: View {
                 fetchPlaceMessagesUseCase: FetchPlaceMessagesUseCaseImpl(
                     messageRepository: MessageRepositoryImpl()
                 ),
+                deleteMessagesUseCase: DeleteMessagesUseCaseImpl(
+                    messageRepository: MessageRepositoryImpl()
+                ),
                 place: .init(
                     id: .init(value: .init()),
                     name: "광화문",

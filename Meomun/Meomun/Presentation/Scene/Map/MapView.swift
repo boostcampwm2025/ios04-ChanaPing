@@ -209,6 +209,9 @@ private extension MapView {
                 fetchPlaceMessagesUseCase: FetchPlaceMessagesUseCaseImpl(
                     messageRepository: MessageRepositoryImpl()
                 ),
+                deleteMessagesUseCase: DeleteMessagesUseCaseImpl(
+                    messageRepository: MessageRepositoryImpl()
+                ),
                 place: place
             ),
             domeEnvironment: .init(dayPart: .afternoon),
