@@ -29,7 +29,7 @@ extension PlaceDTO {
             id: PlaceID(value: placeId),
             name: name,
             coordinate: Coordinate(latitude: latitude, longitude: longitude),
-            address: ""
+            address: address
         )
     }
 
