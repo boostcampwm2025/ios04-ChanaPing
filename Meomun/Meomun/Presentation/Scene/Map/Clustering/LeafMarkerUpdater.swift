@@ -9,14 +9,14 @@ import NMapsMap
 import UIKit
 
 final class LeafMarkerUpdater: NMCDefaultLeafMarkerUpdater {
-    private let diameter: CGFloat = 28 // 전체 크기
-    private let iconDiameter: CGFloat = 18 // 내부 아이콘 크기
+    private let diameter: CGFloat = 35 // 전체 크기
+    private let iconDiameter: CGFloat = 25 // 내부 아이콘 크기
 
     private lazy var cachedIcon: NMFOverlayImage = {
         let image = Self.renderIconWithBackground(
             diameter: diameter,
             backgroundColor: .white.withAlphaComponent(0.9),
-            icon: UIImage.spaceIcon,
+            icon: UIImage.spaceIconBold,
             iconDiameter: iconDiameter
         )
 
@@ -51,7 +51,8 @@ final class LeafMarkerUpdater: NMCDefaultLeafMarkerUpdater {
         diameter: CGFloat,
         backgroundColor: UIColor,
         icon: UIImage,
-        iconDiameter: CGFloat
+        iconDiameter: CGFloat,
+        backgroundYOffset: CGFloat = 2
     ) -> UIImage {
         let size = CGSize(width: diameter, height: diameter)
         let renderer = UIGraphicsImageRenderer(size: size)
@@ -67,10 +68,15 @@ final class LeafMarkerUpdater: NMCDefaultLeafMarkerUpdater {
             // 중앙 아이콘
             let iconRect = CGRect(
                 x: (diameter - iconDiameter) / 2,
-                y: (diameter - iconDiameter) / 2,
+                y: (diameter - iconDiameter) / 2 - backgroundYOffset,
                 width: iconDiameter,
                 height: iconDiameter
             )
+
+            let ringPath = UIBezierPath(ovalIn: rect.insetBy(dx: 1, dy: 1))
+            UIColor.tabActive.withAlphaComponent(0.8).setStroke()
+            ringPath.lineWidth = 1.3
+            ringPath.stroke()
 
             icon.draw(in: iconRect)
         }
