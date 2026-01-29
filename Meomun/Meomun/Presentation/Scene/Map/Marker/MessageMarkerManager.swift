@@ -95,7 +95,7 @@ final class MessageMarkerManager {
 
     /// 외부 바인딩(카메라 이벤트에서 모드 전환용)
     private weak var boundMapView: NMFMapView?
-    private var boundOnTapPlace: ((Place) -> Void)?
+    private var boundOnTapPlace: (([Message]) -> Void)?
     private var boundOnTapNoPlace: (([Message]) -> Void)?
 
     // MARK: - Dependencies
@@ -142,12 +142,12 @@ extension MessageMarkerManager {
     /// Place 메시지를 먼저 저장한 후 NoPlace 메시지를 저장하여 좌표 겹침 시 오프셋을 적용합니다.
     ///
     /// - Parameters:
-    ///   - onTapPlace: Place 마커 탭 시 콜백 (장소 정보 전달)
+    ///   - onTapPlace: Place 마커 탭 시 콜백 (해당 좌표의 모든 메시지 전달)
     ///   - onTapNoPlace: NoPlace 마커 탭 시 콜백 (메시지 배열 전달)
     func loadMessages(
         _ messages: [Message],
         mapView: NMFMapView,
-        onTapPlace: ((Place) -> Void)?,
+        onTapPlace: (([Message]) -> Void)?,
         onTapNoPlace: (([Message]) -> Void)?
     ) {
         // 바인딩 저장
@@ -185,7 +185,7 @@ extension MessageMarkerManager {
     private func applySnapshot(
         _ messages: [Message],
         mapView: NMFMapView,
-        onTapPlace: ((Place) -> Void)?,
+        onTapPlace: (([Message]) -> Void)?,
         onTapNoPlace: (([Message]) -> Void)?
     ) {
         // 0) 이전 상태 기반 좌표 집합(Place + NoPlace)
@@ -433,7 +433,7 @@ extension MessageMarkerManager {
     /// 각 좌표에 대해 마커를 생성합니다.
     private func rebuildAllMarkers(
         mapView: NMFMapView,
-        onTapPlace: ((Place) -> Void)?,
+        onTapPlace: (([Message]) -> Void)?,
         onTapNoPlace: (([Message]) -> Void)?
     ) {
         // Place와 NoPlace 좌표를 합집합으로 구함
@@ -452,7 +452,7 @@ extension MessageMarkerManager {
     private func updateMarkersForCoordinate(
         _ coord: Coordinate,
         mapView: NMFMapView,
-        onTapPlace: ((Place) -> Void)?,
+        onTapPlace: (([Message]) -> Void)?,
         onTapNoPlace: (([Message]) -> Void)?
     ) {
         // Place가 없고, 기존 place 마커도 없다면 스킵
@@ -461,12 +461,10 @@ extension MessageMarkerManager {
             // 아무 동작 X
         } else {
             updateMarker(coord: coord, isPlace: true, mapView: mapView) { messages in
-                guard let place = messages.first?.placeTag else { return }
-
-                let uniquePlaces = Set(messages.compactMap(\.placeTag))
-                if uniquePlaces.count == 1 {
-                    onTapPlace?(place)
-                }
+                // Place가 있는 메시지만 필터링하여 전달
+                let placeMessages = messages.filter { $0.placeTag != nil }
+                guard !placeMessages.isEmpty else { return }
+                onTapPlace?(placeMessages)
             }
         }
 
