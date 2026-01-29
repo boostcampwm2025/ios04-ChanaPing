@@ -156,7 +156,7 @@ extension SpaceView {
                     .frame(maxWidth: .infinity)
             }
         }
-        .floatingContainer()
+        .floatingContainer(color: Color.mmBackground, opacity: 0.8)
     }
 }
 
