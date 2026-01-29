@@ -20,7 +20,7 @@ struct FloatingContainerModifier: ViewModifier {
                     bottomLeft: 10,
                     bottomRight: 10
                 )
-                .fill(.white.opacity(0.85))
+                .fill(Color.meomunFloatingBackground)
                 .shadow(
                     color: .black.opacity(0.12),
                     radius: 18,

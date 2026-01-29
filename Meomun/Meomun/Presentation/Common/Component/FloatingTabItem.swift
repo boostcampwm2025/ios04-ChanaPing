@@ -16,11 +16,11 @@ struct FloatingTabItem: View {
         Button(action: action) {
             VStack(spacing: 4) {
                 Image(systemName: systemImageName)
-                    .foregroundStyle(isSelected ? Color("TabActive") : Color("TabInactive"))
+                    .foregroundStyle(isSelected ? Color(.tabActive) : Color(.tabInactive))
 
                 Circle()
                     .frame(width: 5, height: 5)
-                    .foregroundStyle(isSelected ? Color("TabActive") : .clear)
+                    .foregroundStyle(isSelected ? Color(.tabActive) : .clear)
             }
             .frame(maxWidth: .infinity)
         }
