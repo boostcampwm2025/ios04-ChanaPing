@@ -27,12 +27,11 @@ final class MapViewController: UIViewController {
 
     private let onTapPlace: ((Place) -> Void)?
     private let onTapNoPlace: (([Message]) -> Void)?
-    private let onCameraIdle: ((Coordinate, BoundingBox) -> Void)?
-    private let onCameraChangedByLocation: ((Coordinate, BoundingBox) -> Void)?
+    private let onCameraIdle: ((Coordinate, BoundingBox, MapCameraSnapshot) -> Void)?
+    private let onCameraChangedByLocation: ((Coordinate, BoundingBox, MapCameraSnapshot) -> Void)?
 
     // MARK: - Dependencies
 
-    private var locationManager = CLLocationManager()
     private let messageMarkerManager: MessageMarkerManager
 
     // MARK: - Init
@@ -41,8 +40,8 @@ final class MapViewController: UIViewController {
         messageMarkerManager: MessageMarkerManager,
         onTapPlace: ((Place) -> Void)? = nil,
         onTapNoPlace: (([Message]) -> Void)? = nil,
-        onCameraIdle: ((Coordinate, BoundingBox) -> Void)? = nil,
-        onCameraChangedByLocation: ((Coordinate, BoundingBox) -> Void)? = nil
+        onCameraIdle: ((Coordinate, BoundingBox, MapCameraSnapshot) -> Void)? = nil,
+        onCameraChangedByLocation: ((Coordinate, BoundingBox, MapCameraSnapshot) -> Void)? = nil
     ) {
         self.messageMarkerManager = messageMarkerManager
         self.onTapPlace = onTapPlace
@@ -206,25 +205,41 @@ extension MapViewController {
 // MARK: - Camera Moving
 
 extension MapViewController {
-    func moveCamera(to coordinate: Coordinate, zoom: Double? = nil) {
-        let latLng = NMGLatLng(lat: coordinate.latitude, lng: coordinate.longitude)
-        let update = NMFCameraUpdate(scrollTo: latLng)
+    func moveCamera(to snapshot: MapCameraSnapshot, animated: Bool) {
+        naverMapView.mapView.positionMode = .disabled
 
-        update.animation = .easeIn
-        update.animationDuration = 0.35
-
-        guard let zoom else {
-            naverMapView.mapView.moveCamera(update)
-            return
-        }
+        let latLng = NMGLatLng(lat: snapshot.coordinate.latitude, lng: snapshot.coordinate.longitude)
 
         let position = NMFCameraPosition(
             latLng,
-            zoom: zoom,
-            tilt: 45,
-            heading: 0
+            zoom: snapshot.zoom,
+            tilt: snapshot.tilt,
+            heading: snapshot.heading
         )
-        naverMapView.mapView.moveCamera(NMFCameraUpdate(position: position))
+
+        let update = NMFCameraUpdate(position: position)
+
+        if animated {
+            update.animation = .easeIn
+            update.animationDuration = 0.35
+        } else {
+            update.animation = .none
+        }
+
+        naverMapView.mapView.moveCamera(update)
+    }
+
+    private func currentSnapshot(from mapView: NMFMapView) -> MapCameraSnapshot {
+        let position = mapView.cameraPosition
+        return MapCameraSnapshot(
+            coordinate: .init(
+                latitude: position.target.lat,
+                longitude: position.target.lng
+            ),
+            zoom: position.zoom,
+            tilt: position.tilt,
+            heading: position.heading
+        )
     }
 }
 
@@ -275,8 +290,9 @@ extension MapViewController: NMFMapViewCameraDelegate {
         let center = mapView.cameraPosition.target
         let coordinate = Coordinate(latitude: center.lat, longitude: center.lng)
         let domainBounds = makeBoundingBox(from: mapView)
+        let snapshot = currentSnapshot(from: mapView)
 
-        onCameraIdle?(coordinate, domainBounds)
+        onCameraIdle?(coordinate, domainBounds, snapshot)
         messageMarkerManager.updateClusterModeIfNeeded(zoomLevel: mapView.zoomLevel)
     }
 
@@ -292,8 +308,9 @@ extension MapViewController: NMFMapViewCameraDelegate {
         let center = mapView.cameraPosition.target
         let coordinate = Coordinate(latitude: center.lat, longitude: center.lng)
         let domainBounds = makeBoundingBox(from: mapView)
+        let snapshot = currentSnapshot(from: mapView)
 
-        onCameraChangedByLocation?(coordinate, domainBounds)
+        onCameraChangedByLocation?(coordinate, domainBounds, snapshot)
         messageMarkerManager.updateClusterModeIfNeeded(zoomLevel: mapView.zoomLevel)
     }
 
@@ -313,12 +330,12 @@ extension MapViewController: NMFMapViewCameraDelegate {
 struct MapViewWrapper: UIViewControllerRepresentable {
     private let messages: [Message]
     private let userLocation: Coordinate?
-    private let cameraMoveTarget: Coordinate?
+    private let cameraMoveTarget: MapCameraMoveCommand?
     private let onCameraMoveConsumed: () -> Void
     private let onTapPlace: ((Place) -> Void)?
     private let onTapNoPlace: (([Message]) -> Void)?
-    private let onCameraIdle: ((Coordinate, BoundingBox) -> Void)?
-    private let onCameraChangedByLocation: ((Coordinate, BoundingBox) -> Void)?
+    private let onCameraIdle: ((Coordinate, BoundingBox, MapCameraSnapshot) -> Void)?
+    private let onCameraChangedByLocation: ((Coordinate, BoundingBox, MapCameraSnapshot) -> Void)?
 
     private let messageMarkerManager: MessageMarkerManager
 
@@ -326,12 +343,12 @@ struct MapViewWrapper: UIViewControllerRepresentable {
         userLocation: Coordinate?,
         markerManager: MessageMarkerManager,
         messages: [Message],
-        cameraMoveTarget: Coordinate?,
+        cameraMoveTarget: MapCameraMoveCommand?,
         onCameraMoveConsumed: @escaping () -> Void,
         onTapPlace: ((Place) -> Void)? = nil,
         onTapNoPlace: (([Message]) -> Void)? = nil,
-        onCameraIdle: ((Coordinate, BoundingBox) -> Void)? = nil,
-        onCameraChangedByLocation: ((Coordinate, BoundingBox) -> Void)? = nil
+        onCameraIdle: ((Coordinate, BoundingBox, MapCameraSnapshot) -> Void)? = nil,
+        onCameraChangedByLocation: ((Coordinate, BoundingBox, MapCameraSnapshot) -> Void)? = nil
     ) {
         self.userLocation = userLocation
         self.messageMarkerManager = markerManager
@@ -350,7 +367,7 @@ struct MapViewWrapper: UIViewControllerRepresentable {
 
     final class Coordinator {
         var lastMessagesSnapshot: Int?
-        var lastCameraMoveTarget: Coordinate?
+        var lastCameraMoveTarget: MapCameraMoveCommand?
         var didInitialLoad = false
     }
 
@@ -374,20 +391,16 @@ struct MapViewWrapper: UIViewControllerRepresentable {
     }
 
     func updateUIViewController(_ uiViewController: MapViewController, context: Context) {
-        if let target = cameraMoveTarget {
+        if let target = cameraMoveTarget, context.coordinator.lastCameraMoveTarget != target {
             // 동일 target인 경우 호출 X
-            if context.coordinator.lastCameraMoveTarget?.latitude != target.latitude ||
-                context.coordinator.lastCameraMoveTarget?.longitude != target.longitude {
+            context.coordinator.lastCameraMoveTarget = target
+            uiViewController.moveCamera(
+                to: target.snapshot,
+                animated: target.reason == .userAction
+            )
 
-                context.coordinator.lastCameraMoveTarget = target
-                uiViewController.moveCamera(
-                    to: target,
-                    zoom: 17
-                )
-
-                DispatchQueue.main.async {
-                    onCameraMoveConsumed()
-                }
+            DispatchQueue.main.async {
+                onCameraMoveConsumed()
             }
         }
 
