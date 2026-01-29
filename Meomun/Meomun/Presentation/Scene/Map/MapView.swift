@@ -65,7 +65,7 @@ struct MapView: View {
                             navigationPath.append(MapDestination.space(place: place))
                         }
                     )
-                    .padding(.bottom, 100)
+                    .padding(.bottom, 90)
                 }
             }
             .overlay {

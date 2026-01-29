@@ -35,11 +35,11 @@ struct PlaceCarousel: View {
 
     var body: some View {
         VStack(spacing: Constants.verticalSpacing) {
+            carouselContent
+
             if items.count > 1 {
                 pageIndicator
             }
-
-            carouselContent
         }
     }
 }
