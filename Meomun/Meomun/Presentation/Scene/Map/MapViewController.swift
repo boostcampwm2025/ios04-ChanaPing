@@ -206,31 +206,19 @@ extension MapViewController {
     func updateUserLocation(_ coordinate: Coordinate?) {
         guard let coordinate else { return }
 
-        AppLog.debug(
-            "updateUserLocation() follow ON -> \(coordinate.latitude), \(coordinate.longitude)",
-            category: .location
-        )
-
         let latLng = NMGLatLng(lat: coordinate.latitude, lng: coordinate.longitude)
 
         let overlay = naverMapView.mapView.locationOverlay
         overlay.hidden = false
         overlay.location = latLng
 
-        naverMapView.mapView.positionMode = .direction
-
-        let cameraUpdate = NMFCameraUpdate(scrollTo: latLng)
-        cameraUpdate.animation = .easeIn
-        naverMapView.mapView.moveCamera(cameraUpdate)
+        if naverMapView.mapView.positionMode != .direction {
+            naverMapView.mapView.positionMode = .direction
+        }
     }
 
     func updateUserLocationOverlayOnly(_ coordinate: Coordinate?) {
         guard let coordinate else { return }
-
-        AppLog.debug(
-            "updateUserLocationOverlayOnly() follow OFF -> \(coordinate.latitude), \(coordinate.longitude)",
-            category: .location
-        )
 
         let latLng = NMGLatLng(lat: coordinate.latitude, lng: coordinate.longitude)
 
@@ -335,14 +323,8 @@ extension MapViewController: NMFMapViewCameraDelegate {
     }
 
     func mapView(_ mapView: NMFMapView, cameraDidChangeByReason reason: Int, animated: Bool) {
-        AppLog.debug(
-            "cameraDidChangeByReason: reason=\(reason), animated=\(animated), positionMode=\(naverMapView.mapView.positionMode.rawValue)",
-            category: .location
-        )
-
         // 유저가 직접 지도 건드릴 시 추적 해제 (파란 점은 보이도록)
         if reason == NMFMapChangedByGesture {
-            AppLog.info("> Gesture detected -> following OFF", category: .location)
             naverMapView.mapView.positionMode = .normal
             onUserGesture?()
             return
@@ -357,7 +339,6 @@ extension MapViewController: NMFMapViewCameraDelegate {
         guard isLocationModeOn else { return }
 
         if !isFollowingUser && isLocationModeOn {
-            AppLog.info("> Location button inferred -> following ON requested", category: .location)
             onFollowRequested?()
             return
         }

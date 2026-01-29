@@ -45,14 +45,9 @@ private struct MarkerRenderSignature: Hashable {
 /// renderTasks: [마커키: 렌더링 Task] (누적 방지, 최신만 반영)
 /// fadeTasks:   [마커키: 페이드 Task] (페이드 애니메이션 중복 방지)
 /// hasFadedIn:  Set<마커키> (마커별 최초 1회 페이드 적용 여부)
+/// lastRenderedSignature: [마커키: 렌더 시그니처 캐시]
 /// ```
-///
-/// ## 사용 흐름
-/// ```
-/// 1. loadMessages() -> applySnapshot()으로 스토어 재구성 + diff 기반 마커 갱신
-/// 2. handleEvent() -> 실시간 이벤트 처리 (해당 좌표의 마커/상태 갱신 + 필요 시 아이콘 재렌더)
-/// 3. updateAnimations() -> 애니메이션 대상 마커는 매 프레임 iconImage 갱신 (60fps)
-/// ```
+
 @MainActor
 final class MessageMarkerManager {
 
@@ -95,8 +90,6 @@ final class MessageMarkerManager {
 
     /// 외부 바인딩(카메라 이벤트에서 모드 전환용)
     private weak var boundMapView: NMFMapView?
-    private var boundOnTapPlace: (([Message]) -> Void)?
-    private var boundOnTapNoPlace: (([Message]) -> Void)?
 
     // MARK: - Dependencies
 
@@ -120,7 +113,7 @@ extension MessageMarkerManager {
     /// 네이버맵 마커 객체를 생성합니다.
     ///  - 기본 핀 깜빡임 방지를 위해 투명 placeholder icon을 먼저 세팅하고,
     ///  - 최초 1회는 렌더링 완료 후 페이드 인, 이후 갱신은 alpha = 1 유지한 채 iconImage만 교체
-    private func makeMarker(at position: NMGLatLng, mapView: NMFMapView) -> NMFMarker {
+    private func makeMarker(at position: NMGLatLng) -> NMFMarker {
         let marker = NMFMarker(position: position)
         marker.anchor = CGPoint(x: 0.5, y: 1.0)   // 마커 하단 중앙이 좌표 위치
         marker.zIndex = 1000                      // 다른 오버레이보다 위에 표시
@@ -129,8 +122,21 @@ extension MessageMarkerManager {
         marker.iconImage = MarkerPlaceholder.overlayImage
         marker.alpha = 0.0
 
-        marker.mapView = mapView                  // 지도에 마커 표시
         return marker
+    }
+
+    /// 클러스터 모드 규칙을 담아 마커를 맵에 붙이거나/떼는 역할을 담당합니다.
+    private func attachMarker(_ marker: NMFMarker, to mapView: NMFMapView) {
+        // 클러스터 모드면 붙이지 않음
+        guard !isClusterMode else {
+            marker.mapView = nil
+            return
+        }
+        marker.mapView = mapView
+    }
+
+    private func detachMarker(_ marker: NMFMarker) {
+        marker.mapView = nil
     }
 }
 
@@ -152,8 +158,6 @@ extension MessageMarkerManager {
     ) {
         // 바인딩 저장
         boundMapView = mapView
-        boundOnTapPlace = onTapPlace
-        boundOnTapNoPlace = onTapNoPlace
 
         // 클러스터러 준비
         setupClustererIfNeeded(mapView: mapView)
@@ -164,6 +168,8 @@ extension MessageMarkerManager {
             onTapPlace: onTapPlace,
             onTapNoPlace: onTapNoPlace
         )
+
+        updateClusterModeIfNeeded(zoomLevel: mapView.zoomLevel)
     }
 
     func updateClusterModeIfNeeded(zoomLevel: Double) {
@@ -180,6 +186,27 @@ extension MessageMarkerManager {
     }
 }
 
+// MARK: - MarkerGroupKey
+private extension MessageMarkerManager {
+    func makeAllGroupKeys(
+        placeStore: [Coordinate: [Message]],
+        noPlaceStore: [Coordinate: [Message]]
+    ) -> Set<MarkerGroupKey> {
+        var keys = Set<MarkerGroupKey>()
+        keys.reserveCapacity(placeStore.count + noPlaceStore.count)
+
+        for coord in placeStore.keys where placeStore[coord]?.isEmpty == false {
+            keys.insert(MarkerGroupKey(coordinate: coord, isPlace: true))
+        }
+
+        for coord in noPlaceStore.keys where noPlaceStore[coord]?.isEmpty == false {
+            keys.insert(MarkerGroupKey(coordinate: coord, isPlace: false))
+        }
+
+        return keys
+    }
+}
+
 // MARK: - Diff
 extension MessageMarkerManager {
     private func applySnapshot(
@@ -188,8 +215,11 @@ extension MessageMarkerManager {
         onTapPlace: (([Message]) -> Void)?,
         onTapNoPlace: (([Message]) -> Void)?
     ) {
-        // 0) 이전 상태 기반 좌표 집합(Place + NoPlace)
-        let oldTotalCoordinates = Set(placeMessagesByCoord.keys).union(Set(noPlaceMessagesByCoord.keys))
+        // 0) 기존 store 기반 oldKeys
+        let oldKeys = makeAllGroupKeys(
+            placeStore: placeMessagesByCoord,
+            noPlaceStore: noPlaceMessagesByCoord
+        )
 
         // 1) 새 스토어를 로컬에서 구성
         // - Place 먼저 저장 -> NoPlace 저장(Place 겹치면 offset 적용)
@@ -217,31 +247,37 @@ extension MessageMarkerManager {
             newNoPlace[displayCoordinate, default: []].append(message)
         }
 
-        let newTotalCoordinates = Set(newPlace.keys).union(Set(newNoPlace.keys))
+        // 2) newKeys
+        let newKeys = makeAllGroupKeys(placeStore: newPlace, noPlaceStore: newNoPlace)
 
-        // 2) diff 계산
-        let removed = oldTotalCoordinates.subtracting(newTotalCoordinates)
-        let added = newTotalCoordinates.subtracting(oldTotalCoordinates)
-        let common = oldTotalCoordinates.intersection(newTotalCoordinates)
+        // 3) diff 계산
+        let removed = oldKeys.subtracting(newKeys)
+        let added = newKeys.subtracting(oldKeys)
+        let common = oldKeys.intersection(newKeys)
 
-        // 3) common 중 메시지 id 집합이 바뀐 coordinate만 추출
-        // (바뀐 coordinate만 updateMarkersForCoordinate 호출)
-        var changed: [Coordinate] = []
+        // 4) changed 판단
+        var changed = Set<MarkerGroupKey>()
         changed.reserveCapacity(common.count)
 
-        for coordinate in common {
-            let oldIDs = Set((placeMessagesByCoord[coordinate] ?? []).map { $0.id })
-                .union(Set((noPlaceMessagesByCoord[coordinate] ?? []).map { $0.id }))
+        for key in common {
+            let oldHash = idsHashForKey(
+                key,
+                placeStore: placeMessagesByCoord,
+                noPlaceStore: noPlaceMessagesByCoord
+            )
 
-            let newIDs = Set((newPlace[coordinate] ?? []).map { $0.id })
-                .union(Set((newNoPlace[coordinate] ?? []).map { $0.id }))
+            let newHash = idsHashForKey(
+                key,
+                placeStore: newPlace,
+                noPlaceStore: newNoPlace
+            )
 
-            if oldIDs != newIDs {
-                changed.append(coordinate)
+            if oldHash != newHash {
+                changed.insert(key)
             }
         }
 
-        // 4) 데이터 저장소 최신화 (updateMarkersForCoordinate가 새 데이터를 보도록)
+        // 5) 데이터 저장소 최신화
         placeMessagesByCoord = newPlace
         noPlaceMessagesByCoord = newNoPlace
 
@@ -249,16 +285,15 @@ extension MessageMarkerManager {
             syncClusterItemsIfNeeded()
         }
 
-        // 5) 지도에서 사라질 좌표의 마커 제거
-        for coordinate in removed {
-            removeMarker(for: MarkerGroupKey(coordinate: coordinate, isPlace: true))
-            removeMarker(for: MarkerGroupKey(coordinate: coordinate, isPlace: false))
+        // 6) 지도에서 사라질 마커 제거
+        for key in removed {
+            removeMarker(for: key)
         }
 
-        // 6) added + changed 업데이트
-        for coordinate in added.union(Set(changed)) {
-            updateMarkersForCoordinate(
-                coordinate,
+        // 7) added + changed 업데이트
+        for key in added.union(changed) {
+            updateMarkersForKey(
+                key,
                 mapView: mapView,
                 onTapPlace: onTapPlace,
                 onTapNoPlace: onTapNoPlace
@@ -426,21 +461,26 @@ extension MessageMarkerManager {
 // MARK: - 마커 생성 및 업데이트
 
 extension MessageMarkerManager {
-
-    /// 저장된 모든 좌표에 대해 마커를 생성합니다.
-    ///
-    /// Place와 NoPlace 메시지가 있는 모든 좌표를 순회하며
-    /// 각 좌표에 대해 마커를 생성합니다.
-    private func rebuildAllMarkers(
+    /// key 단위로 마커들을 업데이트합니다.
+    private func updateMarkersForKey(
+        _ key: MarkerGroupKey,
         mapView: NMFMapView,
         onTapPlace: (([Message]) -> Void)?,
         onTapNoPlace: (([Message]) -> Void)?
     ) {
-        // Place와 NoPlace 좌표를 합집합으로 구함
-        let totalCoordinates = Set(placeMessagesByCoord.keys).union(Set(noPlaceMessagesByCoord.keys))
+        let coord = key.coordinate
 
-        for coord in totalCoordinates {
-            updateMarkersForCoordinate(coord, mapView: mapView, onTapPlace: onTapPlace, onTapNoPlace: onTapNoPlace)
+        if key.isPlace {
+            updateMarker(coord: coord, isPlace: true, mapView: mapView) { messages in
+                let uniquePlaces = Set(messages.compactMap { $0.placeTag })
+                if uniquePlaces.count == 1 {
+                    onTapPlace?(messages)
+                }
+            }
+        } else {
+            updateMarker(coord: coord, isPlace: false, mapView: mapView) { messages in
+                onTapNoPlace?(messages)
+            }
         }
     }
 
@@ -491,8 +531,6 @@ extension MessageMarkerManager {
         // 마커 식별 키 생성
         let key = MarkerGroupKey(coordinate: coord, isPlace: isPlace)
 
-        AppLog.debug("updateMarker key=\(key) count(place)=\(placeMessagesByCoord[coord]?.count ?? 0) count(noPlace)=\(noPlaceMessagesByCoord[coord]?.count ?? 0)", category: .location)
-
         // 1. 기존 마커가 있다면 그대로 쓰고, 없으면 새로 만들기
         let marker: NMFMarker
         if let existing = markers[key] {
@@ -534,7 +572,8 @@ extension MessageMarkerManager {
         let signature = makeRenderSignature(markerType: markerType, messages: messages)
 
         // 3-2. 기존 마커가 있고, 시그니처가 동일하면 아이콘 렌더 스킵
-        if let _ = markers[key], lastRenderedSignature[key] == signature { return }
+        if markers[key] != nil,
+           lastRenderedSignature[key] == signature { return }
 
         // 시그니처 갱신
         lastRenderedSignature[key] = signature
@@ -553,7 +592,9 @@ extension MessageMarkerManager {
 
     /// 마커를 지도에서 제거하고 저장소에서 삭제합니다.
     private func removeMarker(for key: MarkerGroupKey) {
-        markers[key]?.mapView = nil           // 지도에서 제거
+        if let marker = markers[key] {
+            detachMarker(marker)
+        }
         markers.removeValue(forKey: key)      // 마커 딕셔너리에서 삭제
         animationStates.removeValue(forKey: key)  // 애니메이션 상태 삭제
 
@@ -574,7 +615,10 @@ extension MessageMarkerManager {
         mapView: NMFMapView
     ) -> NMFMarker {
         let position = NMGLatLng(lat: coord.latitude, lng: coord.longitude)
-        return makeMarker(at: position, mapView: mapView)
+        let marker = makeMarker(at: position)
+
+        attachMarker(marker, to: mapView)
+        return marker
     }
 
     private func scheduleInitialRender(
@@ -756,7 +800,6 @@ private extension MessageMarkerManager {
     /// - ON: 기존 개별 마커 숨김 + clusterer를 mapView에 attach
     /// - OFF: clusterer detach + 기존 개별 마커 복원
     func setClusterMode(_ enabled: Bool, mapView: NMFMapView) {
-        AppLog.debug("[ClusterMode] set enabled=\(enabled) zoom=\(mapView.zoomLevel) markers=\(markers.count)", category: .location)
         isClusterMode = enabled
 
         // 클러스터러가 없으면 sync/addAll/attach가 모두 무의미해지므로 여기서 보장
@@ -765,14 +808,11 @@ private extension MessageMarkerManager {
         if enabled {
             // 1) 개별 마커 숨김
             for (_, marker) in markers {
-                marker.mapView = nil
+                detachMarker(marker)
             }
-
-            AppLog.debug("[ClusterMode] clusterer is nil? \(clusterer == nil)", category: .location)
 
             // 2) 클러스터러 attach (attach 이후 addAll/clear가 반영되도록 순서 고정)
             clusterer?.mapView = mapView
-            AppLog.debug("[ClusterMode] clusterer attached mapView=\(clusterer?.mapView != nil)", category: .location)
 
             // 3) 아이템 동기화
             syncClusterItemsIfNeeded()
@@ -782,44 +822,65 @@ private extension MessageMarkerManager {
 
             // 2) 개별 마커 복원
             for (_, marker) in markers {
-                marker.mapView = mapView
+                attachMarker(marker, to: mapView)
             }
         }
     }
 
     func syncClusterItemsIfNeeded() {
         guard let clusterer else { return }
+        guard isClusterMode else { return }
 
-        let totalGroupCount = placeMessagesByCoord.count + noPlaceMessagesByCoord.count
-        AppLog.debug("[ClusterItems] sync start groups=\(totalGroupCount)", category: .location)
-
-        // 현재 표시 대상 그룹 키(place/noPlace)를 수집
+        // 1) desired 그룹키 수집
         var desiredGroupKeys: [MarkerGroupKey] = []
 
-        for coord in placeMessagesByCoord.keys where (placeMessagesByCoord[coord]?.isEmpty ?? true) == false {
+        for coord in placeMessagesByCoord.keys
+        where (placeMessagesByCoord[coord]?.isEmpty ?? true) == false {
             desiredGroupKeys.append(MarkerGroupKey(coordinate: coord, isPlace: true))
         }
 
-        for coord in noPlaceMessagesByCoord.keys where (noPlaceMessagesByCoord[coord]?.isEmpty ?? true) == false {
+        for coord in noPlaceMessagesByCoord.keys
+        where (noPlaceMessagesByCoord[coord]?.isEmpty ?? true) == false {
             desiredGroupKeys.append(MarkerGroupKey(coordinate: coord, isPlace: false))
         }
 
-        AppLog.debug("[ClusterItems] desired=\(desiredGroupKeys.count) placeKeys=\(placeMessagesByCoord.count) noPlaceKeys=\(noPlaceMessagesByCoord.count)", category: .location)
+        // 2) cluster item map 구성
+        var keyTagMap: [ItemKey: NSObject] = [:]
+        keyTagMap.reserveCapacity(desiredGroupKeys.count)
 
-        // 새 아이템 맵 구성
-        var nextIdToGroupKey: [Int: MarkerGroupKey] = [:]
-        var keyTagMap: [ItemKey: NSNull] = [:]
-
-        for (index, groupKey) in desiredGroupKeys.enumerated() {
+        for groupKey in desiredGroupKeys {
             let coord = groupKey.coordinate
             let position = NMGLatLng(lat: coord.latitude, lng: coord.longitude)
-            let id = index
+            let id = stableClusterId(for: groupKey)
 
-            nextIdToGroupKey[id] = groupKey
-            keyTagMap[ItemKey(identifier: id, position: position)] = NSNull()
+            let tag: NSObject = groupKey.isPlace ? ClusterItemTag.place : ClusterItemTag.noPlace
+            keyTagMap[ItemKey(identifier: id, position: position)] = tag
         }
 
         clusterer.addAll(keyTagMap)
+    }
+
+    func stableClusterId(for groupKey: MarkerGroupKey) -> Int {
+        // 1e-7 deg ≈ 1.1cm (offset이 수m 수준이면 절대 안 뭉침)
+        let scale = 10_000_000.0
+
+        // lat: -90...+90, lng: -180...+180
+        let latQ = Int64((groupKey.coordinate.latitude * scale).rounded())
+        let lngQ = Int64((groupKey.coordinate.longitude * scale).rounded())
+
+        // 양수화 (범위 안이면 안전)
+        let latShifted = latQ + Int64(90 * Int(scale))    // 0 .. 180*scale
+        let lngShifted = lngQ + Int64(180 * Int(scale))   // 0 .. 360*scale
+
+        // latShifted: 최대 1,800,000,000 (31bit)
+        // lngShifted: 최대 3,600,000,000 (32bit)
+        // [isPlace 1bit | lat 31bit | lng 32bit] = 64bit
+        let placeBit: Int64 = groupKey.isPlace ? 1 : 0
+        let packed = (placeBit << 63)
+        | ((latShifted & 0x7FFF_FFFF) << 32)
+        | (lngShifted & 0xFFFF_FFFF)
+
+        return Int(truncatingIfNeeded: packed)
     }
 }
 
@@ -838,17 +899,15 @@ private extension MessageMarkerManager {
         return hasher.finalize()
     }
 
-    func contentHash(_ messages: [Message]?) -> Int {
-        guard let messages, !messages.isEmpty else { return 0 }
+    func idsHashForKey(
+        _ key: MarkerGroupKey,
+        placeStore: [Coordinate: [Message]],
+        noPlaceStore: [Coordinate: [Message]]
+    ) -> Int {
+        let messages = key.isPlace
+        ? placeStore[key.coordinate]
+        : noPlaceStore[key.coordinate]
 
-        var hasher = Hasher()
-        for message in messages {
-            hasher.combine(message.id)
-            hasher.combine(message.createdAt.timeIntervalSince1970)
-            hasher.combine(message.coordinate.latitude)
-            hasher.combine(message.coordinate.longitude)
-        }
-
-        return hasher.finalize()
+        return idsHash(messages)
     }
 }
