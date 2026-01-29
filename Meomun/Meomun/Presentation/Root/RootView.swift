@@ -5,44 +5,41 @@
 //  Created by Hayeon Park on 12/19/25.
 //
 
-import CoreLocation
 import SwiftUI
 
 struct RootView: View {
     @StateObject private var locationProvider = LocationProvider()
+    @StateObject private var store: RootStore
     @Environment(\.scenePhase) private var scenePhase
 
-    @State private var showLocationAlert = false
-
-    private let appSettingsOpener = AppSettingsOpener()
+    init() {
+        let provider = LocationProvider()
+        _locationProvider = StateObject(wrappedValue: provider)
+        _store = StateObject(
+            wrappedValue: RootStore(
+                locationProvider: provider,
+                appSettingsOpener: AppSettingsOpener()
+            )
+        )
+    }
 
     var body: some View {
         MainTabShellView()
             .environmentObject(locationProvider)
             .ignoresSafeArea(.keyboard)
             .overlay {
-                if showLocationAlert {
+                if store.state.showLocationAlert {
                     AlertView(type: .location) {
-                        Task { await appSettingsOpener.openAppSettings() }
+                        Task { await store.send(intent: .tapOpenSettings) }
                     }
                 }
             }
             .onReceive(locationProvider.$authorizationStatus) { status in
-                switch status {
-                case .denied, .restricted:
-                    showLocationAlert = true
-                case .authorizedWhenInUse, .authorizedAlways:
-                    showLocationAlert = false
-                default:
-                    break
-                }
+                Task { await store.send(intent: .authorizationStatusChanged(status)) }
             }
             .onChange(of: scenePhase) { _, newPhase in
                 guard newPhase == .active else { return }
-                locationProvider.requestAuthorizationIfNeeded()
-
-                let status = locationProvider.authorizationStatus
-                showLocationAlert = (status == .denied || status == .restricted)
+                Task { await store.send(intent: .appBecameActive) }
             }
     }
 }
