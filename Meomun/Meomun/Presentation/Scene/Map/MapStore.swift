@@ -13,8 +13,8 @@ final class MapStore: Store {
         case onAppear(Coordinate)
         case onDisappear
 
-        case cameraDidIdle(Coordinate, BoundingBox)
-        case cameraChangedByLocation(Coordinate, BoundingBox)
+        case cameraDidIdle(Coordinate, BoundingBox, MapCameraSnapshot)
+        case cameraChangedByLocation(Coordinate, BoundingBox, MapCameraSnapshot)
         case cameraMoveConsumed
 
         case tapSearch
@@ -36,7 +36,8 @@ final class MapStore: Store {
 
     enum Action {
         case setCameraCoordinate(Coordinate)
-        case setCameraMoveTarget(Coordinate?)
+        case setCameraMoveTarget(MapCameraMoveCommand?)
+        case setCameraSnapshot(MapCameraSnapshot?)
 
         case presentPlaceSearch(Bool)
 
@@ -54,11 +55,12 @@ final class MapStore: Store {
 
     struct State {
         var messages: [Message] = []
+        var cameraSnapshot: MapCameraSnapshot?
 
         var cameraCoordinate: Coordinate?
 
         var isPlaceSearchPresented: Bool = false
-        var cameraMoveTarget: Coordinate?
+        var cameraMoveTarget: MapCameraMoveCommand?
 
         var isShowingAddMessage: Bool = false
 
@@ -97,19 +99,41 @@ final class MapStore: Store {
                 let isConnected = networkMonitor.checkConnection()
                 continuation.yield(.setNetworkConnected(isConnected))
 
+                if let snapshot = state.cameraSnapshot {
+                    continuation.yield(.setCameraMoveTarget(.init(snapshot: snapshot, reason: .restore)))
+                } else {
+                    continuation.yield(
+                        .setCameraMoveTarget(
+                            .init(snapshot: .init(coordinate: coordinate), reason: .restore)
+                        )
+                    )
+                }
+
+                continuation.finish()
+
             case .onDisappear:
                 self.getNearbyMessageTask?.cancel()
                 self.getNearbyMessageTask = nil
                 continuation.yield(.setLoading(false))
                 continuation.finish()
 
-            case .cameraDidIdle(let coordinate, let boundingBox):
+            case .cameraDidIdle(let coordinate, let boundingBox, let snapshot):
                 continuation.yield(.setCameraCoordinate(coordinate))
-                self.getNearbyMessages(at: coordinate, bounds: boundingBox, continuation: continuation)
+                continuation.yield(.setCameraSnapshot(snapshot))
+                self.getNearbyMessages(
+                    at: coordinate,
+                    bounds: boundingBox,
+                    continuation: continuation
+                )
 
-            case .cameraChangedByLocation(let coordinate, let boundingBox):
+            case .cameraChangedByLocation(let coordinate, let boundingBox, let snapshot):
                 continuation.yield(.setCameraCoordinate(coordinate))
-                self.getNearbyMessages(at: coordinate, bounds: boundingBox, continuation: continuation)
+                continuation.yield(.setCameraSnapshot(snapshot))
+                self.getNearbyMessages(
+                    at: coordinate,
+                    bounds: boundingBox,
+                    continuation: continuation
+                )
 
             case .cameraMoveConsumed:
                 continuation.yield(.setCameraMoveTarget(nil))
@@ -125,7 +149,11 @@ final class MapStore: Store {
                 continuation.finish()
 
             case .selectPlace(let place):
-                continuation.yield(.setCameraMoveTarget(place.coordinate))
+                let target = MapCameraMoveCommand(
+                    snapshot: .init(coordinate: place.coordinate),
+                    reason: .userAction
+                )
+                continuation.yield(.setCameraMoveTarget(target))
                 continuation.finish()
 
             case .dismissAddMessage:
@@ -175,8 +203,11 @@ final class MapStore: Store {
         case .setCameraCoordinate(let coordinate):
             newState.cameraCoordinate = coordinate
 
-        case .setCameraMoveTarget(let coordinate):
-            newState.cameraMoveTarget = coordinate
+        case .setCameraSnapshot(let snapshot):
+            newState.cameraSnapshot = snapshot
+
+        case .setCameraMoveTarget(let snapshot):
+            newState.cameraMoveTarget = snapshot
 
         case .presentPlaceSearch(let isPresented):
             newState.isPlaceSearchPresented = isPresented

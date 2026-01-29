@@ -27,11 +27,11 @@ struct MapView: View {
     private let initialUserLocation: Coordinate
 
     init(
+        store: MapStore,
         userLocation: Coordinate,
         messageMarkerManager: MessageMarkerManager,
-        store: MapStore
     ) {
-        self._store = .init(wrappedValue: store)
+        _store = StateObject(wrappedValue: store)
         self.messageMarkerManager = messageMarkerManager
         self.initialUserLocation = userLocation
     }
@@ -147,11 +147,11 @@ private extension MapView {
             onTapNoPlace: { messages in
                 send(.tapNoPlaceMarker(messages))
             },
-            onCameraIdle: { coordinate, bounds in
-                send(.cameraDidIdle(coordinate, bounds))
+            onCameraIdle: { coordinate, bounds, snapshot in
+                send(.cameraDidIdle(coordinate, bounds, snapshot))
             },
-            onCameraChangedByLocation: { coordinate, bounds in
-                send(.cameraChangedByLocation(coordinate, bounds))
+            onCameraChangedByLocation: { coordinate, bounds, snapshot in
+                send(.cameraChangedByLocation(coordinate, bounds, snapshot))
             }
         )
     }
@@ -302,14 +302,14 @@ private extension MapView {
         bubbleImageRenderer: bubbleImageRenderer
     )
 
-    MapView(
-        userLocation: .init(latitude: 37.5665, longitude: 126.9780),
-        messageMarkerManager: messageMarkerManager,
-        store: .init(
+    return MapView(
+        store: MapStore(
             getNearbyMessagesUseCase: GetNearbyMessagesUseCaseImpl(
                 messageRepository: MessageRepositoryImpl(storage: MessageInMemoryStorage.shared)
             ),
-            networkMonitor: .init()
-        )
+            networkMonitor: NetworkMonitor()
+        ),
+        userLocation: .init(latitude: 37.5665, longitude: 126.9780),
+        messageMarkerManager: messageMarkerManager
     )
 }

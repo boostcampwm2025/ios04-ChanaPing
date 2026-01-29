@@ -9,6 +9,10 @@ import SwiftUI
 
 struct MainTabShellView: View {
     @EnvironmentObject private var locationProvider: LocationProvider
+    @StateObject private var mapStore = MapStore(
+        getNearbyMessagesUseCase: GetNearbyMessagesUseCaseImpl(messageRepository: MessageRepositoryImpl()),
+        networkMonitor: NetworkMonitor()
+    )
 
     let userLocation: Coordinate
     @StateObject private var store = MainTabStore()
@@ -42,16 +46,11 @@ struct MainTabShellView: View {
         switch tab {
         case .map:
             MapView(
+                store: mapStore,
                 userLocation: userLocation,
                 messageMarkerManager: MessageMarkerManager(
                     rotationAnimator: .init(),
                     bubbleImageRenderer: .init()
-                ),
-                store: .init(
-                    getNearbyMessagesUseCase: GetNearbyMessagesUseCaseImpl(
-                        messageRepository: MessageRepositoryImpl()
-                    ),
-                    networkMonitor: .init()
                 )
             )
 
