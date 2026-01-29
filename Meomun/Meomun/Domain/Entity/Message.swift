@@ -26,9 +26,7 @@ extension Message {
         }
     }
 
-    var displayDateString: String { // 같은 날이면 시간, 다른 날이면 날짜로 보여지게 하기
-        let formatter = DateFormatter()
-        formatter.dateFormat = "yy.MM.dd"
-        return formatter.string(from: createdAt)
+    var displayDateString: String {
+        return MessageTimestampFormatter.string(from: createdAt)
     }
 }
