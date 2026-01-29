@@ -82,7 +82,9 @@ final class MyPageStore: Store {
     }
 
     private func openAppSettings() {
-        appSettingsOpener.openAppSettings()
+        Task {
+            await appSettingsOpener.openAppSettings()
+        }
     }
 }
 

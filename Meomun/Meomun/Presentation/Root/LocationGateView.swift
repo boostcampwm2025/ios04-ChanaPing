@@ -39,7 +39,9 @@ struct LocationGateView: View {
 
             case .denied, .restricted:
                 AlertView(type: .location) {
-                    appSettingsOpener.openAppSettings()
+                    Task {
+                        await appSettingsOpener.openAppSettings()
+                    }
                 }
 
             default:

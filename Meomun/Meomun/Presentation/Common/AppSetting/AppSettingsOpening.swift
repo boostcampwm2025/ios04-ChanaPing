@@ -8,5 +8,5 @@
 import Foundation
 
 protocol AppSettingsOpening {
-    func openAppSettings()
+    func openAppSettings() async
 }

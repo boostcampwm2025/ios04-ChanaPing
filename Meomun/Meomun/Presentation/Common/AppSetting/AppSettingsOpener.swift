@@ -8,8 +8,10 @@
 import UIKit
 
 struct AppSettingsOpener: AppSettingsOpening {
-    func openAppSettings() {
+    func openAppSettings() async {
         guard let url = URL(string: UIApplication.openSettingsURLString) else { return }
-        UIApplication.shared.open(url)
+        await MainActor.run {
+            UIApplication.shared.open(url)
+        }
     }
 }
