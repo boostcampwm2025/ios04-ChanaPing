@@ -13,6 +13,9 @@ final class MapStore: Store {
         case onAppear(Coordinate)
         case onDisappear
 
+        case userDidInteractMap
+        case followUserRequested
+
         case cameraDidIdle(Coordinate, BoundingBox, MapCameraSnapshot)
         case cameraChangedByLocation(Coordinate, BoundingBox, MapCameraSnapshot)
         case cameraMoveConsumed
@@ -36,6 +39,7 @@ final class MapStore: Store {
 
     enum Action {
         case setCameraCoordinate(Coordinate)
+        case setFollowingUser(Bool)
         case setCameraMoveTarget(MapCameraMoveCommand?)
         case setCameraSnapshot(MapCameraSnapshot?)
 
@@ -58,6 +62,7 @@ final class MapStore: Store {
         var cameraSnapshot: MapCameraSnapshot?
 
         var cameraCoordinate: Coordinate?
+        var isFollowingUser: Bool = true
 
         var isPlaceSearchPresented: Bool = false
         var cameraMoveTarget: MapCameraMoveCommand?
@@ -100,8 +105,10 @@ final class MapStore: Store {
                 continuation.yield(.setNetworkConnected(isConnected))
 
                 if let snapshot = state.cameraSnapshot {
+                    continuation.yield(.setFollowingUser(false))
                     continuation.yield(.setCameraMoveTarget(.init(snapshot: snapshot, reason: .restore)))
                 } else {
+                    continuation.yield(.setFollowingUser(true))
                     continuation.yield(
                         .setCameraMoveTarget(
                             .init(snapshot: .init(coordinate: coordinate), reason: .restore)
@@ -115,6 +122,14 @@ final class MapStore: Store {
                 self.getNearbyMessageTask?.cancel()
                 self.getNearbyMessageTask = nil
                 continuation.yield(.setLoading(false))
+                continuation.finish()
+
+            case .userDidInteractMap:
+                continuation.yield(.setFollowingUser(false))
+                continuation.finish()
+
+            case .followUserRequested:
+                continuation.yield(.setFollowingUser(true))
                 continuation.finish()
 
             case .cameraDidIdle(let coordinate, let boundingBox, let snapshot):
@@ -202,6 +217,9 @@ final class MapStore: Store {
 
         case .setCameraCoordinate(let coordinate):
             newState.cameraCoordinate = coordinate
+
+        case .setFollowingUser(let isFollowing):
+            newState.isFollowingUser = isFollowing
 
         case .setCameraSnapshot(let snapshot):
             newState.cameraSnapshot = snapshot

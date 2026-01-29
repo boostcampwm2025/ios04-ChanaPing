@@ -29,7 +29,7 @@ struct MapView: View {
     init(
         store: MapStore,
         userLocation: Coordinate,
-        messageMarkerManager: MessageMarkerManager,
+        messageMarkerManager: MessageMarkerManager
     ) {
         self.store = store
         self.messageMarkerManager = messageMarkerManager
@@ -76,15 +76,6 @@ struct MapView: View {
                     .ignoresSafeArea()
                 }
             }
-            .task {
-                await store.send(intent: .onAppear(initialUserLocation))
-            }
-            .onAppear {
-                setTabBarHidden(false)
-            }
-            .onDisappear {
-                send(.onDisappear)
-            }
             .simultaneousGesture(
                 TapGesture()
                     .onEnded { _ in
@@ -106,6 +97,17 @@ struct MapView: View {
                     .onAppear { setTabBarHidden(true) }
                 }
             }
+            .task {
+                send(.onAppear(initialUserLocation))
+            }
+            .onAppear {
+                setTabBarHidden(false)
+                locationProvider.startContinuous()
+            }
+            .onDisappear {
+                send(.onDisappear)
+                locationProvider.stopContinuous()
+            }
             .sheet(isPresented: isTimelineListPresentedBinding) {
                 timeLineListView
                     .presentationDetents(.init(arrayLiteral: .medium, .large))
@@ -126,7 +128,8 @@ struct MapView: View {
 private extension MapView {
     var mapViewWrapper: some View {
         MapViewWrapper(
-            userLocation: initialUserLocation,
+            userLocation: locationProvider.current ?? initialUserLocation,
+            isFollowingUser: store.state.isFollowingUser,
             markerManager: messageMarkerManager,
             messages: store.state.messages,
             cameraMoveTarget: store.state.cameraMoveTarget,
@@ -138,6 +141,12 @@ private extension MapView {
             },
             onTapNoPlace: { messages in
                 send(.tapNoPlaceMarker(messages))
+            },
+            onUserGesture: {
+                send(.userDidInteractMap)
+            },
+            onFollowRequested: {
+                send(.followUserRequested)
             },
             onCameraIdle: { coordinate, bounds, snapshot in
                 send(.cameraDidIdle(coordinate, bounds, snapshot))

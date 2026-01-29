@@ -15,6 +15,7 @@ final class MapViewController: UIViewController {
     // MARK: - Properties
 
     private var appLifecycleObservers: [NSObjectProtocol] = []
+    private var isFollowingUser: Bool = true
 
     // MARK: - Animation Properties
 
@@ -27,6 +28,8 @@ final class MapViewController: UIViewController {
 
     private let onTapPlace: (([Message]) -> Void)?
     private let onTapNoPlace: (([Message]) -> Void)?
+    private let onUserGesture: (() -> Void)?
+    private let onFollowRequested: (() -> Void)?
     private let onCameraIdle: ((Coordinate, BoundingBox, MapCameraSnapshot) -> Void)?
     private let onCameraChangedByLocation: ((Coordinate, BoundingBox, MapCameraSnapshot) -> Void)?
 
@@ -40,12 +43,16 @@ final class MapViewController: UIViewController {
         messageMarkerManager: MessageMarkerManager,
         onTapPlace: (([Message]) -> Void)? = nil,
         onTapNoPlace: (([Message]) -> Void)? = nil,
+        onUserGesture: (() -> Void)?,
+        onFollowRequested: (() -> Void)?,
         onCameraIdle: ((Coordinate, BoundingBox, MapCameraSnapshot) -> Void)? = nil,
         onCameraChangedByLocation: ((Coordinate, BoundingBox, MapCameraSnapshot) -> Void)? = nil
     ) {
         self.messageMarkerManager = messageMarkerManager
         self.onTapPlace = onTapPlace
         self.onTapNoPlace = onTapNoPlace
+        self.onUserGesture = onUserGesture
+        self.onFollowRequested = onFollowRequested
         self.onCameraIdle = onCameraIdle
         self.onCameraChangedByLocation = onCameraChangedByLocation
         super.init(nibName: nil, bundle: nil)
@@ -55,6 +62,8 @@ final class MapViewController: UIViewController {
         self.messageMarkerManager = .init(rotationAnimator: .init(), bubbleImageRenderer: .init())
         self.onTapPlace = nil
         self.onTapNoPlace = nil
+        self.onUserGesture = nil
+        self.onFollowRequested = nil
         self.onCameraIdle = nil
         self.onCameraChangedByLocation = nil
         super.init(coder: coder)
@@ -190,15 +199,44 @@ extension MapViewController {
 // MARK: - UserLocation
 
 extension MapViewController {
+    func setFollowingUser(_ isFollowing: Bool) {
+        self.isFollowingUser = isFollowing
+    }
+
     func updateUserLocation(_ coordinate: Coordinate?) {
         guard let coordinate else { return }
 
-        naverMapView.mapView.positionMode = .direction
+        AppLog.debug(
+            "updateUserLocation() follow ON -> \(coordinate.latitude), \(coordinate.longitude)",
+            category: .location
+        )
 
         let latLng = NMGLatLng(lat: coordinate.latitude, lng: coordinate.longitude)
+
+        let overlay = naverMapView.mapView.locationOverlay
+        overlay.hidden = false
+        overlay.location = latLng
+
+        naverMapView.mapView.positionMode = .direction
+
         let cameraUpdate = NMFCameraUpdate(scrollTo: latLng)
         cameraUpdate.animation = .easeIn
         naverMapView.mapView.moveCamera(cameraUpdate)
+    }
+
+    func updateUserLocationOverlayOnly(_ coordinate: Coordinate?) {
+        guard let coordinate else { return }
+
+        AppLog.debug(
+            "updateUserLocationOverlayOnly() follow OFF -> \(coordinate.latitude), \(coordinate.longitude)",
+            category: .location
+        )
+
+        let latLng = NMGLatLng(lat: coordinate.latitude, lng: coordinate.longitude)
+
+        let overlay = naverMapView.mapView.locationOverlay
+        overlay.hidden = false
+        overlay.location = latLng
     }
 }
 
@@ -220,8 +258,8 @@ extension MapViewController {
         let update = NMFCameraUpdate(position: position)
 
         if animated {
-            update.animation = .easeIn
-            update.animationDuration = 0.35
+            update.animation = .fly
+            update.animationDuration = 0.75
         } else {
             update.animation = .none
         }
@@ -297,12 +335,32 @@ extension MapViewController: NMFMapViewCameraDelegate {
     }
 
     func mapView(_ mapView: NMFMapView, cameraDidChangeByReason reason: Int, animated: Bool) {
+        AppLog.debug(
+            "cameraDidChangeByReason: reason=\(reason), animated=\(animated), positionMode=\(naverMapView.mapView.positionMode.rawValue)",
+            category: .location
+        )
+
+        // 유저가 직접 지도 건드릴 시 추적 해제 (파란 점은 보이도록)
+        if reason == NMFMapChangedByGesture {
+            AppLog.info("> Gesture detected -> following OFF", category: .location)
+            naverMapView.mapView.positionMode = .normal
+            onUserGesture?()
+            return
+        }
+
         // 위치 추적으로 인한 카메라 변경인지 확인
         guard reason == NMFMapChangedByLocation else { return }
 
         // 위치 모드가 direction 또는 compass인지 확인
         let positionMode = naverMapView.mapView.positionMode
-        guard positionMode == .direction || positionMode == .compass else { return }
+        let isLocationModeOn = positionMode == .direction || positionMode == .compass
+        guard isLocationModeOn else { return }
+
+        if !isFollowingUser && isLocationModeOn {
+            AppLog.info("> Location button inferred -> following ON requested", category: .location)
+            onFollowRequested?()
+            return
+        }
 
         // 카메라 중심 좌표 추출 및 콜백 호출
         let center = mapView.cameraPosition.target
@@ -334,29 +392,38 @@ struct MapViewWrapper: UIViewControllerRepresentable {
     private let onCameraMoveConsumed: () -> Void
     private let onTapPlace: (([Message]) -> Void)?
     private let onTapNoPlace: (([Message]) -> Void)?
+    private let onUserGesture: (() -> Void)?
+    private let onFollowRequested: (() -> Void)?
     private let onCameraIdle: ((Coordinate, BoundingBox, MapCameraSnapshot) -> Void)?
     private let onCameraChangedByLocation: ((Coordinate, BoundingBox, MapCameraSnapshot) -> Void)?
 
     private let messageMarkerManager: MessageMarkerManager
+    private let isFollowingUser: Bool
 
     init(
         userLocation: Coordinate?,
+        isFollowingUser: Bool,
         markerManager: MessageMarkerManager,
         messages: [Message],
         cameraMoveTarget: MapCameraMoveCommand?,
         onCameraMoveConsumed: @escaping () -> Void,
         onTapPlace: (([Message]) -> Void)? = nil,
         onTapNoPlace: (([Message]) -> Void)? = nil,
+        onUserGesture: (() -> Void)?,
+        onFollowRequested: (() -> Void)?,
         onCameraIdle: ((Coordinate, BoundingBox, MapCameraSnapshot) -> Void)? = nil,
         onCameraChangedByLocation: ((Coordinate, BoundingBox, MapCameraSnapshot) -> Void)? = nil
     ) {
         self.userLocation = userLocation
+        self.isFollowingUser = isFollowingUser
         self.messageMarkerManager = markerManager
         self.messages = messages
         self.cameraMoveTarget = cameraMoveTarget
         self.onCameraMoveConsumed = onCameraMoveConsumed
         self.onTapPlace = onTapPlace
         self.onTapNoPlace = onTapNoPlace
+        self.onUserGesture = onUserGesture
+        self.onFollowRequested = onFollowRequested
         self.onCameraIdle = onCameraIdle
         self.onCameraChangedByLocation = onCameraChangedByLocation
     }
@@ -376,6 +443,8 @@ struct MapViewWrapper: UIViewControllerRepresentable {
             messageMarkerManager: messageMarkerManager,
             onTapPlace: onTapPlace,
             onTapNoPlace: onTapNoPlace,
+            onUserGesture: onUserGesture,
+            onFollowRequested: onFollowRequested,
             onCameraIdle: onCameraIdle,
             onCameraChangedByLocation: onCameraChangedByLocation
         )
@@ -391,6 +460,16 @@ struct MapViewWrapper: UIViewControllerRepresentable {
     }
 
     func updateUIViewController(_ uiViewController: MapViewController, context: Context) {
+        uiViewController.setFollowingUser(isFollowingUser)
+
+        // 추적 상태에 따라 위치 반영
+        if isFollowingUser {
+            uiViewController.updateUserLocation(userLocation)
+        } else {
+            // 추적 해제 모드 시 파란점만 유지하고 카메라는 안 움직이도록 설정
+            uiViewController.updateUserLocationOverlayOnly(userLocation)
+        }
+
         if let target = cameraMoveTarget, context.coordinator.lastCameraMoveTarget != target {
             // 동일 target인 경우 호출 X
             context.coordinator.lastCameraMoveTarget = target
