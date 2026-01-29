@@ -266,6 +266,7 @@ private extension MapView {
     var timeLineListView: some View {
         TimelineListView(
             store: TimelineListStore(
+                initialMessages: store.state.selectedNoPlaceMessages,
                 fetchRecentMessagesUseCase: FetchRecentMessagesUseCaseImpl(
                     repository: MessageRepositoryImpl()
                 ),
@@ -274,6 +275,7 @@ private extension MapView {
             configuration: .bottomSheet
         )
     }
+
     var isTimelineListPresentedBinding: Binding<Bool> {
         Binding(
             get: { store.state.selectedNoPlaceMessages.isEmpty == false },
