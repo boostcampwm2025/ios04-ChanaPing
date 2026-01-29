@@ -81,28 +81,13 @@ struct SpaceView: View {
             message: { $0.message },
             buttons: { $0.buttons }
         )
-        .confirmationDialog(
-            "메시지 관리",
-            isPresented: Binding(
-                get: {
-                    store.state.selectedMessageID != nil
-                },
-                set: { isPresented in
-                    if !isPresented {
-                        Task {
-                            await store.send(intent: .selectMessage(nil))
-                        }
-                    }
-                }
-            ),
-            presenting: store.state.selectedMessageID
-        ) { messageID in
-            Button("삭제", role: .destructive) {
-                Task {
-                    await store.send(intent: .requestDeleteMessage(messageID))
-                }
+        .overlay(alignment: .bottom) {
+            if store.state.selectedMessageID != nil {
+                selectionBar
+                    .transition(.move(edge: .bottom).combined(with: .opacity))
             }
         }
+        .animation(.spring(response: 0.25, dampingFraction: 0.9), value: store.state.selectedMessageID)
         .allowsHitTesting(store.state.deleteStatus == .idle)
         .navigationBarBackButtonHidden()
         .toolbar { toolbarContent }
@@ -127,6 +112,41 @@ extension SpaceView {
         Task {
             await store.send(intent: .selectMessage(component.messageID))
         }
+    }
+}
+
+// MARK: - Actions
+
+private extension SpaceView {
+    func send(_ intent: SpaceStore.Intent) {
+        Task { await store.send(intent: intent) }
+    }
+}
+
+// MARK: Subviews
+
+extension SpaceView {
+    var selectionBar: some View {
+        HStack {
+            Button { send(.selectMessage(nil)) } label: {
+                Text("취소")
+                    .font(.headline)
+                    .foregroundStyle(Color.meomunPrimaryColor)
+                    .padding(.horizontal, 16)
+            }
+
+            Spacer()
+
+            if let messageID = store.state.selectedMessageID {
+                Button { send(.requestDeleteMessage(messageID)) } label: {
+                    Text("삭제")
+                        .font(.headline)
+                        .foregroundStyle(Color.red)
+                        .padding(.horizontal, 24)
+                }
+            }
+        }
+        .floatingContainer()
     }
 }
 

@@ -80,6 +80,7 @@ final class SpaceStore: Store {
                 continuation.finish()
 
             case .requestDeleteMessage(let messageID):
+                continuation.yield(.setSelectedMessage(nil))
                 let alert = AlertFactory.deleteMessage(count: 1) { [weak self] in
                     Task {
                         await self?.send(intent: .confirmDeleteMessage(messageID))
