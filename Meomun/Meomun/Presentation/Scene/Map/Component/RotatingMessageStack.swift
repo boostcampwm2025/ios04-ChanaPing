@@ -36,8 +36,10 @@ struct RotatingMessageStack: View {
 private extension RotatingMessageStack {
     @ViewBuilder
     func messageContent(_ message: Message) -> some View {
-        VStack(alignment: .leading, spacing: 6) {
+        VStack(alignment: .leading, spacing: 5) {
             BubbleText(text: message.content)
+                .frame(height: 36, alignment: .center)
+                .clipped()
 
             Text(message.displayDateString)
                 .font(.system(size: 11, weight: .semibold))
