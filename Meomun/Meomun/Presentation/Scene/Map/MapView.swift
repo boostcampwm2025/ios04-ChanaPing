@@ -52,30 +52,28 @@ struct MapView: View {
                 }
                 .padding(.top, 12)
             }
+            .overlay(alignment: .bottomTrailing) {
+                writeButton
+                    .padding(.bottom, 96)
+            }
+            .overlay(alignment: .bottom) {
+                if !store.state.carouselItems.isEmpty {
+                    PlaceCarousel(
+                        items: store.state.carouselItems,
+                        onTapped: { place in
+                            send(.dismissPlaceCarousel)
+                            navigationPath.append(MapDestination.space(place: place))
+                        }
+                    )
+                    .padding(.bottom, 100)
+                }
+            }
             .overlay {
                 if !store.state.isNetworkConnected {
                     AlertView(type: .network) {
                         send(.tapNetworkRefresh)
                     }
                     .ignoresSafeArea()
-                }
-            }
-            .safeAreaInset(edge: .bottom) {
-                if !store.state.carouselItems.isEmpty {
-                    PlaceCarousel(
-                        items: store.state.carouselItems,
-                        onTapped: { place in
-                            send(.dismissPlaceCarousel)
-                            setTabBarHidden(true)
-                            navigationPath.append(MapDestination.space(place: place))
-                        }
-                    )
-                } else {
-                    HStack {
-                        Spacer()
-                        writeButton
-                    }
-                    .padding(.bottom, 96)
                 }
             }
             .task {
@@ -86,11 +84,6 @@ struct MapView: View {
             }
             .onDisappear {
                 send(.onDisappear)
-            }
-            .onChange(of: store.state.carouselItems.isEmpty) { _, isEmpty in
-                if navigationPath.isEmpty {
-                    setTabBarHidden(!isEmpty)
-                }
             }
             .simultaneousGesture(
                 TapGesture()
@@ -137,7 +130,6 @@ private extension MapView {
             markerManager: messageMarkerManager,
             messages: store.state.messages,
             cameraMoveTarget: store.state.cameraMoveTarget,
-            isLocationButtonHidden: !store.state.carouselItems.isEmpty,
             onCameraMoveConsumed: {
                 send(.cameraMoveConsumed)
             },
