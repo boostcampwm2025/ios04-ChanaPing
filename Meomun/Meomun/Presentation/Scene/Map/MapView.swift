@@ -19,21 +19,19 @@ struct MapView: View {
     @Environment(\.setTabBarHidden) private var setTabBarHidden
 
     @State private var navigationPath = NavigationPath()
+    @State private var didApplyResolvedUserLocation = false
 
     @ObservedObject private var store: MapStore
     @EnvironmentObject private var locationProvider: LocationProvider
 
     private let messageMarkerManager: MessageMarkerManager
-    private let initialUserLocation: Coordinate
 
     init(
         store: MapStore,
-        userLocation: Coordinate,
         messageMarkerManager: MessageMarkerManager
     ) {
         self.store = store
         self.messageMarkerManager = messageMarkerManager
-        self.initialUserLocation = userLocation
     }
 
     private func send(_ intent: MapStore.Intent) {
@@ -98,7 +96,20 @@ struct MapView: View {
                 }
             }
             .task {
-                send(.onAppear(initialUserLocation))
+                let initial = locationProvider.current ?? .seoulCity
+                send(.onAppear(initial))
+
+                if let coordinate = locationProvider.current, !didApplyResolvedUserLocation {
+                    didApplyResolvedUserLocation = true
+                    send(.userLocationReady(coordinate))
+                }
+            }
+            .onChange(of: locationProvider.current) { _, newValue in
+                guard didApplyResolvedUserLocation == false else { return }
+                guard let coordinate = newValue else { return }
+
+                didApplyResolvedUserLocation = true
+                send(.userLocationReady(coordinate))
             }
             .onAppear {
                 setTabBarHidden(false)
@@ -128,7 +139,7 @@ struct MapView: View {
 private extension MapView {
     var mapViewWrapper: some View {
         MapViewWrapper(
-            userLocation: locationProvider.current ?? initialUserLocation,
+            userLocation: locationProvider.current ?? .seoulCity,
             isFollowingUser: store.state.isFollowingUser,
             markerManager: messageMarkerManager,
             messages: store.state.messages,
@@ -312,7 +323,7 @@ private extension MapView {
             ),
             networkMonitor: NetworkMonitor()
         ),
-        userLocation: .init(latitude: 37.5665, longitude: 126.9780),
         messageMarkerManager: messageMarkerManager
     )
+    .environmentObject(LocationProvider())
 }

@@ -8,28 +8,39 @@
 import SwiftUI
 
 struct RootView: View {
-    @StateObject private var locationProvider = LocationProvider()
+    @StateObject private var locationProvider: LocationProvider
+    @StateObject private var store: RootStore
     @Environment(\.scenePhase) private var scenePhase
-    @State private var didStartContinuous = false
-    @State private var userLocation: Coordinate?
+
+    init() {
+        let provider = LocationProvider()
+        _locationProvider = StateObject(wrappedValue: provider)
+        _store = StateObject(
+            wrappedValue: RootStore(
+                locationProvider: provider,
+                appSettingsOpener: AppSettingsOpener()
+            )
+        )
+    }
 
     var body: some View {
-        Group {
-            if let userLocation {
-                MainTabShellView(userLocation: userLocation)
-            } else {
-                MainTabShellView(userLocation: .seoulCity)
-                    .overlay {
-                        LocationGateView(
-                            onReady: { coordinate in
-                                self.userLocation = coordinate
-                            },
-                            appSettingsOpener: AppSettingsOpener())
+        MainTabShellView()
+            .environmentObject(locationProvider)
+            .ignoresSafeArea(.keyboard)
+            .overlay {
+                if store.state.showLocationAlert {
+                    AlertView(type: .location) {
+                        Task { await store.send(intent: .tapOpenSettings) }
                     }
+                }
             }
-        }
-        .environmentObject(locationProvider)
-        .ignoresSafeArea(.keyboard)
+            .onReceive(locationProvider.$authorizationStatus) { status in
+                Task { await store.send(intent: .authorizationStatusChanged(status)) }
+            }
+            .onChange(of: scenePhase) { _, newPhase in
+                guard newPhase == .active else { return }
+                Task { await store.send(intent: .appBecameActive) }
+            }
     }
 }
 

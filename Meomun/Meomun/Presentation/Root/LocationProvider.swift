@@ -126,13 +126,20 @@ extension LocationProvider: CLLocationManagerDelegate {
         self.authorizationStatus = manager.authorizationStatus
 
         // 권한이 허용으로 바뀌면 current warm-up
-        if authorizationStatus == .authorizedWhenInUse || authorizationStatus == .authorizedAlways {
+        switch authorizationStatus {
+        case .authorizedWhenInUse, .authorizedAlways:
             manager.requestLocation()
 
             // startContinuous()가 권한 요청으로 인해 대기 중이었다면, 권한 허용 즉시 연속 추적을 시작
             if wantsContinuousUpdates {
                 startContinuous()
             }
+
+        case .denied, .restricted:
+            handleAuthorizationRevoked()
+
+        default:
+            break
         }
     }
 
@@ -154,6 +161,7 @@ extension LocationProvider: CLLocationManagerDelegate {
         let coordinate = Coordinate(latitude: last.coordinate.latitude,
                                     longitude: last.coordinate.longitude)
         current = coordinate
+        AppLog.debug("Current location updated", category: .location)
 
         succeedOneShots(coordinate)
     }
@@ -168,6 +176,22 @@ extension LocationProvider: CLLocationManagerDelegate {
         )
 
         failOneShots(error)
+    }
+
+    private func handleAuthorizationRevoked() {
+        // 마지막 위치를 UI에 남길지 여부는 정책 선택
+        current = nil
+
+        // 연속 추적 중이면 중단
+        if isContinuousUpdating {
+            AppLog.debug("authorization revoked -> stopUpdatingLocation()", category: .location)
+            manager.stopUpdatingLocation()
+        }
+        isContinuousUpdating = false
+
+        // one-shot 대기자 정리
+        isRequestingOneShot = false
+        failOneShots(LocationError.notAuthorized)
     }
 
     private func succeedOneShots(_ coordinate: Coordinate) {

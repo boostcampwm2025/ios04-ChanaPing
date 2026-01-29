@@ -11,6 +11,7 @@ import Combine
 final class MapStore: Store {
     enum Intent {
         case onAppear(Coordinate)
+        case userLocationReady(Coordinate)
         case onDisappear
 
         case userDidInteractMap
@@ -115,6 +116,23 @@ final class MapStore: Store {
                         )
                     )
                 }
+
+                continuation.finish()
+                return
+
+            case .userLocationReady(let coordinate):
+                continuation.yield(.setCameraCoordinate(coordinate))
+
+                if state.isFollowingUser {
+                    continuation.yield(
+                        .setCameraMoveTarget(
+                            .init(snapshot: .init(coordinate: coordinate), reason: .restore)
+                        )
+                    )
+                }
+
+                continuation.finish()
+                return
 
             case .onDisappear:
                 self.getNearbyMessageTask?.cancel()
