@@ -6,12 +6,15 @@
 //
 
 import CoreLocation
+import NMapsMap
 import SwiftUI
 
 struct MyPageView: View {
     @StateObject private var store: MyPageStore
     @Environment(\.scenePhase) private var scenePhase
     @State private var permissionStatus = LocationPermissionStatus.current
+
+    private let mapView: NMFMapView = .init()
 
     init(store: MyPageStore) {
         _store = .init(wrappedValue: store)
@@ -33,6 +36,14 @@ struct MyPageView: View {
 
                 NavigationRow(title: "오픈소스 라이선스") {
                     OpenSourceLicensesView()
+                }
+
+                ActionRow(title: "네이버 지도 법적 공지") {
+                    mapView.showLegalNotice()
+                }
+
+                ActionRow(title: "네이버 지도 오픈소스 라이선스") {
+                    mapView.showOpenSourceLicense()
                 }
             }
 
