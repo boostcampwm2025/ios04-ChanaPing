@@ -44,7 +44,8 @@ struct MapView: View {
         NavigationStack(path: $navigationPath) {
             ZStack {
                 MapViewWrapper(
-                    userLocation: initialUserLocation,
+                    userLocation: locationProvider.current ?? initialUserLocation,
+                    isFollowingUser: store.state.isFollowingUser,
                     markerManager: messageMarkerManager,
                     messages: store.state.messages,
                     cameraMoveTarget: store.state.cameraMoveTarget,
@@ -56,6 +57,12 @@ struct MapView: View {
                     },
                     onTapNoPlace: { messages in
                         send(.tapNoPlaceMarker(messages))
+                    },
+                    onUserGesture: {
+                        send(.userDidInteractMap)
+                    },
+                    onFollowRequested: {
+                        send(.followUserRequested)
                     },
                     onCameraIdle: { coordinate, bounds, snapshot in
                         send(.cameraDidIdle(coordinate, bounds, snapshot))
@@ -170,9 +177,13 @@ struct MapView: View {
             .task {
                 send(.onAppear(initialUserLocation))
             }
-            .onAppear { setTabBarHidden(false) }
+            .onAppear {
+                setTabBarHidden(false)
+                locationProvider.startContinuous()
+            }
             .onDisappear {
                 send(.onDisappear)
+                locationProvider.stopContinuous()
             }
             .fullScreenCover(isPresented: isPlaceSearchPresentedBinding) {
                 placeSearchOverlay
