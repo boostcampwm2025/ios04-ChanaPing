@@ -8,10 +8,15 @@
 import SwiftUI
 
 private enum Constants {
+    // Page Indicator
     static let pageIndicatorSize: CGFloat = 6
     static let pageIndicatorSpacing: CGFloat = 6
-    static let pageIndicatorBottomPadding: CGFloat = 20
+    static let pageIndicatorVerticalPadding: CGFloat = 6
+    static let pageIndicatorHorizontalPadding: CGFloat = 12
 
+    static let pageIndicatorBackOpacity: CGFloat = 0.15
+
+    // Carousel
     static let verticalSpacing: CGFloat = 8
 
     static let carouselHeight: CGFloat = 120
@@ -54,6 +59,12 @@ private extension PlaceCarousel {
                     .frame(width: Constants.pageIndicatorSize, height: Constants.pageIndicatorSize)
             }
         }
+        .padding(.horizontal, Constants.pageIndicatorHorizontalPadding)
+        .padding(.vertical, Constants.pageIndicatorVerticalPadding)
+        .background(
+            Capsule()
+                .fill(Color.gray.opacity(Constants.pageIndicatorBackOpacity))
+        )
     }
 
     var carouselContent: some View {
