@@ -100,7 +100,6 @@ struct SpaceView: View {
                     await store.send(intent: .requestDeleteMessage(messageID))
                 }
             }
-            Button("취소", role: .cancel) {}
         }
         .allowsHitTesting(store.state.deleteStatus == .idle)
         .task {
