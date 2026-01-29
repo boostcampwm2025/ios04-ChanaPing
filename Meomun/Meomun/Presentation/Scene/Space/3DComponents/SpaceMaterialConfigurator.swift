@@ -1,11 +1,12 @@
 //
-//  DomeMaterialConfigurator.swift
+//  SpaceMaterialConfigurator.swift
 //  Meomun
 //
 //  Created by Hayeon Park on 1/29/26.
 //
 
 import RealityKit
+import UIKit
 
 struct SpaceMaterialConfigurator {
     func configureDome(domeEntity: Entity, dayPart: DayPart) {
@@ -32,6 +33,7 @@ struct SpaceMaterialConfigurator {
             try material.setParameter(name: "TimeSpeed", value: .float(0.3))
         }
     }
+
 }
 
 private extension SpaceMaterialConfigurator {
