@@ -45,14 +45,9 @@ private struct MarkerRenderSignature: Hashable {
 /// renderTasks: [마커키: 렌더링 Task] (누적 방지, 최신만 반영)
 /// fadeTasks:   [마커키: 페이드 Task] (페이드 애니메이션 중복 방지)
 /// hasFadedIn:  Set<마커키> (마커별 최초 1회 페이드 적용 여부)
+/// lastRenderedSignature: [마커키: 렌더 시그니처 캐시]
 /// ```
-///
-/// ## 사용 흐름
-/// ```
-/// 1. loadMessages() -> applySnapshot()으로 스토어 재구성 + diff 기반 마커 갱신
-/// 2. handleEvent() -> 실시간 이벤트 처리 (해당 좌표의 마커/상태 갱신 + 필요 시 아이콘 재렌더)
-/// 3. updateAnimations() -> 애니메이션 대상 마커는 매 프레임 iconImage 갱신 (60fps)
-/// ```
+
 @MainActor
 final class MessageMarkerManager {
 
