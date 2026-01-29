@@ -15,13 +15,14 @@ fileprivate enum Constants {
 
 struct LocationGateView: View {
     @EnvironmentObject private var locationProvider: LocationProvider
-    @Environment(\.openURL) private var openURL
     @Environment(\.scenePhase) private var scenePhase
 
     private let onReady: (Coordinate) -> Void
+    private let appSettingsOpener: AppSettingsOpening
 
-    init(onReady: @escaping (Coordinate) -> Void) {
+    init(onReady: @escaping (Coordinate) -> Void, appSettingsOpener: AppSettingsOpening) {
         self.onReady = onReady
+        self.appSettingsOpener = appSettingsOpener
     }
 
     var body: some View {
@@ -38,8 +39,8 @@ struct LocationGateView: View {
 
             case .denied, .restricted:
                 AlertView(type: .location) {
-                    if let url = URL(string: UIApplication.openSettingsURLString) {
-                        openURL(url)
+                    Task {
+                        await appSettingsOpener.openAppSettings()
                     }
                 }
 
