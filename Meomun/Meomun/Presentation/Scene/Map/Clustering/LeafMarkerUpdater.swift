@@ -12,21 +12,39 @@ final class LeafMarkerUpdater: NMCDefaultLeafMarkerUpdater {
     private let diameter: CGFloat = 35 // 전체 크기
     private let iconDiameter: CGFloat = 25 // 내부 아이콘 크기
 
-    private lazy var cachedIcon: NMFOverlayImage = {
-        let image = Self.renderIconWithBackground(
-            diameter: diameter,
-            backgroundColor: .white.withAlphaComponent(0.9),
-            icon: UIImage.spaceIconBold,
-            iconDiameter: iconDiameter
-        )
+    private func cachedIcon(isPlace: Bool) -> NMFOverlayImage {
+        if isPlace {
+            let image = Self.renderIconWithBackground(
+                diameter: diameter,
+                backgroundColor: .white.withAlphaComponent(0.9),
+                icon: UIImage.spaceIconBold,
+                iconDiameter: iconDiameter,
+                backgroundYOffset: 2
+            )
 
-        return NMFOverlayImage(image: image)
-    }()
+            return NMFOverlayImage(image: image)
+        } else {
+            let image = Self.renderIconWithBackground(
+                diameter: diameter,
+                backgroundColor: .white.withAlphaComponent(0.9),
+                icon: UIImage.dots,
+                iconDiameter: iconDiameter
+            )
+
+            return NMFOverlayImage(image: image)
+        }
+    }
 
     override func updateLeafMarker(_ info: NMCLeafMarkerInfo, _ marker: NMFMarker) {
         super.updateLeafMarker(info, marker)
 
-        marker.iconImage = cachedIcon
+        let tagValue = (info.tag as? NSNumber)?.intValue
+        if tagValue == 1 {
+            marker.iconImage = cachedIcon(isPlace: true)
+        } else {
+            marker.iconImage = cachedIcon(isPlace: false)
+        }
+
         marker.width = diameter
         marker.height = diameter
         marker.touchHandler = { overlay in
@@ -52,7 +70,7 @@ final class LeafMarkerUpdater: NMCDefaultLeafMarkerUpdater {
         backgroundColor: UIColor,
         icon: UIImage,
         iconDiameter: CGFloat,
-        backgroundYOffset: CGFloat = 2
+        backgroundYOffset: CGFloat = 0
     ) -> UIImage {
         let size = CGSize(width: diameter, height: diameter)
         let renderer = UIGraphicsImageRenderer(size: size)

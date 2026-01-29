@@ -845,7 +845,7 @@ private extension MessageMarkerManager {
         }
 
         // 2) cluster item map 구성
-        var keyTagMap: [ItemKey: NSNull] = [:]
+        var keyTagMap: [ItemKey: NSObject] = [:]
         keyTagMap.reserveCapacity(desiredGroupKeys.count)
 
         for groupKey in desiredGroupKeys {
@@ -853,7 +853,8 @@ private extension MessageMarkerManager {
             let position = NMGLatLng(lat: coord.latitude, lng: coord.longitude)
             let id = stableClusterId(for: groupKey)
 
-            keyTagMap[ItemKey(identifier: id, position: position)] = NSNull()
+            let tag: NSObject = groupKey.isPlace ? ClusterItemTag.place : ClusterItemTag.noPlace
+            keyTagMap[ItemKey(identifier: id, position: position)] = tag
         }
 
         clusterer.addAll(keyTagMap)
