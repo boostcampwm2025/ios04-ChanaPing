@@ -113,7 +113,7 @@ extension MessageMarkerManager {
     /// 네이버맵 마커 객체를 생성합니다.
     ///  - 기본 핀 깜빡임 방지를 위해 투명 placeholder icon을 먼저 세팅하고,
     ///  - 최초 1회는 렌더링 완료 후 페이드 인, 이후 갱신은 alpha = 1 유지한 채 iconImage만 교체
-    private func makeMarker(at position: NMGLatLng, mapView: NMFMapView) -> NMFMarker {
+    private func makeMarker(at position: NMGLatLng) -> NMFMarker {
         let marker = NMFMarker(position: position)
         marker.anchor = CGPoint(x: 0.5, y: 1.0)   // 마커 하단 중앙이 좌표 위치
         marker.zIndex = 1000                      // 다른 오버레이보다 위에 표시
@@ -623,7 +623,7 @@ extension MessageMarkerManager {
         mapView: NMFMapView
     ) -> NMFMarker {
         let position = NMGLatLng(lat: coord.latitude, lng: coord.longitude)
-        let marker = makeMarker(at: position, mapView: mapView)
+        let marker = makeMarker(at: position)
 
         attachMarker(marker, to: mapView)
         return marker
