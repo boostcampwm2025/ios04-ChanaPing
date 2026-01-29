@@ -691,7 +691,10 @@ extension MessageMarkerManager {
             // 메시지 변화에 맞춰 currentIndex/flags 보정
             state.syncMessagesKeepingIndex(currentTime: currentTime)
             // 메시지가 2개 미만이면 애니메이션 불필요
-            guard state.messages.count > 1 else { continue }
+            guard state.messages.count > 1 else {
+                animationStates[groupKey] = state
+                continue
+            }
             // 해당 마커가 없으면 스킵
             guard markers[groupKey] != nil else { continue }
 
