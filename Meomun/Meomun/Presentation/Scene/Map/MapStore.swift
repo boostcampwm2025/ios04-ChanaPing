@@ -118,6 +118,7 @@ final class MapStore: Store {
                 }
 
                 continuation.finish()
+                return
 
             case .userLocationReady(let coordinate):
                 continuation.yield(.setCameraCoordinate(coordinate))
@@ -131,6 +132,7 @@ final class MapStore: Store {
                 }
 
                 continuation.finish()
+                return
 
             case .onDisappear:
                 self.getNearbyMessageTask?.cancel()

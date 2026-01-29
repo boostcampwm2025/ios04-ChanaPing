@@ -8,7 +8,7 @@
 import SwiftUI
 
 struct RootView: View {
-    @StateObject private var locationProvider = LocationProvider()
+    @StateObject private var locationProvider: LocationProvider
     @StateObject private var store: RootStore
     @Environment(\.scenePhase) private var scenePhase
 
