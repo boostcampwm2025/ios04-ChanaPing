@@ -110,16 +110,11 @@ struct SpaceView: View {
             spaceController.sync(messages: store.state.messages)
         }
     }
+}
 
-    private var deleteStatusMessage: String {
-        switch store.state.deleteStatus {
-        case .loading: return "메시지를 삭제하고 있어요"
-        case .success: return "메시지를 삭제했어요"
-        case .fail: return "메시지 삭제에 실패했어요"
-        case .idle: return ""
-        }
-    }
+// MARK: - Handle Gesture
 
+extension SpaceView {
     private func handleBubbleTap(entity: Entity?) {
         guard let entity = entity,
               let component = entity.components[MessageBubbleIDComponent.self] else {
@@ -128,6 +123,19 @@ struct SpaceView: View {
 
         Task {
             await store.send(intent: .selectMessage(component.messageID))
+        }
+    }
+}
+
+// MARK: Computed property
+
+extension SpaceView {
+    private var deleteStatusMessage: String {
+        switch store.state.deleteStatus {
+        case .loading: return "메시지를 삭제하고 있어요"
+        case .success: return "메시지를 삭제했어요"
+        case .fail: return "메시지 삭제에 실패했어요"
+        case .idle: return ""
         }
     }
 }
