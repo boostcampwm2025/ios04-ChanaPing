@@ -266,6 +266,7 @@ private extension MapView {
     var timeLineListView: some View {
         TimelineListView(
             store: TimelineListStore(
+                initialMessages: store.state.selectedNoPlaceMessages,
                 fetchRecentMessagesUseCase: FetchRecentMessagesUseCaseImpl(
                     repository: MessageRepositoryImpl()
                 ),

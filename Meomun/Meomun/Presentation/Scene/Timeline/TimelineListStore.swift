@@ -69,6 +69,11 @@ final class TimelineListStore: Store {
         switch intent {
         case .onAppear:
             return .init { continuation in
+                guard state.messages.isEmpty else {
+                    continuation.finish()
+                    return
+                }
+
                 Task {
                     do {
                         // TODO: 페이지네이션 구현
