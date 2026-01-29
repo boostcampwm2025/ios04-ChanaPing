@@ -82,10 +82,7 @@ struct SpaceView: View {
             buttons: { $0.buttons }
         )
         .overlay(alignment: .bottom) {
-            if store.state.selectedMessageID != nil {
-                selectionBar
-                    .transition(.move(edge: .bottom).combined(with: .opacity))
-            }
+            selectionBar
         }
         .animation(.spring(response: 0.25, dampingFraction: 0.9), value: store.state.selectedMessageID)
         .allowsHitTesting(store.state.deleteStatus == .idle)
@@ -126,24 +123,34 @@ private extension SpaceView {
 // MARK: Subviews
 
 extension SpaceView {
+    @ViewBuilder
     var selectionBar: some View {
-        HStack {
-            Button { send(.selectMessage(nil)) } label: {
-                Text("취소")
-                    .font(.headline)
-                    .foregroundStyle(Color.mmPrimary)
-                    .padding(.horizontal, 16)
-            }
+        Group {
+            if store.state.selectedMessageID != nil {
+                HStack {
+                    Button { send(.selectMessage(nil)) } label: {
+                        Text("취소")
+                            .font(.headline)
+                            .foregroundStyle(Color.mmPrimary)
+                            .padding(.horizontal, 16)
+                    }
 
-            Spacer()
+                    Spacer()
 
-            if let messageID = store.state.selectedMessageID {
-                Button { send(.requestDeleteMessage(messageID)) } label: {
-                    Text("삭제")
-                        .font(.headline)
-                        .foregroundStyle(Color.red)
-                        .padding(.horizontal, 24)
+                    if let messageID = store.state.selectedMessageID {
+                        Button { send(.requestDeleteMessage(messageID)) } label: {
+                            Text("삭제")
+                                .font(.headline)
+                                .foregroundStyle(Color.red)
+                                .padding(.horizontal, 24)
+                        }
+                    }
                 }
+            } else {
+                Text("\(store.state.messages.count)개의 추억이 떠다니고 있어요")
+                    .font(.body.weight(.semibold))
+                    .foregroundStyle(Color.mmPrimary)
+                    .frame(maxWidth: .infinity)
             }
         }
         .floatingContainer()
