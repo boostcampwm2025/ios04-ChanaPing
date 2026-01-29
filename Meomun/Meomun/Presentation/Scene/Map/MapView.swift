@@ -274,6 +274,7 @@ private extension MapView {
             configuration: .bottomSheet
         )
     }
+
     var isTimelineListPresentedBinding: Binding<Bool> {
         Binding(
             get: { store.state.selectedNoPlaceMessages.isEmpty == false },
