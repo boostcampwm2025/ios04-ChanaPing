@@ -24,16 +24,13 @@ struct MapView: View {
     @EnvironmentObject private var locationProvider: LocationProvider
 
     private let messageMarkerManager: MessageMarkerManager
-    private let initialUserLocation: Coordinate
 
     init(
         store: MapStore,
-        userLocation: Coordinate,
         messageMarkerManager: MessageMarkerManager
     ) {
         self.store = store
         self.messageMarkerManager = messageMarkerManager
-        self.initialUserLocation = userLocation
     }
 
     private func send(_ intent: MapStore.Intent) {
@@ -98,7 +95,7 @@ struct MapView: View {
                 }
             }
             .task {
-                send(.onAppear(initialUserLocation))
+                send(.onAppear(.seoulCity))
             }
             .onAppear {
                 setTabBarHidden(false)
@@ -128,7 +125,7 @@ struct MapView: View {
 private extension MapView {
     var mapViewWrapper: some View {
         MapViewWrapper(
-            userLocation: locationProvider.current ?? initialUserLocation,
+            userLocation: locationProvider.current ?? .seoulCity,
             isFollowingUser: store.state.isFollowingUser,
             markerManager: messageMarkerManager,
             messages: store.state.messages,
@@ -310,7 +307,7 @@ private extension MapView {
             ),
             networkMonitor: NetworkMonitor()
         ),
-        userLocation: .init(latitude: 37.5665, longitude: 126.9780),
         messageMarkerManager: messageMarkerManager
     )
+    .environmentObject(LocationProvider())
 }

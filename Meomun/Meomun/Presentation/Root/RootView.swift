@@ -16,9 +16,9 @@ struct RootView: View {
     var body: some View {
         Group {
             if let userLocation {
-                MainTabShellView(userLocation: userLocation)
+                MainTabShellView()
             } else {
-                MainTabShellView(userLocation: .seoulCity)
+                MainTabShellView()
                     .overlay {
                         LocationGateView(
                             onReady: { coordinate in
