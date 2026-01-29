@@ -28,10 +28,12 @@ final class TimelineListStore: Store {
         case setMessages([Message])
         case requestDeleteSelectedMessages          // 편집 모드 -> 삭제
         case confirmDeleteSelectedMessages          // 얼럿 - 삭제
+        case requestDeleteMessage(MessageID)        // 단일 메시지 삭제 요청 (메뉴 버튼)
+        case confirmDeleteMessage(MessageID)        // 단일 메시지 삭제 확인 (메뉴 버튼)
         case dismissAlert                           // 얼럿 - 취소
 
         case tapMessage(MessageID)
-        case tapSection(YearMonth)
+        case tapSection(YearMonth?)
         case tapEdit
     }
 
@@ -51,22 +53,22 @@ final class TimelineListStore: Store {
     @Published var state: State
 
     private let fetchRecentMessagesUseCase: FetchRecentMessagesUseCase
-    private let deleteMesagesUseCase: DeleteMessagesUseCaseImpl
+    private let deleteMessagesUseCase: DeleteMessagesUseCase
 
     init(
         initialMessages: [Message] = [],
         fetchRecentMessagesUseCase: FetchRecentMessagesUseCase,
-        deleteMessagesUseCase: DeleteMessagesUseCaseImpl
+        deleteMessagesUseCase: DeleteMessagesUseCase
     ) {
         self.state = State(messages: initialMessages)
         self.fetchRecentMessagesUseCase = fetchRecentMessagesUseCase
-        self.deleteMesagesUseCase = deleteMessagesUseCase
+        self.deleteMessagesUseCase = deleteMessagesUseCase
     }
 
     func action(intent: Intent) -> AsyncStream<Action> {
-        AsyncStream { continuation in
-            switch intent {
-            case .onAppear:
+        switch intent {
+        case .onAppear:
+            return .init { continuation in
                 Task {
                     do {
                         // TODO: 페이지네이션 구현
@@ -75,22 +77,37 @@ final class TimelineListStore: Store {
                     } catch {
                         AppLog.debug(error.localizedDescription, category: .store)
                     }
+
+                    continuation.finish()
                 }
-                return
+            }
 
-            case .tapSection(let section):
-                // TODO: 섹션 탭 동작 구현
+        case .tapSection(let section):
+            return .init { continuation in
                 continuation.yield(.setSelectedSection(section))
+                continuation.finish()
+            }
 
-            case .tapEdit:
+        case .tapEdit:
+            return .init { continuation in
                 continuation.yield(.setEditing(!state.isEditing))
                 continuation.yield(.clearSelectedMessageIDs)
+                continuation.finish()
+            }
 
-            case .tapMessage(let messageID):
-                guard state.isEditing else { break }
+        case .tapMessage(let messageID):
+            return .init { continuation in
+                guard state.isEditing else {
+                    continuation.finish()
+                    return
+                }
+
                 continuation.yield(.toggleMessageSelection(messageID))
+                continuation.finish()
+            }
 
-            case .requestDeleteSelectedMessages:
+        case .requestDeleteSelectedMessages:
+            return .init { continuation in
                 let alert = AlertFactory.deleteMessage(
                     count: state.selectedMessageIDs.count,
                     onConfirm: { [weak self] in
@@ -101,43 +118,47 @@ final class TimelineListStore: Store {
                     }
                 )
                 continuation.yield(.showDeleteAlert(alert))
-
-            case .confirmDeleteSelectedMessages:
-                continuation.yield(.setDeleteStatus(.loading))
-                continuation.yield(.hideAlert)
-
-                Task {
-                    do {
-                        try await deleteMesagesUseCase.execute(for: state.selectedMessageIDs)
-                        continuation.yield(.deleteMessages(state.selectedMessageIDs))
-                        continuation.yield(.setEditing(false))
-                        continuation.yield(.clearSelectedMessageIDs)
-                        continuation.yield(.setDeleteStatus(.success))
-
-                        // 성공 메시지를 1초간 보여준 후 idle로 전환
-                        try? await Task.sleep(for: .seconds(1))
-                        continuation.yield(.setDeleteStatus(.idle))
-                    } catch {
-                        AppLog.error("메시지 삭제 실패", category: .store, error: error)
-                        continuation.yield(.setDeleteStatus(.fail))
-
-                        // 실패 메시지를 1초간 보여준 후 idle로 전환
-                        try? await Task.sleep(for: .seconds(1))
-                        continuation.yield(.setDeleteStatus(.idle))
-                    }
-
-                    continuation.finish()
-                }
-                return
-
-            case .dismissAlert:
-                continuation.yield(.hideAlert)
-
-            case .setMessages(let messages):
-                continuation.yield(.setMessages(messages))
+                continuation.finish()
             }
 
-            continuation.finish()
+        case .requestDeleteMessage(let messageID):
+            return .init { continuation in
+                let alert = AlertFactory.deleteMessage(
+                    count: 1,
+                    onConfirm: { [weak self] in
+                        guard let self else { return }
+                        Task {
+                            await self.send(intent: .confirmDeleteMessage(messageID))
+                        }
+                    }
+                )
+                continuation.yield(.showDeleteAlert(alert))
+                continuation.finish()
+            }
+
+        case .confirmDeleteMessage(let messageID):
+            return performDelete(messageIDs: [messageID])
+
+        case .confirmDeleteSelectedMessages:
+            return performDelete(
+                messageIDs: state.selectedMessageIDs,
+                onSuccess: [
+                    .setEditing(false),
+                    .clearSelectedMessageIDs
+                ]
+            )
+
+        case .dismissAlert:
+            return .init { continuation in
+                continuation.yield(.hideAlert)
+                continuation.finish()
+            }
+
+        case .setMessages(let messages):
+            return .init { continuation in
+                continuation.yield(.setMessages(messages))
+                continuation.finish()
+            }
         }
     }
 
@@ -189,6 +210,45 @@ final class TimelineListStore: Store {
     }
 }
 
+// MARK: - Side Effects
+
+private extension TimelineListStore {
+    func performDelete(
+        messageIDs: Set<MessageID>,
+        onSuccess: [Action] = []
+    ) -> AsyncStream<Action> {
+        AsyncStream { continuation in
+            continuation.yield(.setDeleteStatus(.loading))
+            continuation.yield(.hideAlert)
+
+            Task {
+                do {
+                    try await deleteMessagesUseCase.execute(for: messageIDs)
+                    continuation.yield(.deleteMessages(messageIDs))
+
+                    // 성공 시 추가 액션 실행
+                    onSuccess.forEach { continuation.yield($0) }
+
+                    // 성공 메시지를 1초간 보여준 후 idle로 전환
+                    continuation.yield(.setDeleteStatus(.success))
+                    try? await Task.sleep(for: .seconds(1))
+                    continuation.yield(.setDeleteStatus(.idle))
+                } catch {
+                    AppLog.error("메시지 삭제 실패", category: .store, error: error)
+                    // 실패 메시지를 1초간 보여준 후 idle로 전환
+                    continuation.yield(.setDeleteStatus(.fail))
+                    try? await Task.sleep(for: .seconds(1))
+                    continuation.yield(.setDeleteStatus(.idle))
+                }
+
+                continuation.finish()
+            }
+        }
+    }
+}
+
+// MARK: Section Helper
+
 private extension TimelineListStore {
     func isSectionAvailable(_ section: YearMonth, in messages: [Message]) -> Bool {
         MessageTimelineGrouper
@@ -209,6 +269,8 @@ private extension TimelineListStore {
     }
 }
 
+// MARK: - View Helpers
+
 extension TimelineListStore {
     func selectionState(for message: Message) -> TimelineSelectionState {
         if !state.isEditing {
@@ -216,5 +278,9 @@ extension TimelineListStore {
         }
 
         return state.selectedMessageIDs.contains(message.id) ? .selected : .unselected
+    }
+
+    func messages(in section: YearMonth) -> [Message] {
+        state.sections.first(where: { $0.key == section })?.value ?? []
     }
 }

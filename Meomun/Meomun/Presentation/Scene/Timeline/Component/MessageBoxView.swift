@@ -22,16 +22,24 @@ private enum Layout {
 
 struct MessageBoxView: View {
     private let message: Message
+    private let onDelete: (() -> Void)
 
-    init(message: Message) {
+    init(message: Message, onDelete: @escaping (() -> Void)) {
         self.message = message
+        self.onDelete = onDelete
     }
 
     var body: some View {
         VStack(alignment: .leading, spacing: 24) {
             messageTextView
 
-            metaRowView
+            VStack(alignment: .leading, spacing: 10) {
+                addressView
+
+                Divider()
+
+                metaRowView
+            }
         }
         .padding(.horizontal, Layout.horizontalPadding)
         .padding(.vertical, Layout.verticalPadding)
@@ -50,24 +58,36 @@ private extension MessageBoxView {
             .fixedSize(horizontal: false, vertical: true)
     }
 
+    var addressView: some View {
+        HStack(alignment: .center) {
+            Image(systemName: "mappin.and.ellipse")
+            Text(message.placeTag?.name ?? message.address)
+        }
+        .font(.footnote.bold())
+        .foregroundStyle(Color.meomunSecondaryColor)
+    }
+
     var metaRowView: some View {
-
-        HStack(spacing: 10) {
-            let placeName = message.placeTag?.name ?? message.address
-
-            Label {
-                Text(placeName)
-            } icon: {
-                Image(systemName: "mappin.and.ellipse")
-            }
-            .font(.footnote.bold())
-            .foregroundStyle(Color.meomunSecondaryColor)
-
-            Spacer(minLength: 8)
-
+        HStack {
             Text(MessageTimestampFormatter.string(from: message.createdAt))
                 .font(.footnote.weight(.semibold))
                 .foregroundStyle(Color.meomunSecondaryColor)
+
+            Spacer()
+
+            Menu {
+                Button(role: .destructive) {
+                    onDelete()
+                } label: {
+                    Label("삭제", systemImage: "trash")
+                }
+            } label: {
+                VStack(alignment: .trailing) {
+                    Image(systemName: "ellipsis.circle")
+                        .foregroundStyle(Color.meomunSecondaryColor)
+                        .contentShape(Rectangle())
+                }
+            }
         }
     }
 
@@ -106,6 +126,14 @@ private extension MessageBoxView {
             createdAt: Date().addingTimeInterval(-15000 * 60),
             content: "[Case4] NoPlace 스택 메시지 3",
             coordinate: Coordinate.seoulCity,
+            address: "가람로 109가람로 109가람로 109가람로 109가람로 109가람로 109가람로 109",
+            placeTag: nil
+        ),
+        Message(
+            id: MessageID(value: UUID()),
+            createdAt: Date().addingTimeInterval(-15000 * 60),
+            content: "12345678901234567890123456789012",
+            coordinate: Coordinate.seoulCity,
             address: "가람로 109",
             placeTag: nil
         )
@@ -113,7 +141,7 @@ private extension MessageBoxView {
 
     VStack(spacing: 10) {
         ForEach(messages) { message in
-            MessageBoxView(message: message)
+            MessageBoxView(message: message, onDelete: { })
         }
     }
 }

@@ -64,8 +64,14 @@ struct MainTabShellView: View {
                 )
             )
 
-        case .myPage:
-            EmptyView()
+        case .setting:
+            NavigationStack {
+                SettingView(
+                    store: SettingStore(
+                        appSettingsOpener: AppSettingsOpener()
+                    )
+                )
+            }
         }
     }
 }

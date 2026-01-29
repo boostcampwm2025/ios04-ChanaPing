@@ -29,6 +29,8 @@ final class MapStore: Store {
         case updateMessages([Message])
 
         case tapNoPlaceMarker([Message])
+        case tapPlaceMarker([Message])
+        case dismissPlaceCarousel
 
         case dismissTimelineView
         case tapNetworkRefresh
@@ -47,6 +49,7 @@ final class MapStore: Store {
         case setMessages([Message])
 
         case setSelectedNoPlace([Message])
+        case setCarouselItems([PlaceCarouselDisplayModel])
 
         case setLoading(Bool)
         case setNetworkConnected(Bool)
@@ -67,6 +70,7 @@ final class MapStore: Store {
         var isShowingAddMessage: Bool = false
 
         var selectedNoPlaceMessages: [Message] = []
+        var carouselItems: [PlaceCarouselDisplayModel] = []
 
         var isLoading: Bool = false
         var isNetworkConnected = true
@@ -179,6 +183,15 @@ final class MapStore: Store {
                 continuation.yield(.setSelectedNoPlace(messages))
                 continuation.finish()
 
+            case .tapPlaceMarker(let messages):
+                let items = self.groupMessagesByPlace(messages)
+                continuation.yield(.setCarouselItems(items))
+                continuation.finish()
+
+            case .dismissPlaceCarousel:
+                continuation.yield(.setCarouselItems([]))
+                continuation.finish()
+
             case .dismissTimelineView:
                 continuation.yield(.setSelectedNoPlace([]))
                 continuation.finish()
@@ -222,6 +235,9 @@ final class MapStore: Store {
 
         case .setSelectedNoPlace(let messages):
             newState.selectedNoPlaceMessages = messages
+
+        case .setCarouselItems(let items):
+            newState.carouselItems = items
 
         case .setLoading(let isLoading):
             newState.isLoading = isLoading
@@ -286,5 +302,22 @@ final class MapStore: Store {
                 continuation.yield(.setError(error.localizedDescription))
             }
         }
+    }
+}
+
+private extension MapStore {
+    /// 메시지 배열을 Place별로 그룹화하여 캐러셀 아이템 배열로 변환
+    func groupMessagesByPlace(_ messages: [Message]) -> [PlaceCarouselDisplayModel] {
+        var placeMessages: [Place: [Message]] = [:]
+
+        for message in messages {
+            guard let place = message.placeTag else { continue }
+            placeMessages[place, default: []].append(message)
+        }
+
+        return placeMessages.map { place, messages in
+            PlaceCarouselDisplayModel(place: place, messageCount: messages.count)
+        }
+        .sorted { $0.messageCount > $1.messageCount }
     }
 }

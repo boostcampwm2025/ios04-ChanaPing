@@ -9,11 +9,12 @@ import SwiftUI
 
 struct TimelineSectionHeaderView: View {
     let yearMonth: YearMonth
+    let onTapButton: () -> Void
 
     var body: some View {
         let date = yearMonth.startDate()
 
-        HStack {
+        HStack(spacing: 10) {
             Text(date.formatted(.dateTime.month(.abbreviated)))
                 .font(.largeTitle.bold())
                 .foregroundStyle(Color.meomunPrimaryColor.opacity(0.75))
@@ -24,8 +25,24 @@ struct TimelineSectionHeaderView: View {
                 .padding(.leading, 6)
 
             Spacer()
+
+            Button(action: onTapButton) {
+                HStack(spacing: 6) {
+                    Text("흔적 따라가기")
+                        .font(.footnote.weight(.semibold))
+
+                    Image(systemName: "chevron.right")
+                        .font(.system(size: 18, weight: .semibold))
+                }
+                .foregroundStyle(Color.tabActive)
+                .opacity(0.75)
+                .padding(.vertical, 4)
+                .padding(.horizontal, 10)
+                .contentShape(Rectangle())
+            }
+            .buttonStyle(.plain)
         }
-        .padding(.horizontal, 20)
+        .padding(.horizontal, 30)
         .padding(.top, 8)
         .padding(.bottom, 16)
         .background(Color.meomunBackgroundColor)
@@ -33,5 +50,5 @@ struct TimelineSectionHeaderView: View {
 }
 
 #Preview {
-    TimelineSectionHeaderView(yearMonth: YearMonth(date: Date.now))
+    TimelineSectionHeaderView(yearMonth: YearMonth(date: Date.now), onTapButton: {})
 }

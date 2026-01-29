@@ -13,6 +13,7 @@ struct SpaceView: View {
     @EnvironmentObject private var locationProvider: LocationProvider
     @StateObject private var store: SpaceStore
     @State private var domeEnvironment: DomeEnvironment
+    @State private var rotationCamera: RotationCamera
 
     @State private var spaceRootEntity: Entity?
     @State private var messageBubbleTemplateEntity: Entity?
@@ -24,11 +25,6 @@ struct SpaceView: View {
     private let place: Place
     private let onNavigate: (Coordinate, Place) -> Void
 
-    private let rotationCamera = RotationCamera(
-        position: .init(x: 0, y: 0.7, z: 0),    // 카메라 시작 위치 (돔 중심에서 약간 위)
-        rotateSensitivity: 0.003                // 회전 민감도 (값이 클수록 더 빠르게 회전)
-    )
-
     init(
         store: SpaceStore,
         domeEnvironment: DomeEnvironment,
@@ -36,7 +32,13 @@ struct SpaceView: View {
         onNavigate: @escaping (Coordinate, Place) -> Void
     ) {
         _store = StateObject(wrappedValue: store)
-        self.domeEnvironment = domeEnvironment
+        _rotationCamera = State(
+            initialValue: RotationCamera(
+                position: .init(x: 0, y: 0.7, z: 0),    // 카메라 시작 위치 (돔 중심에서 약간 위)
+                rotateSensitivity: 0.003                // 회전 민감도 (값이 클수록 더 빠르게 회전)
+            )
+        )
+        _domeEnvironment = State(initialValue: domeEnvironment)
         self.place = place
         self.onNavigate = onNavigate
     }
@@ -51,6 +53,10 @@ struct SpaceView: View {
             .gesture(
                 DragGesture()
                     .onChanged { value in
+                        AppLog.debug(
+                            "Drag changed: start=\(value.startLocation) loc=\(value.location) translation=\(value.translation)",
+                            category: .space
+                        )
                         rotationCamera.handleDrag(
                             translationX: Float(value.translation.width),
                             translationY: Float(value.translation.height)
@@ -122,7 +128,9 @@ extension SpaceView {
                 }
 
                 // 카메라 추가
+                AppLog.debug("RotationCamera: will add to scene", category: .space)
                 rotationCamera.addToScene(content)
+                AppLog.debug("RotationCamera: did add to scene", category: .space)
             } catch {
                 AppLog.error(
                     "Failed to load dome entity",
@@ -487,46 +495,6 @@ extension SpaceView {
     }
 }
 
-// MARK: - BubblePlacer
-
-private struct BubblePlacer {
-    func randomPositionInsideHemisphere(
-        radiusRange: ClosedRange<Float>,
-        yRange: ClosedRange<Float>,
-        minimumDistanceFromCenter: Float,
-        minimumDistanceFromViewAxis: Float,
-        maxAttempts: Int
-    ) -> SIMD3<Float> {
-        for _ in 0..<maxAttempts {
-            let theta = Float.random(in: 0...(2 * .pi)) // 수평 회전 각도 (0~360도)
-            let y = Float.random(in: yRange)            // 높이 범위 (바닥에 너무 붙지 않도록 yRange로 제한)
-            let radius = Float.random(in: radiusRange)  // 중심에서 떨어지는 거리 (돔 내부에서 "멀리/가까이" 범위)
-
-            let xzLimit = max(0.0, sqrt(max(0.0, radius * radius - y * y)))
-            let x = cos(theta) * xzLimit
-            let z = sin(theta) * xzLimit
-
-            let position = SIMD3<Float>(x, y, z)
-
-            // 중심 근처 피하기
-            if simd_length(position) < minimumDistanceFromCenter {
-                continue
-            }
-
-            // 뷰 축(카메라 방향 축) 근처 피하기
-            let distanceFromViewAxis = simd_length(SIMD2<Float>(x, y))
-            if distanceFromViewAxis < minimumDistanceFromViewAxis {
-                continue
-            }
-
-            return position
-        }
-
-        // 실패 시 fallback
-        return SIMD3<Float>(minimumDistanceFromViewAxis, yRange.upperBound, -radiusRange.upperBound)
-    }
-}
-
 #Preview {
     NavigationStack {
         SpaceView(
@@ -535,28 +503,16 @@ private struct BubblePlacer {
                     messageRepository: MessageRepositoryImpl()
                 ),
                 place: .init(
-                    id: .init(
-                        value: .init()
-                    ),
+                    id: .init(value: .init()),
                     name: "광화문",
-                    coordinate: .init(
-                        latitude: 0,
-                        longitude: 0
-                    )
+                    coordinate: .init(latitude: 0, longitude: 0)
                 )
             ),
-            domeEnvironment: .init(
-                dayPart: .afternoon
-            ),
+            domeEnvironment: .init(dayPart: .afternoon),
             place: .init(
-                id: .init(
-                    value: .init()
-                ),
+                id: .init(value: .init()),
                 name: "광화문",
-                coordinate: .init(
-                    latitude: 0,
-                    longitude: 0
-                )
+                coordinate: .init(latitude: 0, longitude: 0)
             ),
             onNavigate: { _, _ in }
         )
