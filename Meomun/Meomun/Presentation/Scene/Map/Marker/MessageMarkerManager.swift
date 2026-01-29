@@ -230,7 +230,7 @@ extension MessageMarkerManager {
 
         // 1-1) Place
         for message in sorted where message.placeTag != nil {
-            let coordinate = message.coordinate
+            guard let coordinate = message.placeTag?.coordinate else { return }
             newPlace[coordinate, default: []].append(message)
         }
 
