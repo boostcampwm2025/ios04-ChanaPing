@@ -79,6 +79,10 @@ struct MyPageView: View {
                 )
             }
         }
+        .safeAreaInset(edge: .bottom) {
+            Color.clear
+                .frame(height: 100)
+        }
         .navigationTitle("마이페이지")
         .onAppear {
             permissionStatus = LocationPermissionStatus.current
