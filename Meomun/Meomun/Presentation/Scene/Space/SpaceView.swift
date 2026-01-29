@@ -12,8 +12,6 @@ struct SpaceView: View {
     @EnvironmentObject private var locationProvider: LocationProvider
     @StateObject private var store: SpaceStore
     @State private var spaceController: SpaceController
-    @State private var showContextMenu = false
-    @State private var selectedMessageID: MessageID?
 
     private let place: Place
     private let onNavigate: (Coordinate, Place) -> Void
@@ -83,8 +81,19 @@ struct SpaceView: View {
         )
         .confirmationDialog(
             "메시지 관리",
-            isPresented: $showContextMenu,
-            presenting: selectedMessageID
+            isPresented: Binding(
+                get: {
+                    store.state.selectedMessageID != nil
+                },
+                set: { isPresented in
+                    if !isPresented {
+                        Task {
+                            await store.send(intent: .selectMessage(nil))
+                        }
+                    }
+                }
+            ),
+            presenting: store.state.selectedMessageID
         ) { messageID in
             Button("삭제", role: .destructive) {
                 Task {
@@ -117,8 +126,9 @@ struct SpaceView: View {
             return
         }
 
-        selectedMessageID = component.messageID
-        showContextMenu = true
+        Task {
+            await store.send(intent: .selectMessage(component.messageID))
+        }
     }
 }
 

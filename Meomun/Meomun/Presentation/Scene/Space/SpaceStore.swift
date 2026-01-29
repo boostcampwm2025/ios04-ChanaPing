@@ -12,6 +12,7 @@ final class SpaceStore: Store {
     enum Intent {
         case onAppear(placeID: PlaceID)
         case setToast(String?)
+        case selectMessage(MessageID?)
         case requestDeleteMessage(MessageID)
         case confirmDeleteMessage(MessageID)
         case dismissAlert
@@ -24,6 +25,7 @@ final class SpaceStore: Store {
         case setUserLocation(Coordinate)
         case setCurrentPlaceID(PlaceID)
         case setToastMessage(String?)
+        case setSelectedMessage(MessageID?)
         case deleteMessage(MessageID)
         case showDeleteAlert(AlertModel)
         case hideAlert
@@ -37,6 +39,7 @@ final class SpaceStore: Store {
         var userLocation: Coordinate?           // TODO: - 지도 > 공간 진입 시점 좌표 넘겨주고, 옵셔널 지우기
         var currentPlaceID: PlaceID?
         var toastMessage: String?
+        var selectedMessageID: MessageID?
         var deleteAlert: AlertModel?
         var deleteStatus: LoadingStatus = .idle
     }
@@ -70,6 +73,10 @@ final class SpaceStore: Store {
 
             case .setToast(let message):
                 continuation.yield(.setToastMessage(message))
+                continuation.finish()
+
+            case .selectMessage(let messageID):
+                continuation.yield(.setSelectedMessage(messageID))
                 continuation.finish()
 
             case .requestDeleteMessage(let messageID):
@@ -112,6 +119,9 @@ final class SpaceStore: Store {
 
         case .setToastMessage(let message):
             newState.toastMessage = message
+
+        case .setSelectedMessage(let messageID):
+            newState.selectedMessageID = messageID
 
         case .deleteMessage(let messageID):
             newState.messages.removeAll { $0.id == messageID }
