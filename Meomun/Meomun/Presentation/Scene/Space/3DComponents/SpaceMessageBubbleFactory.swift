@@ -48,6 +48,12 @@ final class SpaceMessageBubbleFactory {
         let finalScale = SpaceBubbleLayoutPolicy.baseBubbleScale * multiplier
         bubbleBubbleEntity.scale = SIMD3<Float>(repeating: finalScale)
 
+        // 제스처 수신을 위해 버블 크기에 맞는 CollisionComponent 추가
+        let collisionSize = SIMD3<Float>(
+            repeating: 0.3 * finalScale / SpaceBubbleLayoutPolicy.baseBubbleScale
+        )
+        bubbleRootEntity.components.set(CollisionComponent(shapes: [.generateBox(size: collisionSize)]))
+
         // Entity 계층 구성: (루트) - (버블) + (텍스트)
         bubbleRootEntity.addChild(bubbleBubbleEntity)
         bubbleRootEntity.addChild(textEntity)
