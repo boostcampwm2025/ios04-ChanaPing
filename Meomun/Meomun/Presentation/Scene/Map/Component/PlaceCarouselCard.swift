@@ -36,6 +36,20 @@ struct PlaceCarouselCard: View {
         .frame(maxWidth: .infinity, alignment: .leading)
         .background(Color.white)
         .clipShape(RoundedRectangle(cornerRadius: Constants.cornerRadius))
+        .overlay {
+            RoundedRectangle(cornerRadius: Constants.cornerRadius, style: .continuous)
+                .stroke(
+                    LinearGradient(
+                        colors: [
+                            Color.gray.opacity(0.65),
+                            Color.gray.opacity(0.22)
+                        ],
+                        startPoint: .topLeading,
+                        endPoint: .bottomTrailing
+                    ),
+                    lineWidth: 1
+                )
+        }
     }
 }
 
