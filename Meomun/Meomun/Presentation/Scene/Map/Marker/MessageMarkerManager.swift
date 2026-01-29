@@ -148,12 +148,12 @@ extension MessageMarkerManager {
     /// Place 메시지를 먼저 저장한 후 NoPlace 메시지를 저장하여 좌표 겹침 시 오프셋을 적용합니다.
     ///
     /// - Parameters:
-    ///   - onTapPlace: Place 마커 탭 시 콜백 (장소 정보 전달)
+    ///   - onTapPlace: Place 마커 탭 시 콜백 (해당 좌표의 모든 메시지 전달)
     ///   - onTapNoPlace: NoPlace 마커 탭 시 콜백 (메시지 배열 전달)
     func loadMessages(
         _ messages: [Message],
         mapView: NMFMapView,
-        onTapPlace: ((Place) -> Void)?,
+        onTapPlace: (([Message]) -> Void)?,
         onTapNoPlace: (([Message]) -> Void)?
     ) {
         // 바인딩 저장
@@ -214,7 +214,7 @@ extension MessageMarkerManager {
     private func applySnapshot(
         _ messages: [Message],
         mapView: NMFMapView,
-        onTapPlace: ((Place) -> Void)?,
+        onTapPlace: (([Message]) -> Void)?,
         onTapNoPlace: (([Message]) -> Void)?
     ) {
         // 0) 기존 store 기반 oldKeys
@@ -467,17 +467,17 @@ extension MessageMarkerManager {
     private func updateMarkersForKey(
         _ key: MarkerGroupKey,
         mapView: NMFMapView,
-        onTapPlace: ((Place) -> Void)?,
+        onTapPlace: (([Message]) -> Void)?,
         onTapNoPlace: (([Message]) -> Void)?
     ) {
         let coord = key.coordinate
 
         if key.isPlace {
             updateMarker(coord: coord, isPlace: true, mapView: mapView) { messages in
-                guard let place = messages.first?.placeTag else { return }
+//                guard let message = messages.first else { return }
                 let uniquePlaces = Set(messages.compactMap { $0.placeTag })
                 if uniquePlaces.count == 1 {
-                    onTapPlace?(place)
+                    onTapPlace?(messages)
                 }
             }
         } else {
@@ -495,7 +495,7 @@ extension MessageMarkerManager {
     private func updateMarkersForCoordinate(
         _ coord: Coordinate,
         mapView: NMFMapView,
-        onTapPlace: ((Place) -> Void)?,
+        onTapPlace: (([Message]) -> Void)?,
         onTapNoPlace: (([Message]) -> Void)?
     ) {
         // Place가 없고, 기존 place 마커도 없다면 스킵
@@ -504,12 +504,10 @@ extension MessageMarkerManager {
             // 아무 동작 X
         } else {
             updateMarker(coord: coord, isPlace: true, mapView: mapView) { messages in
-                guard let place = messages.first?.placeTag else { return }
-
-                let uniquePlaces = Set(messages.compactMap(\.placeTag))
-                if uniquePlaces.count == 1 {
-                    onTapPlace?(place)
-                }
+                // Place가 있는 메시지만 필터링하여 전달
+                let placeMessages = messages.filter { $0.placeTag != nil }
+                guard !placeMessages.isEmpty else { return }
+                onTapPlace?(placeMessages)
             }
         }
 
@@ -519,9 +517,7 @@ extension MessageMarkerManager {
             // 아무 동작 X
         } else {
             updateMarker(coord: coord, isPlace: false, mapView: mapView) { messages in
-                if messages.count >= 2 {
-                    onTapNoPlace?(messages)
-                }
+                onTapNoPlace?(messages)
             }
         }
     }
@@ -711,7 +707,10 @@ extension MessageMarkerManager {
             // 메시지 변화에 맞춰 currentIndex/flags 보정
             state.syncMessagesKeepingIndex(currentTime: currentTime)
             // 메시지가 2개 미만이면 애니메이션 불필요
-            guard state.messages.count > 1 else { continue }
+            guard state.messages.count > 1 else {
+                animationStates[groupKey] = state
+                continue
+            }
             // 해당 마커가 없으면 스킵
             guard markers[groupKey] != nil else { continue }
 

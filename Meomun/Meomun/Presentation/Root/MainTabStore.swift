@@ -10,7 +10,7 @@ import Combine
 enum MainTab: Hashable {
     case map
     case record
-    case myPage
+    case setting
 }
 
 final class MainTabStore: Store {

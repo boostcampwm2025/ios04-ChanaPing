@@ -13,6 +13,9 @@ final class MapStore: Store {
         case onAppear(Coordinate)
         case onDisappear
 
+        case userDidInteractMap
+        case followUserRequested
+
         case cameraDidIdle(Coordinate, BoundingBox, MapCameraSnapshot)
         case cameraChangedByLocation(Coordinate, BoundingBox, MapCameraSnapshot)
         case cameraMoveConsumed
@@ -26,6 +29,8 @@ final class MapStore: Store {
         case updateMessages([Message])
 
         case tapNoPlaceMarker([Message])
+        case tapPlaceMarker([Message])
+        case dismissPlaceCarousel
 
         case dismissTimelineView
         case tapNetworkRefresh
@@ -34,6 +39,7 @@ final class MapStore: Store {
 
     enum Action {
         case setCameraCoordinate(Coordinate)
+        case setFollowingUser(Bool)
         case setCameraMoveTarget(MapCameraMoveCommand?)
         case setCameraSnapshot(MapCameraSnapshot?)
 
@@ -43,6 +49,7 @@ final class MapStore: Store {
         case setMessages([Message])
 
         case setSelectedNoPlace([Message])
+        case setCarouselItems([PlaceCarouselDisplayModel])
 
         case setLoading(Bool)
         case setNetworkConnected(Bool)
@@ -55,6 +62,7 @@ final class MapStore: Store {
         var cameraSnapshot: MapCameraSnapshot?
 
         var cameraCoordinate: Coordinate?
+        var isFollowingUser: Bool = true
 
         var isPlaceSearchPresented: Bool = false
         var cameraMoveTarget: MapCameraMoveCommand?
@@ -62,6 +70,7 @@ final class MapStore: Store {
         var isShowingAddMessage: Bool = false
 
         var selectedNoPlaceMessages: [Message] = []
+        var carouselItems: [PlaceCarouselDisplayModel] = []
 
         var isLoading: Bool = false
         var isNetworkConnected = true
@@ -96,8 +105,10 @@ final class MapStore: Store {
                 continuation.yield(.setNetworkConnected(isConnected))
 
                 if let snapshot = state.cameraSnapshot {
+                    continuation.yield(.setFollowingUser(false))
                     continuation.yield(.setCameraMoveTarget(.init(snapshot: snapshot, reason: .restore)))
                 } else {
+                    continuation.yield(.setFollowingUser(true))
                     continuation.yield(
                         .setCameraMoveTarget(
                             .init(snapshot: .init(coordinate: coordinate), reason: .restore)
@@ -111,6 +122,14 @@ final class MapStore: Store {
                 self.getNearbyMessageTask?.cancel()
                 self.getNearbyMessageTask = nil
                 continuation.yield(.setLoading(false))
+                continuation.finish()
+
+            case .userDidInteractMap:
+                continuation.yield(.setFollowingUser(false))
+                continuation.finish()
+
+            case .followUserRequested:
+                continuation.yield(.setFollowingUser(true))
                 continuation.finish()
 
             case .cameraDidIdle(let coordinate, let boundingBox, let snapshot):
@@ -164,6 +183,15 @@ final class MapStore: Store {
                 continuation.yield(.setSelectedNoPlace(messages))
                 continuation.finish()
 
+            case .tapPlaceMarker(let messages):
+                let items = self.groupMessagesByPlace(messages)
+                continuation.yield(.setCarouselItems(items))
+                continuation.finish()
+
+            case .dismissPlaceCarousel:
+                continuation.yield(.setCarouselItems([]))
+                continuation.finish()
+
             case .dismissTimelineView:
                 continuation.yield(.setSelectedNoPlace([]))
                 continuation.finish()
@@ -190,6 +218,9 @@ final class MapStore: Store {
         case .setCameraCoordinate(let coordinate):
             newState.cameraCoordinate = coordinate
 
+        case .setFollowingUser(let isFollowing):
+            newState.isFollowingUser = isFollowing
+
         case .setCameraSnapshot(let snapshot):
             newState.cameraSnapshot = snapshot
 
@@ -204,6 +235,9 @@ final class MapStore: Store {
 
         case .setSelectedNoPlace(let messages):
             newState.selectedNoPlaceMessages = messages
+
+        case .setCarouselItems(let items):
+            newState.carouselItems = items
 
         case .setLoading(let isLoading):
             newState.isLoading = isLoading
@@ -268,5 +302,22 @@ final class MapStore: Store {
                 continuation.yield(.setError(error.localizedDescription))
             }
         }
+    }
+}
+
+private extension MapStore {
+    /// 메시지 배열을 Place별로 그룹화하여 캐러셀 아이템 배열로 변환
+    func groupMessagesByPlace(_ messages: [Message]) -> [PlaceCarouselDisplayModel] {
+        var placeMessages: [Place: [Message]] = [:]
+
+        for message in messages {
+            guard let place = message.placeTag else { continue }
+            placeMessages[place, default: []].append(message)
+        }
+
+        return placeMessages.map { place, messages in
+            PlaceCarouselDisplayModel(place: place, messageCount: messages.count)
+        }
+        .sorted { $0.messageCount > $1.messageCount }
     }
 }
