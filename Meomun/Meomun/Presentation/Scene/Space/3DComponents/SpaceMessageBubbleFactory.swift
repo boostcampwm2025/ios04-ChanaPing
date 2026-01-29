@@ -53,9 +53,12 @@ final class SpaceMessageBubbleFactory {
             repeating: 0.3 * finalScale / SpaceBubbleLayoutPolicy.baseBubbleScale
         )
         bubbleRootEntity.components.set(CollisionComponent(shapes: [.generateBox(size: collisionSize)]))
-        
+
         // 터치 이벤트 수신을 위해 InputTargetComponent 추가
         bubbleRootEntity.components.set(InputTargetComponent())
+
+        // MessageID 식별을 위한 ID 컴포넌트 추가
+        bubbleRootEntity.components.set(MessageBubbleIDComponent(messageID: message.id))
 
         // Entity 계층 구성: (루트) - (버블) + (텍스트)
         bubbleRootEntity.addChild(bubbleBubbleEntity)
