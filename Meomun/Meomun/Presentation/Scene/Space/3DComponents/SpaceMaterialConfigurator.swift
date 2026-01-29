@@ -34,6 +34,25 @@ struct SpaceMaterialConfigurator {
         }
     }
 
+    func configureMessage(
+        messageEntity: Entity
+    ) {
+        let randomGlowColor = UIColor(
+            red: CGFloat(Float.random(in: 0.0...1.0)),
+            green: CGFloat(Float.random(in: 0.0...1.0)),
+            blue: CGFloat(Float.random(in: 0.0...1.0)),
+            alpha: 0.5
+        )
+
+        configureShaderMaterial(on: messageEntity, surfaceName: "Message", category: .resource) { material in
+            try material.setParameter(name: "GlowColor", value: .color(randomGlowColor))
+            try material.setParameter(name: "GlowOpacity", value: .float(0.3))
+            try material.setParameter(name: "GlowIntensity", value: .int(50))
+
+            try material.setParameter(name: "FresnelPower", value: .float(6.0))
+            try material.setParameter(name: "TimeSpeed", value: .float(1.2))
+        }
+    }
 }
 
 private extension SpaceMaterialConfigurator {

@@ -79,6 +79,7 @@ final class SpaceController {
                     domeEntity: domeEntity,
                     dayPart: domeEnvironment.dayPart
                 )
+                materialConfigurator.configureMessage(messageEntity: messageEntity)
             } catch {
                 AppLog.error(
                     "Failed to configure Space scene",
