@@ -15,11 +15,13 @@ fileprivate enum Constants {
 struct DecoratedMessageBubble<Content: View>: View {
     let message: Message
     let layout: BubbleLayout
+    var rotating: (current: Message, next: Message, progress: Double)?
     let content: (Message) -> Content
 
     init(
         message: Message,
         layout: BubbleLayout,
+        rotating: (current: Message, next: Message, progress: Double)? = nil,
         @ViewBuilder content: @escaping (Message) -> Content = {
             BubbleText(
                 text: $0.content
@@ -28,6 +30,7 @@ struct DecoratedMessageBubble<Content: View>: View {
     ) {
         self.message = message
         self.layout = layout
+        self.rotating = rotating
         self.content = content
     }
 
@@ -59,6 +62,7 @@ struct DecoratedMessageBubble<Content: View>: View {
             MessageBubble(
                 message: message,
                 layout: layout,
+                rotating: rotating,
                 content: content
             )
             .overlay(alignment: .top) {

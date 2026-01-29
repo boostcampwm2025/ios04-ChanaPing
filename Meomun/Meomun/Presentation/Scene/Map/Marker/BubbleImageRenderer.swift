@@ -53,11 +53,12 @@ final class BubbleImageRenderer {
     ) async -> UIImage {
         let bubble = DecoratedMessageBubble(
             message: current,
-            layout: .fixedSize(rotatingBubbleWidth)
+            layout: .fixedSize(rotatingBubbleWidth),
+            rotating: (current: current, next: next, progress: progress)
         ) { _ in
-            RotatingTextStack(
-                currentText: current.content,
-                nextText: next.content,
+            RotatingMessageStack(
+                current: current,
+                next: next,
                 progress: progress
             )
         }

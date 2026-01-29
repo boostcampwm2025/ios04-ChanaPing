@@ -17,11 +17,14 @@ struct MessageBubble<Content: View>: View {
     let layout: BubbleLayout
     let content: (Message) -> Content
 
+    var rotating: (current: Message, next: Message, progress: Double)?
+
     var maxWidth: CGFloat = 210
 
     init(
         message: Message,
         layout: BubbleLayout,
+        rotating: (current: Message, next: Message, progress: Double)? = nil,
         @ViewBuilder content: @escaping (Message) -> Content = {
             BubbleText(
                 text: $0.content
@@ -30,6 +33,7 @@ struct MessageBubble<Content: View>: View {
     ) {
         self.message = message
         self.layout = layout
+        self.rotating = rotating
         self.content = content
     }
 
@@ -37,8 +41,22 @@ struct MessageBubble<Content: View>: View {
         HStack {
             VStack(alignment: .leading, spacing: 5) {
                 locationPart
-                bodyPart
-                datePart
+
+                switch layout {
+                case .flexible:
+                    bodyPart
+                    datePart
+                case .fixedSize:
+                    if let rotating {
+                        rotatingBodyWithDate(rotating)
+                    } else {
+                        // fallback: 현재 메시지
+                        VStack(alignment: .leading, spacing: 6) {
+                            BubbleText(text: message.content)
+                            datePart
+                        }
+                    }
+                }
             }
 
             if message.placeTag != nil {
@@ -89,6 +107,15 @@ private extension MessageBubble {
             .font(.system(size: 11, weight: .semibold))
             .foregroundStyle(Color.gray.opacity(0.8))
             .frame(maxWidth: .infinity, alignment: .trailing)
+    }
+
+    @ViewBuilder
+    func rotatingBodyWithDate(_ rotating: (current: Message, next: Message, progress: Double)) -> some View {
+        RotatingMessageStack(
+            current: rotating.current,
+            next: rotating.next,
+            progress: rotating.progress
+        )
     }
 
     var bubbleBackground: some View {
