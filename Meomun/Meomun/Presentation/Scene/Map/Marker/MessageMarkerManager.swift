@@ -193,16 +193,12 @@ private extension MessageMarkerManager {
         var keys = Set<MarkerGroupKey>()
         keys.reserveCapacity(placeStore.count + noPlaceStore.count)
 
-        for coord in placeStore.keys {
-            if (placeStore[coord]?.isEmpty ?? true) == false {
-                keys.insert(MarkerGroupKey(coordinate: coord, isPlace: true))
-            }
+        for coord in placeStore.keys where placeStore[coord]?.isEmpty == false {
+            keys.insert(MarkerGroupKey(coordinate: coord, isPlace: true))
         }
 
-        for coord in noPlaceStore.keys {
-            if (noPlaceStore[coord]?.isEmpty ?? true) == false {
-                keys.insert(MarkerGroupKey(coordinate: coord, isPlace: false))
-            }
+        for coord in noPlaceStore.keys where noPlaceStore[coord]?.isEmpty == false {
+            keys.insert(MarkerGroupKey(coordinate: coord, isPlace: false))
         }
 
         return keys
@@ -576,7 +572,8 @@ extension MessageMarkerManager {
         let signature = makeRenderSignature(markerType: markerType, messages: messages)
 
         // 3-2. 기존 마커가 있고, 시그니처가 동일하면 아이콘 렌더 스킵
-        if let _ = markers[key], lastRenderedSignature[key] == signature { return }
+        if markers[key] != nil,
+           lastRenderedSignature[key] == signature { return }
 
         // 시그니처 갱신
         lastRenderedSignature[key] = signature
