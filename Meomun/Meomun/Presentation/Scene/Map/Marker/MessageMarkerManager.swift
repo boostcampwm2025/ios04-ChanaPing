@@ -571,6 +571,14 @@ extension MessageMarkerManager {
         // 시그니처 갱신
         lastRenderedSignature[key] = signature
 
+        // 회전 마커가 이미 운영 중이면 굳이 초기 렌더로 덮지 않기
+        if case .rotatingBubble = markerType, animationStates[key] != nil, hasFadedIn.contains(key) {
+            return
+        }
+        if case .stackBubble = markerType, animationStates[key] != nil, hasFadedIn.contains(key) {
+            return
+        }
+
         // 4. 초기 이미지 렌더 (key 기준 검증 + Task 누적 방지)
         scheduleInitialRender(for: key, marker: marker, markerType: markerType)
     }
@@ -617,8 +625,28 @@ extension MessageMarkerManager {
                 image = await bubbleImageRenderer.renderSingleBubble(message: message)
 
             case .rotatingBubble(let messages), .stackBubble(let messages):
-                guard let first = messages.first else { return }
-                image = await bubbleImageRenderer.renderSingleBubble(message: first)
+                guard messages.count >= 1 else { return }
+
+                if let state = animationStates[key], state.messages.count >= 1 {
+                    let snap = state.messages
+                    let current = state.currentMessage ?? snap[0]
+                    let next = state.nextMessage ?? snap[min(1, snap.count - 1)]
+
+                    image = await bubbleImageRenderer.renderRotatingBubble(
+                        current: current,
+                        next: next,
+                        progress: state.isAnimating ? state.animationProgress : 0
+                    )
+                } else {
+                    // state가 아직 없거나 준비 전이면 messages로 fallback
+                    let current = messages[0]
+                    let next = messages[min(1, messages.count - 1)]
+                    image = await bubbleImageRenderer.renderRotatingBubble(
+                        current: current,
+                        next: next,
+                        progress: 0
+                    )
+                }
             }
 
             // 취소되었으면 적용 X
@@ -660,6 +688,8 @@ extension MessageMarkerManager {
         for groupKey in animationStates.keys {
             // 상태 조회 (없으면 스킵)
             guard var state = animationStates[groupKey] else { continue }
+            // 메시지 변화에 맞춰 currentIndex/flags 보정
+            state.syncMessagesKeepingIndex(currentTime: currentTime)
             // 메시지가 2개 미만이면 애니메이션 불필요
             guard state.messages.count > 1 else { continue }
             // 해당 마커가 없으면 스킵
