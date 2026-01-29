@@ -45,6 +45,9 @@ struct SpaceView: View {
                     .onEnded { _ in spaceController.endDrag()}
             )
             .gesture(
+                TapGesture().onEnded { send(.selectMessage(nil)) }
+            )
+            .highPriorityGesture(
                 SpatialTapGesture()
                     .targetedToAnyEntity()
                     .onEnded { value in
