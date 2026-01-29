@@ -34,7 +34,7 @@ struct PlaceCarouselCard: View {
             .frame(maxWidth: .infinity, alignment: .leading)
 
             Image(systemName: "chevron.right")
-                .foregroundStyle(Color.meomunPrimaryColor.opacity(0.4))
+                .foregroundStyle(Color.mmPrimary.opacity(0.4))
         }
         .padding(Constants.padding)
         .frame(maxWidth: .infinity, alignment: .leading)
@@ -63,13 +63,13 @@ private extension PlaceCarouselCard {
     var nameText: some View {
         Text(item.place.name)
             .font(.title3.weight(.semibold))
-            .foregroundStyle(Color.meomunPrimaryColor)
+            .foregroundStyle(Color.mmPrimary)
     }
 
     var addressText: some View {
         Text(item.place.address)
             .font(.subheadline)
-            .foregroundStyle(Color.meomunPrimaryColor.opacity(Constants.addressTextOpacity))
+            .foregroundStyle(Color.mmPrimary.opacity(Constants.addressTextOpacity))
     }
 
     var messageCountText: some View {
@@ -79,7 +79,7 @@ private extension PlaceCarouselCard {
             Image(systemName: "message")
         }
         .font(.footnote)
-        .foregroundStyle(Color.meomunPrimaryColor.opacity(Constants.messageCountTextOpacity))
+        .foregroundStyle(Color.mmPrimary.opacity(Constants.messageCountTextOpacity))
     }
 }
 

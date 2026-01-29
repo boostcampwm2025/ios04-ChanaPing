@@ -32,7 +32,7 @@ struct WriteButton: View {
                 .frame(width: 61, height: 61)
                 .background(
                     LeftTopCutRoundedShape()
-                        .fill(Color.meomunWriteButton)
+                        .fill(Color.mmWriteButton)
                 )
                 .shadow(color: .black.opacity(0.15), radius: 6, y: 4)
         }

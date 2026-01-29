@@ -53,7 +53,7 @@ struct TimelineListView: View {
             setTabBarHidden(shouldHideTabBar)
         }
         .animation(.spring(response: 0.25, dampingFraction: 0.9), value: store.state.isEditing)
-        .background(Color.meomunBackgroundColor)
+        .background(Color.mmBackground)
         .customAlert(
             deleteAlertBinding,
             title: { $0.title },
@@ -80,7 +80,7 @@ private extension TimelineListView {
         ZStack {
             Text(Constants.navigationTitle)
                 .font(.headline)
-                .foregroundStyle(Color.meomunPrimaryColor)
+                .foregroundStyle(Color.mmPrimary)
 
             if configuration.showsEditButton {
                 HStack {
@@ -157,12 +157,12 @@ private extension TimelineListView {
         VStack(spacing: 10) {
             Image(systemName: "book.pages")
                 .font(.system(size: 26, weight: .regular))
-                .foregroundStyle(Color.meomunSecondaryColor)
+                .foregroundStyle(Color.mmSecondary)
 
             Text("END OF RECORDS")
                 .font(.footnote.weight(.semibold))
                 .tracking(1.2)
-                .foregroundStyle(Color.meomunSecondaryColor)
+                .foregroundStyle(Color.mmSecondary)
         }
         .frame(maxWidth: .infinity)
         .padding(.bottom, 100)
@@ -195,7 +195,7 @@ private extension TimelineListView {
     }
 
     var editButtonColor: Color {
-        store.state.messages.isEmpty ? Color.tabInactive : Color.meomunPointColor
+        store.state.messages.isEmpty ? Color.tabInactive : Color.mmPoint
     }
 
     var selectionBarText: String {
@@ -205,7 +205,7 @@ private extension TimelineListView {
     }
 
     var selectionBarTextColor: Color {
-        store.state.selectedMessageIDs.isEmpty ? Color.tabInactive : Color.meomunPrimaryColor
+        store.state.selectedMessageIDs.isEmpty ? Color.tabInactive : Color.mmPrimary
     }
 
     var deleteButtonColor: Color {

@@ -22,14 +22,14 @@ struct FloatingNavigationBar: View {
 
             Text(title)
                 .font(.system(size: 18, weight: .regular))
-                .foregroundStyle(Color.black.opacity(0.9))
+                .foregroundStyle(Color.mmTextTitle)
 
             Spacer()
 
             Button(action: onTapSearch) {
                 Image(systemName: "magnifyingglass")
                     .font(.system(size: 17, weight: .light))
-                    .foregroundStyle(Color.black.opacity(0.9))
+                    .foregroundStyle(Color.mmTextTitle)
                     .frame(width: 36, height: 36)
             }
         }
@@ -42,7 +42,7 @@ struct FloatingNavigationBar: View {
                 bottomLeft: 24,
                 bottomRight: 24
             )
-            .fill(Color.white.opacity(0.76))
+            .fill(Color.mmFloatingBackground)
             .shadow(color: .black.opacity(0.12),
                     radius: 18,
                     x: 0,
