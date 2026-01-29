@@ -96,7 +96,13 @@ struct MapView: View {
                 }
             }
             .task {
-                send(.onAppear(.seoulCity))
+                let initial = locationProvider.current ?? .seoulCity
+                send(.onAppear(initial))
+
+                if let coordinate = locationProvider.current, !didApplyResolvedUserLocation {
+                    didApplyResolvedUserLocation = true
+                    send(.userLocationReady(coordinate))
+                }
             }
             .onChange(of: locationProvider.current) { _, newValue in
                 guard didApplyResolvedUserLocation == false else { return }
