@@ -20,13 +20,12 @@ struct SpaceView: View {
 
     init(
         store: SpaceStore,
-        domeEnvironment: DomeEnvironment,
         place: Place,
         onNavigate: @escaping (Coordinate, Place) -> Void
     ) {
         _store = StateObject(wrappedValue: store)
         _spaceController = State(
-            wrappedValue: SpaceController(domeEnvironment: domeEnvironment)
+            wrappedValue: SpaceController()
         )
         self.place = place
         self.onNavigate = onNavigate
@@ -45,6 +44,9 @@ struct SpaceView: View {
                     .onEnded { _ in spaceController.endDrag()}
             )
             .gesture(
+                TapGesture().onEnded { send(.selectMessage(nil)) }
+            )
+            .highPriorityGesture(
                 SpatialTapGesture()
                     .targetedToAnyEntity()
                     .onEnded { value in
@@ -82,10 +84,7 @@ struct SpaceView: View {
             buttons: { $0.buttons }
         )
         .overlay(alignment: .bottom) {
-            if store.state.selectedMessageID != nil {
-                selectionBar
-                    .transition(.move(edge: .bottom).combined(with: .opacity))
-            }
+            selectionBar
         }
         .animation(.spring(response: 0.25, dampingFraction: 0.9), value: store.state.selectedMessageID)
         .allowsHitTesting(store.state.deleteStatus == .idle)
@@ -96,6 +95,10 @@ struct SpaceView: View {
         }
         .onChange(of: store.state.messages.map(\.id)) {
             spaceController.sync(messages: store.state.messages)
+        }
+        .onChange(of: store.state.domeEnvironment) { _, newValue in
+            guard let newValue else { return }
+            spaceController.update(domeEnvironment: newValue)
         }
     }
 }
@@ -126,27 +129,37 @@ private extension SpaceView {
 // MARK: Subviews
 
 extension SpaceView {
+    @ViewBuilder
     var selectionBar: some View {
-        HStack {
-            Button { send(.selectMessage(nil)) } label: {
-                Text("취소")
-                    .font(.headline)
-                    .foregroundStyle(Color.mmPrimary)
-                    .padding(.horizontal, 16)
-            }
+        Group {
+            if store.state.selectedMessageID != nil {
+                HStack {
+                    Button { send(.selectMessage(nil)) } label: {
+                        Text("취소")
+                            .font(.headline)
+                            .foregroundStyle(Color.mmPrimary)
+                            .padding(.horizontal, 16)
+                    }
 
-            Spacer()
+                    Spacer()
 
-            if let messageID = store.state.selectedMessageID {
-                Button { send(.requestDeleteMessage(messageID)) } label: {
-                    Text("삭제")
-                        .font(.headline)
-                        .foregroundStyle(Color.red)
-                        .padding(.horizontal, 24)
+                    if let messageID = store.state.selectedMessageID {
+                        Button { send(.requestDeleteMessage(messageID)) } label: {
+                            Text("삭제")
+                                .font(.headline)
+                                .foregroundStyle(Color.red)
+                                .padding(.horizontal, 24)
+                        }
+                    }
                 }
+            } else {
+                Text("\(store.state.messages.count)개의 추억이 떠다니고 있어요")
+                    .font(.body.weight(.semibold))
+                    .foregroundStyle(Color.mmPrimary)
+                    .frame(maxWidth: .infinity)
             }
         }
-        .floatingContainer()
+        .floatingContainer(color: Color.mmBackground, opacity: 0.8)
     }
 }
 
@@ -222,7 +235,6 @@ private extension SpaceView {
                     coordinate: .init(latitude: 0, longitude: 0)
                 )
             ),
-            domeEnvironment: .init(dayPart: .afternoon),
             place: .init(
                 id: .init(value: .init()),
                 name: "광화문",
