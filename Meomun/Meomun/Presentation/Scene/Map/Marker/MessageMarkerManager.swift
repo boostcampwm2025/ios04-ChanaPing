@@ -95,8 +95,6 @@ final class MessageMarkerManager {
 
     /// 외부 바인딩(카메라 이벤트에서 모드 전환용)
     private weak var boundMapView: NMFMapView?
-    private var boundOnTapPlace: ((Place) -> Void)?
-    private var boundOnTapNoPlace: (([Message]) -> Void)?
 
     // MARK: - Dependencies
 
@@ -165,8 +163,6 @@ extension MessageMarkerManager {
     ) {
         // 바인딩 저장
         boundMapView = mapView
-        boundOnTapPlace = onTapPlace
-        boundOnTapNoPlace = onTapNoPlace
 
         // 클러스터러 준비
         setupClustererIfNeeded(mapView: mapView)
