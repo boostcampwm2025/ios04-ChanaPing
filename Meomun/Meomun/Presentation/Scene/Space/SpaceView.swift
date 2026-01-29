@@ -12,6 +12,8 @@ struct SpaceView: View {
     @EnvironmentObject private var locationProvider: LocationProvider
     @StateObject private var store: SpaceStore
     @State private var spaceController: SpaceController
+    @State private var showContextMenu = false
+    @State private var selectedMessageID: MessageID?
 
     private let place: Place
     private let onNavigate: (Coordinate, Place) -> Void
@@ -42,6 +44,13 @@ struct SpaceView: View {
                     .onChanged { spaceController.handleDrag($0.translation) }
                     .onEnded { _ in spaceController.endDrag()}
             )
+            .gesture(
+                SpatialTapGesture()
+                    .targetedToAnyEntity()
+                    .onEnded { value in
+                        handleBubbleTap(entity: value.entity)
+                    }
+            )
             .ignoresSafeArea()
 
             VStack {
@@ -58,13 +67,66 @@ struct SpaceView: View {
                 }
                 .padding(.bottom, 96)
             }
+
+            if store.state.deleteStatus != .idle {
+                LoadingOverlayView(
+                    status: store.state.deleteStatus,
+                    message: deleteStatusMessage
+                )
+            }
         }
+        .customAlert(
+            $store.state.deleteAlert,
+            title: { $0.title },
+            message: { $0.message },
+            buttons: { $0.buttons }
+        )
+        .confirmationDialog(
+            "메시지 관리",
+            isPresented: $showContextMenu,
+            presenting: selectedMessageID
+        ) { messageID in
+            Button("삭제", role: .destructive) {
+                Task {
+                    await store.send(intent: .requestDeleteMessage(messageID))
+                }
+            }
+            Button("취소", role: .cancel) {}
+        }
+        .allowsHitTesting(store.state.deleteStatus == .idle)
         .task {
             await store.send(intent: .onAppear(placeID: place.id))
         }
         .onChange(of: store.state.messages.map(\.id)) {
             spaceController.sync(messages: store.state.messages)
         }
+    }
+
+    private var deleteStatusMessage: String {
+        switch store.state.deleteStatus {
+        case .loading: return "메시지를 삭제하고 있어요"
+        case .success: return "메시지를 삭제했어요"
+        case .fail: return "메시지 삭제에 실패했어요"
+        case .idle: return ""
+        }
+    }
+
+    private func handleBubbleTap(entity: Entity?) {
+        guard let entity = entity,
+              entity.name.hasPrefix("MessageBubble-") || entity.name.hasPrefix("MessageModel-") else {
+            return
+        }
+
+        let components = entity.name.split(separator: "-", maxSplits: 1)
+        guard components.count == 2,
+              let uuidString = components.last,
+              let uuid = UUID(uuidString: String(uuidString)) else {
+            AppLog.warn("Failed to parse MessageID from entity: \(entity.name)", category: .space)
+            return
+        }
+
+        selectedMessageID = MessageID(value: uuid)
+        showContextMenu = true
     }
 }
 
