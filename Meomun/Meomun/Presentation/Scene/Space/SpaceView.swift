@@ -131,7 +131,7 @@ extension SpaceView {
             Button { send(.selectMessage(nil)) } label: {
                 Text("취소")
                     .font(.headline)
-                    .foregroundStyle(Color.meomunPrimaryColor)
+                    .foregroundStyle(Color.mmPrimary)
                     .padding(.horizontal, 16)
             }
 
@@ -193,14 +193,14 @@ private extension SpaceView {
 
             Text(place.name)
                 .font(.caption.weight(.semibold))
-                .foregroundStyle(Color.meomunPrimaryColor)
+                .foregroundStyle(Color.mmPrimary)
                 .lineLimit(1)
         }
         .padding(.horizontal, 12)
         .padding(.vertical, 6)
         .background(
             Capsule()
-                .fill(Color.meomunBackgroundColor.opacity(0.8))
+                .fill(Color.mmBackground.opacity(0.8))
         )
         .shadow(color: .black.opacity(0.15), radius: 6, y: 4)
     }
