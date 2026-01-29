@@ -17,7 +17,7 @@ final class SpaceMessageBubbleFactory {
         let processedText = TextArranger.arrangeText(message.content)
         let textEntity = makeTextEntity(processedText)
 
-        // 중앙 정렬 보정
+        // 텍스트 중앙 정렬 보정
         centerTextEntity(textEntity)
 
         // 버블 루트 (전체 billboard 대상)
@@ -67,8 +67,11 @@ final class SpaceMessageBubbleFactory {
 
         return SIMD2<Float>(extents.x, extents.y)
     }
+}
 
-    private func makeTextEntity(_ text: String) -> ModelEntity {
+// MARK: - Text Entity
+private extension SpaceMessageBubbleFactory {
+    func makeTextEntity(_ text: String) -> ModelEntity {
         let mesh = MeshResource.generateText(
             text,
             extrusionDepth: 0.001,
@@ -96,7 +99,7 @@ final class SpaceMessageBubbleFactory {
         return textEntity
     }
 
-    private func centerTextEntity(_ textEntity: ModelEntity) {
+    func centerTextEntity(_ textEntity: ModelEntity) {
         let bounds = textEntity.visualBounds(relativeTo: nil)
         let center = bounds.center
 
@@ -108,7 +111,7 @@ final class SpaceMessageBubbleFactory {
         )
     }
 
-    private func uniformMultiplierToFitText(textEntity: ModelEntity, bubbleEntity: Entity) -> Float {
+    func uniformMultiplierToFitText(textEntity: ModelEntity, bubbleEntity: Entity) -> Float {
         let textBounds = textEntity.visualBounds(relativeTo: nil)
         let text = textBounds.extents
 
@@ -127,7 +130,7 @@ final class SpaceMessageBubbleFactory {
         return min(max(raw, SpaceBubbleLayoutPolicy.minUniform), SpaceBubbleLayoutPolicy.maxUniform)
     }
 
-    private func placeTextInFrontOfBubble(_ textEntity: ModelEntity, bubbleEntity: Entity) {
+    func placeTextInFrontOfBubble(_ textEntity: ModelEntity, bubbleEntity: Entity) {
         let bounds = bubbleEntity.visualBounds(relativeTo: nil)
         let extents = bounds.extents
 
