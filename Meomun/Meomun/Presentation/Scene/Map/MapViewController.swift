@@ -238,12 +238,6 @@ extension MapViewController {
         overlay.hidden = false
         overlay.location = latLng
     }
-
-//    func setPositionModeNormalIfNeeded() {
-//        if naverMapView.mapView.positionMode != .normal {
-//            naverMapView.mapView.positionMode = .normal
-//        }
-//    }
 }
 
 // MARK: - Camera Moving
@@ -474,7 +468,6 @@ struct MapViewWrapper: UIViewControllerRepresentable {
         } else {
             // 추적 해제 모드 시 파란점만 유지하고 카메라는 안 움직이도록 설정
             uiViewController.updateUserLocationOverlayOnly(userLocation)
-//            uiViewController.setPositionModeNormalIfNeeded()
         }
 
         if let target = cameraMoveTarget, context.coordinator.lastCameraMoveTarget != target {
