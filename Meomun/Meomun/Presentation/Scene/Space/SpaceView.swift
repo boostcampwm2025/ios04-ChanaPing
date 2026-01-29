@@ -288,7 +288,7 @@ extension SpaceView {
         let bubblePlacer = BubblePlacer()
 
         // 텍스트 가공 및 생성
-        let processedText = arrangeText(message.content)
+        let processedText = TextArranger.arrangeText(message.content)
         let textEntity = makeTextEntity(processedText)
 
         // 중앙 정렬 보정
@@ -338,35 +338,6 @@ extension SpaceView {
 
         // 추적 저장
         messageBubbleRootByID[message.id] = bubbleRootEntity
-    }
-
-    private func arrangeText(_ text: String) -> String {
-        let words = text.split(separator: " ").map(String.init)
-
-        if text.count >= 10 && words.count >= 2 {
-            let target = text.count / 2
-            var bestIndex = 1
-            var bestDiff = Int.max
-            var prefixCount = 0
-
-            for index in 1..<words.count {
-                // index 개 단어를 첫 줄에 넣었을 때 길이
-                prefixCount = words[0..<index].joined(separator: " ").count
-                let diff = abs(prefixCount - target)
-
-                if diff < bestDiff {
-                    bestDiff = diff
-                    bestIndex = index
-                }
-            }
-
-            let first = words[0..<bestIndex].joined(separator: " ")
-            let second = words[bestIndex...].joined(separator: " ")
-
-            return "\(first)\n\(second)"
-        }
-
-        return text
     }
 
     private func makeTextEntity(_ text: String) -> ModelEntity {
