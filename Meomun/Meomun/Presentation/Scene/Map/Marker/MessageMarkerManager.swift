@@ -129,8 +129,21 @@ extension MessageMarkerManager {
         marker.iconImage = MarkerPlaceholder.overlayImage
         marker.alpha = 0.0
 
-        marker.mapView = mapView                  // 지도에 마커 표시
         return marker
+    }
+
+    /// 클러스터 모드 규칙을 담아 마커를 맵에 붙이거나/떼는 역할을 담당합니다.
+    private func attachMarker(_ marker: NMFMarker, to mapView: NMFMapView) {
+        // 클러스터 모드면 붙이지 않음
+        guard !isClusterMode else {
+            marker.mapView = nil
+            return
+        }
+        marker.mapView = mapView
+    }
+
+    private func detachMarker(_ marker: NMFMarker) {
+        marker.mapView = nil
     }
 }
 
@@ -596,7 +609,9 @@ extension MessageMarkerManager {
 
     /// 마커를 지도에서 제거하고 저장소에서 삭제합니다.
     private func removeMarker(for key: MarkerGroupKey) {
-        markers[key]?.mapView = nil           // 지도에서 제거
+        if let marker = markers[key] {
+            detachMarker(marker)
+        }
         markers.removeValue(forKey: key)      // 마커 딕셔너리에서 삭제
         animationStates.removeValue(forKey: key)  // 애니메이션 상태 삭제
 
@@ -619,9 +634,7 @@ extension MessageMarkerManager {
         let position = NMGLatLng(lat: coord.latitude, lng: coord.longitude)
         let marker = makeMarker(at: position, mapView: mapView)
 
-        if isClusterMode {
-            marker.mapView = nil
-        }
+        attachMarker(marker, to: mapView)
         return marker
     }
 
@@ -801,7 +814,6 @@ private extension MessageMarkerManager {
     /// - ON: 기존 개별 마커 숨김 + clusterer를 mapView에 attach
     /// - OFF: clusterer detach + 기존 개별 마커 복원
     func setClusterMode(_ enabled: Bool, mapView: NMFMapView) {
-        AppLog.debug("[ClusterMode] set enabled=\(enabled) zoom=\(mapView.zoomLevel) markers=\(markers.count)", category: .location)
         isClusterMode = enabled
 
         // 클러스터러가 없으면 sync/addAll/attach가 모두 무의미해지므로 여기서 보장
@@ -810,14 +822,11 @@ private extension MessageMarkerManager {
         if enabled {
             // 1) 개별 마커 숨김
             for (_, marker) in markers {
-                marker.mapView = nil
+                detachMarker(marker)
             }
-
-            AppLog.debug("[ClusterMode] clusterer is nil? \(clusterer == nil)", category: .location)
 
             // 2) 클러스터러 attach (attach 이후 addAll/clear가 반영되도록 순서 고정)
             clusterer?.mapView = mapView
-            AppLog.debug("[ClusterMode] clusterer attached mapView=\(clusterer?.mapView != nil)", category: .location)
 
             // 3) 아이템 동기화
             syncClusterItemsIfNeeded()
@@ -827,7 +836,7 @@ private extension MessageMarkerManager {
 
             // 2) 개별 마커 복원
             for (_, marker) in markers {
-                marker.mapView = mapView
+                attachMarker(marker, to: mapView)
             }
         }
     }
