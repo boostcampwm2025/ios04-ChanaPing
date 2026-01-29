@@ -24,6 +24,7 @@ struct SpaceView: View {
 
     private let place: Place
     private let onNavigate: (Coordinate, Place) -> Void
+    private let spaceMaterialConfigurator = SpaceMaterialConfigurator()
 
     init(
         store: SpaceStore,
@@ -94,7 +95,6 @@ struct SpaceView: View {
 }
 
 // MARK: - Dome UI (배경 돔 로딩/표현)
-
 extension SpaceView {
     private func configureSpace(content: RealityViewCameraContent) {
         guard spaceRootEntity == nil else { return }
@@ -114,8 +114,8 @@ extension SpaceView {
                 let domeEntity = try await Entity(named: "Dome.usdz")
                 domeEntity.name = "Dome"
                 root.addChild(domeEntity)
-                configureDomeSurface(domeEntity: domeEntity)
-                configureGroundSurface(domeEntity: domeEntity)
+                spaceMaterialConfigurator.configureDome(domeEntity: domeEntity, dayPart: .daybreak)
+                spaceMaterialConfigurator.configureGround(domeEntity: domeEntity, dayPart: .daybreak)
 
                 // 메시지 버블 로드
                 let messageEntity = try await Entity(named: "Message.usdz")
@@ -140,92 +140,9 @@ extension SpaceView {
             }
         }
     }
-
-    private func configureShaderMaterial(
-        on parent: Entity,
-        surfaceName: String,
-        category: LogCategory = .resource,
-        configure: (inout ShaderGraphMaterial) throws -> Void
-    ) {
-        guard let surfaceEntity = parent.findEntity(named: surfaceName) else {
-            AppLog.warn(
-                "Surface entity '\(surfaceName)' not found",
-                category: category
-            )
-            return
-        }
-
-        guard
-            let model = surfaceEntity.components[ModelComponent.self],
-            var material = model.materials.first as? ShaderGraphMaterial
-        else {
-            AppLog.warn(
-                "ShaderGraphMaterial not found on '\(surfaceName)'",
-                category: category
-            )
-            return
-        }
-
-        do {
-            try configure(&material)
-            surfaceEntity.components[ModelComponent.self]?.materials = [material]
-        } catch {
-            AppLog.error(
-                "Failed to configure material on '\(surfaceName)'",
-                category: category,
-                error: error
-            )
-        }
-    }
-
-    private func configureDomeSurface(domeEntity: Entity) {
-        let gradientPair = DomeColor.colors(for: domeEnvironment.dayPart)
-
-        configureShaderMaterial(
-            on: domeEntity,
-            surfaceName: "Dome_01",
-            category: .resource
-        ) { material in
-            try material.setParameter(
-                name: "topColor",
-                value: .color(gradientPair.top)
-            )
-
-            try material.setParameter(
-                name: "bottomColor",
-                value: .color(gradientPair.bottom)
-            )
-        }
-    }
-
-    private func configureGroundSurface(domeEntity: Entity) {
-        let gradientPair = DomeColor.colors(for: domeEnvironment.dayPart)
-
-        configureShaderMaterial(
-            on: domeEntity,
-            surfaceName: "Ground_01",
-            category: .resource
-        ) { material in
-            try material.setParameter(
-                name: "topColor",
-                value: .color(gradientPair.top)
-            )
-
-            try material.setParameter(
-                name: "bottomColor",
-                value: .color(gradientPair.bottom)
-            )
-
-            try material.setParameter(name: "Density", value: .float(0.6))
-            try material.setParameter(name: "Contrast", value: .float(0.2))
-            try material.setParameter(name: "TimeSpeed", value: .float(0.3))
-        }
-    }
-
 }
 
 // MARK: - Message Bubble UI (말풍선/텍스트 생성)
-
 extension SpaceView {
     private func syncIfPossible(messages: [Message]) {
         guard let root = spaceRootEntity else { return }
