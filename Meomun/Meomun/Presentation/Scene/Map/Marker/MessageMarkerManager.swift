@@ -474,7 +474,6 @@ extension MessageMarkerManager {
 
         if key.isPlace {
             updateMarker(coord: coord, isPlace: true, mapView: mapView) { messages in
-//                guard let message = messages.first else { return }
                 let uniquePlaces = Set(messages.compactMap { $0.placeTag })
                 if uniquePlaces.count == 1 {
                     onTapPlace?(messages)
