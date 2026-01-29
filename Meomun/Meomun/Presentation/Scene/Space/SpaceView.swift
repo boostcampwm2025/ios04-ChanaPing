@@ -10,6 +10,8 @@ import SwiftUI
 
 struct SpaceView: View {
     @EnvironmentObject private var locationProvider: LocationProvider
+    @Environment(\.dismiss) private var dismiss
+
     @StateObject private var store: SpaceStore
     @State private var spaceController: SpaceController
 
@@ -59,12 +61,57 @@ struct SpaceView: View {
                 .padding(.bottom, 96)
             }
         }
+        .navigationBarBackButtonHidden()
+        .toolbar { toolbarContent }
         .task {
             await store.send(intent: .onAppear(placeID: place.id))
         }
         .onChange(of: store.state.messages.map(\.id)) {
             spaceController.sync(messages: store.state.messages)
         }
+    }
+}
+
+// MARK: Toolbar / Actions
+private extension SpaceView {
+    @ToolbarContentBuilder
+    var toolbarContent: some ToolbarContent {
+        if #available(iOS 26.0, *) {
+            ToolbarItem(placement: .topBarLeading) {
+                backToolbarButton
+            }
+            .sharedBackgroundVisibility(.hidden)
+        } else {
+            ToolbarItem(placement: .topBarLeading) {
+                backToolbarButton
+            }
+        }
+
+        ToolbarItem(placement: .principal) { placeTitle }
+    }
+
+    var backToolbarButton: some View {
+        BackButton { dismiss() }
+    }
+
+    var placeTitle: some View {
+        HStack(spacing: 6) {
+            Image(systemName: "mappin.and.ellipse")
+                .font(.caption)
+                .foregroundStyle(Color.tabActive)
+
+            Text(place.name)
+                .font(.caption.weight(.semibold))
+                .foregroundStyle(Color.meomunPrimaryColor)
+                .lineLimit(1)
+        }
+        .padding(.horizontal, 12)
+        .padding(.vertical, 6)
+        .background(
+            Capsule()
+                .fill(Color.meomunBackgroundColor.opacity(0.8))
+        )
+        .shadow(color: .black.opacity(0.15), radius: 6, y: 4)
     }
 }
 
