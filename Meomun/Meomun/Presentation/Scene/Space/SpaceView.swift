@@ -44,6 +44,13 @@ struct SpaceView: View {
                     .onChanged { spaceController.handleDrag($0.translation) }
                     .onEnded { _ in spaceController.endDrag()}
             )
+            .gesture(
+                SpatialTapGesture()
+                    .targetedToAnyEntity()
+                    .onEnded { value in
+                        handleBubbleTap(entity: value.entity)
+                    }
+            )
             .ignoresSafeArea()
 
             VStack {
@@ -60,7 +67,28 @@ struct SpaceView: View {
                 }
                 .padding(.bottom, 96)
             }
+
+            if store.state.deleteStatus != .idle {
+                LoadingOverlayView(
+                    status: store.state.deleteStatus,
+                    message: deleteStatusMessage
+                )
+            }
         }
+        .customAlert(
+            $store.state.deleteAlert,
+            title: { $0.title },
+            message: { $0.message },
+            buttons: { $0.buttons }
+        )
+        .overlay(alignment: .bottom) {
+            if store.state.selectedMessageID != nil {
+                selectionBar
+                    .transition(.move(edge: .bottom).combined(with: .opacity))
+            }
+        }
+        .animation(.spring(response: 0.25, dampingFraction: 0.9), value: store.state.selectedMessageID)
+        .allowsHitTesting(store.state.deleteStatus == .idle)
         .navigationBarBackButtonHidden()
         .toolbar { toolbarContent }
         .task {
@@ -68,6 +96,69 @@ struct SpaceView: View {
         }
         .onChange(of: store.state.messages.map(\.id)) {
             spaceController.sync(messages: store.state.messages)
+        }
+    }
+}
+
+// MARK: - Handle Gesture
+
+extension SpaceView {
+    private func handleBubbleTap(entity: Entity?) {
+        guard let entity = entity,
+              let component = entity.components[MessageBubbleIDComponent.self] else {
+            return
+        }
+
+        Task {
+            await store.send(intent: .selectMessage(component.messageID))
+        }
+    }
+}
+
+// MARK: - Actions
+
+private extension SpaceView {
+    func send(_ intent: SpaceStore.Intent) {
+        Task { await store.send(intent: intent) }
+    }
+}
+
+// MARK: Subviews
+
+extension SpaceView {
+    var selectionBar: some View {
+        HStack {
+            Button { send(.selectMessage(nil)) } label: {
+                Text("취소")
+                    .font(.headline)
+                    .foregroundStyle(Color.meomunPrimaryColor)
+                    .padding(.horizontal, 16)
+            }
+
+            Spacer()
+
+            if let messageID = store.state.selectedMessageID {
+                Button { send(.requestDeleteMessage(messageID)) } label: {
+                    Text("삭제")
+                        .font(.headline)
+                        .foregroundStyle(Color.red)
+                        .padding(.horizontal, 24)
+                }
+            }
+        }
+        .floatingContainer()
+    }
+}
+
+// MARK: Computed property
+
+extension SpaceView {
+    private var deleteStatusMessage: String {
+        switch store.state.deleteStatus {
+        case .loading: return "메시지를 삭제하고 있어요"
+        case .success: return "메시지를 삭제했어요"
+        case .fail: return "메시지 삭제에 실패했어요"
+        case .idle: return ""
         }
     }
 }
@@ -120,6 +211,9 @@ private extension SpaceView {
         SpaceView(
             store: .init(
                 fetchPlaceMessagesUseCase: FetchPlaceMessagesUseCaseImpl(
+                    messageRepository: MessageRepositoryImpl()
+                ),
+                deleteMessagesUseCase: DeleteMessagesUseCaseImpl(
                     messageRepository: MessageRepositoryImpl()
                 ),
                 place: .init(

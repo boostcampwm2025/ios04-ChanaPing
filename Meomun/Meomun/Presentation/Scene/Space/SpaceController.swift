@@ -62,6 +62,10 @@ final class SpaceController {
                 AppLog.debug("S4. Message template loaded", category: .space)
                 let messageEntity = try await Entity(named: "Message.usdz")
                 messageEntity.name = "MessageBubble"
+
+                // 터치 이벤트 수신을 위해 InputTargetComponent 추가
+                messageEntity.components.set(InputTargetComponent())
+
                 messageBubbleTemplateEntity = messageEntity
                 trySyncIfPossible()
 

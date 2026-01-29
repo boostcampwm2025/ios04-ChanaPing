@@ -12,6 +12,10 @@ final class SpaceStore: Store {
     enum Intent {
         case onAppear(placeID: PlaceID)
         case setToast(String?)
+        case selectMessage(MessageID?)
+        case requestDeleteMessage(MessageID)
+        case confirmDeleteMessage(MessageID)
+        case dismissAlert
     }
 
     enum Action {
@@ -21,6 +25,11 @@ final class SpaceStore: Store {
         case setUserLocation(Coordinate)
         case setCurrentPlaceID(PlaceID)
         case setToastMessage(String?)
+        case setSelectedMessage(MessageID?)
+        case deleteMessage(MessageID)
+        case showDeleteAlert(AlertModel)
+        case hideAlert
+        case setDeleteStatus(LoadingStatus)
     }
 
     struct State {
@@ -30,11 +39,15 @@ final class SpaceStore: Store {
         var userLocation: Coordinate?           // TODO: - 지도 > 공간 진입 시점 좌표 넘겨주고, 옵셔널 지우기
         var currentPlaceID: PlaceID?
         var toastMessage: String?
+        var selectedMessageID: MessageID?
+        var deleteAlert: AlertModel?
+        var deleteStatus: LoadingStatus = .idle
     }
 
     @Published var state: State
 
     private let fetchPlaceMessagesUseCase: FetchPlaceMessagesUseCase
+    private let deleteMessagesUseCase: DeleteMessagesUseCase
 
     private var fetchMessagesTask: Task<Void, Never>?
 
@@ -42,10 +55,12 @@ final class SpaceStore: Store {
 
     init(
         fetchPlaceMessagesUseCase: FetchPlaceMessagesUseCase,
+        deleteMessagesUseCase: DeleteMessagesUseCase,
         place: Place
     ) {
         self.state = State()
         self.fetchPlaceMessagesUseCase = fetchPlaceMessagesUseCase
+        self.deleteMessagesUseCase = deleteMessagesUseCase
         self.place = place
     }
 
@@ -58,6 +73,27 @@ final class SpaceStore: Store {
 
             case .setToast(let message):
                 continuation.yield(.setToastMessage(message))
+                continuation.finish()
+
+            case .selectMessage(let messageID):
+                continuation.yield(.setSelectedMessage(messageID))
+                continuation.finish()
+
+            case .requestDeleteMessage(let messageID):
+                continuation.yield(.setSelectedMessage(nil))
+                let alert = AlertFactory.deleteMessage(count: 1) { [weak self] in
+                    Task {
+                        await self?.send(intent: .confirmDeleteMessage(messageID))
+                    }
+                }
+                continuation.yield(.showDeleteAlert(alert))
+                continuation.finish()
+
+            case .confirmDeleteMessage(let messageID):
+                performDelete(messageID: messageID, continuation: continuation)
+
+            case .dismissAlert:
+                continuation.yield(.hideAlert)
                 continuation.finish()
             }
         }
@@ -84,6 +120,21 @@ final class SpaceStore: Store {
 
         case .setToastMessage(let message):
             newState.toastMessage = message
+
+        case .setSelectedMessage(let messageID):
+            newState.selectedMessageID = messageID
+
+        case .deleteMessage(let messageID):
+            newState.messages.removeAll { $0.id == messageID }
+
+        case .showDeleteAlert(let alert):
+            newState.deleteAlert = alert
+
+        case .hideAlert:
+            newState.deleteAlert = nil
+
+        case .setDeleteStatus(let status):
+            newState.deleteStatus = status
         }
 
         return newState
@@ -119,6 +170,35 @@ private extension SpaceStore {
 
                 continuation.yield(.setError(error.localizedDescription))
             }
+        }
+    }
+
+    func performDelete(
+        messageID: MessageID,
+        continuation: AsyncStream<Action>.Continuation
+    ) {
+        continuation.yield(.setDeleteStatus(.loading))
+        continuation.yield(.hideAlert)
+
+        Task {
+            do {
+                try await deleteMessagesUseCase.execute(for: [messageID])
+                continuation.yield(.deleteMessage(messageID))
+
+                // 성공 피드백 (1초)
+                continuation.yield(.setDeleteStatus(.success))
+                try? await Task.sleep(for: .seconds(1))
+                continuation.yield(.setDeleteStatus(.idle))
+            } catch {
+                AppLog.error("메시지 삭제 실패", category: .store, error: error)
+
+                // 실패 피드백 (1초)
+                continuation.yield(.setDeleteStatus(.fail))
+                try? await Task.sleep(for: .seconds(1))
+                continuation.yield(.setDeleteStatus(.idle))
+            }
+
+            continuation.finish()
         }
     }
 }
