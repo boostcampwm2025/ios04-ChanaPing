@@ -113,19 +113,11 @@ struct SpaceView: View {
 
     private func handleBubbleTap(entity: Entity?) {
         guard let entity = entity,
-              entity.name.hasPrefix("MessageBubble-") || entity.name.hasPrefix("MessageModel-") else {
+              let component = entity.components[MessageBubbleIDComponent.self] else {
             return
         }
 
-        let components = entity.name.split(separator: "-", maxSplits: 1)
-        guard components.count == 2,
-              let uuidString = components.last,
-              let uuid = UUID(uuidString: String(uuidString)) else {
-            AppLog.warn("Failed to parse MessageID from entity: \(entity.name)", category: .space)
-            return
-        }
-
-        selectedMessageID = MessageID(value: uuid)
+        selectedMessageID = component.messageID
         showContextMenu = true
     }
 }
