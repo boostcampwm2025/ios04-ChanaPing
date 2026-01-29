@@ -55,14 +55,6 @@ final class SpaceMessageBubbleFactory {
         // 텍스트를 버블 앞쪽으로 배치
         placeTextInFrontOfBubble(textEntity, bubbleEntity: bubbleBubbleEntity)
 
-        // 최근/일반 메시지 상태 라인 추가 (버블 내부)
-        let isRecent = isRecentMessage(message)
-        attachStatusLine(
-            to: bubbleRootEntity,
-            bubbleEntity: bubbleBubbleEntity,
-            isRecent: isRecent
-        )
-
         return bubbleRootEntity
     }
 
@@ -143,53 +135,5 @@ final class SpaceMessageBubbleFactory {
         let frontOffset = (extents.z * 0.5) + SpaceBubbleLayoutPolicy.entityForwardPadding
 
         textEntity.position += SIMD3<Float>(0, 0, frontOffset)
-    }
-}
-
-private extension SpaceMessageBubbleFactory {
-    func isRecentMessage(_ message: Message, now: Date = .now) -> Bool {
-        now.timeIntervalSince(message.createdAt) < SpaceBubbleLayoutPolicy.recentThresholdSeconds
-    }
-
-    func attachStatusLine(
-        to bubbleRootEntity: Entity,
-        bubbleEntity: Entity,
-        isRecent: Bool
-    ) {
-        // 최근/일반 전환 대응
-        for child in bubbleRootEntity.children where child.name == "StatusLine" {
-            child.removeFromParent()
-        }
-
-        // 버블 bounds를 기준으로 라인 폭/위치 계산
-        let bubbleBounds = bubbleEntity.visualBounds(relativeTo: nil)
-        let bubbleExtents = bubbleBounds.extents
-
-        let lineWidth = bubbleExtents.x * SpaceBubbleLayoutPolicy.statusLineWidthRatioToBubble
-        let lineEntity = makeStatusLineEntity(isRecent: isRecent, width: lineWidth)
-
-        let lineY = (bubbleExtents.y * 0.5) - (bubbleExtents.y * SpaceBubbleLayoutPolicy.statusLineTopInsetRatioToBubble)
-        let lineZ = (bubbleExtents.z * 0.5) + SpaceBubbleLayoutPolicy.entityForwardPadding
-
-        lineEntity.position = SIMD3<Float>(0, lineY, lineZ)
-        bubbleRootEntity.addChild(lineEntity)
-    }
-
-    private func makeStatusLineEntity(isRecent: Bool, width: Float) -> ModelEntity {
-        let mesh = MeshResource.generatePlane(
-            width: max(width, 0.001),
-            height: SpaceBubbleLayoutPolicy.statusLineHeight,
-            cornerRadius: SpaceBubbleLayoutPolicy.statusLineHeight * 0.5
-        )
-
-        let tint: UIColor = isRecent ? .orange : .blue
-        var material = SimpleMaterial()
-        material.color = .init(tint: tint, texture: nil)
-        material.roughness = .float(0.1)
-        material.metallic = .float(0.0)
-
-        let entity = ModelEntity(mesh: mesh, materials: [material])
-        entity.name = "StatusLine"
-        return entity
     }
 }
