@@ -606,7 +606,12 @@ extension MessageMarkerManager {
         mapView: NMFMapView
     ) -> NMFMarker {
         let position = NMGLatLng(lat: coord.latitude, lng: coord.longitude)
-        return makeMarker(at: position, mapView: mapView)
+        let marker = makeMarker(at: position, mapView: mapView)
+
+        if isClusterMode {
+            marker.mapView = nil
+        }
+        return marker
     }
 
     private func scheduleInitialRender(
