@@ -1,5 +1,5 @@
 //
-//  MyPageStore.swift
+//  SettingStore.swift
 //  Meomun
 //
 //  Created by hoon on 1/29/26.
@@ -8,7 +8,7 @@
 import Combine
 import Foundation
 
-final class MyPageStore: Store {
+final class SettingStore: Store {
     struct State: Equatable {
         var resetAlert: AlertModel?
     }

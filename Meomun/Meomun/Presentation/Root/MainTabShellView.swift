@@ -59,10 +59,10 @@ struct MainTabShellView: View {
                 )
             )
 
-        case .myPage:
+        case .setting:
             NavigationStack {
-                MyPageView(
-                    store: MyPageStore(
+                SettingView(
+                    store: SettingStore(
                         appSettingsOpener: AppSettingsOpener()
                     )
                 )

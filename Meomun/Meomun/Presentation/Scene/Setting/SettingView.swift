@@ -1,5 +1,5 @@
 //
-//  MyPageView.swift
+//  SettingView.swift
 //  Meomun
 //
 //  Created by hoon on 1/28/26.
@@ -9,14 +9,14 @@ import CoreLocation
 import NMapsMap
 import SwiftUI
 
-struct MyPageView: View {
-    @StateObject private var store: MyPageStore
+struct SettingView: View {
+    @StateObject private var store: SettingStore
     @Environment(\.scenePhase) private var scenePhase
     @State private var permissionStatus = LocationPermissionStatus.current
 
     private let mapView: NMFMapView = .init()
 
-    init(store: MyPageStore) {
+    init(store: SettingStore) {
         _store = .init(wrappedValue: store)
     }
 
@@ -97,7 +97,7 @@ struct MyPageView: View {
 
 #Preview {
     NavigationStack {
-        MyPageView(
+        SettingView(
             store: .init(
                 appSettingsOpener: AppSettingsOpener()
             )
@@ -107,7 +107,7 @@ struct MyPageView: View {
 
 // MARK: - Alert
 
-private extension MyPageView {
+private extension SettingView {
     var resetAlertBinding: Binding<AlertModel?> {
         Binding(
             get: { store.state.resetAlert },

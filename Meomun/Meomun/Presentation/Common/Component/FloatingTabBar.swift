@@ -28,10 +28,10 @@ struct FloatingTabBar: View {
             }
 
             FloatingTabItem(
-                systemImageName: "person",
-                isSelected: selectedTab == .myPage
+                systemImageName: "gearshape",
+                isSelected: selectedTab == .setting
             ) {
-                onSelect(.myPage)
+                onSelect(.setting)
             }
         }
         .floatingContainer()
