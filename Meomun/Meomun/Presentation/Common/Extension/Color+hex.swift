@@ -8,15 +8,6 @@
 import SwiftUI
 
 extension Color {
-    static let meomunWriteButton = Color(hex: "#5C9397")
-    static let meomunPrimary = Color(hex: "#0E1B1A")
-    static let meomunSecondary = Color(hex: "#789290")
-    static let meomunPoint = Color(hex: "#1DC9C0")
-    static let meomunMessageBackground = Color(hex: "#FAFAFA")
-    static let meomunBackground = Color(hex: "#F4F4F4")
-}
-
-extension Color {
     init(hex: String) {
         let hex = hex.replacingOccurrences(of: "#", with: "")
         let scanner = Scanner(string: hex)
