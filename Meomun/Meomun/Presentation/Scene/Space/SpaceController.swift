@@ -10,11 +10,13 @@ import SwiftUI
 
 @MainActor
 final class SpaceController {
-    private var domeEnvironment: DomeEnvironment
+    private var domeEnvironment: DomeEnvironment?
     private var rotationCamera: RotationCamera
 
     private var spaceRootEntity: Entity?
     private var messageBubbleTemplateEntity: Entity?
+    private var domeEntity: Entity?
+
     private var syncTask: Task<Void, Never>?
     private var pendingMessages: [Message] = []
 
@@ -22,13 +24,11 @@ final class SpaceController {
     private let materialConfigurator: SpaceMaterialConfigurator
 
     init(
-        domeEnvironment: DomeEnvironment,
         rotationCamera: RotationCamera = .init(
             position: .init(x: 0, y: 0.7, z: 0),
             rotateSensitivity: 0.003
         )
     ) {
-        self.domeEnvironment = domeEnvironment
         self.rotationCamera = rotationCamera
         self.bubbleSynchronizer = SpaceMessageBubbleSynchronizer()
         self.materialConfigurator = SpaceMaterialConfigurator()
@@ -57,6 +57,7 @@ final class SpaceController {
                 let domeEntity = try await Entity(named: "Dome.usdz")
                 domeEntity.name = "Dome"
                 root.addChild(domeEntity)
+                self.domeEntity = domeEntity
 
                 // Message template 로드
                 AppLog.debug("S4. Message template loaded", category: .space)
@@ -65,16 +66,6 @@ final class SpaceController {
                 messageBubbleTemplateEntity = messageEntity
                 trySyncIfPossible()
 
-                // 머테리얼 세팅
-                AppLog.debug("S5. Materials configured", category: .space)
-                materialConfigurator.configureDome(
-                    domeEntity: domeEntity,
-                    dayPart: domeEnvironment.dayPart
-                )
-                materialConfigurator.configureGround(
-                    domeEntity: domeEntity,
-                    dayPart: domeEnvironment.dayPart
-                )
             } catch {
                 AppLog.error(
                     "Failed to configure Space scene",
@@ -87,12 +78,31 @@ final class SpaceController {
 }
 
 // MARK: - Message Sync
+
 extension SpaceController {
     func sync(messages: [Message]) {
         AppLog.debug("SpaceController sync: \(messages.count)", category: .space)
 
         pendingMessages = messages
         trySyncIfPossible()
+    }
+
+    func update(domeEnvironment: DomeEnvironment) {
+        self.domeEnvironment = domeEnvironment
+
+        guard let domeEntity else { return }
+
+        // 머테리얼 세팅
+        AppLog.debug("S5. Materials configured", category: .space)
+        materialConfigurator.configureDome(
+            domeEntity: domeEntity,
+            dayPart: domeEnvironment.dayPart
+        )
+
+        materialConfigurator.configureGround(
+            domeEntity: domeEntity,
+            dayPart: domeEnvironment.dayPart
+        )
     }
 
     private func trySyncIfPossible() {
@@ -121,6 +131,7 @@ extension SpaceController {
 }
 
 // MARK: - Camera Input
+
 extension SpaceController {
     func handleDrag(_ translation: CGSize) {
         rotationCamera.handleDrag(

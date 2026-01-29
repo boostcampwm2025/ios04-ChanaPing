@@ -5,6 +5,6 @@
 //  Created by MinwooJe on 1/8/26.
 //
 
-struct DomeEnvironment {
+struct DomeEnvironment: Equatable {
     let dayPart: DayPart
 }

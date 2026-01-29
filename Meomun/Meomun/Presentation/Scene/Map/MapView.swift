@@ -222,7 +222,6 @@ private extension MapView {
                 ),
                 place: place
             ),
-            domeEnvironment: .init(dayPart: .current()),
             place: place,
             onNavigate: { coordinate, place in
                 onNavigate(coordinate, place)

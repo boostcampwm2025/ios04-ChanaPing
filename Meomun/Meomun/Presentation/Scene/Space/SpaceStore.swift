@@ -17,6 +17,7 @@ final class SpaceStore: Store {
     enum Action {
         case setLoading(Bool)
         case setMessages([Message])
+        case setDomeEnvironment(DomeEnvironment)
         case setError(String)
         case setUserLocation(Coordinate)
         case setCurrentPlaceID(PlaceID)
@@ -27,6 +28,7 @@ final class SpaceStore: Store {
         var isLoading: Bool = false
         var errorMessage: String = ""
         var messages: [Message] = []
+        var domeEnvironment: DomeEnvironment?
         var userLocation: Coordinate?           // TODO: - 지도 > 공간 진입 시점 좌표 넘겨주고, 옵셔널 지우기
         var currentPlaceID: PlaceID?
         var toastMessage: String?
@@ -54,6 +56,7 @@ final class SpaceStore: Store {
             switch intent {
             case .onAppear(let placeID):
                 continuation.yield(.setCurrentPlaceID(placeID))
+                continuation.yield(.setDomeEnvironment(.init(dayPart: .current())))
                 fetchMessages(for: placeID, continuation: continuation)
 
             case .setToast(let message):
@@ -72,6 +75,9 @@ final class SpaceStore: Store {
 
         case .setMessages(let messages):
             newState.messages = messages
+
+        case .setDomeEnvironment(let environment):
+            newState.domeEnvironment = environment
 
         case .setError(let message):
             newState.errorMessage = message
