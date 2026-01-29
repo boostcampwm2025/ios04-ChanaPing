@@ -23,32 +23,17 @@ final class SpaceMessageBubbleSynchronizer {
         let idSetToRemove = existingMessageIDs.subtracting(incomingMessageIDs)
         let idSetToAdd = incomingMessageIDs.subtracting(existingMessageIDs)
 
-        // Remove 부터 진행
+        // 1. remove
         for messageID in idSetToRemove {
             removeMessage(id: messageID)
         }
 
-        // 이후 메시지 Add 진행
+        // 2.add
         for messageID in idSetToAdd {
             guard let message = messages.first(where: { $0.id == messageID }) else { continue }
 
-            let bubbleRoot = factory.makeBubbleRoot(
-                message: message,
-                templateEntity: templateEntity
-            )
-
-            // 씬에 추가
-            root.addChild(bubbleRoot)
-
-            // 추적 저장
-            bubbleRootByID[message.id] = bubbleRoot
+            addMessage(message: message, root: root, templateEntity: templateEntity)
         }
-    }
-
-    private func removeMessage(id: MessageID) {
-        guard let entity = bubbleRootByID[id] else { return }
-        entity.removeFromParent()
-        bubbleRootByID[id] = nil
     }
 
     private func addMessage(
@@ -62,5 +47,11 @@ final class SpaceMessageBubbleSynchronizer {
         )
         root.addChild(bubbleRoot)
         bubbleRootByID[message.id] = bubbleRoot
+    }
+
+    private func removeMessage(id: MessageID) {
+        guard let entity = bubbleRootByID[id] else { return }
+        entity.removeFromParent()
+        bubbleRootByID[id] = nil
     }
 }
