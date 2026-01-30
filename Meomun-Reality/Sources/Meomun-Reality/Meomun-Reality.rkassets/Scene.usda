@@ -12,549 +12,305 @@ reorder rootPrims = ["Root", "WaterMaterial"]
 
 def Xform "Root"
 {
-    def "Dome" (
+    def "Message" (
         active = true
-        references = @Dome.usdz@
+        references = @Message.usdz@
     )
     {
-        float3 xformOp:scale = (0.01, 0.01, 0.01)
-        float3 xformOp:translate = (0, 0, 0)
+        uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:orient", "xformOp:scale"]
 
-        over "Grid" (
-            active = false
+        over "Message" (
+            prepend apiSchemas = ["MaterialBindingAPI"]
+            customData = {
+                dictionary RE = {
+                    dictionary mesh = {
+                        dictionary v1 = {
+                            bool reorderVertexCaching = 0
+                        }
+                    }
+                }
+            }
         )
         {
-        }
-
-        over "Looks"
-        {
-            reorder nameChildren = ["GridMATSG", "GroundMATSG", "DomeMATSG", "GroundMaterial", "WaterGroundMaterial"]
-            over "GridMATSG" (
-                active = false
+            reorder nameChildren = ["Material", "GroundingShadow", "Message_01"]
+            rel material:binding = </Root/Message/Message/Message_01> (
+                bindMaterialAs = "weakerThanDescendants"
             )
-            {
-            }
 
-            over "GroundMATSG" (
-                active = false
-            )
+            over "Material"
             {
-                string[] ui:nodegraph:realitykit:node:attributesShowingChildren = ["inputs:file4:varname"]
+                reorder nameChildren = ["Heartbeat", "PreviewSurface", "UnlitSurface", "FrenselMask"]
+                token outputs:mtlx:surface.connect = </Root/Message/Message/Material/PreviewSurface.outputs:out>
+                float2 ui:nodegraph:realitykit:subgraphOutputs:pos = (335.5, 100.5)
+                int ui:nodegraph:realitykit:subgraphOutputs:stackingOrder = 875
 
-                over "UnlitSurface"
+                over "PreviewSurface"
                 {
+                    float inputs:clearcoat
+                    float inputs:clearcoatRoughness
+                    color3f inputs:emissiveColor
+                    float inputs:ior
+                    float3 inputs:normal
+                    float inputs:occlusion
                     float inputs:opacityThreshold
-                    int ui:nodegraph:node:stackingOrder = 218
-                }
-
-                over "Multiply_1" (
-                    active = false
-                )
-                {
-                    float inputs:in1
-                    float inputs:in2
-                    int ui:nodegraph:node:stackingOrder = 282
-                    string[] ui:nodegraph:realitykit:node:attributesShowingChildren = []
-                }
-
-                over "ConstantColor3"
-                {
-                    int ui:nodegraph:node:stackingOrder = 215
-                }
-
-                over "Remap" (
-                    active = false
-                )
-                {
-                    float inputs:in
-                    int ui:nodegraph:node:stackingOrder = 282
-                }
-
-                over "Position" (
-                    active = false
-                )
-                {
-                    int ui:nodegraph:node:stackingOrder = 282
-                }
-
-                over "Multiply" (
-                    active = false
-                )
-                {
-                    float inputs:in1
-                    float inputs:in2
-                    int ui:nodegraph:node:stackingOrder = 282
-                }
-
-                over "Separate3" (
-                    active = false
-                )
-                {
-                    int ui:nodegraph:node:stackingOrder = 282
-                }
-
-                over "Add" (
-                    active = false
-                )
-                {
-                    int ui:nodegraph:node:stackingOrder = 282
-                }
-
-                over "SquareRoot" (
-                    active = false
-                )
-                {
-                    int ui:nodegraph:node:stackingOrder = 282
+                    float2 ui:nodegraph:node:pos = (112.921875, 32.304688)
+                    int ui:nodegraph:node:stackingOrder = 872
+                    string[] ui:nodegraph:realitykit:node:attributesShowingChildren = ["Advanced"]
                 }
             }
 
-            def Material "GroundMaterial" (
-                active = false
-            )
+            def RealityKitComponent "GroundingShadow"
             {
-                reorder nameChildren = ["SkyColorMix", "SkyTintMix", "PreviewSurface", "Multiply_1", "AlbedoVariation", "BaseRough", "Add", "Subtract", "DetailScale", "Multiply_2", "Time", "FractalNoise"]
-                color3f inputs:bottomColor = (0.08627451, 0.12941177, 0.24313726) (
-                    colorSpace = "lin_srgb"
+                bool enableIBLShadow = 1
+                bool enableMeshShadow = 1
+                bool enableReceiveIBLShadow = 0
+                bool enableReceiveMeshShadow = 0
+                uniform token info:id = "RealityKit.GroundingShadow"
+            }
+
+            def Material "Message_01"
+            {
+                reorder nameChildren = ["PreviewSurface", "FrenselMask", "Heartbeat"]
+                float inputs:FresnelPower = 3 (
                     customData = {
                         dictionary realitykit = {
-                            float2 positionInSubgraph = (-1038.9866, -96.11422)
-                            int stackingOrderInSubgraph = 2015
+                            float2 positionInSubgraph = (275.5, 488)
+                            int stackingOrderInSubgraph = 1940
                         }
                     }
                 )
-                color3f inputs:topColor = (0.101960786, 0.101960786, 0.18039216) (
-                    colorSpace = "lin_srgb"
+                color3f inputs:GlowColor = (0.27679446, 0.6000156, 0.741804) (
+                    colorSpace = "srgb_texture"
                     customData = {
                         dictionary realitykit = {
-                            float2 positionInSubgraph = (-1028.9266, -254.4196)
-                            int stackingOrderInSubgraph = 2015
+                            float2 positionInSubgraph = (486, 27.5)
+                            int stackingOrderInSubgraph = 1731
                         }
                     }
                 )
-                token outputs:mtlx:surface.connect = </Root/Dome/Looks/GroundMaterial/PreviewSurface.outputs:out>
+                float inputs:GlowIntensity = 50 (
+                    customData = {
+                        dictionary realitykit = {
+                            float2 positionInSubgraph = (275.5, 373)
+                            int stackingOrderInSubgraph = 1940
+                        }
+                    }
+                )
+                float inputs:GlowOpacity = 0.3 (
+                    customData = {
+                        dictionary realitykit = {
+                            float2 positionInSubgraph = (486, 142.5)
+                            int stackingOrderInSubgraph = 1731
+                        }
+                    }
+                )
+                float inputs:TimeSpeed = 0.4 (
+                    customData = {
+                        dictionary realitykit = {
+                            float2 positionInSubgraph = (69.5, 202.5)
+                            int stackingOrderInSubgraph = 1940
+                        }
+                    }
+                )
+                token outputs:mtlx:surface.connect = </Root/Message/Message/Message_01/PreviewSurface.outputs:out>
                 token outputs:realitykit:vertex
-                float2 ui:nodegraph:realitykit:subgraphOutputs:pos = (15.756337, 111.99292)
-                int ui:nodegraph:realitykit:subgraphOutputs:stackingOrder = 896
-
-                def Shader "SkyColorMix" (
-                    references = @Dome.usdz@</SkyDome/Looks/DomeMATSG/Mix_1>
-                )
-                {
-                    uniform token info:id = "ND_mix_color3"
-                    color3f inputs:bg.connect = </Root/Dome/Looks/GroundMaterial.inputs:bottomColor>
-                    color3f inputs:fg.connect = </Root/Dome/Looks/GroundMaterial.inputs:topColor>
-                    float inputs:mix = 0.5
-                    float inputs:mix.connect = None
-                    float2 ui:nodegraph:node:pos = (-770.9558, -191.64848)
-                    int ui:nodegraph:node:stackingOrder = 2015
-                }
-
-                def Shader "SkyTintMix" (
-                    references = @Dome.usdz@</SkyDome/Looks/DomeMATSG/Mix_1>
-                )
-                {
-                    uniform token info:id = "ND_mix_color3"
-                    color3f inputs:bg.connect = </Root/Dome/Looks/GroundMaterial.inputs:bottomColor>
-                    color3f inputs:fg.connect = </Root/Dome/Looks/GroundMaterial/SkyColorMix.outputs:out>
-                    float inputs:mix = 0.35
-                    float inputs:mix.connect = None
-                    float2 ui:nodegraph:node:pos = (-500.99445, 0.97228545)
-                    int ui:nodegraph:node:stackingOrder = 2015
-                    string[] ui:nodegraph:realitykit:node:attributesShowingChildren = ["outputs:out", "inputs:mix", "inputs:mix"]
-                }
+                float2 ui:nodegraph:realitykit:subgraphOutputs:pos = (1189.5, 169.5)
+                int ui:nodegraph:realitykit:subgraphOutputs:stackingOrder = 1881
 
                 def Shader "PreviewSurface"
                 {
                     uniform token info:id = "ND_UsdPreviewSurface_surfaceshader"
-                    float inputs:clearcoat
-                    float inputs:clearcoatRoughness
-                    color3f inputs:diffuseColor.connect = </Root/Dome/Looks/GroundMaterial/SkyTintMix.outputs:out>
-                    color3f inputs:emissiveColor
+                    color3f inputs:diffuseColor = (1, 1, 1) (
+                        colorSpace = "srgb_texture"
+                    )
+                    color3f inputs:emissiveColor.connect = </Root/Message/Message/Message_01/Multiply_4.outputs:out>
                     float inputs:ior
                     float inputs:metallic
                     float3 inputs:normal
-                    float inputs:occlusion
-                    float inputs:opacity
-                    float inputs:opacityThreshold
-                    float inputs:roughness
+                    float inputs:opacity = 0.5
+                    float inputs:roughness = 0.2
                     token outputs:out
-                    float2 ui:nodegraph:node:pos = (-226.24367, 111.99292)
-                    int ui:nodegraph:node:stackingOrder = 1941
-                    string[] ui:nodegraph:realitykit:node:attributesShowingChildren = ["inputs:roughness"]
+                    float2 ui:nodegraph:node:pos = (947.5, 169.5)
+                    int ui:nodegraph:node:stackingOrder = 1963
+                    string[] ui:nodegraph:realitykit:node:attributesShowingChildren = ["Advanced"]
                 }
 
-                def Shader "Multiply_1"
+                def NodeGraph "FrenselMask"
                 {
-                    uniform token info:id = "ND_multiply_float"
-                    float inputs:in1.connect = </Root/Dome/Looks/GroundMaterial/Subtract.outputs:out>
-                    float inputs:in2.connect = </Root/Dome/Looks/GroundMaterial/AlbedoVariation.outputs:out>
-                    float outputs:out
-                    float2 ui:nodegraph:node:pos = (-1246.9812, 392.40375)
-                    int ui:nodegraph:node:stackingOrder = 1645
+                    float inputs:FrenselPower (
+                        customData = {
+                            dictionary realitykit = {
+                                float2 positionInSubgraph = (589, 178.5)
+                                int stackingOrderInSubgraph = 857
+                            }
+                        }
+                    )
+                    float inputs:FrenselPower.connect = </Root/Message/Message/Message_01.inputs:FresnelPower>
+                    float outputs:FresnelMask_out.connect = </Root/Message/Message/Message_01/FrenselMask/FresnelMask.outputs:out>
+                    float2 ui:nodegraph:node:pos = (486, 460.5)
+                    int ui:nodegraph:node:stackingOrder = 1940
+                    float2 ui:nodegraph:realitykit:subgraphOutputs:pos = (1037.8086, 77.71484)
+                    int ui:nodegraph:realitykit:subgraphOutputs:stackingOrder = 856
+
+                    def Shader "ViewDirection"
+                    {
+                        uniform token info:id = "ND_realitykit_viewdirection_vector3"
+                        float3 outputs:out
+                        float2 ui:nodegraph:node:pos = (122.94141, 105.20703)
+                        int ui:nodegraph:node:stackingOrder = 850
+                    }
+
+                    def Shader "Oneminus"
+                    {
+                        uniform token info:id = "ND_realitykit_oneminus_float"
+                        float inputs:in.connect = </Root/Message/Message/Message_01/FrenselMask/DotProduct.outputs:out>
+                        float outputs:out
+                        float2 ui:nodegraph:node:pos = (589, 57.5)
+                        int ui:nodegraph:node:stackingOrder = 846
+                    }
+
+                    def Shader "Normal"
+                    {
+                        uniform token info:id = "ND_normal_vector3"
+                        string inputs:space = "world"
+                        float3 outputs:out
+                        float2 ui:nodegraph:node:pos = (160.52734, 27.976562)
+                        int ui:nodegraph:node:stackingOrder = 852
+                        string[] ui:nodegraph:realitykit:node:attributesShowingChildren = ["outputs:out"]
+                    }
+
+                    def Shader "FresnelMask"
+                    {
+                        uniform token info:id = "ND_power_float"
+                        float inputs:in1.connect = </Root/Message/Message/Message_01/FrenselMask/Oneminus.outputs:out>
+                        float inputs:in2.connect = </Root/Message/Message/Message_01/FrenselMask.inputs:FrenselPower>
+                        float outputs:out
+                        float2 ui:nodegraph:node:pos = (818.5, 81.5)
+                        int ui:nodegraph:node:stackingOrder = 846
+                    }
+
+                    def Shader "DotProduct"
+                    {
+                        uniform token info:id = "ND_dotproduct_vector3"
+                        float3 inputs:in1.connect = </Root/Message/Message/Message_01/FrenselMask/Normal.outputs:out>
+                        float3 inputs:in2.connect = </Root/Message/Message/Message_01/FrenselMask/ViewDirection.outputs:out>
+                        float outputs:out
+                        float2 ui:nodegraph:node:pos = (359.5, 57.5)
+                        int ui:nodegraph:node:stackingOrder = 846
+                    }
                 }
 
-                def Shader "AlbedoVariation"
+                def NodeGraph "Heartbeat"
                 {
-                    uniform token info:id = "ND_constant_float"
-                    float inputs:value = 0.06
-                    float inputs:value.connect = None
-                    float outputs:out
-                    float2 ui:nodegraph:node:pos = (-1511.7393, 458.00256)
-                    int ui:nodegraph:node:stackingOrder = 1644
+                    float inputs:TimeSpeed (
+                        customData = {
+                            dictionary realitykit = {
+                                float2 positionInSubgraph = (72, 142.5)
+                                int stackingOrderInSubgraph = 878
+                            }
+                        }
+                    )
+                    float inputs:TimeSpeed.connect = </Root/Message/Message/Message_01.inputs:TimeSpeed>
+                    float outputs:Add_out.connect = </Root/Message/Message/Message_01/Heartbeat/Add.outputs:out>
+                    float2 ui:nodegraph:node:pos = (275.5, 202.5)
+                    int ui:nodegraph:node:stackingOrder = 1940
+                    float2 ui:nodegraph:realitykit:subgraphOutputs:pos = (797, 57.5)
+
+                    def Shader "Time"
+                    {
+                        uniform token info:id = "ND_time_float"
+                        float outputs:out
+                        float2 ui:nodegraph:node:pos = (72, 27.5)
+                        int ui:nodegraph:node:stackingOrder = 877
+                    }
+
+                    def Shader "Multiply"
+                    {
+                        uniform token info:id = "ND_multiply_float"
+                        float inputs:in1.connect = </Root/Message/Message/Message_01/Heartbeat/Time.outputs:out>
+                        float inputs:in2.connect = </Root/Message/Message/Message_01/Heartbeat.inputs:TimeSpeed>
+                        float outputs:out
+                        float2 ui:nodegraph:node:pos = (232.5, 57.5)
+                        int ui:nodegraph:node:stackingOrder = 877
+                    }
+
+                    def Shader "Add"
+                    {
+                        uniform token info:id = "ND_add_float"
+                        float inputs:in1.connect = </Root/Message/Message/Message_01/Heartbeat/Multiply_1.outputs:out>
+                        float inputs:in2 = 0.5
+                        float outputs:out
+                        float2 ui:nodegraph:node:pos = (646.5, 57.5)
+                        int ui:nodegraph:node:stackingOrder = 877
+                    }
+
+                    def Shader "Sin"
+                    {
+                        uniform token info:id = "ND_sin_float"
+                        float inputs:in.connect = </Root/Message/Message/Message_01/Heartbeat/Multiply.outputs:out>
+                        float outputs:out
+                        float2 ui:nodegraph:node:pos = (380.5, 57.5)
+                        int ui:nodegraph:node:stackingOrder = 877
+                    }
+
+                    def Shader "Multiply_1"
+                    {
+                        uniform token info:id = "ND_multiply_float"
+                        float inputs:in1.connect = </Root/Message/Message/Message_01/Heartbeat/Sin.outputs:out>
+                        float inputs:in2 = 0.4
+                        float outputs:out
+                        float2 ui:nodegraph:node:pos = (528.5, 57.5)
+                        int ui:nodegraph:node:stackingOrder = 877
+                        string[] ui:nodegraph:realitykit:node:attributesShowingChildren = ["inputs:in2"]
+                    }
                 }
 
-                def Shader "BaseRough"
+                def Shader "Multiply_4" (
+                    references = None
+                )
                 {
                     uniform token info:id = "ND_multiply_color3FA"
-                    color3f inputs:in1.connect = </Root/Dome/Looks/GroundMaterial.inputs:bottomColor>
-                    float inputs:in2.connect = </Root/Dome/Looks/GroundMaterial/Add.outputs:out>
+                    color3f inputs:in1.connect = </Root/Message/Message/Message_01/Multiply.outputs:out>
+                    float inputs:in2.connect = </Root/Message/Message/Message_01/Multiply_3.outputs:out>
                     color3f outputs:out
-                    float2 ui:nodegraph:node:pos = (-911.08734, 333.82687)
-                    int ui:nodegraph:node:stackingOrder = 1691
-                }
-
-                def Shader "Add"
-                {
-                    uniform token info:id = "ND_add_float"
-                    float inputs:in1 = 1
-                    float inputs:in2.connect = </Root/Dome/Looks/GroundMaterial/Multiply_1.outputs:out>
-                    float outputs:out
-                    float2 ui:nodegraph:node:pos = (-1060.7715, 354.82053)
-                    int ui:nodegraph:node:stackingOrder = 1646
-                }
-
-                def Shader "Subtract"
-                {
-                    uniform token info:id = "ND_subtract_float"
-                    float inputs:in1.connect = </Root/Dome/Looks/GroundMaterial/FractalNoise.outputs:out>
-                    float inputs:in2 = 0.5
-                    float outputs:out
-                    float2 ui:nodegraph:node:pos = (-1355.2091, 322.70636)
-                    int ui:nodegraph:node:stackingOrder = 1652
-                }
-
-                def Shader "DetailScale"
-                {
-                    uniform token info:id = "ND_constant_float"
-                    float inputs:value = 0.75
-                    float outputs:out
-                    float2 ui:nodegraph:node:pos = (-2018.6024, 139.39775)
-                    int ui:nodegraph:node:stackingOrder = 1845
-                }
-
-                def Shader "Multiply_2"
-                {
-                    uniform token info:id = "ND_multiply_float"
-                    float inputs:in1.connect = </Root/Dome/Looks/GroundMaterial/Multiply_3.outputs:out>
-                    float inputs:in2.connect = </Root/Dome/Looks/GroundMaterial/Time.outputs:out>
-                    float outputs:out
-                    float2 ui:nodegraph:node:pos = (-1723.69, 185.31354)
-                    int ui:nodegraph:node:stackingOrder = 1613
-                }
-
-                def Shader "Time"
-                {
-                    uniform token info:id = "ND_time_float"
-                    float outputs:out
-                    float2 ui:nodegraph:node:pos = (-1862.1586, 233.01312)
-                    int ui:nodegraph:node:stackingOrder = 1618
-                }
-
-                def Shader "FractalNoise"
-                {
-                    uniform token info:id = "ND_fractal3d_float"
-                    float inputs:amplitude.connect = </Root/Dome/Looks/GroundMaterial/Multiply_2.outputs:out>
-                    float inputs:diminish
-                    float inputs:lacunarity
-                    int inputs:octaves
-                    float3 inputs:position
-                    float outputs:out
-                    float2 ui:nodegraph:node:pos = (-1552.8358, 233.1445)
-                    int ui:nodegraph:node:stackingOrder = 1620
+                    float2 ui:nodegraph:node:pos = (765.5, 169.5)
+                    int ui:nodegraph:node:stackingOrder = 1731
                 }
 
                 def Shader "Multiply"
                 {
-                    uniform token info:id = "ND_multiply_float"
-                    float inputs:in1.connect = </Root/Dome/Looks/GroundMaterial/RoughnessVariation.outputs:out>
-                    float inputs:in2.connect = </Root/Dome/Looks/GroundMaterial/Subtract.outputs:out>
-                    float outputs:out
-                    float2 ui:nodegraph:node:pos = (-1150.8948, 180.10327)
-                    int ui:nodegraph:node:stackingOrder = 1670
-                    string[] ui:nodegraph:realitykit:node:attributesShowingChildren = ["inputs:in2"]
-                }
-
-                def Shader "RoughnessVariation"
-                {
-                    uniform token info:id = "ND_constant_float"
-                    float inputs:value = 0.2
-                    float outputs:out
-                    float2 ui:nodegraph:node:pos = (-1409.7035, 75.07385)
-                    int ui:nodegraph:node:stackingOrder = 1661
-                }
-
-                def Shader "Add_1"
-                {
-                    uniform token info:id = "ND_add_color3FA"
-                    color3f inputs:in1.connect = </Root/Dome/Looks/GroundMaterial/BaseRough.outputs:out>
-                    float inputs:in2.connect = </Root/Dome/Looks/GroundMaterial/Multiply.outputs:out>
+                    uniform token info:id = "ND_multiply_color3FA"
+                    color3f inputs:in1.connect = </Root/Message/Message/Message_01.inputs:GlowColor>
+                    float inputs:in2.connect = </Root/Message/Message/Message_01.inputs:GlowOpacity>
                     color3f outputs:out
-                    float2 ui:nodegraph:node:pos = (-793.7882, 275.43735)
-                    int ui:nodegraph:node:stackingOrder = 1680
+                    float2 ui:nodegraph:node:pos = (648.5, 57.5)
+                    int ui:nodegraph:node:stackingOrder = 1731
                 }
 
-                def Shader "Clamp"
-                {
-                    uniform token info:id = "ND_clamp_color3"
-                    color3f inputs:high
-                    color3f inputs:in.connect = </Root/Dome/Looks/GroundMaterial/Add_1.outputs:out>
-                    color3f inputs:low
-                    color3f outputs:out
-                    float2 ui:nodegraph:node:pos = (-660.1133, 348.7865)
-                    int ui:nodegraph:node:stackingOrder = 1847
-                }
-
-                def Shader "Position"
-                {
-                    uniform token info:id = "ND_position_vector3"
-                    string inputs:space = "world"
-                    float3 outputs:out
-                    float2 ui:nodegraph:node:pos = (-2340.602, 33.57107)
-                    int ui:nodegraph:node:stackingOrder = 1845
-                }
-
-                def Shader "Swizzle"
-                {
-                    uniform token info:id = "ND_swizzle_vector3_vector2"
-                    string inputs:channels = "xz"
-                    float3 inputs:in.connect = </Root/Dome/Looks/GroundMaterial/Position.outputs:out>
-                    float2 outputs:out
-                    float2 ui:nodegraph:node:pos = (-2186.8872, 33.538208)
-                    int ui:nodegraph:node:stackingOrder = 1853
-                }
-
-                def Shader "Length"
-                {
-                    uniform token info:id = "ND_magnitude_vector2"
-                    float2 inputs:in.connect = </Root/Dome/Looks/GroundMaterial/Swizzle.outputs:out>
-                    float outputs:out
-                    float2 ui:nodegraph:node:pos = (-2021.6371, 52.621624)
-                    int ui:nodegraph:node:stackingOrder = 1854
-                }
-
-                def Shader "Multiply_3"
+                def Shader "Multiply_2" (
+                    references = None
+                )
                 {
                     uniform token info:id = "ND_multiply_float"
-                    float inputs:in1.connect = </Root/Dome/Looks/GroundMaterial/Length.outputs:out>
-                    float inputs:in2.connect = </Root/Dome/Looks/GroundMaterial/DetailScale.outputs:out>
+                    float inputs:in1.connect = </Root/Message/Message/Message_01.inputs:GlowIntensity>
+                    float inputs:in2.connect = </Root/Message/Message/Message_01/Heartbeat.outputs:Add_out>
                     float outputs:out
-                    float2 ui:nodegraph:node:pos = (-1853.6934, 110.08568)
-                    int ui:nodegraph:node:stackingOrder = 1845
+                    float2 ui:nodegraph:node:pos = (486, 248)
+                    int ui:nodegraph:node:stackingOrder = 1940
                 }
-            }
 
-            over "DomeMATSG"
-            {
-                color3f inputs:bottomColor = (0.08627451, 0.7647059, 0.24313726) (
-                    colorSpace = "lin_srgb"
-                    customData = {
-                        dictionary realitykit = {
-                            float2 positionInSubgraph = (-196.13982, 103.03134)
-                            int stackingOrderInSubgraph = 487
-                        }
-                    }
+                def Shader "Multiply_3" (
+                    references = None
                 )
-                color3f inputs:topColor = (0.101960786, 0.6616211, 0.7439837) (
-                    colorSpace = "lin_srgb"
-                    customData = {
-                        dictionary realitykit = {
-                            float2 positionInSubgraph = (-196.19373, 14.310704)
-                            int stackingOrderInSubgraph = 486
-                        }
-                    }
-                )
-
-                over "Mix_1"
-                {
-                    int ui:nodegraph:node:stackingOrder = 487
-                }
-
-                over "UnlitSurface"
-                {
-                    int ui:nodegraph:node:stackingOrder = 486
-                }
-
-                over "Separate3_1"
-                {
-                    int ui:nodegraph:node:stackingOrder = 488
-                }
-            }
-
-            def Material "WaterGroundMaterial"
-            {
-                color3f inputs:bottomColor = (0.08627451, 0.7647059, 0.24313726) (
-                    colorSpace = "lin_srgb"
-                    customData = {
-                        dictionary realitykit = {
-                            float2 positionInSubgraph = (390.33148, -18.477238)
-                            int stackingOrderInSubgraph = 2156
-                        }
-                    }
-                )
-                float inputs:Contrast = 0.2 (
-                    customData = {
-                        dictionary realitykit = {
-                            float2 positionInSubgraph = (618.5, 273.5)
-                            int stackingOrderInSubgraph = 2019
-                        }
-                    }
-                )
-                float inputs:Density = 0.6 (
-                    customData = {
-                        dictionary realitykit = {
-                            float2 positionInSubgraph = (69.5, 129.5)
-                            int stackingOrderInSubgraph = 2157
-                        }
-                    }
-                )
-                float inputs:TimeSpeed = 0.3 (
-                    customData = {
-                        dictionary realitykit = {
-                            float2 positionInSubgraph = (69.5, 359.5)
-                            int stackingOrderInSubgraph = 2064
-                        }
-                    }
-                )
-                color3f inputs:topColor = (0.101960786, 0.101960786, 0.18039216) (
-                    colorSpace = "lin_srgb"
-                    customData = {
-                        dictionary realitykit = {
-                            float2 positionInSubgraph = (390.33148, -133.47723)
-                            int stackingOrderInSubgraph = 2155
-                        }
-                    }
-                )
-                token outputs:mtlx:surface.connect = </Root/Dome/Looks/WaterGroundMaterial/UnlitSurface.outputs:out>
-                token outputs:realitykit:vertex
-                float2 ui:nodegraph:realitykit:subgraphOutputs:pos = (1268.2913, 157.56888)
-                int ui:nodegraph:realitykit:subgraphOutputs:stackingOrder = 2153
-
-                def Shader "WorleyNoise3D"
-                {
-                    uniform token info:id = "ND_worleynoise3d_float"
-                    float inputs:jitter = 1
-                    float3 inputs:position.connect = </Root/Dome/Looks/WaterGroundMaterial/Add.outputs:out>
-                    float outputs:out
-                    float2 ui:nodegraph:node:pos = (618.5, 121.5)
-                    int ui:nodegraph:node:stackingOrder = 117
-                }
-
-                def Shader "Position"
-                {
-                    uniform token info:id = "ND_position_vector3"
-                    string inputs:space = "world"
-                    float3 outputs:out
-                    float2 ui:nodegraph:node:pos = (69.5, 21)
-                    int ui:nodegraph:node:stackingOrder = 177
-                }
-
-                def Shader "Multiply"
-                {
-                    uniform token info:id = "ND_multiply_vector3FA"
-                    float3 inputs:in1.connect = </Root/Dome/Looks/WaterGroundMaterial/Position.outputs:out>
-                    float inputs:in2.connect = </Root/Dome/Looks/WaterGroundMaterial.inputs:Density>
-                    float3 outputs:out
-                    float2 ui:nodegraph:node:pos = (227.5, 51)
-                    int ui:nodegraph:node:stackingOrder = 175
-                }
-
-                def Shader "Time"
-                {
-                    uniform token info:id = "ND_time_float"
-                    float outputs:out
-                    float2 ui:nodegraph:node:pos = (69.5, 244.5)
-                    int ui:nodegraph:node:stackingOrder = 2063
-                }
-
-                def Shader "Add"
-                {
-                    uniform token info:id = "ND_add_vector3FA"
-                    float3 inputs:in1.connect = </Root/Dome/Looks/WaterGroundMaterial/Multiply.outputs:out>
-                    float inputs:in2.connect = </Root/Dome/Looks/WaterGroundMaterial/Multiply_1.outputs:out>
-                    float3 outputs:out
-                    float2 ui:nodegraph:node:pos = (389.5, 121.5)
-                    int ui:nodegraph:node:stackingOrder = 179
-                }
-
-                def Shader "Power"
-                {
-                    uniform token info:id = "ND_power_float"
-                    float inputs:in1.connect = </Root/Dome/Looks/WaterGroundMaterial/WorleyNoise3D.outputs:out>
-                    float inputs:in2 = 5
-                    float inputs:in2.connect = </Root/Dome/Looks/WaterGroundMaterial.inputs:Contrast>
-                    float outputs:out
-                    float2 ui:nodegraph:node:pos = (838, 151.5)
-                    int ui:nodegraph:node:stackingOrder = 199
-                }
-
-                def Shader "UnlitSurface"
-                {
-                    uniform token info:id = "ND_realitykit_unlit_surfaceshader"
-                    bool inputs:applyPostProcessToneMap
-                    color3f inputs:color.connect = </Root/Dome/Looks/WaterGroundMaterial/SkyTintMix.outputs:out>
-                    float inputs:opacity.connect = </Root/Dome/Looks/WaterGroundMaterial/Power.outputs:out>
-                    float inputs:opacityThreshold
-                    token outputs:out
-                    float2 ui:nodegraph:node:pos = (1050.3372, 103.95989)
-                    int ui:nodegraph:node:stackingOrder = 2150
-                }
-
-                def Shader "SkyColorMix" (
-                    references = @Dome.usdz@</SkyDome/Looks/DomeMATSG/Mix_1>
-                )
-                {
-                    uniform token info:id = "ND_mix_color3"
-                    color3f inputs:bg.connect = </Root/Dome/Looks/WaterGroundMaterial.inputs:bottomColor>
-                    color3f inputs:fg.connect = </Root/Dome/Looks/WaterGroundMaterial.inputs:topColor>
-                    float inputs:mix = 0.5
-                    float inputs:mix.connect = None
-                    float2 ui:nodegraph:node:pos = (619.3315, -59.977238)
-                    int ui:nodegraph:node:stackingOrder = 2148
-                }
-
-                def Shader "SkyTintMix" (
-                    references = @Dome.usdz@</SkyDome/Looks/DomeMATSG/Mix_1>
-                )
-                {
-                    uniform token info:id = "ND_mix_color3"
-                    color3f inputs:bg.connect = </Root/Dome/Looks/WaterGroundMaterial.inputs:bottomColor>
-                    color3f inputs:fg.connect = </Root/Dome/Looks/WaterGroundMaterial/SkyColorMix.outputs:out>
-                    float inputs:mix = 0.35
-                    float inputs:mix.connect = None
-                    float2 ui:nodegraph:node:pos = (838.8315, -29.977238)
-                    int ui:nodegraph:node:stackingOrder = 2148
-                    string[] ui:nodegraph:realitykit:node:attributesShowingChildren = ["outputs:out", "inputs:mix", "inputs:mix"]
-                }
-
-                def Shader "Multiply_1"
                 {
                     uniform token info:id = "ND_multiply_float"
-                    float inputs:in1.connect = </Root/Dome/Looks/WaterGroundMaterial.inputs:TimeSpeed>
-                    float inputs:in2.connect = </Root/Dome/Looks/WaterGroundMaterial/Time.outputs:out>
+                    float inputs:in1.connect = </Root/Message/Message/Message_01/Multiply_2.outputs:out>
+                    float inputs:in2.connect = </Root/Message/Message/Message_01/FrenselMask.outputs:FresnelMask_out>
                     float outputs:out
-                    float2 ui:nodegraph:node:pos = (227.5, 274.5)
-                    int ui:nodegraph:node:stackingOrder = 2059
+                    float2 ui:nodegraph:node:pos = (648.5, 317.5)
+                    int ui:nodegraph:node:stackingOrder = 1940
                 }
             }
-        }
-
-        over "Ground_01" (
-            prepend apiSchemas = ["MaterialBindingAPI"]
-        )
-        {
-            rel material:binding = </Root/Dome/Looks/WaterGroundMaterial> (
-                bindMaterialAs = "weakerThanDescendants"
-            )
         }
     }
 }

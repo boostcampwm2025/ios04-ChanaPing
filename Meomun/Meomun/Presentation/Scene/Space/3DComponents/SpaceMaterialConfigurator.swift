@@ -1,11 +1,12 @@
 //
-//  DomeMaterialConfigurator.swift
+//  SpaceMaterialConfigurator.swift
 //  Meomun
 //
 //  Created by Hayeon Park on 1/29/26.
 //
 
 import RealityKit
+import UIKit
 
 struct SpaceMaterialConfigurator {
     func configureDome(domeEntity: Entity, dayPart: DayPart) {
@@ -30,6 +31,26 @@ struct SpaceMaterialConfigurator {
             try material.setParameter(name: "Density", value: .float(0.6))
             try material.setParameter(name: "Contrast", value: .float(0.2))
             try material.setParameter(name: "TimeSpeed", value: .float(0.3))
+        }
+    }
+
+    func configureMessage(
+        messageEntity: Entity
+    ) {
+        let randomGlowColor = UIColor(
+            red: CGFloat(Float.random(in: 0.0...1.0)),
+            green: CGFloat(Float.random(in: 0.0...1.0)),
+            blue: CGFloat(Float.random(in: 0.0...1.0)),
+            alpha: 0.5
+        )
+
+        configureShaderMaterial(on: messageEntity, surfaceName: "Message", category: .resource) { material in
+            try material.setParameter(name: "GlowColor", value: .color(randomGlowColor))
+            try material.setParameter(name: "GlowOpacity", value: .float(0.3))
+            try material.setParameter(name: "GlowIntensity", value: .int(50))
+
+            try material.setParameter(name: "FresnelPower", value: .float(6.0))
+            try material.setParameter(name: "TimeSpeed", value: .float(1.2))
         }
     }
 }

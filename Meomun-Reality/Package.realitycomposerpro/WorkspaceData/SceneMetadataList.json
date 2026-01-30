@@ -3,36 +3,61 @@
     "objectMetadataList" : [
       [
         "FF64A1AC-277B-4E23-9810-F7D10D286661",
+        "Root"
+      ],
+      {
+        "isExpanded" : true,
+        "isLocked" : false
+      },
+      [
+        "FF64A1AC-277B-4E23-9810-F7D10D286661",
         "Root",
-        "Dome",
+        "Message_2",
+        "Message"
+      ],
+      {
+        "isExpanded" : true,
+        "isLocked" : false
+      },
+      [
+        "FF64A1AC-277B-4E23-9810-F7D10D286661",
+        "Root",
+        "Message_1",
+        "Material"
+      ],
+      {
+        "isExpanded" : true,
+        "isLocked" : false
+      },
+      [
+        "FF64A1AC-277B-4E23-9810-F7D10D286661",
+        "Root",
+        "Message",
+        "Message"
+      ],
+      {
+        "isExpanded" : true,
+        "isLocked" : false
+      },
+      [
+        "FF64A1AC-277B-4E23-9810-F7D10D286661",
+        "Root",
+        "SkyDome",
         "Looks",
         "GroundMATSG"
       ],
       {
-        "disallowsFraming" : true,
         "isExpanded" : true,
         "isLocked" : false
       },
       [
         "FF64A1AC-277B-4E23-9810-F7D10D286661",
         "Root",
-        "Dome",
-        "Looks",
-        "GroundMaterial"
+        "SkyDome",
+        "Looks"
       ],
       {
-        "disallowsFraming" : true,
         "isExpanded" : true,
-        "isLocked" : false
-      },
-      [
-        "FF64A1AC-277B-4E23-9810-F7D10D286661",
-        "Root",
-        "SkyDome"
-      ],
-      {
-        "disallowsFraming" : true,
-        "isExpanded" : false,
         "isLocked" : false
       },
       [
@@ -51,37 +76,8 @@
         "FF64A1AC-277B-4E23-9810-F7D10D286661",
         "Root",
         "Dome",
-        "Grid"
-      ],
-      {
-        "disallowsFraming" : true,
-        "isExpanded" : false,
-        "isLocked" : false
-      },
-      [
-        "FF64A1AC-277B-4E23-9810-F7D10D286661",
-        "Root",
-        "SkyDome",
         "Looks",
-        "GroundMATSG"
-      ],
-      {
-        "isExpanded" : true,
-        "isLocked" : false
-      },
-      [
-        "FF64A1AC-277B-4E23-9810-F7D10D286661",
-        "Root",
-        "SkyDome",
-        "Looks"
-      ],
-      {
-        "isExpanded" : true,
-        "isLocked" : false
-      },
-      [
-        "FF64A1AC-277B-4E23-9810-F7D10D286661",
-        "Root"
+        "DomeMATSG"
       ],
       {
         "isExpanded" : true,
@@ -92,10 +88,64 @@
         "Root",
         "Dome",
         "Looks",
-        "DomeMATSG"
+        "GroundMATSG"
+      ],
+      {
+        "disallowsFraming" : true,
+        "isExpanded" : true,
+        "isLocked" : false
+      },
+      [
+        "FF64A1AC-277B-4E23-9810-F7D10D286661",
+        "Root",
+        "Dome",
+        "Looks"
       ],
       {
         "isExpanded" : true,
+        "isLocked" : false
+      },
+      [
+        "FF64A1AC-277B-4E23-9810-F7D10D286661",
+        "Root",
+        "Dome",
+        "Looks",
+        "GroundMaterial"
+      ],
+      {
+        "disallowsFraming" : true,
+        "isExpanded" : true,
+        "isLocked" : false
+      },
+      [
+        "FF64A1AC-277B-4E23-9810-F7D10D286661",
+        "Root",
+        "Message_1",
+        "Message"
+      ],
+      {
+        "isExpanded" : true,
+        "isLocked" : false
+      },
+      [
+        "FF64A1AC-277B-4E23-9810-F7D10D286661",
+        "Root",
+        "Message",
+        "Message",
+        "Message_01"
+      ],
+      {
+        "isExpanded" : true,
+        "isLocked" : false
+      },
+      [
+        "FF64A1AC-277B-4E23-9810-F7D10D286661",
+        "Root",
+        "SkyDome"
+      ],
+      {
+        "disallowsFraming" : true,
+        "isExpanded" : false,
         "isLocked" : false
       },
       [
@@ -112,8 +162,9 @@
       [
         "FF64A1AC-277B-4E23-9810-F7D10D286661",
         "Root",
-        "Dome",
-        "Looks"
+        "Message",
+        "Message",
+        "Material"
       ],
       {
         "isExpanded" : true,
@@ -122,7 +173,29 @@
       [
         "FF64A1AC-277B-4E23-9810-F7D10D286661",
         "Root",
-        "Dome"
+        "Dome",
+        "Grid"
+      ],
+      {
+        "disallowsFraming" : true,
+        "isExpanded" : false,
+        "isLocked" : false
+      },
+      [
+        "FF64A1AC-277B-4E23-9810-F7D10D286661",
+        "Root",
+        "Message_1",
+        "Message",
+        "Material_1"
+      ],
+      {
+        "isExpanded" : true,
+        "isLocked" : false
+      },
+      [
+        "FF64A1AC-277B-4E23-9810-F7D10D286661",
+        "Root",
+        "Message"
       ],
       {
         "isExpanded" : true,

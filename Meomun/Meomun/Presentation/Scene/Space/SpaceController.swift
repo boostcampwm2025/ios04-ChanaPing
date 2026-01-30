@@ -79,6 +79,8 @@ final class SpaceController {
                 let messageEntity = try await Entity(named: "Message.usdz")
                 messageEntity.name = "MessageBubble"
 
+                materialConfigurator.configureMessage(messageEntity: messageEntity)
+
                 // 터치 이벤트 수신을 위해 InputTargetComponent 추가
                 messageEntity.components.set(InputTargetComponent())
 
