@@ -125,23 +125,10 @@ private extension MessageBubble {
                     radius: 12,
                     x: 0,
                     y: 6)
-            .overlay {
-                RoundedRectangle(cornerRadius: 22, style: .continuous)
-                    .stroke(
-                        LinearGradient(
-                            colors: (message.placeTag != nil) ? [
-                                Color.tabActive.opacity(0.75),
-                                Color.tabActive.opacity(0.22)
-                            ] : [
-                                Color.gray.opacity(0.65),
-                                Color.gray.opacity(0.22)
-                            ],
-                            startPoint: .topLeading,
-                            endPoint: .bottomTrailing
-                        ),
-                        lineWidth: 1
-                    )
-            }
+            .mmGradientStroke(
+                cornerRadius: 22,
+                gradientColorType: (message.placeTag != nil) ? .green : .gray
+            )
     }
 
     var chevron: some View {
