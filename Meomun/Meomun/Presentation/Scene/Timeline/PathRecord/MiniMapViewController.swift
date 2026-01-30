@@ -108,8 +108,8 @@ extension MiniMapViewController {
 
         let positions = sortedMessages.map {
             NMGLatLng(
-                lat: $0.coordinate.latitude,
-                lng: $0.coordinate.longitude
+                lat: $0.placeTag?.coordinate.latitude ?? $0.coordinate.latitude,
+                lng: $0.placeTag?.coordinate.longitude ?? $0.coordinate.longitude
             )
         }
         let dayLabels = sortedMessages.map { "\(calendar.component(.day, from: $0.createdAt))" }
