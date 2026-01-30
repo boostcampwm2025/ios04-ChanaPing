@@ -46,7 +46,7 @@ struct MessageTextEditor: View {
                     TextEditor(text: $localText)
                         .focused($isFocused)
                         .font(.body.bold())
-                        .foregroundStyle(Color.mmPrimary.opacity(0.8))
+                        .foregroundStyle(Color.mmTextBrand.opacity(0.8))
                         .padding(.horizontal, 18)
                         .padding(.top, 18)
                         .padding(.bottom, 22)
@@ -79,7 +79,7 @@ struct MessageTextEditor: View {
                     if text.isEmpty {
                         Text(placeholder)
                             .font(.body.bold())
-                            .foregroundStyle(Color.mmPrimary.opacity(0.3))
+                            .foregroundStyle(Color.mmTextBrand.opacity(0.3))
                             .padding(.horizontal, 24)
                             .padding(.top, 26)
                             .allowsHitTesting(false)
