@@ -37,7 +37,7 @@ struct PlaceSearchContainerView<Content: View>: View {
         )
         .overlay(
             RoundedRectangle(cornerRadius: 12, style: .continuous)
-                .strokeBorder(Color.mmPrimary.opacity(0.15), lineWidth: 0.5)
+                .strokeBorder(Color.mmTextBrand.opacity(0.15), lineWidth: 0.5)
         )
         .shadow(color: .black.opacity(0.05), radius: 2)
         .shadow(color: .black.opacity(0.05), radius: 0, x: 1, y: 1)
