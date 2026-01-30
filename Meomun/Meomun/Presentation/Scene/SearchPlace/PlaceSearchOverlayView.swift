@@ -164,8 +164,6 @@ extension PlaceSearchOverlayView {
                                 .foregroundStyle(Color.mmPrimary)
                                 .padding(.vertical, 5)
                                 .padding(.horizontal, 12)
-                                .background(Color.white.opacity(0.08))
-                                .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
                             }
                             .buttonStyle(.plain)
                         }

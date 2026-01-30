@@ -45,7 +45,6 @@ struct TimelineSectionHeaderView: View {
         .padding(.horizontal, 30)
         .padding(.top, 8)
         .padding(.bottom, 16)
-        .background(Color.mmBackground)
     }
 }
 
