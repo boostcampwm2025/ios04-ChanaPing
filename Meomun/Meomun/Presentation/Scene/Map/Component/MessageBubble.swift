@@ -84,7 +84,7 @@ private extension MessageBubble {
 
             Text(message.displayLocationName)
                 .font(.system(size: 13, weight: .semibold))
-                .foregroundStyle(Color.gray.opacity(0.8))
+                .foregroundStyle(Color.mmTextSecondary)
         }
         .padding(.top, 3)
     }
@@ -105,7 +105,7 @@ private extension MessageBubble {
     var datePart: some View {
         Text(message.displayDateString)
             .font(.system(size: 11, weight: .semibold))
-            .foregroundStyle(Color.gray.opacity(0.8))
+            .foregroundStyle(Color.mmTextSecondary)
             .frame(maxWidth: .infinity, alignment: .trailing)
     }
 
@@ -120,7 +120,7 @@ private extension MessageBubble {
 
     var bubbleBackground: some View {
         RoundedRectangle(cornerRadius: 22, style: .continuous)
-            .fill(Color.white)
+            .fill(Color.mmBubbleBackground)
             .shadow(color: .black.opacity(0.06),
                     radius: 12,
                     x: 0,
@@ -152,7 +152,7 @@ struct BubbleText: View {
         // 본문 (최대 2줄)
         Text(text)
             .font(.system(size: 14, weight: .regular))
-            .foregroundStyle(Color.black.opacity(0.9))
+            .foregroundStyle(Color.mmTextPrimary)
             .lineLimit(2)
             .multilineTextAlignment(.leading)
             .fixedSize(horizontal: false, vertical: true)
