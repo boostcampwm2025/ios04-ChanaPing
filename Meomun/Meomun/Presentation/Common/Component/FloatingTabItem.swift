@@ -16,6 +16,9 @@ struct FloatingTabItem: View {
         Button(action: action) {
             VStack(spacing: 4) {
                 Image(systemName: systemImageName)
+                    .resizable()
+                    .scaledToFit()
+                    .frame(width: 20)
                     .foregroundStyle(isSelected ? Color(.tabActive) : Color(.tabInactive))
 
                 Circle()

@@ -12,7 +12,7 @@ struct FloatingTabBar: View {
     let onSelect: (MainTab) -> Void
 
     var body: some View {
-        HStack(spacing: 0) {
+        HStack(spacing: 2) {
             FloatingTabItem(
                 systemImageName: "map",
                 isSelected: selectedTab == .map

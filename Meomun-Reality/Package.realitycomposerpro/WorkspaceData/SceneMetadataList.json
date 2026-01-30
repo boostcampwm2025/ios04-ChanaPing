@@ -195,6 +195,18 @@
       [
         "FF64A1AC-277B-4E23-9810-F7D10D286661",
         "Root",
+        "Message",
+        "Message",
+        "Message_01",
+        "FrenselMask"
+      ],
+      {
+        "isExpanded" : true,
+        "isLocked" : false
+      },
+      [
+        "FF64A1AC-277B-4E23-9810-F7D10D286661",
+        "Root",
         "Message"
       ],
       {
