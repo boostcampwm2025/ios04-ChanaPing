@@ -45,7 +45,7 @@ struct MapView: View {
                     .ignoresSafeArea()
 
                 VStack {
-                    floatingNavigationBar
+                    mmFloatingNavigationBar
                     Spacer()
                 }
                 .padding(.top, 12)
@@ -68,7 +68,7 @@ struct MapView: View {
             }
             .overlay {
                 if !store.state.isNetworkConnected {
-                    AlertView(type: .network) {
+                    MMAlertView(type: .network) {
                         send(.tapNetworkRefresh)
                     }
                     .ignoresSafeArea()
@@ -130,7 +130,7 @@ struct MapView: View {
             }
             .transaction { $0.disablesAnimations = true }
         }
-        .toast(toastBinding, bottomPadding: 100)
+        .mmToast(toastBinding, bottomPadding: 100)
     }
 }
 
@@ -168,8 +168,8 @@ private extension MapView {
         )
     }
 
-    var floatingNavigationBar: some View {
-        FloatingNavigationBar(
+    var mmFloatingNavigationBar: some View {
+        MMFloatingNavigationBar(
             title: Constants.navigationTitle,
             onTapSearch: { send(.tapSearch) }
         )

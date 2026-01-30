@@ -1,5 +1,5 @@
 //
-//  AlertView.swift
+//  MMAlertView.swift
 //  Meomun
 //
 //  Created by MinwooJe on 1/26/26.
@@ -16,7 +16,7 @@ fileprivate enum Constants {
     static let descriptionSpacing: CGFloat = 6
 }
 
-enum AlertType {
+enum MMAlertType {
     struct AlertConfiguration {
         let image: Image
         let title: String
@@ -47,7 +47,7 @@ enum AlertType {
     }
 }
 
-struct AlertView: View {
+struct MMAlertView: View {
     private let titleImage: Image
     private let title: String
     private let description: String
@@ -55,7 +55,7 @@ struct AlertView: View {
 
     private let onTapButton: () -> Void
 
-    init(type: AlertType, onTapButton: @escaping () -> Void) {
+    init(type: MMAlertType, onTapButton: @escaping () -> Void) {
         self.titleImage = type.config.image
         self.title = type.config.title
         self.description = type.config.description
@@ -85,7 +85,7 @@ struct AlertView: View {
     }
 }
 
-extension AlertView {
+extension MMAlertView {
     private var titleImageView: some View {
         titleImage
             .font(.largeTitle)
@@ -119,11 +119,11 @@ extension AlertView {
 }
 
 #Preview {
-    AlertView(type: .location) {
+    MMAlertView(type: .location) {
         print("로케이션 버튼 탭")
     }
 
-    AlertView(type: .network) {
+    MMAlertView(type: .network) {
         print("네트워크 버튼 탭")
     }
 }

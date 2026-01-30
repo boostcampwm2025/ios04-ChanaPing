@@ -28,7 +28,7 @@ final class SpaceStore: Store {
         case setToastMessage(String?)
         case setSelectedMessage(MessageID?)
         case deleteMessage(MessageID)
-        case showDeleteAlert(AlertModel)
+        case showDeleteAlert(MMAlertModel)
         case hideAlert
         case setDeleteStatus(LoadingStatus)
     }
@@ -42,7 +42,7 @@ final class SpaceStore: Store {
         var currentPlaceID: PlaceID?
         var toastMessage: String?
         var selectedMessageID: MessageID?
-        var deleteAlert: AlertModel?
+        var deleteAlert: MMAlertModel?
         var deleteStatus: LoadingStatus = .idle
     }
 
@@ -84,7 +84,7 @@ final class SpaceStore: Store {
 
             case .requestDeleteMessage(let messageID):
                 continuation.yield(.setSelectedMessage(nil))
-                let alert = AlertFactory.deleteMessage(count: 1) { [weak self] in
+                let alert = MMAlertFactory.deleteMessage(count: 1) { [weak self] in
                     Task {
                         await self?.send(intent: .confirmDeleteMessage(messageID))
                     }

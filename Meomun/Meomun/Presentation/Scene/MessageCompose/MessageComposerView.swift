@@ -28,7 +28,7 @@ struct MessageComposerView: View {
     @Environment(\.dismiss) private var dismiss
 
     @StateObject private var store: MessageComposerStore
-    @State private var presentedAlert: AlertModel?
+    @State private var presentedAlert: MMAlertModel?
 
     init(store: MessageComposerStore) {
         _store = StateObject(wrappedValue: store)
@@ -92,8 +92,8 @@ struct MessageComposerView: View {
             placeSearchOverlay
                 .presentationBackground(.clear)
         }
-        .fullScreenCover(isPresented: isLoadingOverlayPresentedBinding) {
-            loadingOverlay
+        .fullScreenCover(isPresented: isMMLoadingOverlayPresentedBinding) {
+            mmLoadingOverlay
                 .presentationBackground(.clear)
                 .interactiveDismissDisabled(true)
         }
@@ -118,13 +118,13 @@ private extension MessageComposerView {
         .onTapGesture { isFocused = false }
         .navigationBarBackButtonHidden()
         .toolbar { toolbarContent }
-        .customAlert(
+        .mmAlert(
             $presentedAlert,
             title: { $0.title },
             message: { $0.message },
             buttons: { $0.buttons }
         )
-        .toast(toastBinding)
+        .mmToast(toastBinding)
     }
 
     @ViewBuilder
@@ -185,10 +185,10 @@ private extension MessageComposerView {
         )
     }
 
-    var loadingOverlay: some View {
-        LoadingOverlayView(
+    var mmLoadingOverlay: some View {
+        MMLoadingOverlayView(
             status: store.state.confirmStatus,
-            message: loadingOverlayMessage
+            message: mmLoadingOverlayMessage
         )
     }
 }
@@ -203,7 +203,7 @@ private extension MessageComposerView {
         store.state.selectedPlace == nil ? Color.tabInactive : Color.tabActive
     }
 
-    var loadingOverlayMessage: String {
+    var mmLoadingOverlayMessage: String {
         switch store.state.confirmStatus {
         case .loading: return Constants.loadingMessage
         case .success: return Constants.successMessage
@@ -246,7 +246,7 @@ private extension MessageComposerView {
         )
     }
 
-    var isLoadingOverlayPresentedBinding: Binding<Bool> {
+    var isMMLoadingOverlayPresentedBinding: Binding<Bool> {
         Binding(
             get: { store.state.confirmStatus != .idle },
             set: { _ in }
@@ -303,17 +303,17 @@ private extension MessageComposerView {
         send(.setAlert(exitAlert))
     }
 
-    var exitAlert: AlertModel {
-        AlertModel(
+    var exitAlert: MMAlertModel {
+        MMAlertModel(
             title: Constants.exitAlertTitle,
             message: Constants.exitAlertMessage,
             buttons: [
-                AlertButtonConfig(
+                MMAlertButtonConfig(
                     title: Constants.exitAlertPrimaryButtonTitle,
                     role: .destructive,
                     action: { send(.resetDraft) }
                 ),
-                AlertButtonConfig(
+                MMAlertButtonConfig(
                     title: Constants.exitAlertSecondaryButtonTitle,
                     role: .cancel,
                     action: nil
@@ -322,8 +322,8 @@ private extension MessageComposerView {
         )
     }
 
-    var emptyLocationAlert: AlertModel {
-        AlertModel(title: "위치 정보를 가져올 수 없어요.", message: "네트워크 연결을 확인해주세요.", buttons: [
+    var emptyLocationAlert: MMAlertModel {
+        MMAlertModel(title: "위치 정보를 가져올 수 없어요.", message: "네트워크 연결을 확인해주세요.", buttons: [
             .init(title: "그대로 작성", role: .normal, action: {
                 send(.confirmWithEmptyLocation)
             }),

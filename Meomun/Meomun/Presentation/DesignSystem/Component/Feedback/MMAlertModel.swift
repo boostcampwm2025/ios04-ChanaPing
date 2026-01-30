@@ -1,5 +1,5 @@
 //
-//  AlertModel.swift
+//  MMAlertModel.swift
 //  Meomun
 //
 //  Created by Hayeon Park on 1/20/26.
@@ -7,17 +7,17 @@
 
 import Foundation
 
-struct AlertModel: Identifiable, Equatable {
+struct MMAlertModel: Identifiable, Equatable {
     let id: UUID
     let title: String
     let message: String
-    let buttons: [AlertButtonConfig]
+    let buttons: [MMAlertButtonConfig]
 
     init(
         id: UUID = UUID(),
         title: String,
         message: String,
-        buttons: [AlertButtonConfig] = [.confirm]
+        buttons: [MMAlertButtonConfig] = [.confirm]
     ) {
         self.id = id
         self.title = title
@@ -25,7 +25,7 @@ struct AlertModel: Identifiable, Equatable {
         self.buttons = Array(buttons.prefix(2))
     }
 
-    static func == (lhs: AlertModel, rhs: AlertModel) -> Bool {
+    static func == (lhs: MMAlertModel, rhs: MMAlertModel) -> Bool {
         lhs.id == rhs.id
         && lhs.title == rhs.title
         && lhs.message == rhs.message

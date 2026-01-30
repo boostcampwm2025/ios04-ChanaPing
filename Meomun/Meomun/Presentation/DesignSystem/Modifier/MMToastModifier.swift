@@ -1,5 +1,5 @@
 //
-//  ToastModifier.swift
+//  MMToastModifier.swift
 //  Meomun
 //
 //  Created by Hayeon Park on 1/19/26.
@@ -7,7 +7,7 @@
 
 import SwiftUI
 
-struct ToastModifier: ViewModifier {
+struct MMToastModifier: ViewModifier {
     @Binding var message: String?
 
     let duration: Duration
@@ -26,7 +26,7 @@ struct ToastModifier: ViewModifier {
     func body(content: Content) -> some View {
         content.overlay(alignment: .bottom) {
             if let message {
-                ToastView(message: message)
+                MMToastView(message: message)
                     .padding(.bottom, bottomPadding)
                     .transition(.opacity)
                     .task(id: message) {
@@ -46,13 +46,13 @@ struct ToastModifier: ViewModifier {
 }
 
 extension View {
-    func toast(
+    func mmToast(
         _ message: Binding<String?>,
         duration: Duration = .seconds(2),
         bottomPadding: CGFloat = 32
     ) -> some View {
         modifier(
-            ToastModifier(
+            MMToastModifier(
                 message: message,
                 duration: duration,
                 bottomPadding: bottomPadding,

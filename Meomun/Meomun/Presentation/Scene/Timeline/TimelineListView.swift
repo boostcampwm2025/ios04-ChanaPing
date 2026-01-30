@@ -54,7 +54,7 @@ struct TimelineListView: View {
         }
         .animation(.spring(response: 0.25, dampingFraction: 0.9), value: store.state.isEditing)
         .background(Color.mmBackground)
-        .customAlert(
+        .mmAlert(
             deleteAlertBinding,
             title: { $0.title },
             message: { $0.message },
@@ -188,7 +188,7 @@ private extension TimelineListView {
             }
             .disabled(store.state.selectedMessageIDs.isEmpty)
         }
-        .floatingContainer()
+        .mmFloatingContainer()
     }
 }
 
@@ -243,7 +243,7 @@ private extension TimelineListView {
 
 // MARK: - Alert & LoadingOverlay
 private extension TimelineListView {
-    var deleteAlertBinding: Binding<AlertModel?> {
+    var deleteAlertBinding: Binding<MMAlertModel?> {
         Binding(
             get: { store.state.deleteAlert },
             set: { _ in send(.dismissAlert) }
@@ -258,7 +258,7 @@ private extension TimelineListView {
     }
 
     var deleteLoadingOverlay: some View {
-        LoadingOverlayView(
+        MMLoadingOverlayView(
             status: store.state.deleteStatus,
             message: deleteLoadingOverlayMessage
         )

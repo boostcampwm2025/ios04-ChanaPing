@@ -25,7 +25,7 @@ final class MessageComposerStore: Store {
         var selectedPlace: Place?
         var isPlaceSearchPresented: Bool = false
 
-        var alert: AlertModel?
+        var alert: MMAlertModel?
         var toastMessage: String?
 
         var showEmptyLocationAlert: Bool = false
@@ -53,7 +53,7 @@ final class MessageComposerStore: Store {
         case tapConfirm
         case confirmWithEmptyLocation
 
-        case setAlert(AlertModel?)
+        case setAlert(MMAlertModel?)
         case setToast(String?)
         case retryReverseGeocoding
     }
@@ -68,7 +68,7 @@ final class MessageComposerStore: Store {
 
         case setShowEmptyLocationAlert(Bool)
         case setConfirmStatus(LoadingStatus)
-        case presentAlert(AlertModel?)
+        case presentAlert(MMAlertModel?)
         case presentToast(String?)
         case close(isSuccess: Bool)
     }

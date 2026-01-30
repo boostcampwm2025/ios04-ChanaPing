@@ -1,5 +1,5 @@
 //
-//  CustomAlertModifier.swift
+//  MMAlertModifier.swift
 //  Meomun
 //
 //  Created by Hayeon Park on 1/20/26.
@@ -7,12 +7,12 @@
 
 import SwiftUI
 
-struct CustomAlertModifier<AlertModel>: ViewModifier {
+struct MMAlertModifier<AlertModel>: ViewModifier {
     @Binding var alert: AlertModel?
 
     let title: (AlertModel) -> String
     let message: (AlertModel) -> String
-    let buttons: (AlertModel) -> [AlertButtonConfig]
+    let buttons: (AlertModel) -> [MMAlertButtonConfig]
 
     func body(content: Content) -> some View {
         let isPresented = Binding<Bool>(
@@ -40,7 +40,7 @@ struct CustomAlertModifier<AlertModel>: ViewModifier {
     }
 
     @ViewBuilder
-    private func makeButton(_ config: AlertButtonConfig) -> some View {
+    private func makeButton(_ config: MMAlertButtonConfig) -> some View {
         let action: () -> Void = {
             Task { @MainActor in
                 config.action?()
@@ -59,14 +59,14 @@ struct CustomAlertModifier<AlertModel>: ViewModifier {
 }
 
 extension View {
-    func customAlert<AlertModel>(
+    func mmAlert<AlertModel>(
         _ alert: Binding<AlertModel?>,
         title: @escaping (AlertModel) -> String,
         message: @escaping (AlertModel) -> String,
-        buttons: @escaping (AlertModel) -> [AlertButtonConfig] = { _ in [] }
+        buttons: @escaping (AlertModel) -> [MMAlertButtonConfig] = { _ in [] }
     ) -> some View {
         modifier(
-            CustomAlertModifier(
+            MMAlertModifier(
                 alert: alert,
                 title: title,
                 message: message,

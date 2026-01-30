@@ -1,5 +1,5 @@
 //
-//  FloatingContainerModifier.swift
+//  MMFloatingContainerModifier.swift
 //  Meomun
 //
 //  Created by MinwooJe on 1/27/26.
@@ -7,7 +7,7 @@
 
 import SwiftUI
 
-struct FloatingContainerModifier: ViewModifier {
+struct MMFloatingContainerModifier: ViewModifier {
     private let color: Color
     private let opacity: CGFloat
 
@@ -42,10 +42,10 @@ struct FloatingContainerModifier: ViewModifier {
 }
 
 extension View {
-    func floatingContainer(
+    func mmFloatingContainer(
         color: Color = Color.mmFloatingBackground,
         opacity: CGFloat = 0.85
     ) -> some View {
-        modifier(FloatingContainerModifier(color: color, opacity: opacity))
+        modifier(MMFloatingContainerModifier(color: color, opacity: opacity))
     }
 }

@@ -1,5 +1,5 @@
 //
-//  LoadingOverlayView.swift
+//  MMLoadingOverlayView.swift
 //  Meomun
 //
 //  Created by Hayeon Park on 1/21/26.
@@ -22,7 +22,7 @@ private enum Layout {
     static let verticalPadding: CGFloat = 10
 }
 
-struct LoadingOverlayView: View {
+struct MMLoadingOverlayView: View {
     let status: LoadingStatus
     let message: String?
 
@@ -54,7 +54,7 @@ struct LoadingOverlayView: View {
     }
 }
 
-private extension LoadingOverlayView {
+private extension MMLoadingOverlayView {
     @ViewBuilder var statusIcon: some View {
         switch status {
         case .loading:
@@ -77,7 +77,7 @@ private extension LoadingOverlayView {
     }
 }
 
-private extension LoadingOverlayView {
+private extension MMLoadingOverlayView {
     var hasMessage: Bool {
         guard let message else { return false }
         return !message.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
@@ -135,9 +135,9 @@ private extension LoadingOverlayView {
     let failMessage = "머문 흔적 남기기에 실패했어요."
 
     VStack(alignment: .center) {
-        LoadingOverlayView()
-        LoadingOverlayView(status: .loading, message: loadingMessage)
-        LoadingOverlayView(status: .success, message: successMessage )
-        LoadingOverlayView(status: .fail, message: failMessage)
+        MMLoadingOverlayView()
+        MMLoadingOverlayView(status: .loading, message: loadingMessage)
+        MMLoadingOverlayView(status: .success, message: successMessage )
+        MMLoadingOverlayView(status: .fail, message: failMessage)
     }
 }

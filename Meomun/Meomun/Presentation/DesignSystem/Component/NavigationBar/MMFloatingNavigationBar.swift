@@ -1,5 +1,5 @@
 //
-//  FloatingNavigationBar.swift
+//  MMFloatingNavigationBar.swift
 //  Meomun
 //
 //  Created by 지연 on 1/8/26.
@@ -7,7 +7,7 @@
 
 import SwiftUI
 
-struct FloatingNavigationBar: View {
+struct MMFloatingNavigationBar: View {
     let title: String
     let onTapSearch: () -> Void
 
@@ -56,7 +56,7 @@ struct FloatingNavigationBar: View {
     ZStack {
         Color.gray.opacity(0.2).ignoresSafeArea()
 
-        FloatingNavigationBar(
+        MMFloatingNavigationBar(
             title: "머문",
             onTapSearch: {}
         )

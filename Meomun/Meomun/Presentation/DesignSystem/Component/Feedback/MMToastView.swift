@@ -1,5 +1,5 @@
 //
-//  ToastView.swift
+//  MMToastView.swift
 //  Meomun
 //
 //  Created by Hayeon Park on 1/16/26.
@@ -7,7 +7,7 @@
 
 import SwiftUI
 
-struct ToastView: View {
+struct MMToastView: View {
     let message: String
 
     var body: some View {

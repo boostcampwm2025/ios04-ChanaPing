@@ -34,7 +34,7 @@ struct FloatingTabBar: View {
                 onSelect(.setting)
             }
         }
-        .floatingContainer()
+        .mmFloatingContainer()
         .animation(
             .spring(
                 response: 0.25,

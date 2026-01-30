@@ -29,7 +29,7 @@ struct RootView: View {
             .ignoresSafeArea(.keyboard)
             .overlay {
                 if store.state.showLocationAlert {
-                    AlertView(type: .location) {
+                    MMAlertView(type: .location) {
                         Task { await store.send(intent: .tapOpenSettings) }
                     }
                 }

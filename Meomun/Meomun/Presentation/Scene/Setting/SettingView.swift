@@ -71,7 +71,7 @@ struct SettingView: View {
                 } label: {
                     Text("앱 데이터 초기화")
                 }
-                .customAlert(
+                .mmAlert(
                     resetAlertBinding,
                     title: { $0.title },
                     message: { $0.message },
@@ -108,7 +108,7 @@ struct SettingView: View {
 // MARK: - Alert
 
 private extension SettingView {
-    var resetAlertBinding: Binding<AlertModel?> {
+    var resetAlertBinding: Binding<MMAlertModel?> {
         Binding(
             get: { store.state.resetAlert },
             set: { newValue in

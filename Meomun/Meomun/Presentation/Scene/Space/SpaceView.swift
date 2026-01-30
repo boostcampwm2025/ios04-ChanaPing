@@ -71,13 +71,13 @@ struct SpaceView: View {
             }
 
             if store.state.deleteStatus != .idle {
-                LoadingOverlayView(
+                MMLoadingOverlayView(
                     status: store.state.deleteStatus,
                     message: deleteStatusMessage
                 )
             }
         }
-        .customAlert(
+        .mmAlert(
             $store.state.deleteAlert,
             title: { $0.title },
             message: { $0.message },
@@ -159,7 +159,7 @@ extension SpaceView {
                     .frame(maxWidth: .infinity)
             }
         }
-        .floatingContainer(color: Color.mmBackground, opacity: 0.8)
+        .mmFloatingContainer(color: Color.mmBackground, opacity: 0.8)
     }
 }
 
