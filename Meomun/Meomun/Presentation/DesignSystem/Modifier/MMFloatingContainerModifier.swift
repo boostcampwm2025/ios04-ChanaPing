@@ -19,14 +19,14 @@ struct MMFloatingContainerModifier: ViewModifier {
     func body(content: Content) -> some View {
         content
             .frame(minHeight: 25)  // FloatingTabItem 내용물 기준 최소 높이
-            .padding(.horizontal, 22)
-            .padding(.vertical, 22)
+            .padding(.horizontal, MMSpacing.floatingInnerHorizontalPadding)
+            .padding(.vertical, MMSpacing.floatingVerticalPadding)
             .background(
                 CornerRadiusShape(
-                    topLeft: 24,
-                    topRight: 24,
-                    bottomLeft: 10,
-                    bottomRight: 10
+                    topLeft: MMCornerRadius.floatingContainerTop,
+                    topRight: MMCornerRadius.floatingContainerTop,
+                    bottomLeft: MMCornerRadius.floatingContainerBottom,
+                    bottomRight: MMCornerRadius.floatingContainerBottom
                 )
                 .fill(color.opacity(opacity))
                 .shadow(

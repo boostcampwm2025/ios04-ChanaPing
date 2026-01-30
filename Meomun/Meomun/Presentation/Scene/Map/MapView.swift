@@ -52,7 +52,7 @@ struct MapView: View {
             }
             .overlay(alignment: .bottomTrailing) {
                 writeButton
-                    .padding(.bottom, 96)
+                    .padding(.bottom, MMLayout.tabBarBottomOffset)
             }
             .overlay(alignment: .bottom) {
                 if !store.state.carouselItems.isEmpty {
@@ -63,7 +63,7 @@ struct MapView: View {
                             navigationPath.append(MapDestination.space(place: place))
                         }
                     )
-                    .padding(.bottom, 90)
+                    .padding(.bottom, MMLayout.aboveTabBarOffset)
                 }
             }
             .overlay {

@@ -75,7 +75,7 @@ private extension PlaceCarousel {
                         onTapped(item.place)
                     }
                     .tag(index)
-                    .padding(.horizontal, 30)
+                    .padding(.horizontal, MMSpacing.floatingHorizontalPadding)
             }
         }
         .tabViewStyle(.page(indexDisplayMode: .never))
