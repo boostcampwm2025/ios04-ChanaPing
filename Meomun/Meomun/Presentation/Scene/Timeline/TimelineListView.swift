@@ -66,11 +66,15 @@ struct TimelineListView: View {
                     .transition(.identity) // 애니메이션 없음
             }
         }
-        .fullScreenCover(isPresented: isSelectedSectionOverlayPresentedBinding) {
-            sectionOverlay
-                .presentationBackground(.clear)
+        .overlay {
+            if store.state.selectedSection != nil {
+                sectionOverlay
+                    .frame(maxWidth: .infinity, maxHeight: .infinity)
+                    .ignoresSafeArea()
+                    .transition(.opacity)
+            }
         }
-        .transaction({ transaction in transaction.disablesAnimations = true })
+        .animation(.easeInOut(duration: 0.3), value: store.state.selectedSection != nil)
     }
 }
 
