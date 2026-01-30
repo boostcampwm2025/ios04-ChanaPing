@@ -58,6 +58,7 @@ final class LeafMarkerUpdater: NMCDefaultLeafMarkerUpdater {
 
                 let cameraUpdate = NMFCameraUpdate(position: position)
                 cameraUpdate.animation = .easeIn
+                cameraUpdate.animationDuration = 0.5
                 mapView.moveCamera(cameraUpdate)
             }
 
