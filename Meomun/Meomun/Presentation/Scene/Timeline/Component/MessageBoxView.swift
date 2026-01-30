@@ -53,7 +53,7 @@ private extension MessageBoxView {
     var messageTextView: some View {
         Text(message.content)
             .font(.body)
-            .foregroundStyle(Color.mmPrimary.opacity(0.8))
+            .foregroundStyle(Color.mmTextBrand.opacity(0.8))
             .frame(maxHeight: .infinity, alignment: .leading)
             .fixedSize(horizontal: false, vertical: true)
     }

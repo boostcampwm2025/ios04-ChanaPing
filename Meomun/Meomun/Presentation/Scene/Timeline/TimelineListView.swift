@@ -84,7 +84,7 @@ private extension TimelineListView {
         ZStack {
             Text(Constants.navigationTitle)
                 .font(.headline)
-                .foregroundStyle(Color.mmPrimary)
+                .foregroundStyle(Color.mmTextBrand)
 
             if configuration.showsEditButton {
                 HStack {
@@ -199,7 +199,7 @@ private extension TimelineListView {
     }
 
     var editButtonColor: Color {
-        store.state.messages.isEmpty ? Color.tabInactive : Color.mmPoint
+        store.state.messages.isEmpty ? Color.tabInactive : Color.tabActive
     }
 
     var selectionBarText: String {
@@ -209,7 +209,7 @@ private extension TimelineListView {
     }
 
     var selectionBarTextColor: Color {
-        store.state.selectedMessageIDs.isEmpty ? Color.tabInactive : Color.mmPrimary
+        store.state.selectedMessageIDs.isEmpty ? Color.tabInactive : Color.mmTextBrand
     }
 
     var deleteButtonColor: Color {
