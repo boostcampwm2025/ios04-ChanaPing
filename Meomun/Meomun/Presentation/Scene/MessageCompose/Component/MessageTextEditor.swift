@@ -32,7 +32,7 @@ struct MessageTextEditor: View {
         ZStack(alignment: .bottom) {
             // Background
             RoundedRectangle(cornerRadius: 12, style: .continuous)
-                .fill(Color.mmMessageBackground.opacity(0.8))
+                .fill(Color.mmContainerBackground.opacity(0.8))
                 .overlay(
                     RoundedRectangle(cornerRadius: 12, style: .continuous)
                         .strokeBorder(Color.mmPrimary.opacity(0.15), lineWidth: 0.5)

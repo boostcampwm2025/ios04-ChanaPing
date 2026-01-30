@@ -93,7 +93,7 @@ private extension MessageBoxView {
 
     var backgroundView: some View {
         RoundedRectangle(cornerRadius: Layout.cornerRadius, style: .continuous)
-            .fill(Color.mmMessageBackground)
+            .fill(Color.mmContainerBackground)
             .overlay(
                 RoundedRectangle(cornerRadius: Layout.cornerRadius, style: .continuous)
                     .strokeBorder(Color.mmPrimary.opacity(0.15), lineWidth: 0.5)
