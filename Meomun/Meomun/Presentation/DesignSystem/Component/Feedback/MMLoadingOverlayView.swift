@@ -106,7 +106,7 @@ private extension MMLoadingOverlayView {
 
             Text(message ?? "")
                 .font(.subheadline.bold())
-                .foregroundStyle(Color.mmPrimary)
+                .foregroundStyle(Color.mmTextBrand)
                 .multilineTextAlignment(.center)
                 .lineLimit(2)
                 .fixedSize(horizontal: false, vertical: false)
@@ -117,7 +117,7 @@ private extension MMLoadingOverlayView {
 
     var cardBackground: some View {
         RoundedRectangle(cornerRadius: 16)
-            .fill(.white.opacity(0.8))
+            .fill(Color.mmContainerBackground.opacity(0.8))
             .shadow(color: .black.opacity(0.05), radius: 2)
             .shadow(color: .black.opacity(0.05), radius: 0, x: 1, y: 1)
     }
