@@ -34,11 +34,11 @@ struct PlaceCarouselCard: View {
             .frame(maxWidth: .infinity, alignment: .leading)
 
             Image(systemName: "chevron.right")
-                .foregroundStyle(Color.mmPrimary.opacity(0.4))
+                .foregroundStyle(Color.mmTextBrand.opacity(0.4))
         }
         .padding(Constants.padding)
         .frame(maxWidth: .infinity, alignment: .leading)
-        .background(Color.white)
+        .background(Color.mmContainerBackground)
         .clipShape(RoundedRectangle(cornerRadius: Constants.cornerRadius))
         .mmGradientStroke(
             cornerRadius: Constants.cornerRadius,
@@ -53,13 +53,13 @@ private extension PlaceCarouselCard {
     var nameText: some View {
         Text(item.place.name)
             .font(.title3.weight(.semibold))
-            .foregroundStyle(Color.mmPrimary)
+            .foregroundStyle(Color.mmTextBrand)
     }
 
     var addressText: some View {
         Text(item.place.address)
             .font(.subheadline)
-            .foregroundStyle(Color.mmPrimary.opacity(Constants.addressTextOpacity))
+            .foregroundStyle(Color.mmTextBrand.opacity(Constants.addressTextOpacity))
     }
 
     var messageCountText: some View {
@@ -69,7 +69,7 @@ private extension PlaceCarouselCard {
             Image(systemName: "message")
         }
         .font(.footnote)
-        .foregroundStyle(Color.mmPrimary.opacity(Constants.messageCountTextOpacity))
+        .foregroundStyle(Color.mmTextBrand.opacity(Constants.messageCountTextOpacity))
     }
 }
 
