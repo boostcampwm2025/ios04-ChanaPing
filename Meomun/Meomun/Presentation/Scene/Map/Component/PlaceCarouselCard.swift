@@ -38,18 +38,28 @@ struct PlaceCarouselCard: View {
         }
         .padding(Constants.padding)
         .frame(maxWidth: .infinity, alignment: .leading)
-        .background(Color.mmContainerBackground)
-        .clipShape(RoundedRectangle(cornerRadius: Constants.cornerRadius))
-        .mmGradientStroke(
-            cornerRadius: Constants.cornerRadius,
-            gradientColorType: .gray
-        )
+        .background(cardBackground)
     }
 }
 
 // MARK: - Components
 
 private extension PlaceCarouselCard {
+    var cardBackground: some View {
+        RoundedRectangle(cornerRadius: Constants.cornerRadius, style: .continuous)
+            .fill(Color.mmContainerBackground)
+            .shadow(
+                color: .black.opacity(0.06),
+                radius: 12,
+                x: 0,
+                y: 6
+            )
+            .mmGradientStroke(
+                cornerRadius: Constants.cornerRadius,
+                gradientColorType: .gray
+            )
+    }
+
     var nameText: some View {
         Text(item.place.name)
             .font(.title3.weight(.semibold))
