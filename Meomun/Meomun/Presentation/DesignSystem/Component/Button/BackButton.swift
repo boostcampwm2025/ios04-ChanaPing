@@ -14,7 +14,7 @@ struct BackButton: View {
         Button(action: action) {
             Image(systemName: "arrow.left")
                 .font(.system(size: 16))
-                .foregroundStyle(Color.mmPrimary)
+                .foregroundStyle(Color.mmTextBrand)
                 .frame(width: 44, height: 44)
                 .background(
                     Circle()
