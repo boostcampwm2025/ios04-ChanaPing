@@ -137,7 +137,7 @@ extension SpaceView {
                     Button { send(.selectMessage(nil)) } label: {
                         Text("취소")
                             .font(.headline)
-                            .foregroundStyle(Color.mmPrimary)
+                            .foregroundStyle(Color.mmTextBrand)
                             .padding(.horizontal, 16)
                     }
 
@@ -155,7 +155,7 @@ extension SpaceView {
             } else {
                 Text("\(store.state.messages.count)개의 추억이 떠다니고 있어요")
                     .font(.body.weight(.semibold))
-                    .foregroundStyle(Color.mmPrimary)
+                    .foregroundStyle(Color.mmTextBrand)
                     .frame(maxWidth: .infinity)
             }
         }
@@ -206,7 +206,7 @@ private extension SpaceView {
 
             Text(place.name)
                 .font(.caption.weight(.semibold))
-                .foregroundStyle(Color.mmPrimary)
+                .foregroundStyle(Color.mmTextBrand)
                 .lineLimit(1)
         }
         .padding(.horizontal, 12)
@@ -220,14 +220,15 @@ private extension SpaceView {
 }
 
 #Preview {
+    let storage = MessageInMemoryStorage.shared
     NavigationStack {
         SpaceView(
             store: .init(
                 fetchPlaceMessagesUseCase: FetchPlaceMessagesUseCaseImpl(
-                    messageRepository: MessageRepositoryImpl()
+                    messageRepository: MessageRepositoryImpl(storage: storage)
                 ),
                 deleteMessagesUseCase: DeleteMessagesUseCaseImpl(
-                    messageRepository: MessageRepositoryImpl()
+                    messageRepository: MessageRepositoryImpl(storage: storage)
                 ),
                 place: .init(
                     id: .init(value: .init()),
