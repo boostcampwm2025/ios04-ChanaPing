@@ -679,6 +679,29 @@ extension MessageMarkerManager {
     }
 }
 
+// MARK: - 다크모드 대응
+
+extension MessageMarkerManager {
+    func setColorScheme(_ traitCollection: UITraitCollection) {
+        bubbleImageRenderer.setColorScheme(traitCollection)
+    }
+
+    /// 지도 위의 마커를 갱신합니다.
+    /// trait(라이트 모드, 다크 모드) 변경에 따라 메시지 버블의 렌더링 색 모드를 변경하기 위해 사용합니다.
+    func rebuildAllMarkers() {
+        for (key, marker) in markers {
+            let messagesInCoord = key.isPlace
+            ? placeMessagesByCoord[key.coordinate]
+            : noPlaceMessagesByCoord[key.coordinate]
+            let messages = Array((messagesInCoord ?? []).suffix(displayLimit))
+            guard let type = MarkerType.from(messages: messages, isPlace: key.isPlace) else {
+                continue
+            }
+            scheduleInitialRender(for: key, marker: marker, markerType: type)
+        }
+    }
+}
+
 // MARK: - 마커 애니메이션
 
 extension MessageMarkerManager {

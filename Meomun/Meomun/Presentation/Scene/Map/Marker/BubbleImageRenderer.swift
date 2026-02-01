@@ -15,6 +15,9 @@ final class BubbleImageRenderer {
     /// 회전 버블의 고정 너비
     private let rotatingBubbleWidth: CGFloat
 
+    /// 메시지 버블 렌더링 시 다크 모드 대응을 위해
+    private var currentColorScheme: ColorScheme = .light
+
     init(rotatingBubbleWidth: CGFloat = 170) {
         self.rotatingBubbleWidth = rotatingBubbleWidth
     }
@@ -77,9 +80,18 @@ extension BubbleImageRenderer {
     private func render<V: View>(view: V, scale: CGFloat) async -> UIImage {
         await Task.yield()
 
-        let renderer = ImageRenderer(content: view)
+        let content = view.environment(\.colorScheme, currentColorScheme)
+
+        let renderer = ImageRenderer(content: content)
         renderer.scale = scale
         renderer.isOpaque = false
         return renderer.uiImage ?? UIImage()
+    }
+}
+
+extension BubbleImageRenderer {
+    /// trait에 맞춰 렌더링 할 색 모드를 설정합니다.
+    func setColorScheme(_ traitCollection: UITraitCollection) {
+        currentColorScheme = traitCollection.userInterfaceStyle == .light ? .light : .dark
     }
 }
