@@ -54,7 +54,7 @@ private extension PlaceCarousel {
                     .fill(
                         index == currentIndex
                         ? Color.mmPoint
-                        : Color.mmTextBrand.opacity(0.2)
+                        : Color.mmPrimary.opacity(0.2)
                     )
                     .frame(width: Constants.pageIndicatorSize, height: Constants.pageIndicatorSize)
             }

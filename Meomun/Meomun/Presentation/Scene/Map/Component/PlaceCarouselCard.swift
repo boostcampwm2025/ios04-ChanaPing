@@ -34,7 +34,7 @@ struct PlaceCarouselCard: View {
             .frame(maxWidth: .infinity, alignment: .leading)
 
             Image(systemName: "chevron.right")
-                .foregroundStyle(Color.mmTextBrand.opacity(0.4))
+                .foregroundStyle(Color.mmPrimary.opacity(0.4))
         }
         .padding(Constants.padding)
         .frame(maxWidth: .infinity, alignment: .leading)

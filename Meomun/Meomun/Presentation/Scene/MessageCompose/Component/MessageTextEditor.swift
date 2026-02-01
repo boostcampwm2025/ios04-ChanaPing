@@ -93,7 +93,7 @@ struct MessageTextEditor: View {
                         .foregroundStyle(Color.mmSecondary)
                         .padding(.horizontal, 12)
                         .padding(.vertical, 6)
-                        .background(Color.mmTextBrand.opacity(0.05), in: Capsule())
+                        .background(Color.mmPrimary.opacity(0.05), in: Capsule())
 
                     Spacer()
 

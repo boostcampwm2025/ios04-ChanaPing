@@ -14,7 +14,7 @@ struct CancelButton: View {
         Button(action: action) {
             Image(systemName: "xmark")
                 .font(.system(size: 16))
-                .foregroundStyle(Color.mmTextBrand)
+                .foregroundStyle(Color.mmPrimary)
                 .frame(width: 44, height: 44)
                 .background(
                     RoundedRectangle(cornerRadius: 12)
@@ -23,7 +23,7 @@ struct CancelButton: View {
                 .overlay(
                     // Shadow
                     RoundedRectangle(cornerRadius: 12, style: .continuous)
-                        .strokeBorder(Color.mmTextBrand.opacity(0.15), lineWidth: 0.5)
+                        .strokeBorder(Color.mmPrimary.opacity(0.15), lineWidth: 0.5)
                 )
                 .shadow(color: .black.opacity(0.05), radius: 2)
                 .shadow(color: .black.opacity(0.05), radius: 0, x: 1, y: 1)
