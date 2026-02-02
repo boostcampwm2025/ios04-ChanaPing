@@ -106,12 +106,10 @@ final class SpaceController {
                 messageBubbleTemplateEntity = messageEntity
 
                 didFinishConfigure = true
-                isConfiguring = false
                 flushReadyHandlers()
 
                 trySyncIfPossible()
             } catch {
-                isConfiguring = false
                 AppLog.error(
                     "Failed to configure Space scene",
                     category: .space,
