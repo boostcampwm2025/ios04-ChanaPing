@@ -13,15 +13,15 @@ struct WriteButton: View {
     var body: some View {
         Button(action: action) {
             Image(systemName: "plus")
-                .font(.system(size: 27, weight: .semibold))
+                .font(.system(size: 25, weight: .regular))
                 .foregroundStyle(.white)
-                .frame(width: 61, height: 61)
+                .frame(width: 55, height: 55)
                 .background(
                     CornerRadiusShape(
-                        topLeft: 30,
-                        topRight: 30,
-                        bottomLeft: 30,
-                        bottomRight: 5
+                        topLeft: 50,
+                        topRight: 20,
+                        bottomLeft: 20,
+                        bottomRight: 20
                     )
                     .fill(Color.mmWriteButton)
                 )
