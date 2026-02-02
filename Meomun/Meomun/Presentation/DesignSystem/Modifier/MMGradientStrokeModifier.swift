@@ -17,8 +17,8 @@ struct MMGradientStrokeModifier: ViewModifier {
             switch self {
             case .green:
                 return [
-                    Color.tabActive.opacity(0.75),
-                    Color.tabActive.opacity(0.22)
+                    Color.mmTabActive.opacity(0.75),
+                    Color.mmTabActive.opacity(0.22)
                 ]
             case .gray:
                 return [

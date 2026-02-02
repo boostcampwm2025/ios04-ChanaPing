@@ -17,6 +17,8 @@ fileprivate enum Constants {
 
 struct MapView: View {
     @Environment(\.setTabBarHidden) private var setTabBarHidden
+    @Environment(\.setNavBarHidden) private var setNavBarHidden
+    @Environment(\.setSplashReady) private var setSplashReady
 
     @State private var navigationPath = NavigationPath()
     @State private var didApplyResolvedUserLocation = false
@@ -43,12 +45,6 @@ struct MapView: View {
             ZStack {
                 mapViewWrapper
                     .ignoresSafeArea()
-
-                VStack {
-                    mmFloatingNavigationBar
-                    Spacer()
-                }
-                .padding(.top, 12)
             }
             .overlay(alignment: .bottomTrailing) {
                 writeButton
@@ -86,13 +82,19 @@ struct MapView: View {
                     spaceView(place: place) { coordinate, place in
                         navigationPath.append(MapDestination.messageComposer(location: coordinate, place: place))
                     }
-                    .onAppear { setTabBarHidden(true) }
+                    .onAppear {
+                        setTabBarHidden(true)
+                        setNavBarHidden(true)
+                    }
 
                 case .messageComposer(let location, let place):
                     messageComposerView(location: location, place: place) {
                         navigationPath.removeLast()
                     }
-                    .onAppear { setTabBarHidden(true) }
+                    .onAppear {
+                        setTabBarHidden(true)
+                        setNavBarHidden(true)
+                    }
                 }
             }
             .task {
@@ -113,6 +115,7 @@ struct MapView: View {
             }
             .onAppear {
                 setTabBarHidden(false)
+                setNavBarHidden(false)
                 locationProvider.startContinuous()
             }
             .onDisappear {
@@ -164,14 +167,10 @@ private extension MapView {
             },
             onCameraChangedByLocation: { coordinate, bounds, snapshot in
                 send(.cameraChangedByLocation(coordinate, bounds, snapshot))
+            },
+            onFirstMapIdle: {
+                setSplashReady()
             }
-        )
-    }
-
-    var mmFloatingNavigationBar: some View {
-        MMFloatingNavigationBar(
-            title: Constants.navigationTitle,
-            onTapSearch: { send(.tapSearch) }
         )
     }
 
@@ -285,6 +284,7 @@ private extension MapView {
                 ),
                 deleteMessagesUseCase: DeleteMessagesUseCaseImpl(messageRepository: MessageRepositoryImpl())
             ),
+            isEditing: false,
             configuration: .bottomSheet
         )
     }

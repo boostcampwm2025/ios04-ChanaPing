@@ -7,27 +7,27 @@
 
 import SwiftUI
 
-struct FloatingTabBar: View {
+struct MMFloatingTabBar: View {
     let selectedTab: MainTab
     let onSelect: (MainTab) -> Void
 
     var body: some View {
         HStack(spacing: 2) {
-            FloatingTabItem(
+            MMFloatingTabBarItem(
                 systemImageName: "map",
                 isSelected: selectedTab == .map
             ) {
                 onSelect(.map)
             }
 
-            FloatingTabItem(
+            MMFloatingTabBarItem(
                 systemImageName: "archivebox",
                 isSelected: selectedTab == .record
             ) {
                 onSelect(.record)
             }
 
-            FloatingTabItem(
+            MMFloatingTabBarItem(
                 systemImageName: "gearshape",
                 isSelected: selectedTab == .setting
             ) {
@@ -46,7 +46,7 @@ struct FloatingTabBar: View {
 }
 
 #Preview {
-    FloatingTabBar(selectedTab: .map) { _ in
+    MMFloatingTabBar(selectedTab: .map) { _ in
         print("hi")
     }
 }

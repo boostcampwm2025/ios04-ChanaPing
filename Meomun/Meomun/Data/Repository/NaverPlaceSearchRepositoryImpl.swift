@@ -14,7 +14,7 @@ final class NaverPlaceSearchRepositoryImpl: PlaceRepository {
         self.remote = remote
     }
 
-    func searchPlace(query: String, start: Int) async throws -> [NaverLocalItemDTO] {
-        try await remote.searchPlace(query: query, sort: "random")
+    func searchPlace(query: String) async throws -> [NaverLocalItemDTO] {
+        try await remote.searchPlace(query: query)
     }
 }

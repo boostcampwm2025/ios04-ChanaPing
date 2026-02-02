@@ -200,7 +200,7 @@ private extension MessageComposerView {
     }
 
     var placeFieldColor: Color {
-        store.state.selectedPlace == nil ? Color.tabInactive : Color.tabActive
+        store.state.selectedPlace == nil ? Color.mmTabInactive : Color.mmTabActive
     }
 
     var mmLoadingOverlayMessage: String {

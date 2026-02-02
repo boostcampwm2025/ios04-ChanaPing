@@ -8,10 +8,7 @@
 import Foundation
 
 protocol SupabaseService: Sendable {
-    func searchPlace(
-        query: String,
-        sort: String
-    ) async throws -> [NaverLocalItemDTO]
+    func searchPlace(query: String) async throws -> [NaverLocalItemDTO]
     func fetchAddress(longitude: Double, latitude: Double) async throws -> ReverseGeocodeResponseDTO
 }
 
@@ -23,10 +20,7 @@ final class SupabaseServiceImpl: SupabaseService {
         self.client = network
     }
 
-    func searchPlace(
-        query: String,
-        sort: String = "random"
-    ) async throws -> [NaverLocalItemDTO] {
+    func searchPlace(query: String) async throws -> [NaverLocalItemDTO] {
         // Naver API 제약: start, display는 각각 1, 5로만 고정됨.
         let endpoint = DefaultEndpoint(
             baseURL: baseURL,

@@ -30,4 +30,6 @@ protocol MessageStorage: Sendable {
     func update(for message: UpdateMessageRequestDTO) async throws
 
     func delete(messageIDs: Set<MessageID>) async throws
+
+    func reset() async throws
 }
