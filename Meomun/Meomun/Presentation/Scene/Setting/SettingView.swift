@@ -119,7 +119,11 @@ private extension SettingView {
     var resetAlertBinding: Binding<MMAlertModel?> {
         Binding(
             get: { store.state.resetAlert },
-            set: { _ in }
+            set: { newValue in
+                if newValue == nil {
+                    Task { await store.send(intent: .dismissResetAlert) }
+                }
+            }
         )
     }
 }
