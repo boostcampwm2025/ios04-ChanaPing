@@ -193,14 +193,6 @@ private struct TermsOfServiceView: View {
     }
 }
 
-private struct PrivacyPolicyView: View {
-    var body: some View {
-        Text("개인정보처리방침 화면")
-            .frame(maxWidth: .infinity, maxHeight: .infinity)
-            .background(Color(.mmBackground))
-    }
-}
-
 private struct OpenSourceLicensesView: View {
     var body: some View {
         Text("오픈소스 라이선스 화면")
