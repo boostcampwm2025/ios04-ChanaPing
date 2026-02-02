@@ -64,10 +64,6 @@ struct SettingView: View {
 
             // 데이터
             Section("데이터") {
-                Text("앱 데이터 초기화 시 모든 로컬 데이터가 삭제되며, 이 작업은 되돌릴 수 없습니다.")
-                    .font(.footnote)
-                    .foregroundColor(.secondary)
-
                 Button(role: .destructive) {
                     Task { await store.send(intent: .tapResetAppData) }
                 } label: {
@@ -79,6 +75,10 @@ struct SettingView: View {
                     message: { $0.message },
                     buttons: { $0.buttons }
                 )
+
+                Text("앱 데이터 초기화 시 모든 로컬 데이터가 삭제되며, 이 작업은 되돌릴 수 없습니다.")
+                    .font(.footnote)
+                    .foregroundColor(.secondary)
             }
             .listRowBackground(Color.mmContainerBackground)
         }
