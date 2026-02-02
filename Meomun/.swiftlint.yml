@@ -34,6 +34,10 @@ type_body_length:
 file_length:
   warning: 500 # 파일 크기 제한
 
+large_tuple:
+  warning: 3
+  error: 4
+
 # 4. 이름 규칙 커스터마이징
 identifier_name:
   min_length: # 짧은 이름 방지 (예: single-letter names)
