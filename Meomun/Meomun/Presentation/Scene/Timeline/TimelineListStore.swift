@@ -35,6 +35,7 @@ final class TimelineListStore: Store {
         case tapMessage(MessageID)
         case tapSection(YearMonth?)
         case tapEdit
+        case syncEditing(Bool)
     }
 
     enum Action {
@@ -97,6 +98,15 @@ final class TimelineListStore: Store {
             return .init { continuation in
                 continuation.yield(.setEditing(!state.isEditing))
                 continuation.yield(.clearSelectedMessageIDs)
+                continuation.finish()
+            }
+
+        case .syncEditing(let isEditing):
+            return .init { continuation in
+                continuation.yield(.setEditing(isEditing))
+                if isEditing == false {
+                    continuation.yield(.clearSelectedMessageIDs)
+                }
                 continuation.finish()
             }
 

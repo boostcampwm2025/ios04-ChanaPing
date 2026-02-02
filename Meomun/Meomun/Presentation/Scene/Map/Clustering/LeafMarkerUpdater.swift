@@ -93,7 +93,7 @@ final class LeafMarkerUpdater: NMCDefaultLeafMarkerUpdater {
             )
 
             let ringPath = UIBezierPath(ovalIn: rect.insetBy(dx: 1, dy: 1))
-            UIColor.tabActive.withAlphaComponent(0.8).setStroke()
+            UIColor.mmTabActive.withAlphaComponent(0.8).setStroke()
             ringPath.lineWidth = 1.3
             ringPath.stroke()
 

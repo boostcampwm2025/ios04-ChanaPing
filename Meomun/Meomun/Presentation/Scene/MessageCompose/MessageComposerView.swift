@@ -175,7 +175,7 @@ private extension MessageComposerView {
             store: PlaceSearchStore(
                 searchPlaces: SearchNearbyPlaceUseCaseImpl(
                     placeRepository: NaverPlaceSearchRepositoryImpl(
-                        network: NetworkClientImpl()
+                        remote: SupabaseServiceImpl(network: NetworkClientImpl())
                     )
                 ),
                 userLocation: store.state.startLocation,
@@ -200,7 +200,7 @@ private extension MessageComposerView {
     }
 
     var placeFieldColor: Color {
-        store.state.selectedPlace == nil ? Color.tabInactive : Color.tabActive
+        store.state.selectedPlace == nil ? Color.mmTabInactive : Color.mmTabActive
     }
 
     var mmLoadingOverlayMessage: String {
@@ -352,7 +352,7 @@ private extension MessageComposerView {
                 ),
                 reverseGeocoding: ReverseGeocodeUseCaseImpl(
                     repository: ReverseGeocodeRepositoryImpl(
-                        client: NetworkClientImpl()
+                        remote: SupabaseServiceImpl(network: NetworkClientImpl())
                     )
                 ),
                 onClose: { _ in

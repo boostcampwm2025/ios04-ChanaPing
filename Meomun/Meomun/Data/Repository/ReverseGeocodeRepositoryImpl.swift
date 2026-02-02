@@ -6,31 +6,13 @@
 //
 
 final class ReverseGeocodeRepositoryImpl: ReverseGeocodeRepository {
-    private let client: NetworkClient
-    private let apiKeyId: String
-    private let apiKey: String
+    private let remote: SupabaseService
 
-    init(
-        client: NetworkClient,
-        apiKeyId: String = AppConfig.naverGeocodingApiKeyId,
-        apiKey: String = AppConfig.naverGeocodingApiKey
-    ) {
-        self.client = client
-        self.apiKeyId = apiKeyId
-        self.apiKey = apiKey
+    init(remote: SupabaseService) {
+        self.remote = remote
     }
 
     func fetchAddress(longitude: Double, latitude: Double) async throws -> ReverseGeocodeResponseDTO {
-        let endpoint = ReverseGeocodeEndpoint(
-            apiKeyId: apiKeyId,
-            apiKey: apiKey,
-            longitude: longitude,
-            latitude: latitude
-        )
-
-        return try await client.request(
-            endpoint: endpoint,
-            responseType: ReverseGeocodeResponseDTO.self
-        )
+        try await remote.fetchAddress(longitude: longitude, latitude: latitude)
     }
 }

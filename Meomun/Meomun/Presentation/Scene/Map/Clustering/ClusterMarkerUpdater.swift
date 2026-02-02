@@ -45,7 +45,7 @@ final class ClusterMarkerUpdater: NMCDefaultClusterMarkerUpdater {
 
     private static func renderIcon(
         diameter: CGFloat,
-        fillColor: UIColor = .tabActive
+        fillColor: UIColor = .mmTabActive
     ) -> UIImage {
         let size = CGSize(width: diameter, height: diameter)
         let renderer = UIGraphicsImageRenderer(size: size)

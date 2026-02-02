@@ -31,7 +31,7 @@ final class StubGetNearbyMessagesUseCase: GetNearbyMessagesUseCase {
 
     // MARK: - GetNearbyMessagesUseCase
 
-    func execute(location: Coordinate, limit: Int?) async throws -> [Message] {
+    func execute(at location: Meomun.Coordinate, bounds: Meomun.BoundingBox, limit: Int?) async throws -> [Meomun.Message] {
         if stubbedDelay > 0 {
             try await Task.sleep(nanoseconds: stubbedDelay)
         }

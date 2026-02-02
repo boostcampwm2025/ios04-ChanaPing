@@ -77,4 +77,8 @@ actor MessageInMemoryStorage: MessageStorage {
             messageIDs.contains(MessageID(value: message.id))
         }
     }
+
+    func reset() async throws {
+        storage.removeAll(keepingCapacity: false)
+    }
 }
