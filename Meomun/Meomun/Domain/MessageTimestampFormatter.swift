@@ -7,27 +7,49 @@
 
 import Foundation
 
+enum MessageTimestampFormatterStyle {
+    case date
+    case dateTime
+}
+
 struct MessageTimestampFormatter {
-    static func string(from date: Date) -> String {
-        let now = Date()
+    let style: MessageTimestampFormatterStyle
+    let locale: Locale
+
+    init(
+        style: MessageTimestampFormatterStyle = .date,
+        locale: Locale = .current
+    ) {
+        self.style = style
+        self.locale = locale
+    }
+
+    func string(from date: Date, now: Date = Date()) -> String {
         let elapsed = now.timeIntervalSince(date)
         let oneDay: TimeInterval = 60 * 60 * 24
 
         if elapsed < oneDay {
             return relativeString(from: date, now: now)
         } else {
-            return absoluteString(from: date)
+            return absoluteString(from: date, style: style)
         }
     }
 
-    static func relativeString(from date: Date, now: Date) -> String {
+    private func relativeString(from date: Date, now: Date) -> String {
         let formatter = RelativeDateTimeFormatter()
         formatter.unitsStyle = .full
+        formatter.locale = locale
+
         return formatter.localizedString(for: date, relativeTo: now)
     }
 
-    static func absoluteString(from date: Date) -> String {
-        return date.formatted(.dateTime.locale(Locale.current)
-        )
+    private func absoluteString(from date: Date, style: MessageTimestampFormatterStyle) -> String {
+        switch style {
+        case .date:
+            return date.formatted(.dateTime.year().month().day().locale(locale))
+
+        case .dateTime:
+            return date.formatted(date: .complete, time: .shortened)
+        }
     }
 }

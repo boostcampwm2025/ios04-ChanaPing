@@ -18,8 +18,7 @@ final class SpaceMessageBubbleFactory {
 
         // 텍스트 가공 및 entity 생성
         let contentText = TextArranger.arrangeText(message.content)
-        let dateText = MessageTimestampFormatter.string(from: message.createdAt)
-
+        let dateText = message.displayDateString
         let contentTextEntity = makeTextEntity(contentText, type: .content)
         let dateTextEntity = makeTextEntity(dateText, type: .date)
 

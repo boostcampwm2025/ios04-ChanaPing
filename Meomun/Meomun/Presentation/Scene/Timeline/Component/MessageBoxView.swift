@@ -69,7 +69,7 @@ private extension MessageBoxView {
 
     var metaRowView: some View {
         HStack {
-            Text(message.displayDateString)
+            Text(message.displayDateTimeString)
                 .font(.footnote.weight(.semibold))
                 .foregroundStyle(Color.mmSecondary)
 

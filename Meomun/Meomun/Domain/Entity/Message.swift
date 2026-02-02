@@ -27,6 +27,10 @@ extension Message {
     }
 
     var displayDateString: String {
-        return MessageTimestampFormatter.string(from: createdAt)
+        return MessageTimestampFormatter().string(from: createdAt)
+    }
+
+    var displayDateTimeString: String {
+        return MessageTimestampFormatter(style: .dateTime).string(from: createdAt)
     }
 }
