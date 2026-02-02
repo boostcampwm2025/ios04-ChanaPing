@@ -53,7 +53,7 @@ private extension MessageBoxView {
     var messageTextView: some View {
         Text(message.content)
             .font(.body)
-            .foregroundStyle(Color.mmPrimary.opacity(0.8))
+            .foregroundStyle(Color.mmTextBrand.opacity(0.8))
             .frame(maxHeight: .infinity, alignment: .leading)
             .fixedSize(horizontal: false, vertical: true)
     }
@@ -93,7 +93,7 @@ private extension MessageBoxView {
 
     var backgroundView: some View {
         RoundedRectangle(cornerRadius: Layout.cornerRadius, style: .continuous)
-            .fill(Color.mmMessageBackground)
+            .fill(Color.mmContainerBackground)
             .overlay(
                 RoundedRectangle(cornerRadius: Layout.cornerRadius, style: .continuous)
                     .strokeBorder(Color.mmPrimary.opacity(0.15), lineWidth: 0.5)

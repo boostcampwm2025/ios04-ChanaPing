@@ -51,7 +51,7 @@ struct PlaceSearchOverlayView: View {
                 }
                 .padding(28)
                 .frame(width: 320, height: 400)
-                .background(Color.white)
+                .background(Color.mmContainerBackground)
                 .cornerRadius(25)
                 .shadow(radius: 8)
                 .transition(.opacity.combined(with: .scale(scale: 0.98)))
@@ -75,7 +75,7 @@ extension PlaceSearchOverlayView {
         ZStack {
             Text(title)
                 .font(.headline.weight(.semibold))
-                .foregroundStyle(Color.mmPrimary)
+                .foregroundStyle(Color.mmTextBrand)
 
             HStack {
                 Spacer()
@@ -103,7 +103,7 @@ extension PlaceSearchOverlayView {
             ))
                 .focused($isFocused)
                 .font(.system(size: 16, weight: .medium))
-                .foregroundStyle(Color.mmPrimary)
+                .foregroundStyle(Color.mmTextBrand)
                 .submitLabel(.search)
                 .onSubmit {
                     Task { await store.send(intent: .submit) }
@@ -161,11 +161,9 @@ extension PlaceSearchOverlayView {
                                         Task { await store.send(intent: .scrollReachedBottom) }
                                     }
                                 }
-                                .foregroundStyle(Color.mmPrimary)
+                                .foregroundStyle(Color.mmTextBrand)
                                 .padding(.vertical, 5)
                                 .padding(.horizontal, 12)
-                                .background(Color.white.opacity(0.08))
-                                .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
                             }
                             .buttonStyle(.plain)
                         }

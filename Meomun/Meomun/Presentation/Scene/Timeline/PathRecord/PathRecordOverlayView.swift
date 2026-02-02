@@ -62,11 +62,11 @@ private extension PathRecordOverlayView {
                 .padding(.top, Constants.miniMapTopPadding)
                 .padding(.bottom, Constants.miniMapPadding)
                 .padding(.horizontal, Constants.miniMapPadding)
-                .background(Color.black.opacity(0.02))
+                .background(Color.mmSecondaryBackground)
             title
         }
         .padding(.bottom, Constants.frameInnerBottomPadding)
-        .background(Color.white)
+        .background(Color.mmContainerBackground)
         .clipShape(RoundedRectangle(cornerRadius: Constants.frameCornerRadius, style: .continuous))
         .shadow(color: .black.opacity(0.08), radius: 8, x: 0, y: 4)
         .overlay(

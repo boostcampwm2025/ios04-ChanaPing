@@ -38,38 +38,38 @@ struct PlaceCarouselCard: View {
         }
         .padding(Constants.padding)
         .frame(maxWidth: .infinity, alignment: .leading)
-        .background(Color.white)
-        .clipShape(RoundedRectangle(cornerRadius: Constants.cornerRadius))
-        .overlay {
-            RoundedRectangle(cornerRadius: Constants.cornerRadius, style: .continuous)
-                .stroke(
-                    LinearGradient(
-                        colors: [
-                            Color.gray.opacity(0.65),
-                            Color.gray.opacity(0.22)
-                        ],
-                        startPoint: .topLeading,
-                        endPoint: .bottomTrailing
-                    ),
-                    lineWidth: 1
-                )
-        }
+        .background(cardBackground)
     }
 }
 
 // MARK: - Components
 
 private extension PlaceCarouselCard {
+    var cardBackground: some View {
+        RoundedRectangle(cornerRadius: Constants.cornerRadius, style: .continuous)
+            .fill(Color.mmContainerBackground)
+            .shadow(
+                color: .black.opacity(0.06),
+                radius: 12,
+                x: 0,
+                y: 6
+            )
+            .mmGradientStroke(
+                cornerRadius: Constants.cornerRadius,
+                gradientColorType: .gray
+            )
+    }
+
     var nameText: some View {
         Text(item.place.name)
             .font(.title3.weight(.semibold))
-            .foregroundStyle(Color.mmPrimary)
+            .foregroundStyle(Color.mmTextBrand)
     }
 
     var addressText: some View {
         Text(item.place.address)
             .font(.subheadline)
-            .foregroundStyle(Color.mmPrimary.opacity(Constants.addressTextOpacity))
+            .foregroundStyle(Color.mmTextBrand.opacity(Constants.addressTextOpacity))
     }
 
     var messageCountText: some View {
@@ -79,7 +79,7 @@ private extension PlaceCarouselCard {
             Image(systemName: "message")
         }
         .font(.footnote)
-        .foregroundStyle(Color.mmPrimary.opacity(Constants.messageCountTextOpacity))
+        .foregroundStyle(Color.mmTextBrand.opacity(Constants.messageCountTextOpacity))
     }
 }
 

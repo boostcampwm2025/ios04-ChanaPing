@@ -46,6 +46,7 @@ struct SettingView: View {
                     mapView.showOpenSourceLicense()
                 }
             }
+            .listRowBackground(Color.mmContainerBackground)
 
             // 권한
             Section("권한") {
@@ -59,6 +60,7 @@ struct SettingView: View {
                     Task { await store.send(intent: .tapOpenAppSettings) }
                 }
             }
+            .listRowBackground(Color.mmContainerBackground)
 
             // 데이터
             Section("데이터") {
@@ -71,14 +73,17 @@ struct SettingView: View {
                 } label: {
                     Text("앱 데이터 초기화")
                 }
-                .customAlert(
+                .mmAlert(
                     resetAlertBinding,
                     title: { $0.title },
                     message: { $0.message },
                     buttons: { $0.buttons }
                 )
             }
+            .listRowBackground(Color.mmContainerBackground)
         }
+        .scrollContentBackground(.hidden)
+        .background(Color.mmBackground)
         .safeAreaInset(edge: .bottom) {
             Color.clear
                 .frame(height: 100)
@@ -108,7 +113,7 @@ struct SettingView: View {
 // MARK: - Alert
 
 private extension SettingView {
-    var resetAlertBinding: Binding<AlertModel?> {
+    var resetAlertBinding: Binding<MMAlertModel?> {
         Binding(
             get: { store.state.resetAlert },
             set: { newValue in
@@ -184,7 +189,7 @@ private struct TermsOfServiceView: View {
     var body: some View {
         Text("이용약관 화면")
             .frame(maxWidth: .infinity, maxHeight: .infinity)
-            .background(Color(.systemGroupedBackground))
+            .background(Color(.mmBackground))
     }
 }
 
@@ -192,7 +197,7 @@ private struct PrivacyPolicyView: View {
     var body: some View {
         Text("개인정보처리방침 화면")
             .frame(maxWidth: .infinity, maxHeight: .infinity)
-            .background(Color(.systemGroupedBackground))
+            .background(Color(.mmBackground))
     }
 }
 
@@ -200,6 +205,6 @@ private struct OpenSourceLicensesView: View {
     var body: some View {
         Text("오픈소스 라이선스 화면")
             .frame(maxWidth: .infinity, maxHeight: .infinity)
-            .background(Color(.systemGroupedBackground))
+            .background(Color(.mmBackground))
     }
 }

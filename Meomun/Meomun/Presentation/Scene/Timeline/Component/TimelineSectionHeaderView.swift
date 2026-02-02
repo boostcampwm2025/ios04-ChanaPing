@@ -17,11 +17,11 @@ struct TimelineSectionHeaderView: View {
         HStack(spacing: 10) {
             Text(date.formatted(.dateTime.month(.abbreviated)))
                 .font(.largeTitle.bold())
-                .foregroundStyle(Color.mmPrimary.opacity(0.75))
+                .foregroundStyle(Color.mmTextBrand.opacity(0.75))
 
             Text(date.formatted(.dateTime.year()))
                 .font(.title3.weight(.semibold))
-                .foregroundStyle(Color.mmPrimary.opacity(0.45))
+                .foregroundStyle(Color.mmTextBrand.opacity(0.45))
                 .padding(.leading, 6)
 
             Spacer()
@@ -45,7 +45,6 @@ struct TimelineSectionHeaderView: View {
         .padding(.horizontal, 30)
         .padding(.top, 8)
         .padding(.bottom, 16)
-        .background(Color.mmBackground)
     }
 }
 

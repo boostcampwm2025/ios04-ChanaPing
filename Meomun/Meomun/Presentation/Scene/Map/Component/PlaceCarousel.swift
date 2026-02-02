@@ -53,8 +53,8 @@ private extension PlaceCarousel {
                 Circle()
                     .fill(
                         index == currentIndex
-                            ? Color.mmPoint
-                            : Color.mmPrimary.opacity(0.2)
+                        ? Color.mmPoint
+                        : Color.mmPrimary.opacity(0.2)
                     )
                     .frame(width: Constants.pageIndicatorSize, height: Constants.pageIndicatorSize)
             }
@@ -75,7 +75,7 @@ private extension PlaceCarousel {
                         onTapped(item.place)
                     }
                     .tag(index)
-                    .padding(.horizontal, 30)
+                    .padding(.horizontal, MMSpacing.floatingHorizontalPadding)
             }
         }
         .tabViewStyle(.page(indexDisplayMode: .never))

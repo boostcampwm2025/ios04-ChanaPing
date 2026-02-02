@@ -45,14 +45,14 @@ struct MapView: View {
                     .ignoresSafeArea()
 
                 VStack {
-                    floatingNavigationBar
+                    mmFloatingNavigationBar
                     Spacer()
                 }
                 .padding(.top, 12)
             }
             .overlay(alignment: .bottomTrailing) {
                 writeButton
-                    .padding(.bottom, 96)
+                    .padding(.bottom, MMLayout.tabBarBottomOffset)
             }
             .overlay(alignment: .bottom) {
                 if !store.state.carouselItems.isEmpty {
@@ -63,12 +63,12 @@ struct MapView: View {
                             navigationPath.append(MapDestination.space(place: place))
                         }
                     )
-                    .padding(.bottom, 90)
+                    .padding(.bottom, MMLayout.aboveTabBarOffset)
                 }
             }
             .overlay {
                 if !store.state.isNetworkConnected {
-                    AlertView(type: .network) {
+                    MMAlertView(type: .network) {
                         send(.tapNetworkRefresh)
                     }
                     .ignoresSafeArea()
@@ -130,7 +130,7 @@ struct MapView: View {
             }
             .transaction { $0.disablesAnimations = true }
         }
-        .toast(toastBinding, bottomPadding: 100)
+        .mmToast(toastBinding, bottomPadding: 100)
     }
 }
 
@@ -168,8 +168,8 @@ private extension MapView {
         )
     }
 
-    var floatingNavigationBar: some View {
-        FloatingNavigationBar(
+    var mmFloatingNavigationBar: some View {
+        MMFloatingNavigationBar(
             title: Constants.navigationTitle,
             onTapSearch: { send(.tapSearch) }
         )

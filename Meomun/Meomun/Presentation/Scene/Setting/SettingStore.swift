@@ -10,7 +10,7 @@ import Foundation
 
 final class SettingStore: Store {
     struct State: Equatable {
-        var resetAlert: AlertModel?
+        var resetAlert: MMAlertModel?
     }
 
     enum Intent: Equatable {
@@ -21,7 +21,7 @@ final class SettingStore: Store {
     }
 
     enum Action: Equatable {
-        case setResetAlert(AlertModel?)
+        case setResetAlert(MMAlertModel?)
     }
 
     @Published var state: State
@@ -41,7 +41,7 @@ final class SettingStore: Store {
                 continuation.finish()
 
             case .tapResetAppData:
-                let alert = AlertFactory.resetAllData(
+                let alert = MMAlertFactory.resetAllData(
                     onCancel: { [weak self] in
                         guard let self else { return }
                         Task {

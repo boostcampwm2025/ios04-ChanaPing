@@ -15,7 +15,7 @@ struct PathRecordMiniMapView: View {
             .clipShape(Rectangle())
             .overlay(
                 Rectangle()
-                    .stroke(Color.black.opacity(0.08), lineWidth: 1)
+                    .stroke(Color.mmBorder, lineWidth: 1)
             )
     }
 }

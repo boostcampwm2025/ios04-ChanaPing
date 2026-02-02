@@ -18,9 +18,10 @@ struct CancelButton: View {
                 .frame(width: 44, height: 44)
                 .background(
                     RoundedRectangle(cornerRadius: 12)
-                        .fill(Color.white.opacity(0.6))
+                        .fill(Color.mmContainerBackground.opacity(0.6))
                 )
                 .overlay(
+                    // Shadow
                     RoundedRectangle(cornerRadius: 12, style: .continuous)
                         .strokeBorder(Color.mmPrimary.opacity(0.15), lineWidth: 0.5)
                 )
