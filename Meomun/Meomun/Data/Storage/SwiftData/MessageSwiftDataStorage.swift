@@ -164,8 +164,9 @@ actor MessageSwiftDataStorage: MessageStorage {
     func reset() async throws {
         let context = makeContext()
 
-        try context.delete(model: PlaceModel.self)
-        try context.delete(model: MessageModel.self)
+        for model in AppDataConfig.modelList {
+            try context.delete(model: model)
+        }
 
         try context.save()
     }
