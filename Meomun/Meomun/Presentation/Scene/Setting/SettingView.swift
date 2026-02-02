@@ -21,66 +21,69 @@ struct SettingView: View {
     }
 
     var body: some View {
-        List {
-            // 정보
-            Section("정보") {
-                AppVersionRow()
+        VStack {
+            Color.clear.frame(height: ShellLayout.topInset)
+            List {
+                // 정보
+                Section("정보") {
+                    AppVersionRow()
 
-                NavigationRow(title: "이용약관") {
-                    TermsOfServiceView()
-                }
+                    NavigationRow(title: "이용약관") {
+                        TermsOfServiceView()
+                    }
 
-                NavigationRow(title: "개인정보처리방침") {
-                    PrivacyPolicyView()
-                }
+                    NavigationRow(title: "개인정보처리방침") {
+                        PrivacyPolicyView()
+                    }
 
-                NavigationRow(title: "오픈소스 라이선스") {
-                    OpenSourceLicensesView()
-                }
+                    NavigationRow(title: "오픈소스 라이선스") {
+                        OpenSourceLicensesView()
+                    }
 
-                ActionRow(title: "네이버 지도 법적 공지") {
-                    mapView.showLegalNotice()
-                }
+                    ActionRow(title: "네이버 지도 법적 공지") {
+                        mapView.showLegalNotice()
+                    }
 
-                ActionRow(title: "네이버 지도 오픈소스 라이선스") {
-                    mapView.showOpenSourceLicense()
+                    ActionRow(title: "네이버 지도 오픈소스 라이선스") {
+                        mapView.showOpenSourceLicense()
+                    }
                 }
+                .listRowBackground(Color.mmContainerBackground)
+
+                // 권한
+                Section("권한") {
+                    PermissionStatusRow(
+                        title: "위치 권한",
+                        status: permissionStatus.displayText,
+                        statusKind: permissionStatus.kind
+                    )
+
+                    Button("앱 설정으로 이동") {
+                        Task { await store.send(intent: .tapOpenAppSettings) }
+                    }
+                }
+                .listRowBackground(Color.mmContainerBackground)
+
+                // 데이터
+                Section("데이터") {
+                    Text("앱 데이터 초기화 시 모든 로컬 데이터가 삭제되며, 이 작업은 되돌릴 수 없습니다.")
+                        .font(.footnote)
+                        .foregroundColor(.secondary)
+
+                    Button(role: .destructive) {
+                        Task { await store.send(intent: .tapResetAppData) }
+                    } label: {
+                        Text("앱 데이터 초기화")
+                    }
+                    .mmAlert(
+                        resetAlertBinding,
+                        title: { $0.title },
+                        message: { $0.message },
+                        buttons: { $0.buttons }
+                    )
+                }
+                .listRowBackground(Color.mmContainerBackground)
             }
-            .listRowBackground(Color.mmContainerBackground)
-
-            // 권한
-            Section("권한") {
-                PermissionStatusRow(
-                    title: "위치 권한",
-                    status: permissionStatus.displayText,
-                    statusKind: permissionStatus.kind
-                )
-
-                Button("앱 설정으로 이동") {
-                    Task { await store.send(intent: .tapOpenAppSettings) }
-                }
-            }
-            .listRowBackground(Color.mmContainerBackground)
-
-            // 데이터
-            Section("데이터") {
-                Text("앱 데이터 초기화 시 모든 로컬 데이터가 삭제되며, 이 작업은 되돌릴 수 없습니다.")
-                    .font(.footnote)
-                    .foregroundColor(.secondary)
-
-                Button(role: .destructive) {
-                    Task { await store.send(intent: .tapResetAppData) }
-                } label: {
-                    Text("앱 데이터 초기화")
-                }
-                .mmAlert(
-                    resetAlertBinding,
-                    title: { $0.title },
-                    message: { $0.message },
-                    buttons: { $0.buttons }
-                )
-            }
-            .listRowBackground(Color.mmContainerBackground)
         }
         .scrollContentBackground(.hidden)
         .background(Color.mmBackground)
@@ -88,7 +91,6 @@ struct SettingView: View {
             Color.clear
                 .frame(height: 100)
         }
-        .navigationTitle("마이페이지")
         .onAppear {
             permissionStatus = LocationPermissionStatus.current
         }

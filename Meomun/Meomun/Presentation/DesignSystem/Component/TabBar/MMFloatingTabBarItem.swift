@@ -7,7 +7,7 @@
 
 import SwiftUI
 
-struct FloatingTabItem: View {
+struct MMFloatingTabBarItem: View {
     let systemImageName: String
     let isSelected: Bool
     let action: () -> Void
@@ -19,11 +19,11 @@ struct FloatingTabItem: View {
                     .resizable()
                     .scaledToFit()
                     .frame(width: 20)
-                    .foregroundStyle(isSelected ? Color(.tabActive) : Color(.tabInactive))
+                    .foregroundStyle(isSelected ? Color(.mmTabActive) : Color(.mmTabInactive))
 
                 Circle()
                     .frame(width: 5, height: 5)
-                    .foregroundStyle(isSelected ? Color(.tabActive) : .clear)
+                    .foregroundStyle(isSelected ? Color(.mmTabActive) : .clear)
             }
             .frame(maxWidth: .infinity)
         }
@@ -32,7 +32,7 @@ struct FloatingTabItem: View {
 }
 
 #Preview {
-    FloatingTabItem(systemImageName: "map", isSelected: true) {
+    MMFloatingTabBarItem(systemImageName: "map", isSelected: true) {
         print("hi")
     }
 }

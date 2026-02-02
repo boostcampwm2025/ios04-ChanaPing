@@ -134,11 +134,11 @@ private extension MessageBubble {
     var chevron: some View {
         Image(systemName: "chevron.right")
             .font(.system(size: 15, weight: .semibold))
-            .foregroundStyle(Color.tabActive)
+            .foregroundStyle(Color.mmTabActive)
             .opacity(0.75)
             .background(
                 Circle()
-                    .fill(Color.tabActive.opacity(0.1))
+                    .fill(Color.mmTabActive.opacity(0.1))
                     .frame(width: 20, height: 20)
             )
     }
