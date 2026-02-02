@@ -4,7 +4,7 @@ name: Build and Test
 on:
   # develop 브랜치에 push 나 pull request 이벤트가 일어났을때 해당 workflow를 트리거
   push:
-    branches: [ develop ]
+    branches: [ test/MapStoreTests-fix ]
   pull_request:
     branches: [ develop ]
 
@@ -69,7 +69,22 @@ jobs:
 
         xcodebuild clean build -"$filetype_parameter" "$file_to_build" -scheme "$SCHEME_NAME" -destination 'platform=iOS Simulator,name=iPhone 17,OS=latest' -skipPackagePluginValidation -skipMacroValidation
     
-#    - name: Run tests 🧪
-#      run: |
-#        cd "$PROJECT_DIR"
-#        xcodebuild test -project "$SCHEME_NAME.xcodeproj" -scheme "$SCHEME_NAME" -destination 'platform=iOS Simulator,name=iPhone 17,OS=latest' -skipPackagePluginValidation -skipMacroValidation
+    - name: Run tests 🧪
+      run: |
+        cd "$PROJECT_DIR"
+
+        # .xcworkspace 또는 .xcodeproj 파일 찾기
+        if [ -d *.xcworkspace ] 2>/dev/null; then
+          filetype_parameter="workspace"
+          file_to_build=$(ls -d *.xcworkspace | head -1)
+        elif [ -d *.xcodeproj ] 2>/dev/null; then
+          filetype_parameter="project"
+          file_to_build=$(ls -d *.xcodeproj | head -1)
+        else
+          echo "❌ No .xcworkspace or .xcodeproj found"
+          exit 1
+        fi
+
+        echo "Running tests on $file_to_build..."
+
+        xcodebuild test -"$filetype_parameter" "$file_to_build" -scheme "$SCHEME_NAME" -destination 'platform=iOS Simulator,name=iPhone 17,OS=latest' -skipPackagePluginValidation -skipMacroValidation
