@@ -53,11 +53,11 @@ jobs:
         # 프로젝트 디렉토리로 이동
         cd "$PROJECT_DIR"
         
-        # .xcworkspace 또는 .xcodeproj 파일 찾기
-        if [ -d *.xcworkspace ] 2>/dev/null; then
+        # .xcworkspace 또는 .xcodeproj 파일 찾기 (글롭 확장 안전성 개선)
+        if compgen -G "*.xcworkspace" > /dev/null 2>&1; then
           filetype_parameter="workspace"
           file_to_build=$(ls -d *.xcworkspace | head -1)
-        elif [ -d *.xcodeproj ] 2>/dev/null; then
+        elif compgen -G "*.xcodeproj" > /dev/null 2>&1; then
           filetype_parameter="project"
           file_to_build=$(ls -d *.xcodeproj | head -1)
         else
@@ -73,11 +73,11 @@ jobs:
       run: |
         cd "$PROJECT_DIR"
 
-        # .xcworkspace 또는 .xcodeproj 파일 찾기
-        if [ -d *.xcworkspace ] 2>/dev/null; then
+        # .xcworkspace 또는 .xcodeproj 파일 찾기 (글롭 확장 안전성 개선)
+        if compgen -G "*.xcworkspace" > /dev/null 2>&1; then
           filetype_parameter="workspace"
           file_to_build=$(ls -d *.xcworkspace | head -1)
-        elif [ -d *.xcodeproj ] 2>/dev/null; then
+        elif compgen -G "*.xcodeproj" > /dev/null 2>&1; then
           filetype_parameter="project"
           file_to_build=$(ls -d *.xcodeproj | head -1)
         else
