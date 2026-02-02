@@ -30,7 +30,6 @@ final class PlaceSearchStore: Store {
     enum Intent {
         case queryChanged(String)
         case submit
-        case scrollReachedBottom
         case tapResult(Place)
         case dismiss
     }
@@ -39,29 +38,18 @@ final class PlaceSearchStore: Store {
         case setQuery(String)
         case setPhase(Phase)
         case clear
-
-        case appendResults([Place])
-        case setPagination(nextStart: Int, hasMore: Bool)
-        case setLoadingMore(Bool)
     }
 
     struct State {
         var query: String = ""
         var phase: Phase = .idle
         var userLocation: Coordinate?
-
-        // 페이지네이션
-        var display: Int = 5
-        var nextStart: Int = 1
-        var hasMore: Bool = true
-        var isLoadingMore: Bool = false
     }
 
     @Published var state: State
 
     // 검색 작업이 결과를 반환
     private var searchTask: Task<[Place], Never>?
-    private var loadMoreTask: Task<[Place], Never>?
 
     private let searchNearbyPlaces: SearchNearbyPlaceUseCase
 
@@ -90,17 +78,11 @@ final class PlaceSearchStore: Store {
             case .submit:
                 search(for: state.query, immediate: true)
 
-            case .scrollReachedBottom:
-                Task { @MainActor in
-                    loadMore()
-                }
-
             case .tapResult(let place):
                 onSelect(place)
 
             case .dismiss:
                 cancelSearch()
-                cancelLoadMore()
                 onDismiss()
             }
 
@@ -121,21 +103,6 @@ final class PlaceSearchStore: Store {
         case .clear:
             newState.query = ""
             newState.phase = .idle
-            newState.nextStart = 1
-            newState.hasMore = true
-            newState.isLoadingMore = false
-
-        case .appendResults(let places):
-            let current = newState.phase.results
-            let merged = current + places
-            newState.phase = .loaded(merged)
-
-        case .setPagination(nextStart: let nextStart, hasMore: let hasMore):
-            newState.nextStart = nextStart
-            newState.hasMore = hasMore
-
-        case .setLoadingMore(let flag):
-            newState.isLoadingMore = flag
         }
 
         return newState
@@ -155,7 +122,6 @@ private extension PlaceSearchStore {
         let trimmedQuery = query.trimmingCharacters(in: .whitespacesAndNewlines)
 
         cancelSearch()
-        cancelLoadMore()
 
         guard !trimmedQuery.isEmpty else {
             Task { @MainActor in
@@ -170,8 +136,6 @@ private extension PlaceSearchStore {
 
         // 페이지네이션 초기화
         Task { @MainActor in
-            apply(.setPagination(nextStart: 1, hasMore: true))
-            apply(.setLoadingMore(false))
             apply(.setPhase(.loading))
         }
 
@@ -187,8 +151,7 @@ private extension PlaceSearchStore {
             do {
                 let results = try await useCase.execute(
                     query: stabilizedQuery,
-                    userLocation: userLocation,
-                    start: 1
+                    userLocation: userLocation
                 )
                 return results
             } catch {
@@ -202,13 +165,11 @@ private extension PlaceSearchStore {
             let results = await task.value
             if Task.isCancelled { return }
 
-            // 첫 페이지 결과 반영 + 페이지네이션 상태 업데이트
-            let hasMore = results.count == self.state.display
-            let nextStart = 1 + results.count
+            var seen = Set<PlaceID>()
+            let deduped = results.filter { seen.insert($0.id).inserted }
 
-            let nextPhase: Phase = results.isEmpty ? .empty : .loaded(results)
+            let nextPhase: Phase = deduped.isEmpty ? .empty : .loaded(deduped)
             apply(.setPhase(nextPhase))
-            apply(.setPagination(nextStart: nextStart, hasMore: hasMore))
         }
     }
 
@@ -251,68 +212,5 @@ private extension PlaceSearchStore {
     func cancelSearch() {
         searchTask?.cancel()
         searchTask = nil
-    }
-
-    // MARK: - 페이지네이션
-
-    @MainActor
-    func loadMore() {
-        // loaded 상태에서만 더 불러오도록 함.
-        guard case .loaded = state.phase else { return }
-        guard state.hasMore else { return }
-        guard !state.isLoadingMore else { return }
-
-        let query = state.query.trimmingCharacters(in: .whitespacesAndNewlines)
-        guard !query.isEmpty else { return }
-
-        guard let userLocation = state.userLocation else { return }
-
-        let useCase = searchNearbyPlaces
-        let start = state.nextStart
-        let display = state.display
-
-        cancelLoadMore()
-        apply(.setLoadingMore(true))
-
-        loadMoreTask = Task {
-            if Task.isCancelled { return [] }
-
-            do {
-                let results = try await useCase.execute(
-                    query: query,
-                    userLocation: userLocation,
-                    start: start
-                )
-                return results
-            } catch {
-                AppLog.error("Load more failed", category: .network, error: error)
-                return []
-            }
-        }
-
-        Task { @MainActor [weak self] in
-            guard let self, let task = self.loadMoreTask else { return }
-
-            defer {
-                apply(.setLoadingMore(false))
-            }
-
-            let results = await task.value
-            if Task.isCancelled { return }
-
-            if !results.isEmpty {
-                apply(.appendResults(results))
-            }
-
-            let hasMore = results.count == display
-            let nextStart = start + results.count
-
-            apply(.setPagination(nextStart: nextStart, hasMore: hasMore))
-        }
-    }
-
-    func cancelLoadMore() {
-        loadMoreTask?.cancel()
-        loadMoreTask = nil
     }
 }
