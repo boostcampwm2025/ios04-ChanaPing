@@ -124,6 +124,11 @@ struct PortalLoadingOverlay: View {
                 .onAppear {
                     ringRotation = 360
                     pulse = true
+
+                    if isReady, !didRunFinish {
+                        didRunFinish = true
+                        finishSequence()
+                    }
                 }
                 .onChange(of: isReady) { _, ready in
                     guard ready else { return }

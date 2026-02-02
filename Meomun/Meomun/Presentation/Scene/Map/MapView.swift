@@ -83,18 +83,14 @@ struct MapView: View {
             )
             .fullScreenCover(isPresented: $showSpace) {
                 if let place = selectedPlaceForSpace {
-                    spaceView(place: place) { coordinate, place in
-                        navigationPath.append(MapDestination.messageComposer(location: coordinate, place: place))
-                    }
+                    spaceView(place: place)
                     .onAppear {
                         setTabBarHidden(true)
                         setNavBarHidden(true)
-                        locationProvider.stopContinuous()
                     }
                     .onDisappear {
                         setTabBarHidden(false)
                         setNavBarHidden(false)
-                        locationProvider.startContinuous()
                     }
                 }
             }
@@ -230,7 +226,7 @@ private extension MapView {
         )
     }
 
-    private func spaceView(place: Place, onNavigate: @escaping (Coordinate, Place) -> Void) -> some View {
+    private func spaceView(place: Place) -> some View {
         SpaceView(
             store: .init(
                 fetchPlaceMessagesUseCase: FetchPlaceMessagesUseCaseImpl(
@@ -240,11 +236,7 @@ private extension MapView {
                     messageRepository: MessageRepositoryImpl()
                 ),
                 place: place
-            ),
-            place: place,
-            onNavigate: { coordinate, place in
-                onNavigate(coordinate, place)
-            }
+            )
         )
     }
 }

@@ -20,124 +20,152 @@ struct SpaceView: View {
 
     @State private var appearOpacity: Double = 0
 
-    private let place: Place
-    private let onNavigate: (Coordinate, Place) -> Void
+    @State private var path = NavigationPath()
 
     init(
-        store: SpaceStore,
-        place: Place,
-        onNavigate: @escaping (Coordinate, Place) -> Void
+        store: SpaceStore
     ) {
         _store = StateObject(wrappedValue: store)
         _spaceController = State(
             wrappedValue: SpaceController()
         )
-        self.place = place
-        self.onNavigate = onNavigate
     }
 
     var body: some View {
-        ZStack {
-            RealityView { content in
-                // 가상 카메라 모드 설정 (AR이 아닌 3D 공간)
-                content.camera = .virtual
-                spaceController.configureSpace(content: content) {
-                    isSpaceReady = true
-                }
-            }
-            .opacity(isSpaceReady ? (showPortal ? 0.25 : 1.0) : 0.0)
-            .animation(.easeInOut(duration: 0.35), value: isSpaceReady)
-            .animation(.easeInOut(duration: 0.22), value: showPortal)
-            .allowsHitTesting(isSpaceReady)
-            .gesture(
-                DragGesture()
-                    .onChanged { spaceController.handleDrag($0.translation) }
-                    .onEnded { _ in spaceController.endDrag()}
-            )
-            .gesture(
-                TapGesture().onEnded { send(.selectMessage(nil)) }
-            )
-            .highPriorityGesture(
-                SpatialTapGesture()
-                    .targetedToAnyEntity()
-                    .onEnded { value in
-                        handleBubbleTap(entity: value.entity)
+        NavigationStack(path: $path) {
+            ZStack {
+                RealityView { content in
+                    // 가상 카메라 모드 설정 (AR이 아닌 3D 공간)
+                    content.camera = .virtual
+                    spaceController.configureSpace(content: content) {
+                        isSpaceReady = true
                     }
-            )
-            .ignoresSafeArea()
+                }
+                .opacity(isSpaceReady ? (showPortal ? 0.25 : 1.0) : 0.0)
+                .animation(.easeInOut(duration: 0.35), value: isSpaceReady)
+                .animation(.easeInOut(duration: 0.22), value: showPortal)
+                .allowsHitTesting(isSpaceReady)
+                .gesture(
+                    DragGesture()
+                        .onChanged { spaceController.handleDrag($0.translation) }
+                        .onEnded { _ in spaceController.endDrag()}
+                )
+                .gesture(
+                    TapGesture().onEnded { send(.selectMessage(nil)) }
+                )
+                .highPriorityGesture(
+                    SpatialTapGesture()
+                        .targetedToAnyEntity()
+                        .onEnded { value in
+                            handleBubbleTap(entity: value.entity)
+                        }
+                )
+                .ignoresSafeArea()
 
-            VStack {
-                Spacer()
-
-                HStack {
+                VStack {
                     Spacer()
 
-                    WriteButton(mode: .white) {
-                        if let coordinate = locationProvider.current {
-                            onNavigate(coordinate, store.place)
+                    HStack {
+                        Spacer()
+
+                        WriteButton(mode: .white) {
+                            if let coordinate = locationProvider.current {
+                                path.append(
+                                    SpaceDestination.composer(
+                                        location: coordinate,
+                                        place: store.place
+                                    )
+                                )
+                            }
                         }
+                        .opacity(!showPortal ? 1 : 0)
+                        .allowsHitTesting(!showPortal && isSpaceReady)
                     }
+                    .padding(.bottom, 96)
+                }
+
+                if store.state.deleteStatus != .idle {
+                    MMLoadingOverlayView(
+                        status: store.state.deleteStatus,
+                        message: deleteStatusMessage
+                    )
                     .opacity(!showPortal ? 1 : 0)
                 }
-                .padding(.bottom, 96)
-            }
 
-            if store.state.deleteStatus != .idle {
-                MMLoadingOverlayView(
-                    status: store.state.deleteStatus,
-                    message: deleteStatusMessage
-                )
-                .opacity(!showPortal ? 1 : 0)
-            }
-
-            if showPortal {
-                PortalLoadingOverlay(
-                    title: place.name,
-                    isReady: isSpaceReady
-                ) {
-                    showPortal = false
+                if showPortal {
+                    PortalLoadingOverlay(
+                        title: store.place.name,
+                        isReady: isSpaceReady
+                    ) {
+                        showPortal = false
+                    }
+                    .transition(.opacity)
+                    .animation(.easeInOut(duration: 0.22), value: showPortal)
+                    .zIndex(999)
                 }
-                .transition(.opacity)
-                .animation(.easeInOut(duration: 0.22), value: showPortal)
-                .zIndex(999)
             }
-        }
-        .mmAlert(
-            $store.state.deleteAlert,
-            title: { $0.title },
-            message: { $0.message },
-            buttons: { $0.buttons }
-        )
-        .overlay(alignment: .bottom) {
-            selectionBar
-                .opacity(!showPortal ? 1 : 0)
-        }
-        .animation(.spring(response: 0.25, dampingFraction: 0.9), value: store.state.selectedMessageID)
-        .allowsHitTesting(store.state.deleteStatus == .idle)
-        .overlay(alignment: .top) {
-            SpaceTopBar(
-                title: place.name,
-                onBack: { dismissWithFade() }
+            .navigationDestination(for: SpaceDestination.self) { destination in
+                switch destination {
+                case .composer(let location, let place):
+                    MessageComposerView(
+                        store: .init(
+                            currentLocation: location,
+                            currentPlace: place,
+                            createMessage: CreateMessageUseCaseImpl(
+                                messageRepository: MessageRepositoryImpl()
+                            ),
+                            reverseGeocoding: ReverseGeocodeUseCaseImpl(
+                                repository: ReverseGeocodeRepositoryImpl(
+                                    remote: SupabaseServiceImpl(network: NetworkClientImpl())
+                                )
+                            ),
+                            onClose: { _ in
+                                path.removeLast()
+                                showPortal = false
+                            }
+                        )
+                    )
+                    .navigationBarBackButtonHidden()
+                }
+            }
+            .mmAlert(
+                $store.state.deleteAlert,
+                title: { $0.title },
+                message: { $0.message },
+                buttons: { $0.buttons }
             )
-            .padding(.top, 12)
-            .opacity(!showPortal ? 1 : 0)
-        }
-        .task {
-            isSpaceReady = false
-            showPortal = true
-            await store.send(intent: .onAppear(placeID: place.id))
-        }
-        .onChange(of: store.state.messages.map(\.id)) {
-            spaceController.sync(messages: store.state.messages)
-        }
-        .onChange(of: store.state.domeEnvironment) { _, newValue in
-            guard let newValue else { return }
-            spaceController.update(domeEnvironment: newValue)
-        }
-        .opacity(appearOpacity)
-        .onAppear {
-            withAnimation(.easeInOut(duration: 0.25)) {
-                appearOpacity = 1
+            .overlay(alignment: .bottom) {
+                selectionBar
+                    .opacity(!showPortal ? 1 : 0)
+            }
+            .animation(.spring(response: 0.25, dampingFraction: 0.9), value: store.state.selectedMessageID)
+            .allowsHitTesting(store.state.deleteStatus == .idle)
+            .overlay(alignment: .top) {
+                SpaceTopBar(
+                    title: store.place.name,
+                    onBack: { dismissWithFade() }
+                )
+                .padding(.top, 12)
+                .opacity(!showPortal ? 1 : 0)
+            }
+            .task {
+                if !isSpaceReady {
+                    showPortal = true
+                }
+                await store.send(intent: .onAppear(placeID: store.place.id))
+            }
+            .onChange(of: store.state.messages.map(\.id)) {
+                spaceController.sync(messages: store.state.messages)
+            }
+            .onChange(of: store.state.domeEnvironment) { _, newValue in
+                guard let newValue else { return }
+                spaceController.update(domeEnvironment: newValue)
+            }
+            .opacity(appearOpacity)
+            .onAppear {
+                withAnimation(.easeInOut(duration: 0.25)) {
+                    appearOpacity = 1
+                }
             }
         }
     }
@@ -242,13 +270,7 @@ extension SpaceView {
                     name: "광화문",
                     coordinate: .init(latitude: 0, longitude: 0)
                 )
-            ),
-            place: .init(
-                id: .init(value: .init()),
-                name: "광화문",
-                coordinate: .init(latitude: 0, longitude: 0)
-            ),
-            onNavigate: { _, _ in }
+            )
         )
     }
 }
