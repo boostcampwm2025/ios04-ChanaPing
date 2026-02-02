@@ -213,6 +213,7 @@ final class TimelineListStore: Store {
             newState.messages.removeAll { messageIDs.contains($0.id) }
             newState.selectedMessageIDs.subtract(messageIDs)
             cleanupSectionIfNeeded(&newState)
+            AppLog.debug("[TimelineListStore] Deleted messages: \(newState.messages.count) left", category: .store)
 
         case .showDeleteAlert(let alert):
             newState.deleteAlert = alert
