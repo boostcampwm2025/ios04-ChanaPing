@@ -12,8 +12,15 @@ enum MessageTimestampFormatterStyle {
     case dateTime
 }
 
-struct MessageTimestampFormatter {
+final class MessageTimestampFormatter {
     let locale: Locale
+
+    private lazy var relativeFormatter: RelativeDateTimeFormatter = {
+        let formatter = RelativeDateTimeFormatter()
+        formatter.unitsStyle = .full
+        formatter.locale = locale
+        return formatter
+    }()
 
     init(locale: Locale = .current) {
         self.locale = locale
@@ -24,18 +31,10 @@ struct MessageTimestampFormatter {
         let oneDay: TimeInterval = 60 * 60 * 24
 
         if elapsed < oneDay {
-            return relativeString(from: date, now: now)
+            return relativeFormatter.localizedString(for: date, relativeTo: now)
         } else {
             return absoluteString(from: date, style: style)
         }
-    }
-
-    private func relativeString(from date: Date, now: Date) -> String {
-        let formatter = RelativeDateTimeFormatter()
-        formatter.unitsStyle = .full
-        formatter.locale = locale
-
-        return formatter.localizedString(for: date, relativeTo: now)
     }
 
     private func absoluteString(from date: Date, style: MessageTimestampFormatterStyle) -> String {
@@ -44,7 +43,9 @@ struct MessageTimestampFormatter {
             return date.formatted(.dateTime.year().month().day().locale(locale))
 
         case .dateTime:
-            return date.formatted(date: .complete, time: .shortened)
+            return date.formatted(
+                Date.FormatStyle(date: .complete, time: .shortened).locale(locale)
+            )
         }
     }
 }
