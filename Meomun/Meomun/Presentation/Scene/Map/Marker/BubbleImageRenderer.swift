@@ -92,6 +92,11 @@ extension BubbleImageRenderer {
 extension BubbleImageRenderer {
     /// trait에 맞춰 렌더링 할 색 모드를 설정합니다.
     func setColorScheme(_ traitCollection: UITraitCollection) {
-        currentColorScheme = traitCollection.userInterfaceStyle == .light ? .light : .dark
+        switch traitCollection.userInterfaceStyle {
+        case .dark:
+            currentColorScheme = .dark
+        default:
+            currentColorScheme = .light
+        }
     }
 }
