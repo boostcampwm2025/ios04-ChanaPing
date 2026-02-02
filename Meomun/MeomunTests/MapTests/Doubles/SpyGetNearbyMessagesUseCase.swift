@@ -22,7 +22,7 @@ final class SpyGetNearbyMessagesUseCase: GetNearbyMessagesUseCase {
         self.stubbedMessages = stubbedMessages
     }
 
-    func execute(location: Coordinate, limit: Int?) async throws -> [Message] {
+    func execute(at location: Coordinate, bounds: BoundingBox, limit: Int?) async throws -> [Message] {
         calledLocations.append(location)
         return stubbedMessages
     }

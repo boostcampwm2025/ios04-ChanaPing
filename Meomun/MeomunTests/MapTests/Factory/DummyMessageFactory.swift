@@ -31,18 +31,18 @@ enum DummyMessageFactory {
     /// 단일 메시지 생성
     static func makeMessage(
         id: UUID = UUID(),
-        authorID: UUID = UUID(),
         content: String = "테스트 메시지",
         coordinate: Coordinate,
         placeTag: Place? = nil,
+        address: String = "주소",
         createdAt: Date = Date()
     ) -> Message {
         Message(
             id: MessageID(value: id),
-            authorID: UserID(value: authorID),
             createdAt: createdAt,
             content: content,
             coordinate: coordinate,
+            address: address,
             placeTag: placeTag
         )
     }
