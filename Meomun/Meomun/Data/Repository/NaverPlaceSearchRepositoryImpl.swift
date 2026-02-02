@@ -8,32 +8,13 @@
 import Foundation
 
 final class NaverPlaceSearchRepositoryImpl: PlaceRepository {
-    private let network: NetworkClient
-    private let clientId: String
-    private let clientSecret: String
+    private let remote: SupabaseService
 
-    init(
-        network: NetworkClient,
-        clientId: String = AppConfig.naverClientId,
-        clientSecret: String = AppConfig.naverClientSecret
-    ) {
-        self.network = network
-        self.clientId = clientId
-        self.clientSecret = clientSecret
+    init(remote: SupabaseService) {
+        self.remote = remote
     }
 
     func searchPlace(query: String) async throws -> [NaverLocalItemDTO] {
-        let endpoint = NaverLocalSearchEndpoint(
-            query: query,
-            clientId: clientId,
-            clientSecret: clientSecret
-        )
-
-        let dto = try await network.request(
-            endpoint: endpoint,
-            responseType: NaverLocalSearchResponseDTO.self
-        )
-
-        return dto.items
+        try await remote.searchPlace(query: query)
     }
 }

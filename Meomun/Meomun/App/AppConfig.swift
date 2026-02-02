@@ -8,38 +8,21 @@
 import Foundation
 
 enum AppConfig {
-    static var naverClientId: String {
-        guard let key = Bundle.main.object(
-            forInfoDictionaryKey: "NAVER_CLIENT_ID"
+    // Supabase 설정
+    static var supabaseProjectRef: String {
+        guard let url = Bundle.main.object(
+            forInfoDictionaryKey: "SUPABASE_PROJECT_REF"
         ) as? String else {
-            fatalError("NAVER_CLIENT_ID not found")
+            fatalError("SUPABASE_PROJECT_REF not found")
         }
-        return key
+        return url
     }
 
-    static var naverClientSecret: String {
+    static var supabaseAnonKey: String {
         guard let key = Bundle.main.object(
-            forInfoDictionaryKey: "NAVER_CLIENT_SECRET"
+            forInfoDictionaryKey: "SUPABASE_ANON_KEY"
         ) as? String else {
-            fatalError("NAVER_CLIENT_SECRET not found")
-        }
-        return key
-    }
-
-    static var naverGeocodingApiKeyId: String {
-        guard let key = Bundle.main.object(
-            forInfoDictionaryKey: "X_NCP_APIGW_API_KEY_ID"
-        ) as? String else {
-            fatalError("X_NCP_APIGW_API_KEY_ID not found")
-        }
-        return key
-    }
-
-    static var naverGeocodingApiKey: String {
-        guard let key = Bundle.main.object(
-            forInfoDictionaryKey: "X_NCP_APIGW_API_KEY"
-        ) as? String else {
-            fatalError("X_NCP_APIGW_API_KEY not found")
+            fatalError("SUPABASE_ANON_KEY not found")
         }
         return key
     }

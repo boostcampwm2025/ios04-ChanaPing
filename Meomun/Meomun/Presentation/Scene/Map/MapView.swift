@@ -203,7 +203,7 @@ private extension MapView {
                 ),
                 reverseGeocoding: ReverseGeocodeUseCaseImpl(
                     repository: ReverseGeocodeRepositoryImpl(
-                        client: NetworkClientImpl()
+                        remote: SupabaseServiceImpl(network: NetworkClientImpl())
                     )
                 ),
                 onClose: { _ in
@@ -242,7 +242,7 @@ private extension MapView {
                 store: PlaceSearchStore(
                     searchPlaces: SearchNearbyPlaceUseCaseImpl(
                         placeRepository: NaverPlaceSearchRepositoryImpl(
-                            network: NetworkClientImpl()
+                            remote: SupabaseServiceImpl(network: NetworkClientImpl())
                         )
                     ),
                     userLocation: current,

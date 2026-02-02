@@ -175,7 +175,7 @@ private extension MessageComposerView {
             store: PlaceSearchStore(
                 searchPlaces: SearchNearbyPlaceUseCaseImpl(
                     placeRepository: NaverPlaceSearchRepositoryImpl(
-                        network: NetworkClientImpl()
+                        remote: SupabaseServiceImpl(network: NetworkClientImpl())
                     )
                 ),
                 userLocation: store.state.startLocation,
@@ -352,7 +352,7 @@ private extension MessageComposerView {
                 ),
                 reverseGeocoding: ReverseGeocodeUseCaseImpl(
                     repository: ReverseGeocodeRepositoryImpl(
-                        client: NetworkClientImpl()
+                        remote: SupabaseServiceImpl(network: NetworkClientImpl())
                     )
                 ),
                 onClose: { _ in

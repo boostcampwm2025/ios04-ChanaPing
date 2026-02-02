@@ -8,7 +8,6 @@
 import Foundation
 import Combine
 import CoreLocation
-import Supabase
 
 enum MessageComposerPolicy {
     static let maxCount = 30
