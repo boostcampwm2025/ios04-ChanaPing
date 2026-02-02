@@ -89,10 +89,12 @@ struct MapView: View {
                     .onAppear {
                         setTabBarHidden(true)
                         setNavBarHidden(true)
+                        locationProvider.stopContinuous()
                     }
                     .onDisappear {
                         setTabBarHidden(false)
                         setNavBarHidden(false)
+                        locationProvider.startContinuous()
                     }
                 }
             }
