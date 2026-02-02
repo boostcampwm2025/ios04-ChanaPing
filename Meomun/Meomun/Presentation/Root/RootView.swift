@@ -78,15 +78,14 @@ private extension RootView {
         }
     }
 
+    @MainActor
     func runProgressLoop() async {
         for i in 0...100 {
             try? await Task.sleep(for: .milliseconds(20))
             loadingProgress = CGFloat(i) / 100
         }
 
-        await MainActor.run {
-            minimumReady = true
-        }
+        minimumReady = true
     }
 
     @MainActor
