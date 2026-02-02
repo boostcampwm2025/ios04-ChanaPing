@@ -67,6 +67,10 @@ final class MessageRepositoryImpl: MessageRepository {
         try await storage.delete(messageIDs: messageIDs)
     }
 
+    func resetMessages() async throws {
+        try await storage.reset()
+    }
+
     func fetchNearbyMessages(at location: Coordinate, bounds: BoundingBox, limit: Int?) async throws -> [Message] {
         try await storage.fetchNearby(at: location, bounds: bounds, limit: limit)
             .map { $0.toDomain() }

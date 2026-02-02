@@ -6,5 +6,5 @@
 //
 
 protocol PlaceRepository: Sendable {
-    func searchPlace(query: String, start: Int) async throws -> [NaverLocalItemDTO]
+    func searchPlace(query: String) async throws -> [NaverLocalItemDTO]
 }

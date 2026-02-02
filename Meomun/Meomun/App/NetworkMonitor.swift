@@ -8,7 +8,11 @@
 import Foundation
 import Network
 
-final class NetworkMonitor {
+protocol NetworkMonitoring {
+    func checkConnection() -> Bool
+}
+
+final class NetworkMonitor: NetworkMonitoring {
     private let monitor = NWPathMonitor()
     private let queue = DispatchQueue(label: "NetworkMonitor")
     private var isConnected: Bool = false

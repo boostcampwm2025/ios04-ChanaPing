@@ -2,17 +2,11 @@
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
 <dict>
-	<key>NAVER_CLIENT_ID</key>
-	<string>$(NAVER_CLIENT_ID)</string>
-	<key>NAVER_CLIENT_SECRET</key>
-	<string>$(NAVER_CLIENT_SECRET)</string>
 	<key>NMFNcpKeyId</key>
 	<string>$(NMF_NCP_KEY_ID)</string>
-	<key>UILaunchScreen</key>
-	<false/>
-	<key>X_NCP_APIGW_API_KEY</key>
-	<string>$(X_NCP_APIGW_API_KEY)</string>
-	<key>X_NCP_APIGW_API_KEY_ID</key>
-	<string>$(X_NCP_APIGW_API_KEY_ID)</string>
+	<key>SUPABASE_ANON_KEY</key>
+	<string>$(SUPABASE_ANON_KEY)</string>
+	<key>SUPABASE_PROJECT_REF</key>
+	<string>$(SUPABASE_PROJECT_REF)</string>
 </dict>
 </plist>
