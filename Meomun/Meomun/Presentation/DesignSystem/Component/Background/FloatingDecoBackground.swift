@@ -10,7 +10,7 @@ import SwiftUI
 struct FloatingDecoBackground: View {
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
-    let backgroundImageName: String = "meomunBackLight"
+    var backgroundImageName: String = "meomunBackLight"
     let bubbleGroupAImageName: String = "meomunDeco1"
     let bubbleGroupBImageName: String = "meomunDeco2"
 

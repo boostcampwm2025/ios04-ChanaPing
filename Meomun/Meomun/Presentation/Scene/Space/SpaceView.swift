@@ -15,6 +15,11 @@ struct SpaceView: View {
     @StateObject private var store: SpaceStore
     @State private var spaceController: SpaceController
 
+    @State private var isSpaceReady: Bool = false
+    @State private var showPortal: Bool = true
+
+    @State private var appearOpacity: Double = 0
+
     private let place: Place
     private let onNavigate: (Coordinate, Place) -> Void
 
@@ -36,8 +41,14 @@ struct SpaceView: View {
             RealityView { content in
                 // 가상 카메라 모드 설정 (AR이 아닌 3D 공간)
                 content.camera = .virtual
-                spaceController.configureSpace(content: content)
+                spaceController.configureSpace(content: content) {
+                    isSpaceReady = true
+                }
             }
+            .opacity(isSpaceReady ? (showPortal ? 0.25 : 1.0) : 0.0)
+            .animation(.easeInOut(duration: 0.35), value: isSpaceReady)
+            .animation(.easeInOut(duration: 0.22), value: showPortal)
+            .allowsHitTesting(isSpaceReady)
             .gesture(
                 DragGesture()
                     .onChanged { spaceController.handleDrag($0.translation) }
@@ -66,6 +77,7 @@ struct SpaceView: View {
                             onNavigate(coordinate, store.place)
                         }
                     }
+                    .opacity(!showPortal ? 1 : 0)
                 }
                 .padding(.bottom, 96)
             }
@@ -75,6 +87,19 @@ struct SpaceView: View {
                     status: store.state.deleteStatus,
                     message: deleteStatusMessage
                 )
+                .opacity(!showPortal ? 1 : 0)
+            }
+
+            if showPortal {
+                PortalLoadingOverlay(
+                    title: place.name,
+                    isReady: isSpaceReady
+                ) {
+                    showPortal = false
+                }
+                .transition(.opacity)
+                .animation(.easeInOut(duration: 0.22), value: showPortal)
+                .zIndex(999)
             }
         }
         .mmAlert(
@@ -85,12 +110,20 @@ struct SpaceView: View {
         )
         .overlay(alignment: .bottom) {
             selectionBar
+                .opacity(!showPortal ? 1 : 0)
         }
         .animation(.spring(response: 0.25, dampingFraction: 0.9), value: store.state.selectedMessageID)
         .allowsHitTesting(store.state.deleteStatus == .idle)
-        .navigationBarBackButtonHidden()
-        .toolbar { toolbarContent }
+        .overlay(alignment: .top) {
+            SpaceTopBar(
+                title: place.name,
+                onBack: { dismissWithFade() }
+            )
+            .opacity(!showPortal ? 1 : 0)
+        }
         .task {
+            isSpaceReady = false
+            showPortal = true
             await store.send(intent: .onAppear(placeID: place.id))
         }
         .onChange(of: store.state.messages.map(\.id)) {
@@ -99,6 +132,22 @@ struct SpaceView: View {
         .onChange(of: store.state.domeEnvironment) { _, newValue in
             guard let newValue else { return }
             spaceController.update(domeEnvironment: newValue)
+        }
+        .opacity(appearOpacity)
+        .onAppear {
+            withAnimation(.easeInOut(duration: 0.25)) {
+                appearOpacity = 1
+            }
+        }
+    }
+
+    func dismissWithFade() {
+        Task { @MainActor in
+            withAnimation(.easeInOut(duration: 0.25)) {
+                appearOpacity = 0
+            }
+            try? await Task.sleep(nanoseconds: 250_000_000)
+            dismiss()
         }
     }
 }
@@ -126,7 +175,7 @@ private extension SpaceView {
     }
 }
 
-// MARK: Subviews
+// MARK: - Subviews
 
 extension SpaceView {
     @ViewBuilder
@@ -163,7 +212,7 @@ extension SpaceView {
     }
 }
 
-// MARK: Computed property
+// MARK: - Computed property
 
 extension SpaceView {
     private var deleteStatusMessage: String {
@@ -173,49 +222,6 @@ extension SpaceView {
         case .fail: return "메시지 삭제에 실패했어요"
         case .idle: return ""
         }
-    }
-}
-
-// MARK: Toolbar / Actions
-private extension SpaceView {
-    @ToolbarContentBuilder
-    var toolbarContent: some ToolbarContent {
-        if #available(iOS 26.0, *) {
-            ToolbarItem(placement: .topBarLeading) {
-                backToolbarButton
-            }
-            .sharedBackgroundVisibility(.hidden)
-        } else {
-            ToolbarItem(placement: .topBarLeading) {
-                backToolbarButton
-            }
-        }
-
-        ToolbarItem(placement: .principal) { placeTitle }
-    }
-
-    var backToolbarButton: some View {
-        BackButton { dismiss() }
-    }
-
-    var placeTitle: some View {
-        HStack(spacing: 6) {
-            Image(systemName: "mappin.and.ellipse")
-                .font(.caption)
-                .foregroundStyle(Color.mmTabActive)
-
-            Text(place.name)
-                .font(.caption.weight(.semibold))
-                .foregroundStyle(Color.mmTextBrand)
-                .lineLimit(1)
-        }
-        .padding(.horizontal, 12)
-        .padding(.vertical, 6)
-        .background(
-            Capsule()
-                .fill(Color.mmBackground.opacity(0.8))
-        )
-        .shadow(color: .black.opacity(0.15), radius: 6, y: 4)
     }
 }
 

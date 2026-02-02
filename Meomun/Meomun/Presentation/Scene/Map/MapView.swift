@@ -21,6 +21,8 @@ struct MapView: View {
     @Environment(\.setSplashReady) private var setSplashReady
 
     @State private var navigationPath = NavigationPath()
+    @State private var selectedPlaceForSpace: Place? = nil
+    @State private var showSpace: Bool = false
     @State private var didApplyResolvedUserLocation = false
 
     @ObservedObject private var store: MapStore
@@ -56,7 +58,10 @@ struct MapView: View {
                         items: store.state.carouselItems,
                         onTapped: { place in
                             send(.dismissPlaceCarousel)
-                            navigationPath.append(MapDestination.space(place: place))
+                            selectedPlaceForSpace = place
+                            withAnimation(.easeInOut(duration: 0.25)) {
+                                showSpace = true
+                            }
                         }
                     )
                     .padding(.bottom, MMLayout.aboveTabBarOffset)
@@ -76,9 +81,8 @@ struct MapView: View {
                         send(.dismissPlaceCarousel)
                     }
             )
-            .navigationDestination(for: MapDestination.self) { destination in
-                switch destination {
-                case .space(let place):
+            .fullScreenCover(isPresented: $showSpace) {
+                if let place = selectedPlaceForSpace {
                     spaceView(place: place) { coordinate, place in
                         navigationPath.append(MapDestination.messageComposer(location: coordinate, place: place))
                     }
@@ -86,7 +90,14 @@ struct MapView: View {
                         setTabBarHidden(true)
                         setNavBarHidden(true)
                     }
-
+                    .onDisappear {
+                        setTabBarHidden(false)
+                        setNavBarHidden(false)
+                    }
+                }
+            }
+            .navigationDestination(for: MapDestination.self) { destination in
+                switch destination {
                 case .messageComposer(let location, let place):
                     messageComposerView(location: location, place: place) {
                         navigationPath.removeLast()
@@ -193,7 +204,11 @@ private extension MapView {
 // MARK: - Navigation Destination
 
 private extension MapView {
-    private func messageComposerView(location: Coordinate, place: Place?, onClose: @escaping () -> Void) -> some View {
+    private func messageComposerView(
+        location: Coordinate,
+        place: Place?,
+        onClose: @escaping () -> Void
+    ) -> some View {
         MessageComposerView(
             store: .init(
                 currentLocation: location,
