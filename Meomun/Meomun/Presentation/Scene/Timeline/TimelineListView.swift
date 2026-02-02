@@ -46,6 +46,13 @@ struct TimelineListView: View {
                 emptyContent
             }
         }
+        .fullScreenCover(isPresented: isSelectedSectionOverlayPresentedBinding) {
+            if store.state.selectedSection != nil {
+                sectionOverlay
+                    .presentationBackground(.clear)
+            }
+        }
+        .transaction({ transaction in transaction.disablesAnimations = true })
         .overlay(alignment: .bottom) {
             if store.state.isEditing {
                 selectionBar
@@ -79,15 +86,6 @@ struct TimelineListView: View {
                     .transition(.identity) // 애니메이션 없음
             }
         }
-        .overlay {
-            if store.state.selectedSection != nil {
-                sectionOverlay
-                    .frame(maxWidth: .infinity, maxHeight: .infinity)
-                    .ignoresSafeArea()
-                    .transition(.opacity)
-            }
-        }
-        .animation(.easeInOut(duration: 0.3), value: store.state.selectedSection != nil)
     }
 }
 
