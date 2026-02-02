@@ -103,7 +103,7 @@ private extension MessageBubble {
     }
 
     var datePart: some View {
-        Text(message.displayDateString)
+        Text(message.displayDateString(using: AppConfig.timestampFormatter))
             .font(.system(size: 11, weight: .semibold))
             .foregroundStyle(Color.mmTextSecondary)
             .frame(maxWidth: .infinity, alignment: .trailing)

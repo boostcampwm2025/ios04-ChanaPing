@@ -13,18 +13,13 @@ enum MessageTimestampFormatterStyle {
 }
 
 struct MessageTimestampFormatter {
-    let style: MessageTimestampFormatterStyle
     let locale: Locale
 
-    init(
-        style: MessageTimestampFormatterStyle = .date,
-        locale: Locale = .current
-    ) {
-        self.style = style
+    init(locale: Locale = .current) {
         self.locale = locale
     }
 
-    func string(from date: Date, now: Date = Date()) -> String {
+    func string(from date: Date, style: MessageTimestampFormatterStyle, now: Date = Date()) -> String {
         let elapsed = now.timeIntervalSince(date)
         let oneDay: TimeInterval = 60 * 60 * 24
 
