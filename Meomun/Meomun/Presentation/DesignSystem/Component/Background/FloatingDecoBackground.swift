@@ -67,7 +67,7 @@ struct FloatingDecoBackground: View {
                 )
                 .allowsHitTesting(false)
             }
-            .task {
+            .task(id: reduceMotion) {
                 guard !reduceMotion else { return }
                 while !Task.isCancelled {
                     try? await Task.sleep(for: .milliseconds(16))
