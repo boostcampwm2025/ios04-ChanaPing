@@ -122,7 +122,7 @@ extension MiniMapViewController {
             let marker = NMFMarker(position: position)
 
             marker.iconImage = MarkerAssets.pin
-            marker.iconTintColor = .tabActive
+            marker.iconTintColor = .mmTabActive
             marker.angle = CGFloat(Int.random(in: 0...15))
 
             marker.captionText = dayLabels[safe: index] ?? ""
@@ -140,7 +140,7 @@ extension MiniMapViewController {
         guard let polyline = NMFPolylineOverlay(positions) else { return }
 
         polyline.width = 2
-        polyline.color = UIColor.tabActive
+        polyline.color = UIColor.mmTabActive
         polyline.pattern = [6, 3]
         polyline.capType = .round
         polyline.joinType = .round

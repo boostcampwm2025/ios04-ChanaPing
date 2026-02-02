@@ -7,6 +7,12 @@
 
 import SwiftUI
 
+fileprivate enum Constants {
+    static let mapTitle = "머문"
+    static let recordTitle = "머물렀던 순간들"
+    static let settingTitle = "설정"
+}
+
 struct MainTabShellView: View {
     @StateObject private var mapStore = MapStore(
         getNearbyMessagesUseCase: GetNearbyMessagesUseCaseImpl(messageRepository: MessageRepositoryImpl()),
@@ -21,20 +27,39 @@ struct MainTabShellView: View {
                 .environment(\.setTabBarHidden) { hidden in
                     Task { await store.send(intent: .setTabBarHidden(hidden)) }
                 }
+                .environment(\.setNavBarHidden) { hidden in
+                    Task { await store.send(intent: .setNavBarHidden(hidden)) }
+                }
         }
-        .frame(maxWidth: .infinity, maxHeight: .infinity)
-        .overlay(alignment: .bottom) {
-            if !store.state.isTabBarHidden {
-                FloatingTabBar(
-                    selectedTab: store.state.selectedTab,
-                    onSelect: { tab in
-                        Task {
-                            await store.send(intent: .selectTab(tab))
-                        }
-                    }
-                )
+        .safeAreaInset(edge: .top) {
+            if !store.state.isNavBarHidden {
+                MMFloatingNavigationBar(config: navBarConfig)
+                    .padding(.top, 12)
+                    .transition(.opacity)
+                    .zIndex(99)
             }
         }
+        .safeAreaInset(edge: .bottom) {
+            if !store.state.isTabBarHidden {
+                ZStack(alignment: .bottom) {
+                    Color.clear
+                        .frame(height: 96)
+                        .contentShape(Rectangle())
+                        .allowsHitTesting(true)
+
+                    MMFloatingTabBar(
+                        selectedTab: store.state.selectedTab,
+                        onSelect: { tab in
+                            Task {
+                                await store.send(intent: .selectTab(tab))
+                            }
+                        }
+                    )
+                    .contentShape(Rectangle())
+                }
+            }
+        }
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
         .ignoresSafeArea(.keyboard)
         .task { await store.send(intent: .onAppear) }
     }
@@ -57,8 +82,14 @@ struct MainTabShellView: View {
                     fetchRecentMessagesUseCase: FetchRecentMessagesUseCaseImpl(
                         repository: MessageRepositoryImpl()
                     ),
-                    deleteMessagesUseCase: DeleteMessagesUseCaseImpl(messageRepository: MessageRepositoryImpl())
-                )
+                    deleteMessagesUseCase: DeleteMessagesUseCaseImpl(
+                        messageRepository: MessageRepositoryImpl()
+                    )
+                ),
+                isEditing: store.state.isRecordEditing,
+                onEditingChanged: { isEditing in
+                    Task { await store.send(intent: .setRecordEditing(isEditing)) }
+                }
             )
 
         case .setting:
@@ -72,15 +103,30 @@ struct MainTabShellView: View {
             }
         }
     }
-}
 
-private struct SetTabBarHiddenKey: EnvironmentKey {
-    static let defaultValue: (Bool) -> Void = { _ in }
-}
+    private var navBarConfig: MMFloatingNavBarConfiguration {
+        switch store.state.selectedTab {
+        case .map:
+            return MMFloatingNavBarConfiguration(
+                title: Constants.mapTitle,
+                rightItem: .search(action: {
+                    Task { await mapStore.send(intent: .tapSearch) }
+                })
+            )
 
-extension EnvironmentValues {
-    var setTabBarHidden: (Bool) -> Void {
-        get { self[SetTabBarHiddenKey.self] }
-        set { self[SetTabBarHiddenKey.self] = newValue }
+        case .record:
+            return MMFloatingNavBarConfiguration(
+                title: Constants.recordTitle,
+                rightItem: .edit(isEditing: store.state.isRecordEditing, action: {
+                    Task { await store.send(intent: .toggleRecordEditing) }
+                })
+            )
+
+        case .setting:
+            return MMFloatingNavBarConfiguration(
+                title: Constants.settingTitle,
+                rightItem: .none
+            )
+        }
     }
 }
