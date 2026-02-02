@@ -145,7 +145,7 @@ struct MessageSwiftDataStorageTests {
         try await storage.reset()
         #expect((try await storage.fetchRecent(page: 0, pageSize: 10)).isEmpty)
 
-        // ✅ 핵심: reset 이후에도 다시 기록 가능해야 함 (네가 겪은 에러 재발 방지)
+        // reset 이후에도 다시 기록 가능해야 함
         try await storage.create(for: makeCreateDTO(content: "after-reset"))
         let results = try await storage.fetchRecent(page: 0, pageSize: 10)
         #expect(results.count == 1)
