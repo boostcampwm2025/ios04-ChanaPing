@@ -19,16 +19,21 @@ final class MainTabStore: Store {
         case selectTab(MainTab)
         case setTabBarHidden(Bool)
         case onAppear
+
+        case toggleRecordEditing
+        case setRecordEditing(Bool)
     }
 
     enum Action {
         case setSelectedTab(MainTab)
         case setTabBarHidden(Bool)
+        case setRecordEditing(Bool)
     }
 
     struct State {
         var selectedTab: MainTab = .map
         var isTabBarHidden: Bool = false
+        var isRecordEditing: Bool = false
     }
 
     @Published var state: State = .init()
@@ -44,7 +49,16 @@ final class MainTabStore: Store {
 
             case .onAppear:
                 break
+
+            case .toggleRecordEditing:
+                guard state.selectedTab == .record else { return }
+                continuation.yield(.setRecordEditing(!state.isRecordEditing))
+
+            case .setRecordEditing(let isEditing):
+                guard state.selectedTab == .record else { return }
+                continuation.yield(.setRecordEditing(isEditing))
             }
+
             continuation.finish()
         }
     }
@@ -55,9 +69,13 @@ final class MainTabStore: Store {
         switch action {
         case .setSelectedTab(let tab):
             newState.selectedTab = tab
+            newState.isRecordEditing = false
 
         case .setTabBarHidden(let isHidden):
             newState.isTabBarHidden = isHidden
+
+        case .setRecordEditing(let isEditing):
+            newState.isRecordEditing = isEditing
         }
 
         return newState

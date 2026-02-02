@@ -7,6 +7,12 @@
 
 import SwiftUI
 
+fileprivate enum Constants {
+    static let mapTitle = "머문"
+    static let recordTitle = "머물렀던 순간들"
+    static let settingTitle = "설정"
+}
+
 struct MainTabShellView: View {
     @StateObject private var mapStore = MapStore(
         getNearbyMessagesUseCase: GetNearbyMessagesUseCaseImpl(messageRepository: MessageRepositoryImpl()),
@@ -21,6 +27,16 @@ struct MainTabShellView: View {
                 .environment(\.setTabBarHidden) { hidden in
                     Task { await store.send(intent: .setTabBarHidden(hidden)) }
                 }
+        }
+        .safeAreaInset(edge: .top) {
+            if !store.state.isTabBarHidden {
+                MMFloatingNavigationBar(config: navBarConfig)
+                    .padding(.top, 12)
+                    .transition(.opacity)
+                    .zIndex(99)
+                    .animation(.easeInOut(duration: 0.25), value: store.state.selectedTab)
+                    .animation(.easeInOut(duration: 0.25), value: store.state.isRecordEditing)
+            }
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
         .overlay(alignment: .bottom) {
@@ -57,8 +73,14 @@ struct MainTabShellView: View {
                     fetchRecentMessagesUseCase: FetchRecentMessagesUseCaseImpl(
                         repository: MessageRepositoryImpl()
                     ),
-                    deleteMessagesUseCase: DeleteMessagesUseCaseImpl(messageRepository: MessageRepositoryImpl())
-                )
+                    deleteMessagesUseCase: DeleteMessagesUseCaseImpl(
+                        messageRepository: MessageRepositoryImpl()
+                    )
+                ),
+                isEditing: store.state.isRecordEditing,
+                onEditingChanged: { isEditing in
+                    Task { await store.send(intent: .setRecordEditing(isEditing)) }
+                }
             )
 
         case .setting:
@@ -69,6 +91,32 @@ struct MainTabShellView: View {
                     )
                 )
             }
+        }
+    }
+
+    private var navBarConfig: MMFloatingNavBarConfiguration {
+        switch store.state.selectedTab {
+        case .map:
+            return MMFloatingNavBarConfiguration(
+                title: Constants.mapTitle,
+                rightItem: .search(action: {
+                    Task { await mapStore.send(intent: .tapSearch) }
+                })
+            )
+
+        case .record:
+            return MMFloatingNavBarConfiguration(
+                title: Constants.recordTitle,
+                rightItem: .edit(isEditing: store.state.isRecordEditing, action: {
+                    Task { await store.send(intent: .toggleRecordEditing) }
+                })
+            )
+
+        case .setting:
+            return MMFloatingNavBarConfiguration(
+                title: Constants.settingTitle,
+                rightItem: .none
+            )
         }
     }
 }

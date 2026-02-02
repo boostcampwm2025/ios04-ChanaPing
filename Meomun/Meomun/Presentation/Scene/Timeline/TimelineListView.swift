@@ -8,8 +8,6 @@
 import SwiftUI
 
 fileprivate enum Constants {
-    static let navigationTitle = "머물렀던 순간들"
-
     static let deleteLoadingMessage = "메시지를 삭제하고 있어요."
     static let deleteSuccessMessage = "메시지를 삭제했어요."
     static let deleteFailMessage = "메시지 삭제 실패\n다시 시도해주세요."
@@ -20,9 +18,20 @@ struct TimelineListView: View {
     @StateObject private var store: TimelineListStore
     private let configuration: Configuration
 
-    init(store: TimelineListStore, configuration: Configuration = .full) {
+    // 외부 편집 상태 (SSOT: MainTabStore)
+    private let isEditing: Bool
+
+    // 내부 편집 상태 변경 발생 시 상위로 알리기
+    private let onEditingChanged: (Bool) -> Void
+
+    init(store: TimelineListStore,
+         isEditing: Bool,
+         configuration: Configuration = .full,
+         onEditingChanged: @escaping (Bool) -> Void = { _ in }) {
         _store = StateObject(wrappedValue: store)
+        self.isEditing = isEditing
         self.configuration = configuration
+        self.onEditingChanged = onEditingChanged
     }
 
     private func send(_ intent: TimelineListStore.Intent) {
@@ -31,8 +40,6 @@ struct TimelineListView: View {
 
     var body: some View {
         VStack {
-            if configuration.showsHeader { header }
-
             if !store.state.messages.isEmpty {
                 content
             } else {
@@ -46,8 +53,14 @@ struct TimelineListView: View {
             }
         }
         .onAppear { send(.onAppear) }
-        .onChange(of: store.state.isEditing) { _, _ in
+        // 상위(MainTabStore) 편집 상태 변화 → 내부 store에 반영
+        .onChange(of: isEditing) { _, newValue in
+            send(.syncEditing(newValue))
+        }
+        // 내부 store 편집 상태 변화 → 상위로 반영 (+ 탭바 숨김 처리)
+        .onChange(of: store.state.isEditing) { _, newValue in
             setTabBarHidden(shouldHideTabBar)
+            onEditingChanged(newValue)
         }
         .onChange(of: store.state.deleteStatus) { _, _ in
             setTabBarHidden(shouldHideTabBar)
@@ -80,29 +93,6 @@ struct TimelineListView: View {
 
 // MARK: Subviews
 private extension TimelineListView {
-    var header: some View {
-        ZStack {
-            Text(Constants.navigationTitle)
-                .font(.headline)
-                .foregroundStyle(Color.mmTextBrand)
-
-            if configuration.showsEditButton {
-                HStack {
-                    Spacer()
-
-                    Button { send(.tapEdit) } label: {
-                        Text(store.state.isEditing ? "취소": "편집")
-                            .font(.headline)
-                            .foregroundStyle(editButtonColor)
-                    }
-                    .disabled(store.state.messages.isEmpty)
-                }
-            }
-        }
-        .padding(.horizontal, 16)
-        .padding(.top, 18)
-    }
-
     var content: some View {
         ScrollView {
             LazyVStack(alignment: .leading, spacing: 0, pinnedViews: [.sectionHeaders]) {
@@ -138,7 +128,7 @@ private extension TimelineListView {
                     }
                 }
             }
-            .padding(.top, 30)
+            .padding(.top, 10)
             .padding(.bottom, 16)
 
             if configuration.showsFooter && !store.state.messages.isEmpty {
@@ -276,13 +266,12 @@ private extension TimelineListView {
 
 extension TimelineListView {
     struct Configuration: Equatable {
-        var showsHeader: Bool
         var showsFooter: Bool
         var showsEditButton: Bool
 
-        static let full = Configuration(showsHeader: true, showsFooter: true, showsEditButton: true)
+        static let full = Configuration(showsFooter: true, showsEditButton: true)
 
-        static let bottomSheet = Configuration(showsHeader: false, showsFooter: false, showsEditButton: false)
+        static let bottomSheet = Configuration(showsFooter: false, showsEditButton: false)
     }
 }
 
@@ -318,9 +307,17 @@ extension TimelineListView {
         store: TimelineListStore(
             initialMessages: messages,
             fetchRecentMessagesUseCase: FetchRecentMessagesUseCaseImpl(
-                repository: MessageRepositoryImpl(storage: MessageInMemoryStorage.shared)
+                repository: MessageRepositoryImpl(
+                    storage: MessageInMemoryStorage.shared
+                )
             ),
-            deleteMessagesUseCase: DeleteMessagesUseCaseImpl(messageRepository: MessageRepositoryImpl())
-        )
+            deleteMessagesUseCase: DeleteMessagesUseCaseImpl(
+                messageRepository: MessageRepositoryImpl()
+            )
+        ),
+        isEditing: false,
+        onEditingChanged: { isEditing in
+            print("onEditingChanged: \(isEditing)")
+        }
     )
 }

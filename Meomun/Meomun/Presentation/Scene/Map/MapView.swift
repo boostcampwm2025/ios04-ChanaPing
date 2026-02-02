@@ -43,12 +43,6 @@ struct MapView: View {
             ZStack {
                 mapViewWrapper
                     .ignoresSafeArea()
-
-                VStack {
-                    mmFloatingNavigationBar
-                    Spacer()
-                }
-                .padding(.top, 12)
             }
             .overlay(alignment: .bottomTrailing) {
                 writeButton
@@ -168,13 +162,6 @@ private extension MapView {
         )
     }
 
-    var mmFloatingNavigationBar: some View {
-        MMFloatingNavigationBar(
-            title: Constants.navigationTitle,
-            onTapSearch: { send(.tapSearch) }
-        )
-    }
-
     var writeButton: some View {
         WriteButton {
             if let current = locationProvider.current {
@@ -285,6 +272,7 @@ private extension MapView {
                 ),
                 deleteMessagesUseCase: DeleteMessagesUseCaseImpl(messageRepository: MessageRepositoryImpl())
             ),
+            isEditing: false,
             configuration: .bottomSheet
         )
     }

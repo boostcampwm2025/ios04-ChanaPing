@@ -12,7 +12,7 @@ struct WriteButton: View {
 
     var body: some View {
         Button(action: action) {
-            Image(systemName: "pencil")
+            Image(systemName: "plus")
                 .font(.system(size: 27, weight: .semibold))
                 .foregroundStyle(.white)
                 .frame(width: 61, height: 61)
