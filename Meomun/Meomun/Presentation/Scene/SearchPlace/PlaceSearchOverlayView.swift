@@ -189,7 +189,7 @@ extension PlaceSearchOverlayView {
             store: PlaceSearchStore(
                 searchPlaces: SearchNearbyPlaceUseCaseImpl(
                     placeRepository: NaverPlaceSearchRepositoryImpl(
-                        network: NetworkClientImpl()
+                        remote: SupabaseServiceImpl(network: NetworkClientImpl())
                     )
                 ),
                 userLocation: .init(
