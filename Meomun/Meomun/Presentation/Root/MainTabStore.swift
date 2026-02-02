@@ -46,24 +46,30 @@ final class MainTabStore: Store {
             switch intent {
             case .selectTab(let tab):
                 continuation.yield(.setSelectedTab(tab))
-                
+
             case .setNavBarHidden(let hidden):
                 continuation.yield(.setNavBarHidden(hidden))
-                
+
             case .setTabBarHidden(let hidden):
                 continuation.yield(.setTabBarHidden(hidden))
-                
+
             case .onAppear:
                 break
-                
+
             case .toggleRecordEditing:
-                guard state.selectedTab == .record else { return }
+                guard state.selectedTab == .record else {
+                    continuation.finish()
+                    return
+                }
                 continuation.yield(.setRecordEditing(!state.isRecordEditing))
-                
+
             case .setRecordEditing(let isEditing):
-                guard state.selectedTab == .record else { return }
+                guard state.selectedTab == .record else {
+                    continuation.finish()
+                    return
+                }
                 continuation.yield(.setRecordEditing(isEditing))
-                
+
                 continuation.finish()
             }
         }
