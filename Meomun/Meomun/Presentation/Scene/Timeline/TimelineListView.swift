@@ -189,7 +189,7 @@ private extension TimelineListView {
     }
 
     var editButtonColor: Color {
-        store.state.messages.isEmpty ? Color.tabInactive : Color.tabActive
+        store.state.messages.isEmpty ? Color.mmTabInactive : Color.mmTabActive
     }
 
     var selectionBarText: String {
@@ -199,11 +199,11 @@ private extension TimelineListView {
     }
 
     var selectionBarTextColor: Color {
-        store.state.selectedMessageIDs.isEmpty ? Color.tabInactive : Color.mmTextBrand
+        store.state.selectedMessageIDs.isEmpty ? Color.mmTabInactive : Color.mmTextBrand
     }
 
     var deleteButtonColor: Color {
-        store.state.selectedMessageIDs.isEmpty ? Color.tabInactive : Color.red
+        store.state.selectedMessageIDs.isEmpty ? Color.mmTabInactive : Color.red
     }
 }
 

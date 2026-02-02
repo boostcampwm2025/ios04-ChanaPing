@@ -17,6 +17,7 @@ final class MainTabStore: Store {
 
     enum Intent {
         case selectTab(MainTab)
+        case setNavBarHidden(Bool)
         case setTabBarHidden(Bool)
         case onAppear
 
@@ -26,12 +27,14 @@ final class MainTabStore: Store {
 
     enum Action {
         case setSelectedTab(MainTab)
+        case setNavBarHidden(Bool)
         case setTabBarHidden(Bool)
         case setRecordEditing(Bool)
     }
 
     struct State {
         var selectedTab: MainTab = .map
+        var isNavBarHidden: Bool = false
         var isTabBarHidden: Bool = false
         var isRecordEditing: Bool = false
     }
@@ -43,23 +46,26 @@ final class MainTabStore: Store {
             switch intent {
             case .selectTab(let tab):
                 continuation.yield(.setSelectedTab(tab))
-
+                
+            case .setNavBarHidden(let hidden):
+                continuation.yield(.setNavBarHidden(hidden))
+                
             case .setTabBarHidden(let hidden):
                 continuation.yield(.setTabBarHidden(hidden))
-
+                
             case .onAppear:
                 break
-
+                
             case .toggleRecordEditing:
                 guard state.selectedTab == .record else { return }
                 continuation.yield(.setRecordEditing(!state.isRecordEditing))
-
+                
             case .setRecordEditing(let isEditing):
                 guard state.selectedTab == .record else { return }
                 continuation.yield(.setRecordEditing(isEditing))
+                
+                continuation.finish()
             }
-
-            continuation.finish()
         }
     }
 
@@ -70,6 +76,9 @@ final class MainTabStore: Store {
         case .setSelectedTab(let tab):
             newState.selectedTab = tab
             newState.isRecordEditing = false
+
+        case .setNavBarHidden(let isHidden):
+            newState.isNavBarHidden = isHidden
 
         case .setTabBarHidden(let isHidden):
             newState.isTabBarHidden = isHidden

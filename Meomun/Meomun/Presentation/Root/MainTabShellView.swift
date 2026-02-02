@@ -27,9 +27,12 @@ struct MainTabShellView: View {
                 .environment(\.setTabBarHidden) { hidden in
                     Task { await store.send(intent: .setTabBarHidden(hidden)) }
                 }
+                .environment(\.setNavBarHidden) { hidden in
+                    Task { await store.send(intent: .setNavBarHidden(hidden)) }
+                }
         }
         .safeAreaInset(edge: .top) {
-            if !store.state.isTabBarHidden {
+            if !store.state.isNavBarHidden {
                 MMFloatingNavigationBar(config: navBarConfig)
                     .padding(.top, 12)
                     .transition(.opacity)
@@ -116,16 +119,5 @@ struct MainTabShellView: View {
                 rightItem: .none
             )
         }
-    }
-}
-
-private struct SetTabBarHiddenKey: EnvironmentKey {
-    static let defaultValue: (Bool) -> Void = { _ in }
-}
-
-extension EnvironmentValues {
-    var setTabBarHidden: (Bool) -> Void {
-        get { self[SetTabBarHiddenKey.self] }
-        set { self[SetTabBarHiddenKey.self] = newValue }
     }
 }

@@ -202,7 +202,7 @@ private extension SpaceView {
         HStack(spacing: 6) {
             Image(systemName: "mappin.and.ellipse")
                 .font(.caption)
-                .foregroundStyle(Color.tabActive)
+                .foregroundStyle(Color.mmTabActive)
 
             Text(place.name)
                 .font(.caption.weight(.semibold))

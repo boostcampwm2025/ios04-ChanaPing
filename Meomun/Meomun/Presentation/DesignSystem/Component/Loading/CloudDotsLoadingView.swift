@@ -49,7 +49,7 @@ struct CloudDotsLoadingView: View {
 
     // Outer haze (soft colored blur)
     var hazeEnabled: Bool = true
-    var hazeColor: Color = .tabActive
+    var hazeColor: Color = .mmTabActive
     /// 바깥 레이어 투명도 스케일(낮을수록 은은)
     var hazeOpacityScale: CGFloat = 0.18
     /// 본체 blur에 곱해지는 바깥 blur 배수 (클수록 더 멀리 퍼짐)

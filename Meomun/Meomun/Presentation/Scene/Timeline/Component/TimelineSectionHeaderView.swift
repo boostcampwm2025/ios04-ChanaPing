@@ -34,7 +34,7 @@ struct TimelineSectionHeaderView: View {
                     Image(systemName: "chevron.right")
                         .font(.system(size: 18, weight: .semibold))
                 }
-                .foregroundStyle(Color.tabActive)
+                .foregroundStyle(Color.mmTabActive)
                 .opacity(0.75)
                 .padding(.vertical, 4)
                 .padding(.horizontal, 10)
