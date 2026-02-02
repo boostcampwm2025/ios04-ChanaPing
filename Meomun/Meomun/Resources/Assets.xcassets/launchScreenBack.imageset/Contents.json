@@ -1,17 +1,17 @@
 {
   "images" : [
     {
-      "filename" : "스크린샷 2026-02-02 오후 5.27.36.png",
+      "filename" : "meomunSplash.png",
       "idiom" : "universal",
       "scale" : "1x"
     },
     {
-      "filename" : "스크린샷 2026-02-02 오후 5.27.36 1.png",
+      "filename" : "meomunSplash 1.png",
       "idiom" : "universal",
       "scale" : "2x"
     },
     {
-      "filename" : "스크린샷 2026-02-02 오후 5.27.36 2.png",
+      "filename" : "meomunSplash 2.png",
       "idiom" : "universal",
       "scale" : "3x"
     }
