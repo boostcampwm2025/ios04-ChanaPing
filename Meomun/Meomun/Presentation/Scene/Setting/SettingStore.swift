@@ -27,10 +27,12 @@ final class SettingStore: Store {
     @Published var state: State
 
     private let appSettingsOpener: AppSettingsOpening
+    private let resetMessagesUseCase: ResetMessagesUseCase
 
-    init(appSettingsOpener: AppSettingsOpening) {
+    init(appSettingsOpener: AppSettingsOpening, resetMessagesUseCase: ResetMessagesUseCase) {
         self.state = State()
         self.appSettingsOpener = appSettingsOpener
+        self.resetMessagesUseCase = resetMessagesUseCase
     }
 
     func action(intent: Intent) -> AsyncStream<Action> {
@@ -63,7 +65,9 @@ final class SettingStore: Store {
                 continuation.finish()
 
             case .confirmResetAppData:
-                AppDataResetter.resetLocalData()
+                Task {
+                    try await AppDataResetter.resetLocalData(resetUseCase: resetMessagesUseCase)
+                }
                 continuation.yield(.setResetAlert(nil))
                 continuation.finish()
             }
@@ -91,7 +95,7 @@ final class SettingStore: Store {
 // MARK: - Data Reset
 
 private enum AppDataResetter {
-    static func resetLocalData() {
+    static func resetLocalData(resetUseCase: ResetMessagesUseCase) async throws {
         // 1) UserDefaults
         if let bundleIdentifier = Bundle.main.bundleIdentifier {
             UserDefaults.standard.removePersistentDomain(forName: bundleIdentifier)
@@ -102,6 +106,6 @@ private enum AppDataResetter {
         URLCache.shared.removeAllCachedResponses()
 
         // 3) SwiftData
-        // TODO: - SwiftData 초기화
+        try await resetUseCase.execute()
     }
 }

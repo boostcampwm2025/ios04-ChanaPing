@@ -104,7 +104,10 @@ struct SettingView: View {
     NavigationStack {
         SettingView(
             store: .init(
-                appSettingsOpener: AppSettingsOpener()
+                appSettingsOpener: AppSettingsOpener(),
+                resetMessagesUseCase: ResetMessagesUseCaseImpl(
+                    messageRepository: MessageRepositoryImpl()
+                )
             )
         )
     }
