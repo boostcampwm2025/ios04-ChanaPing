@@ -160,6 +160,15 @@ actor MessageSwiftDataStorage: MessageStorage {
 
         try context.save()
     }
+
+    func reset() async throws {
+        let context = makeContext()
+
+        try context.delete(model: PlaceModel.self)
+        try context.delete(model: MessageModel.self)
+
+        try context.save()
+    }
 }
 
 private extension MessageSwiftDataStorage {
