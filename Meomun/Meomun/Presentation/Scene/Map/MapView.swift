@@ -206,7 +206,11 @@ private extension MapView {
                         remote: SupabaseServiceImpl(network: NetworkClientImpl())
                     )
                 ),
-                onClose: { _ in
+                onClose: { isSuccess in
+                    if isSuccess {
+                        Task { await store.send(intent: .refreshVisibleMessages) }
+                    }
+                    
                     onClose()
                 }
             )
@@ -229,6 +233,9 @@ private extension MapView {
                 onNavigate(coordinate, place)
             }
         )
+        .onDisappear {
+            Task { await store.send(intent: .refreshVisibleMessages) }
+        }
     }
 }
 
@@ -282,7 +289,10 @@ private extension MapView {
                 fetchRecentMessagesUseCase: FetchRecentMessagesUseCaseImpl(
                     repository: MessageRepositoryImpl()
                 ),
-                deleteMessagesUseCase: DeleteMessagesUseCaseImpl(messageRepository: MessageRepositoryImpl())
+                deleteMessagesUseCase: DeleteMessagesUseCaseImpl(messageRepository: MessageRepositoryImpl()),
+                onDeletedMessages: { _ in
+                    Task { await store.send(intent: .refreshVisibleMessages) }
+                }
             ),
             isEditing: false,
             configuration: .bottomSheet

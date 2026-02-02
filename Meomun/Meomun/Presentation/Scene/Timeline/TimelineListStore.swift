@@ -55,15 +55,18 @@ final class TimelineListStore: Store {
 
     private let fetchRecentMessagesUseCase: FetchRecentMessagesUseCase
     private let deleteMessagesUseCase: DeleteMessagesUseCase
+    private let onDeletedMessages: (Set<MessageID>) -> Void
 
     init(
         initialMessages: [Message] = [],
         fetchRecentMessagesUseCase: FetchRecentMessagesUseCase,
-        deleteMessagesUseCase: DeleteMessagesUseCase
+        deleteMessagesUseCase: DeleteMessagesUseCase,
+        onDeletedMessages: @escaping (Set<MessageID>) -> Void = { _ in }
     ) {
         self.state = State(messages: initialMessages)
         self.fetchRecentMessagesUseCase = fetchRecentMessagesUseCase
         self.deleteMessagesUseCase = deleteMessagesUseCase
+        self.onDeletedMessages = onDeletedMessages
     }
 
     func action(intent: Intent) -> AsyncStream<Action> {
@@ -240,6 +243,7 @@ private extension TimelineListStore {
                 do {
                     try await deleteMessagesUseCase.execute(for: messageIDs)
                     continuation.yield(.deleteMessages(messageIDs))
+                    self.onDeletedMessages(messageIDs)
 
                     // 성공 시 추가 액션 실행
                     onSuccess.forEach { continuation.yield($0) }
