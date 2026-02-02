@@ -26,7 +26,7 @@ struct MMSplashView: View {
 
                 Text("나만의 공간 아카이브를 여는 중…")
                     .font(.system(size: 16))
-                    .foregroundStyle(.tabActive)
+                    .foregroundStyle(.mmWriteButton)
                     .padding(.top, -20)
             }
             .opacity(contentOpacity)
