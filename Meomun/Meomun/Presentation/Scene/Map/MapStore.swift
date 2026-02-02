@@ -85,11 +85,11 @@ final class MapStore: Store {
 
     private var getNearbyMessageTask: Task<Void, Never>?
     private let getNearbyMessagesUseCase: GetNearbyMessagesUseCase
-    private let networkMonitor: NetworkMonitor
+    private let networkMonitor: NetworkMonitoring
 
     init(
         getNearbyMessagesUseCase: GetNearbyMessagesUseCase,
-        networkMonitor: NetworkMonitor
+        networkMonitor: NetworkMonitoring
     ) {
         self.state = State()
         self.getNearbyMessagesUseCase = getNearbyMessagesUseCase
