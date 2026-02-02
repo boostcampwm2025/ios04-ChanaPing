@@ -96,7 +96,8 @@ struct MainTabShellView: View {
             NavigationStack {
                 SettingView(
                     store: SettingStore(
-                        appSettingsOpener: AppSettingsOpener()
+                        appSettingsOpener: AppSettingsOpener(),
+                        resetMessagesUseCase: ResetMessagesUseCaseImpl(messageRepository: MessageRepositoryImpl())
                     )
                 )
             }
