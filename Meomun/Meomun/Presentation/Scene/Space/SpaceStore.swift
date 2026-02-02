@@ -71,8 +71,7 @@ final class SpaceStore: Store {
             switch intent {
             case .onAppear(let placeID):
                 continuation.yield(.setCurrentPlaceID(placeID))
-//                continuation.yield(.setDomeEnvironment(.init(dayPart: .current())))
-                continuation.yield(.setDomeEnvironment(.init(dayPart: .afternoon)))
+                continuation.yield(.setDomeEnvironment(.init(dayPart: .current())))
                 fetchMessages(for: placeID, continuation: continuation)
 
             case .setToast(let message):
