@@ -66,10 +66,23 @@ final class SettingStore: Store {
 
             case .confirmResetAppData:
                 Task {
-                    try await AppDataResetter.resetLocalData(resetUseCase: resetMessagesUseCase)
+                    do {
+                        try await AppDataResetter.resetLocalData(resetUseCase: resetMessagesUseCase)
+
+                        let alert = MMAlertModel(
+                            title: "초기화 성공",
+                            message: "앱 데이터 초기화에 성공했습니다."
+                        )
+                        continuation.yield(.setResetAlert(alert))
+                    } catch {
+                        let alert = MMAlertModel(
+                            title: "초기화 실패",
+                            message: "앱 데이터 초기화에 실패했습니다. 다시 시도해 주세요."
+                        )
+                        continuation.yield(.setResetAlert(alert))
+                    }
+                    continuation.finish()
                 }
-                continuation.yield(.setResetAlert(nil))
-                continuation.finish()
             }
         }
     }
