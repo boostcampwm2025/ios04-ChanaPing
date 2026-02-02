@@ -61,7 +61,7 @@ struct SpaceView: View {
                 HStack {
                     Spacer()
 
-                    WriteButton {   // TODO: - 위치 조정 필요
+                    WriteButton {
                         if let coordinate = locationProvider.current {
                             onNavigate(coordinate, store.place)
                         }
