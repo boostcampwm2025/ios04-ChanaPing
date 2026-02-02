@@ -32,6 +32,8 @@ final class MapViewController: UIViewController {
     private let onFollowRequested: (() -> Void)?
     private let onCameraIdle: ((Coordinate, BoundingBox, MapCameraSnapshot) -> Void)?
     private let onCameraChangedByLocation: ((Coordinate, BoundingBox, MapCameraSnapshot) -> Void)?
+    var onFirstMapIdle: (() -> Void)?
+    private var didNotifyFirstMapIdle: Bool = false
 
     // MARK: - Dependencies
 
@@ -324,6 +326,11 @@ extension MapViewController {
 
 extension MapViewController: NMFMapViewCameraDelegate {
     func mapViewCameraIdle(_ mapView: NMFMapView) {
+        if !didNotifyFirstMapIdle {
+            didNotifyFirstMapIdle = true
+            onFirstMapIdle?()
+        }
+
         let center = mapView.cameraPosition.target
         let coordinate = Coordinate(latitude: center.lat, longitude: center.lng)
         let domainBounds = makeBoundingBox(from: mapView)
@@ -387,6 +394,7 @@ struct MapViewWrapper: UIViewControllerRepresentable {
     private let onFollowRequested: (() -> Void)?
     private let onCameraIdle: ((Coordinate, BoundingBox, MapCameraSnapshot) -> Void)?
     private let onCameraChangedByLocation: ((Coordinate, BoundingBox, MapCameraSnapshot) -> Void)?
+    private let onFirstMapIdle: (() -> Void)?
 
     private let messageMarkerManager: MessageMarkerManager
     private let isFollowingUser: Bool
@@ -403,7 +411,8 @@ struct MapViewWrapper: UIViewControllerRepresentable {
         onUserGesture: (() -> Void)?,
         onFollowRequested: (() -> Void)?,
         onCameraIdle: ((Coordinate, BoundingBox, MapCameraSnapshot) -> Void)? = nil,
-        onCameraChangedByLocation: ((Coordinate, BoundingBox, MapCameraSnapshot) -> Void)? = nil
+        onCameraChangedByLocation: ((Coordinate, BoundingBox, MapCameraSnapshot) -> Void)? = nil,
+        onFirstMapIdle: (() -> Void)? = nil
     ) {
         self.userLocation = userLocation
         self.isFollowingUser = isFollowingUser
@@ -417,6 +426,7 @@ struct MapViewWrapper: UIViewControllerRepresentable {
         self.onFollowRequested = onFollowRequested
         self.onCameraIdle = onCameraIdle
         self.onCameraChangedByLocation = onCameraChangedByLocation
+        self.onFirstMapIdle = onFirstMapIdle
     }
 
     func makeCoordinator() -> Coordinator {
@@ -439,6 +449,8 @@ struct MapViewWrapper: UIViewControllerRepresentable {
             onCameraIdle: onCameraIdle,
             onCameraChangedByLocation: onCameraChangedByLocation
         )
+
+        viewController.onFirstMapIdle = onFirstMapIdle
 
         // 초기 1회 loadMessages() 호출
         viewController.loadMessages(messages)

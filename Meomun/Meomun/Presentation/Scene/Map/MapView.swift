@@ -17,6 +17,7 @@ fileprivate enum Constants {
 
 struct MapView: View {
     @Environment(\.setTabBarHidden) private var setTabBarHidden
+    @Environment(\.setSplashReady) private var setSplashReady
 
     @State private var navigationPath = NavigationPath()
     @State private var didApplyResolvedUserLocation = false
@@ -158,6 +159,9 @@ private extension MapView {
             },
             onCameraChangedByLocation: { coordinate, bounds, snapshot in
                 send(.cameraChangedByLocation(coordinate, bounds, snapshot))
+            },
+            onFirstMapIdle: {
+                setSplashReady()
             }
         )
     }
