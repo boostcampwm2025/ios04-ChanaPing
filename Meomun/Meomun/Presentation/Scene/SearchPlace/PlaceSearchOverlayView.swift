@@ -137,7 +137,7 @@ extension PlaceSearchOverlayView {
             case .loaded(let results):
                 ScrollView {
                     LazyVStack(alignment: .leading, spacing: 8) {
-                        ForEach(results, id: \.self) { place in
+                        ForEach(results, id: \.id) { place in
                             Button {
                                 Task { await store.send(intent: .tapResult(place)) }
                             } label: {
@@ -155,11 +155,6 @@ extension PlaceSearchOverlayView {
                                             .foregroundStyle(Color.gray)
                                     }
                                     Spacer()
-                                }
-                                .onAppear {
-                                    if place == results.last {
-                                        Task { await store.send(intent: .scrollReachedBottom) }
-                                    }
                                 }
                                 .foregroundStyle(Color.mmTextBrand)
                                 .padding(.vertical, 5)

@@ -22,10 +22,9 @@ final class NaverPlaceSearchRepositoryImpl: PlaceRepository {
         self.clientSecret = clientSecret
     }
 
-    func searchPlace(query: String, start: Int) async throws -> [NaverLocalItemDTO] {
+    func searchPlace(query: String) async throws -> [NaverLocalItemDTO] {
         let endpoint = NaverLocalSearchEndpoint(
             query: query,
-            start: start,
             clientId: clientId,
             clientSecret: clientSecret
         )
