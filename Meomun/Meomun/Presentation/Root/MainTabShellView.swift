@@ -25,7 +25,7 @@ struct MainTabShellView: View {
         .frame(maxWidth: .infinity, maxHeight: .infinity)
         .overlay(alignment: .bottom) {
             if !store.state.isTabBarHidden {
-                FloatingTabBar(
+                MMFloatingTabBar(
                     selectedTab: store.state.selectedTab,
                     onSelect: { tab in
                         Task {

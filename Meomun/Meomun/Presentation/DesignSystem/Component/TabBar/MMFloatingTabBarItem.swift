@@ -7,7 +7,7 @@
 
 import SwiftUI
 
-struct FloatingTabItem: View {
+struct MMFloatingTabBarItem: View {
     let systemImageName: String
     let isSelected: Bool
     let action: () -> Void
@@ -32,7 +32,7 @@ struct FloatingTabItem: View {
 }
 
 #Preview {
-    FloatingTabItem(systemImageName: "map", isSelected: true) {
+    MMFloatingTabBarItem(systemImageName: "map", isSelected: true) {
         print("hi")
     }
 }
