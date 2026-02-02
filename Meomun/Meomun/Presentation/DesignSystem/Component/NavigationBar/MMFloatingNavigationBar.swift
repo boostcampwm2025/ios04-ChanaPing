@@ -13,9 +13,10 @@ struct MMFloatingNavigationBar: View {
     var body: some View {
         HStack(alignment: .center) {
             leftTitle
+                .animation(.spring(response: 0.32, dampingFraction: 0.48), value: config.title)
             Spacer()
             rightButton
-                .transition(.opacity.combined(with: .scale(scale: 0.95)))
+                .animation(.spring(response: 0.32, dampingFraction: 0.48), value: config.rightItem)
         }
         .padding(.horizontal, 30)
         .padding(.vertical, 10)
@@ -34,6 +35,7 @@ private extension MMFloatingNavigationBar {
             Text(config.title)
                 .font(.system(size: 18, weight: .regular))
                 .foregroundStyle(Color.mmTextTitle)
+                .contentTransition(.opacity)
         }
         .padding(10)
         .padding(.horizontal, 5)

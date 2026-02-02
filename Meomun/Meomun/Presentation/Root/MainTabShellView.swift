@@ -34,8 +34,6 @@ struct MainTabShellView: View {
                     .padding(.top, 12)
                     .transition(.opacity)
                     .zIndex(99)
-                    .animation(.easeInOut(duration: 0.25), value: store.state.selectedTab)
-                    .animation(.easeInOut(duration: 0.25), value: store.state.isRecordEditing)
             }
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
