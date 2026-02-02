@@ -4,6 +4,10 @@
 > 지도 위에서 추억을 다시 만나는 위치 기반 개인 기록 서비스
 
 ---
+## 배포 링크
+### 테스트 플라이트 링크
+<img width="357" height="357" alt="2093q (1)" src="https://github.com/user-attachments/assets/1712e40b-1b92-4f02-927e-b64c0509e706" />
+
 
 ## 👬🏻 팀 소개
 
