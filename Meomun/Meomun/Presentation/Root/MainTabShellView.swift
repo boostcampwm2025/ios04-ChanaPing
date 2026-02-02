@@ -39,19 +39,27 @@ struct MainTabShellView: View {
                     .zIndex(99)
             }
         }
-        .frame(maxWidth: .infinity, maxHeight: .infinity)
-        .overlay(alignment: .bottom) {
+        .safeAreaInset(edge: .bottom) {
             if !store.state.isTabBarHidden {
-                MMFloatingTabBar(
-                    selectedTab: store.state.selectedTab,
-                    onSelect: { tab in
-                        Task {
-                            await store.send(intent: .selectTab(tab))
+                ZStack(alignment: .bottom) {
+                    Color.clear
+                        .frame(height: 96)
+                        .contentShape(Rectangle())
+                        .allowsHitTesting(true)
+
+                    MMFloatingTabBar(
+                        selectedTab: store.state.selectedTab,
+                        onSelect: { tab in
+                            Task {
+                                await store.send(intent: .selectTab(tab))
+                            }
                         }
-                    }
-                )
+                    )
+                    .contentShape(Rectangle())
+                }
             }
         }
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
         .ignoresSafeArea(.keyboard)
         .task { await store.send(intent: .onAppear) }
     }
