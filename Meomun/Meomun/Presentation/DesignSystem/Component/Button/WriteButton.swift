@@ -7,20 +7,6 @@
 
 import SwiftUI
 
-struct LeftTopCutRoundedShape: Shape {
-    private let baseRadius: CGFloat = 22
-    private let cutRadius: CGFloat = 34
-
-    func path(in rect: CGRect) -> Path {
-        CornerRadiusShape(
-            topLeft: cutRadius,
-            topRight: baseRadius,
-            bottomLeft: baseRadius,
-            bottomRight: baseRadius
-        ).path(in: rect)
-    }
-}
-
 struct WriteButton: View {
     var action: () -> Void
 
@@ -31,8 +17,13 @@ struct WriteButton: View {
                 .foregroundStyle(.white)
                 .frame(width: 61, height: 61)
                 .background(
-                    LeftTopCutRoundedShape()
-                        .fill(Color.mmWriteButton)
+                    CornerRadiusShape(
+                        topLeft: 30,
+                        topRight: 30,
+                        bottomLeft: 30,
+                        bottomRight: 5
+                    )
+                    .fill(Color.mmWriteButton)
                 )
                 .shadow(color: .black.opacity(0.15), radius: 6, y: 4)
         }
