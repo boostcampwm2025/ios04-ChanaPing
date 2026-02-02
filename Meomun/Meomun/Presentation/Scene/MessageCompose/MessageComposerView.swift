@@ -8,9 +8,13 @@
 import SwiftUI
 
 fileprivate enum Constants {
-    static let navigationTitle = "잠시 남겨놓기"
-    static let textEditorTitle = "이 말은 잠시 머물 거에요."
-    static let textEditorPlaceholder = "지금 느낌 어때요?"
+    static let navigationTitle = "머물기"
+    static let textEditorTitle = "지금 이 공간에 남겨볼까요?"
+    static let textEditorPlaceholder = "여기서 떠오른 한 줄을 적어보세요."
+    static let placeTip = """
+    장소 태그는 선택이에요.
+    지금 위치 그대로 기록하거나, 원하는 장소를 직접 선택할 수 있어요.
+    """
     static let placeContainerPlaceholder = "지금 어디에 있나요?"
 
     static let loadingMessage = "머문 흔적을 남기고 있어요."
@@ -65,7 +69,7 @@ struct MessageComposerView: View {
                 }
 
                 if store.state.confirmStatus == .loading {
-                     send(.setToast("머문 흔적을 남기는 중이에요."))
+                    send(.setToast(Constants.loadingMessage))
                     return
                 }
 
@@ -74,6 +78,15 @@ struct MessageComposerView: View {
                 }
             }
         )
+        .overlay(alignment: .top) {
+            ComposeTopBar(
+                title: Constants.navigationTitle,
+                onBack: { onTapBackButton() }
+            )
+            .padding(.top, 12)
+            .disabled(store.state.confirmStatus == .loading)
+            .opacity(store.state.confirmStatus == .loading ? 0.4 : 1.0)
+        }
         .onAppear { send(.onAppear) }
         .onChange(of: store.state.alert) { _, newValue in
             guard presentedAlert != newValue else { return }
@@ -113,11 +126,12 @@ private extension MessageComposerView {
             confirmSection
             Spacer(minLength: 0)
         }
-        .padding(24)
+        .padding(.top, 54)
+        .padding(.horizontal, 22)
+        .padding(.bottom, 18)
         .background(backgroundView)
         .onTapGesture { isFocused = false }
         .navigationBarBackButtonHidden()
-        .toolbar { toolbarContent }
         .mmAlert(
             $presentedAlert,
             title: { $0.title },
@@ -143,17 +157,24 @@ private extension MessageComposerView {
     }
 
     var placeSection: some View {
-        HStack(spacing: 8) {
-            Button(action: onTapPlaceField) {
-                PlaceSearchContainerView {
-                    Text(placeFieldText)
-                        .font(.system(size: 16, weight: .medium))
-                        .foregroundStyle(placeFieldColor)
-                        .frame(maxWidth: .infinity, alignment: .leading)
-                }
-            }
+        VStack(alignment: .leading, spacing: 10) {
+            Text(Constants.placeTip)
+                .font(.caption)
+                .foregroundStyle(Color.mmSecondary)
+                .lineSpacing(3)
 
-            CancelButton { send(.clearPlace) }
+            HStack(spacing: 8) {
+                Button(action: onTapPlaceField) {
+                    PlaceSearchContainerView {
+                        Text(placeFieldText)
+                            .font(.system(size: 16, weight: .semibold))
+                            .foregroundStyle(placeFieldColor)
+                            .frame(maxWidth: .infinity, alignment: .leading)
+                    }
+                }
+
+                CancelButton { send(.clearPlace) }
+            }
         }
     }
 
@@ -254,34 +275,8 @@ private extension MessageComposerView {
     }
 }
 
-// MARK: Toolbar / Actions
+// MARK: Actions
 private extension MessageComposerView {
-    @ToolbarContentBuilder
-    var toolbarContent: some ToolbarContent {
-        if #available(iOS 26.0, *) {
-            ToolbarItem(placement: .topBarLeading) {
-                backToolbarButton
-            }
-            .sharedBackgroundVisibility(.hidden)
-        } else {
-            ToolbarItem(placement: .topBarLeading) {
-                backToolbarButton
-            }
-        }
-
-        ToolbarItem(placement: .principal) {
-            Text(Constants.navigationTitle)
-                .font(.headline.weight(.semibold))
-                .foregroundStyle(Color.mmPrimary)
-        }
-    }
-
-    var backToolbarButton: some View {
-        BackButton(action: onTapBackButton)
-        .disabled(store.state.confirmStatus == .loading)
-        .opacity(store.state.confirmStatus == .loading ? 0.4 : 1.0)
-    }
-
     func onTapPlaceField() {
         isFocused = false
         send(.tapPlaceField)

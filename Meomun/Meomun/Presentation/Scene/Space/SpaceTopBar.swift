@@ -34,7 +34,7 @@ struct SpaceTopBar: View {
                 .foregroundStyle(.white.opacity(0.85))
 
             Text(title)
-                .font(.system(size: 15, weight: .semibold))
+                .font(.system(size: 17, weight: .semibold))
                 .foregroundStyle(.white.opacity(0.92))
                 .lineLimit(1)
         }
