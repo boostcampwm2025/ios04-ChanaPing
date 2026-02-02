@@ -72,7 +72,7 @@ struct SpaceView: View {
                 HStack {
                     Spacer()
 
-                    WriteButton {
+                    WriteButton(mode: .white) {
                         if let coordinate = locationProvider.current {
                             onNavigate(coordinate, store.place)
                         }
