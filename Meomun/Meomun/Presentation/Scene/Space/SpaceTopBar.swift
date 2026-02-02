@@ -12,44 +12,62 @@ struct SpaceTopBar: View {
     let onBack: () -> Void
 
     var body: some View {
-        HStack(spacing: 10) {
-            BackButton(action: onBack)
+        ZStack {
+            titleLabel
+                .frame(maxWidth: .infinity, alignment: .center)
 
-            Spacer()
-            HStack(spacing: 6) {
-                Image(systemName: "mappin.and.ellipse")
-                    .font(.caption)
-                    .foregroundStyle(Color.mmTabActive)
-
-                Text(title)
-                    .font(.caption.weight(.semibold))
-                    .foregroundStyle(Color.mmTextBrand)
-                    .lineLimit(1)
+            HStack {
+                BackButton(action: onBack)
+                Spacer()
             }
-            .padding(.horizontal, 12)
-            .padding(.vertical, 8)
-            .background(
-                Capsule()
-                    .fill(Color.mmBackground.opacity(0.8))
-            )
-            .clipShape(Capsule())
-            .shadow(color: .black.opacity(0.12), radius: 8, y: 4)
-
-            Spacer()
         }
+        .padding(.horizontal, 30)
         .padding(.top, 10)
-        .padding(.horizontal, 14)
-        .padding(.bottom, 8)
+        .padding(.bottom, 10)
+        .background(topFade)
+    }
+
+    private var titleLabel: some View {
+        HStack(spacing: 6) {
+            Image(systemName: "mappin.and.ellipse")
+                .font(.system(size: 12, weight: .semibold))
+                .foregroundStyle(.white.opacity(0.85))
+
+            Text(title)
+                .font(.system(size: 15, weight: .semibold))
+                .foregroundStyle(.white.opacity(0.92))
+                .lineLimit(1)
+        }
+        .padding(.horizontal, 10)
+        .padding(.vertical, 6)
         .background(
-            LinearGradient(
-                colors: [
-                    .black.opacity(0.18),
-                    .black.opacity(0.0)
-                ],
-                startPoint: .top,
-                endPoint: .bottom
-            )
-            .ignoresSafeArea(edges: .top)
+            RoundedRectangle(cornerRadius: 12, style: .continuous)
+                .fill(.black.opacity(0.12))
+                .blur(radius: 8)
         )
     }
+
+    private var topFade: some View {
+        LinearGradient(
+            colors: [
+                .black.opacity(0.30),
+                .black.opacity(0.10),
+                .black.opacity(0.0)
+            ],
+            startPoint: .top,
+            endPoint: .bottom
+        )
+        .frame(height: 120)
+        .ignoresSafeArea(edges: .top)
+    }
+}
+
+#Preview {
+    ZStack {
+        SpaceTopBar(title: "판교동행정복지센터") {
+            print("hi")
+        }
+    }
+    .frame(maxWidth: .infinity, maxHeight: .infinity)
+    .background(.mmBackground)
 }

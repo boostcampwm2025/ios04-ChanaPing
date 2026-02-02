@@ -13,10 +13,16 @@ struct MMFloatingNavigationBar: View {
     var body: some View {
         HStack(alignment: .center) {
             leftTitle
-                .animation(.spring(response: 0.32, dampingFraction: 0.48), value: config.title)
+                .animation(
+                    .spring(response: 0.32, dampingFraction: 0.48),
+                    value: config.title
+                )
             Spacer()
             rightButton
-                .animation(.spring(response: 0.32, dampingFraction: 0.48), value: config.rightItem)
+                .animation(
+                    .spring(response: 0.32, dampingFraction: 0.48),
+                    value: config.rightItem
+                )
         }
         .padding(.horizontal, 30)
         .padding(.vertical, 10)

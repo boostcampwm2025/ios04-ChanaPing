@@ -119,6 +119,7 @@ struct SpaceView: View {
                 title: place.name,
                 onBack: { dismissWithFade() }
             )
+            .padding(.top, 12)
             .opacity(!showPortal ? 1 : 0)
         }
         .task {
