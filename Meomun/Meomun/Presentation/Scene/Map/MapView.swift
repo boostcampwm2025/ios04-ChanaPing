@@ -21,7 +21,7 @@ struct MapView: View {
     @Environment(\.setSplashReady) private var setSplashReady
 
     @State private var navigationPath = NavigationPath()
-    @State private var selectedPlaceForSpace: Place? = nil
+    @State private var selectedPlaceForSpace: Place?
     @State private var showSpace: Bool = false
     @State private var didApplyResolvedUserLocation = false
 

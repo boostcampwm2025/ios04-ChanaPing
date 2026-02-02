@@ -84,7 +84,12 @@ struct PortalLoadingOverlay: View {
                         )
                         .blur(radius: 0.7)
                         .rotationEffect(.degrees(ringRotation))
-                        .animation(.linear(duration: softenMotion ? 2.0 : 1.4).repeatForever(autoreverses: false), value: ringRotation)
+                        .animation(
+                            .linear(duration: softenMotion ? 2.0 : 1.4).repeatForever(
+                                autoreverses: false
+                            ),
+                            value: ringRotation
+                        )
                         .opacity((softenMotion ? 0.7 : 1.0) * (fadeOut ? 0 : 1))
                         .animation(.easeOut(duration: 0.35), value: fadeOut)
 
