@@ -24,7 +24,7 @@ struct MapPlaceConceptTip: Tip {
     }
 
     var message: Text? {
-        Text("메세지를 탭하면 그 장소에 남겨진 메시지를 모아볼 수 있어요.")
+        Text("메세지를 탭하면 그 장소에 남겨진 메세지를 모아볼 수 있어요.")
     }
 
     var image: Image? {

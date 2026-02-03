@@ -26,7 +26,7 @@ struct TimelineSectionTip: Tip {
     }
 
     var message: Text? {
-        Text("상단의 월(YYYY.MM) 옆 흔전 따라가기를 탭하면 해당 달의 기록을 모아볼 수 있어요.")
+        Text("상단의 월(YYYY.MM) 옆 흔적 따라가기를 탭하면 해당 달의 기록을 모아볼 수 있어요.")
     }
 
     var image: Image? {
