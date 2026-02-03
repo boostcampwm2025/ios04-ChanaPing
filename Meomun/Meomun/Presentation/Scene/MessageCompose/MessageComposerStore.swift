@@ -144,7 +144,7 @@ final class MessageComposerStore: Store {
                 }
 
                 // 케이스 2: startAddress가 정상이면 네트워크 체크 없이 진행
-                createMessage(continuation: continuation, allowEmptyLocation: false)
+                createMessage(continuation: continuation)
                 return
 
             case .setAlert(let alert):
@@ -155,7 +155,7 @@ final class MessageComposerStore: Store {
 
             case .confirmWithEmptyLocation:
                 continuation.yield(.setShowEmptyLocationAlert(false))
-                createMessage(continuation: continuation, allowEmptyLocation: true)
+                createMessage(continuation: continuation)
                 return
 
             case .retryReverseGeocoding:
@@ -242,10 +242,7 @@ extension MessageComposerStore {
         }
     }
 
-    private func createMessage(
-        continuation: AsyncStream<Action>.Continuation,
-        allowEmptyLocation: Bool = false
-    ) {
+    private func createMessage(continuation: AsyncStream<Action>.Continuation) {
         Task {
             continuation.yield(.setConfirmStatus(.loading))
             defer {
@@ -253,15 +250,11 @@ extension MessageComposerStore {
             }
 
             do {
-                AppLog.debug("createMessage 진입", category: .store)
-                guard let createMessageRequest = await makeCreateMessageRequest(
-                    allowEmptyLocation: allowEmptyLocation
-                ) else {
+                guard let createMessageRequest = await makeCreateMessageRequest() else {
                     continuation.yield(.setConfirmStatus(.fail))
                     return
                 }
 
-                AppLog.debug("\(createMessageRequest)", category: .store)
                 try await createMessageUseCase.execute(createMessageRequest)
                 await finish(isSuccess: true, continuation)
             } catch {
@@ -280,13 +273,12 @@ extension MessageComposerStore {
         continuation.yield(.close(isSuccess: isSuccess))
     }
 
-    private func makeCreateMessageRequest(allowEmptyLocation: Bool = false) async -> CreateMessageRequest? {
-        AppLog.debug("makeCreateMessageRequest", category: .store)
+    private func makeCreateMessageRequest() async -> CreateMessageRequest? {
         guard let startLocation = state.startLocation else { return nil }
 
         return CreateMessageRequest(
             content: state.message,
-            coordinate: startLocation,
+            coordinate: state.selectedPlace?.coordinate ?? startLocation,
             address: state.startAddress,
             place: state.selectedPlace
         )
