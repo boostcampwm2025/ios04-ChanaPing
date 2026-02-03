@@ -33,10 +33,15 @@ struct MeomunApp: App {
 
     var body: some Scene {
         WindowGroup {
-            RootView()
-                .task {
-                    await MessageSwiftDataStorage.shared.configure(container: meomunModelContainer)
-                }
+            if let locationProvider: LocationProvider = DIContainer.resolve(),
+               let rootStore: RootStore = DIContainer.resolve() {
+                RootView(locationProvider: locationProvider, store: rootStore)
+                    .task {
+                        await MessageSwiftDataStorage.shared.configure(container: meomunModelContainer)
+                    }
+            } else {
+                EmptyView()
+            }
         }
     }
 }

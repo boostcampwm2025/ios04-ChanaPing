@@ -19,15 +19,9 @@ struct RootView: View {
     @State private var showSplash = true
     @State private var loadingProgress: CGFloat = 0
 
-    init() {
-        let provider = LocationProvider()
-        _locationProvider = StateObject(wrappedValue: provider)
-        _store = StateObject(
-            wrappedValue: RootStore(
-                locationProvider: provider,
-                appSettingsOpener: AppSettingsOpener()
-            )
-        )
+    init(locationProvider: LocationProvider, store: RootStore) {
+        _locationProvider = StateObject(wrappedValue: locationProvider)
+        _store = StateObject(wrappedValue: store)
     }
 
     var body: some View {
@@ -107,5 +101,8 @@ private extension RootView {
 }
 
 #Preview {
-    RootView()
+    let locationProvider = LocationProvider()
+    let appSettingsOpener = AppSettingsOpener()
+    let rootStore = RootStore(locationProvider: locationProvider, appSettingsOpener: appSettingsOpener)
+    RootView(locationProvider: locationProvider, store: rootStore)
 }
