@@ -40,6 +40,8 @@ struct TimelineListView: View {
 
     var body: some View {
         VStack {
+            TimelineSectionTipView()
+
             if !store.state.messages.isEmpty {
                 content
             } else {
@@ -52,7 +54,10 @@ struct TimelineListView: View {
                     .transition(.move(edge: .bottom).combined(with: .opacity))
             }
         }
-        .onAppear { send(.onAppear) }
+        .onAppear {
+            send(.onAppear)
+            syncTimelineTipState(isFirstAppear: true)
+        }
         // 상위(MainTabStore) 편집 상태 변화 → 내부 store에 반영
         .onChange(of: isEditing) { _, newValue in
             send(.syncEditing(newValue))
@@ -61,6 +66,10 @@ struct TimelineListView: View {
         .onChange(of: store.state.isEditing) { _, newValue in
             setTabBarHidden(shouldHideTabBar)
             onEditingChanged(newValue)
+            syncTimelineTipState()
+        }
+        .onChange(of: store.state.messages.isEmpty) { _, _ in
+            syncTimelineTipState()
         }
         .onChange(of: store.state.deleteStatus) { _, _ in
             setTabBarHidden(shouldHideTabBar)
@@ -272,6 +281,18 @@ extension TimelineListView {
         static let full = Configuration(showsFooter: true, showsEditButton: true)
 
         static let bottomSheet = Configuration(showsFooter: false, showsEditButton: false)
+    }
+}
+
+// MARK: - TipKit state sync
+private extension TimelineListView {
+    private func syncTimelineTipState(isFirstAppear: Bool = false) {
+        if isFirstAppear {
+            TimelineSectionTip.isReady = true
+        }
+
+        TimelineSectionTip.hasContent = (store.state.messages.isEmpty == false)
+        TimelineSectionTip.isEditing = store.state.isEditing
     }
 }
 
