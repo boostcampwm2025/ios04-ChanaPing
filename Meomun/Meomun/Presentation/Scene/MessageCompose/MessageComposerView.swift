@@ -74,7 +74,11 @@ struct MessageComposerView: View {
                 }
             }
         )
-        .onAppear { send(.onAppear) }
+        .onAppear {
+            send(.onAppear)
+            MessageComposerPlaceConceptTip.isReady = true
+            syncConfirmDisabledTipState(isFirstAppear: true)
+        }
         .onChange(of: store.state.alert) { _, newValue in
             guard presentedAlert != newValue else { return }
             presentedAlert = newValue
@@ -87,6 +91,15 @@ struct MessageComposerView: View {
             if show {
                 presentedAlert = emptyLocationAlert
             }
+        }
+        .onChange(of: store.state.message) { _, newValue in
+            if newValue.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty == false {
+                MessageComposerConfirmDisabledTip.hasStartedTyping = true
+            }
+            syncConfirmDisabledTipState()
+        }
+        .onChange(of: store.state.isConfirmEnabled) { _, _ in
+            syncConfirmDisabledTipState()
         }
         .fullScreenCover(isPresented: isPlaceSearchPresentedBinding) {
             placeSearchOverlay
@@ -105,11 +118,13 @@ struct MessageComposerView: View {
 private extension MessageComposerView {
     var content: some View {
         VStack(alignment: .center, spacing: 12) {
+            MessageComposerPlaceConceptTipView()
             Spacer()
             editorSection
             Spacer(minLength: 0)
             placeSection
             Spacer(minLength: 0)
+            MessageComposerConfirmDisabledTipView()
             confirmSection
             Spacer(minLength: 0)
         }
@@ -190,6 +205,21 @@ private extension MessageComposerView {
             status: store.state.confirmStatus,
             message: mmLoadingOverlayMessage
         )
+    }
+}
+
+// MARK: TipKit helpers
+private extension MessageComposerView {
+    func syncConfirmDisabledTipState(isFirstAppear: Bool = false) {
+        if isFirstAppear {
+            MessageComposerConfirmDisabledTip.isReady = true
+        }
+
+        let isMessageEmpty = store.state.message
+            .trimmingCharacters(in: .whitespacesAndNewlines)
+            .isEmpty
+
+        MessageComposerConfirmDisabledTip.shouldShow = (store.state.isConfirmEnabled == false) && isMessageEmpty
     }
 }
 
