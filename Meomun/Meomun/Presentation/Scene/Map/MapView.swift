@@ -22,6 +22,7 @@ struct MapView: View {
 
     @State private var navigationPath = NavigationPath()
     @State private var didApplyResolvedUserLocation = false
+    @State private var isTimelineListPresented = false
 
     @ObservedObject private var store: MapStore
     @EnvironmentObject private var locationProvider: LocationProvider
@@ -113,6 +114,16 @@ struct MapView: View {
                 didApplyResolvedUserLocation = true
                 send(.userLocationReady(coordinate))
             }
+            .onChange(of: store.state.selectedNoPlaceMessages.isEmpty) { _, isEmpty in
+                guard isEmpty, isTimelineListPresented else { return }
+
+                Task { @MainActor in
+                    try? await Task.sleep(for: .milliseconds(1000))
+                    withAnimation(.spring(response: 0.25, dampingFraction: 0.9)) {
+                        isTimelineListPresented = false
+                    }
+                }
+            }
             .onAppear {
                 setTabBarHidden(false)
                 setNavBarHidden(false)
@@ -122,16 +133,16 @@ struct MapView: View {
                 send(.onDisappear)
                 locationProvider.stopContinuous()
             }
-            .sheet(isPresented: isTimelineListPresentedBinding) {
-                timeLineListView
-                    .presentationDetents(.init(arrayLiteral: .medium, .large))
-                    .presentationDragIndicator(.visible)
-            }
             .fullScreenCover(isPresented: isPlaceSearchPresentedBinding) {
                 placeSearchOverlay
                     .presentationBackground(.clear)
             }
             .transaction { $0.disablesAnimations = true }
+            .sheet(isPresented: isTimelineListPresentedBinding) {
+                timeLineListView
+                    .presentationDetents(.init(arrayLiteral: .medium, .large))
+                    .presentationDragIndicator(.visible)
+            }
         }
         .mmToast(toastBinding, bottomPadding: 100)
     }
@@ -154,6 +165,7 @@ private extension MapView {
                 send(.tapPlaceMarker(messages))
             },
             onTapNoPlace: { messages in
+                isTimelineListPresented = true
                 send(.tapNoPlaceMarker(messages))
             },
             onUserGesture: {
@@ -206,7 +218,11 @@ private extension MapView {
                         remote: SupabaseServiceImpl(network: NetworkClientImpl())
                     )
                 ),
-                onClose: { _ in
+                onClose: { isSuccess in
+                    if isSuccess {
+                        send(.refreshVisibleMessages)
+                    }
+
                     onClose()
                 }
             )
@@ -229,6 +245,9 @@ private extension MapView {
                 onNavigate(coordinate, place)
             }
         )
+        .onDisappear {
+            send(.refreshVisibleMessages)
+        }
     }
 }
 
@@ -271,7 +290,8 @@ private extension MapView {
             set: { isPresented in
                 if !isPresented {
                     send(.dismissPlaceSearch)
-            }}
+                }
+            }
         )
     }
 
@@ -282,18 +302,35 @@ private extension MapView {
                 fetchRecentMessagesUseCase: FetchRecentMessagesUseCaseImpl(
                     repository: MessageRepositoryImpl()
                 ),
-                deleteMessagesUseCase: DeleteMessagesUseCaseImpl(messageRepository: MessageRepositoryImpl())
+                deleteMessagesUseCase: DeleteMessagesUseCaseImpl(messageRepository: MessageRepositoryImpl()),
+                onDeletedMessages: { _ in
+                    send(.refreshVisibleMessages)
+                }
             ),
             isEditing: false,
-            configuration: .bottomSheet
+            configuration: .bottomSheet,
+            onBecameEmpty: {
+                Task { @MainActor in
+                    try? await Task.sleep(for: .milliseconds(1000))
+
+                    guard isTimelineListPresented else { return }
+
+                    withAnimation(.spring(response: 0.25, dampingFraction: 0.9)) {
+                        isTimelineListPresented = false
+                    }
+                }
+                
+                send(.dismissTimelineView)
+            }
         )
     }
 
     var isTimelineListPresentedBinding: Binding<Bool> {
         Binding(
-            get: { store.state.selectedNoPlaceMessages.isEmpty == false },
+            get: { isTimelineListPresented },
             set: { isPresented in
                 if !isPresented {
+                    isTimelineListPresented = false
                     send(.dismissTimelineView)
                 }
             }

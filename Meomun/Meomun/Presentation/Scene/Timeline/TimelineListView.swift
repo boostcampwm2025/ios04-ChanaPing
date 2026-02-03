@@ -17,6 +17,7 @@ struct TimelineListView: View {
     @Environment(\.setTabBarHidden) private var setTabBarHidden
     @StateObject private var store: TimelineListStore
     private let configuration: Configuration
+    private let onBecameEmpty: () -> Void
 
     // 외부 편집 상태 (SSOT: MainTabStore)
     private let isEditing: Bool
@@ -27,11 +28,14 @@ struct TimelineListView: View {
     init(store: TimelineListStore,
          isEditing: Bool,
          configuration: Configuration = .full,
-         onEditingChanged: @escaping (Bool) -> Void = { _ in }) {
+         onEditingChanged: @escaping (Bool) -> Void = { _ in },
+         onBecameEmpty: @escaping () -> Void = { }
+    ) {
         _store = StateObject(wrappedValue: store)
         self.isEditing = isEditing
         self.configuration = configuration
         self.onEditingChanged = onEditingChanged
+        self.onBecameEmpty = onBecameEmpty
     }
 
     private func send(_ intent: TimelineListStore.Intent) {
@@ -71,6 +75,10 @@ struct TimelineListView: View {
         }
         .onChange(of: store.state.deleteStatus) { _, _ in
             setTabBarHidden(shouldHideTabBar)
+        }
+        .onChange(of: store.state.messages.isEmpty) { _, isEmpty in
+            guard isEmpty else { return }
+            onBecameEmpty()
         }
         .animation(.spring(response: 0.25, dampingFraction: 0.9), value: store.state.isEditing)
         .background(Color.mmBackground)
@@ -269,7 +277,7 @@ extension TimelineListView {
 
         static let full = Configuration(showsFooter: true, showsEditButton: true)
 
-        static let bottomSheet = Configuration(showsFooter: false, showsEditButton: false)
+        static let bottomSheet = Configuration(showsFooter: true, showsEditButton: false)
     }
 }
 

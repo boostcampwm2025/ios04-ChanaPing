@@ -21,13 +21,13 @@ final class MapStore: Store {
         case cameraChangedByLocation(Coordinate, BoundingBox, MapCameraSnapshot)
         case cameraMoveConsumed
 
+        case refreshVisibleMessages
+
         case tapSearch
         case dismissPlaceSearch
         case selectPlace(Place)
 
         case dismissAddMessage
-
-        case updateMessages([Message])
 
         case tapNoPlaceMarker([Message])
         case tapPlaceMarker([Message])
@@ -43,6 +43,7 @@ final class MapStore: Store {
         case setFollowingUser(Bool)
         case setCameraMoveTarget(MapCameraMoveCommand?)
         case setCameraSnapshot(MapCameraSnapshot?)
+        case setCameraBounds(BoundingBox)
 
         case presentPlaceSearch(Bool)
 
@@ -63,6 +64,7 @@ final class MapStore: Store {
         var cameraSnapshot: MapCameraSnapshot?
 
         var cameraCoordinate: Coordinate?
+        var cameraBounds: BoundingBox?
         var isFollowingUser: Bool = true
 
         var isPlaceSearchPresented: Bool = false
@@ -150,6 +152,7 @@ final class MapStore: Store {
             case .cameraDidIdle(let coordinate, let boundingBox, let snapshot):
                 continuation.yield(.setCameraCoordinate(coordinate))
                 continuation.yield(.setCameraSnapshot(snapshot))
+                continuation.yield(.setCameraBounds(boundingBox))
                 self.getNearbyMessages(
                     at: coordinate,
                     bounds: boundingBox,
@@ -160,6 +163,7 @@ final class MapStore: Store {
             case .cameraChangedByLocation(let coordinate, let boundingBox, let snapshot):
                 continuation.yield(.setCameraCoordinate(coordinate))
                 continuation.yield(.setCameraSnapshot(snapshot))
+                continuation.yield(.setCameraBounds(boundingBox))
                 self.getNearbyMessages(
                     at: coordinate,
                     bounds: boundingBox,
@@ -170,6 +174,21 @@ final class MapStore: Store {
             case .cameraMoveConsumed:
                 continuation.yield(.setCameraMoveTarget(nil))
                 continuation.yield(.presentPlaceSearch(false))
+
+            case .refreshVisibleMessages:
+                guard let coordinate = state.cameraCoordinate,
+                      let bounds = state.cameraBounds
+                else {
+                    continuation.finish()
+                    return
+                }
+
+                self.getNearbyMessages(
+                    at: coordinate,
+                    bounds: bounds,
+                    continuation: continuation
+                )
+                return
 
             case .tapSearch:
                 continuation.yield(.presentPlaceSearch(true))
@@ -186,9 +205,6 @@ final class MapStore: Store {
 
             case .dismissAddMessage:
                 continuation.yield(.setShowAddMessage(false))
-
-            case .updateMessages(let messages):
-                continuation.yield(.setMessages(messages))
 
             case .tapNoPlaceMarker(let messages):
                 continuation.yield(.setSelectedNoPlace(messages))
@@ -232,6 +248,9 @@ final class MapStore: Store {
         case .setCameraSnapshot(let snapshot):
             newState.cameraSnapshot = snapshot
 
+        case .setCameraBounds(let bounds):
+            newState.cameraBounds = bounds
+
         case .setCameraMoveTarget(let snapshot):
             newState.cameraMoveTarget = snapshot
 
@@ -259,6 +278,8 @@ final class MapStore: Store {
         case .setToastMessage(let message):
             newState.toastMessage = message
         }
+
+        AppLog.debug("[MapView] message: \(newState.messages.count)", category: .store)
 
         return newState
     }
