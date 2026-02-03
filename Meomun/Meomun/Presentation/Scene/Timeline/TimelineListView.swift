@@ -46,7 +46,7 @@ struct TimelineListView: View {
         VStack {
             if !store.state.messages.isEmpty {
                 content
-//                    .padding(.top, 10)
+                    .padding(.top, 10)
             } else {
                 emptyContent
             }
