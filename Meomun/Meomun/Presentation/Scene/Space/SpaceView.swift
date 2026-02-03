@@ -41,7 +41,7 @@ struct SpaceView: View {
             .gesture(
                 DragGesture()
                     .onChanged { spaceController.handleDrag($0.translation) }
-                    .onEnded { _ in spaceController.endDrag()}
+                    .onEnded { _ in spaceController.endDrag() }
             )
             .gesture(
                 TapGesture().onEnded { send(.selectMessage(nil)) }
@@ -86,12 +86,16 @@ struct SpaceView: View {
         .overlay(alignment: .bottom) {
             selectionBar
         }
+        .overlay(alignment: .top) {
+            SpaceOnboardingTipView()
+        }
         .animation(.spring(response: 0.25, dampingFraction: 0.9), value: store.state.selectedMessageID)
         .allowsHitTesting(store.state.deleteStatus == .idle)
         .navigationBarBackButtonHidden()
         .toolbar { toolbarContent }
         .task {
             await store.send(intent: .onAppear(placeID: place.id))
+            SpaceIntroTip.isReady = true
         }
         .onChange(of: store.state.messages.map(\.id)) {
             spaceController.sync(messages: store.state.messages)
