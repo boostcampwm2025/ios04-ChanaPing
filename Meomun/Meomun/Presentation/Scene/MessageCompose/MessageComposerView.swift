@@ -12,8 +12,8 @@ fileprivate enum Constants {
     static let textEditorTitle = "지금 이 공간에 남겨볼까요?"
     static let textEditorPlaceholder = "여기서 떠오른 한 줄을 적어보세요."
     static let placeTip = """
-    장소 태그는 선택이에요.
     지금 위치 그대로 기록하거나, 원하는 장소를 직접 선택할 수 있어요.
+    장소를 태그하면 나만의 공간이 생성돼요.
     """
     static let placeContainerPlaceholder = "지금 어디에 있나요?"
 
