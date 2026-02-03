@@ -126,7 +126,7 @@ private extension TimelineListView {
                     }
                 }
             }
-            .padding(.top, 10)
+            .padding(.top, configuration.showsFooter && configuration.showsEditButton ? 10 : 44)
             .padding(.bottom, 16)
 
             if configuration.showsFooter && !store.state.messages.isEmpty {
