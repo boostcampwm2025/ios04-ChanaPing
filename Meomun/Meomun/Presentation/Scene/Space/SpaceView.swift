@@ -140,6 +140,8 @@ struct SpaceView: View {
             }
             .overlay(alignment: .top) {
                 SpaceOnboardingTipView()
+                    .padding(.top, MMLayout.belowNavigationToolbarOffset)
+                    .opacity(!showPortal ? 1 : 0)
             }
             .animation(.spring(response: 0.25, dampingFraction: 0.9), value: store.state.selectedMessageID)
             .allowsHitTesting(store.state.deleteStatus == .idle)
