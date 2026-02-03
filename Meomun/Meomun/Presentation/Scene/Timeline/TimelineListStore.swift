@@ -35,6 +35,7 @@ final class TimelineListStore: Store {
 
     enum Intent: Equatable {
         case onAppear
+        case requestNextPage
 
         case requestDeleteSelectedMessages          // 편집 모드 -> 삭제
         case confirmDeleteSelectedMessages          // 얼럿 - 삭제
@@ -49,7 +50,11 @@ final class TimelineListStore: Store {
     }
 
     enum Action {
+        case setCurrentPage(Int)
+        case setLoadingNextPage(Bool)
+        case setReachedEndPage(Bool)
         case addMessages([Message])
+
         case toggleMessageSelection(MessageID)
         case clearSelectedMessageIDs
         case setSelectedSection(YearMonth?)
@@ -85,24 +90,10 @@ final class TimelineListStore: Store {
     func action(intent: Intent) -> AsyncStream<Action> {
         switch intent {
         case .onAppear:
-            return .init { continuation in
-                guard state.messages.isEmpty else {
-                    continuation.finish()
-                    return
-                }
+            return loadPage(page: 0)
 
-                Task {
-                    do {
-                        // TODO: 페이지네이션 구현
-                        let messages = try await fetchRecentMessagesUseCase.execute(page: 0, pageSize: 10)
-                        continuation.yield(.addMessages(messages))
-                    } catch {
-                        AppLog.error(error.localizedDescription, category: .store, error: error)
-                    }
-
-                    continuation.finish()
-                }
-            }
+        case .requestNextPage:
+            return loadPage(page: state.pagination.currentPage)
 
         case .tapSection(let section):
             return .init { continuation in
@@ -191,9 +182,18 @@ final class TimelineListStore: Store {
         var newState = state
 
         switch action {
+        case .setCurrentPage(let page):
+            newState.pagination.currentPage = page
+
+        case .setLoadingNextPage(let isLoadingNextPage):
+            newState.pagination.isLoadingNextPage = isLoadingNextPage
+
+        case .setReachedEndPage(let hasReachedEndPage):
+            newState.pagination.hasReachedEndPage = hasReachedEndPage
 
         case .addMessages(let messages):
             newState.messages += messages
+            cleanupSectionIfNeeded(&newState)
 
         case .toggleMessageSelection(let messageID):
             if newState.selectedMessageIDs.contains(messageID) {
