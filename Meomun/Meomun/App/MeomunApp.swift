@@ -21,7 +21,7 @@ struct MeomunApp: App {
             #endif
 
             try Tips.configure([
-                .displayFrequency(.monthly)
+                .displayFrequency(.immediate)
             ])
         } catch {
             // TipKit configuration failure should not block app launch.
