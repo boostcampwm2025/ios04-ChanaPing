@@ -23,6 +23,11 @@ final class SpaceController {
     private let bubbleSynchronizer: SpaceMessageBubbleSynchronizer
     private let materialConfigurator: SpaceMaterialConfigurator
 
+    private var configureTask: Task<Void, Never>?
+    private var isConfiguring: Bool = false
+    private var didFinishConfigure: Bool = false
+    private var readyHandlers: [() -> Void] = []
+
     init(
         rotationCamera: RotationCamera = .init(
             position: .init(x: 0, y: 0.7, z: 0),
@@ -35,11 +40,25 @@ final class SpaceController {
     }
 
     // MARK: - Space Setup
-    func configureSpace(content: RealityViewCameraContent) {
-        guard spaceRootEntity == nil else { return }
+    func configureSpace(content: RealityViewCameraContent, onReady: (() -> Void)? = nil) {
+        if let onReady { readyHandlers.append(onReady) }
 
-        Task {
+        if didFinishConfigure {
+            flushReadyHandlers()
+            return
+        }
+
+        if isConfiguring { return }
+
+        isConfiguring = true
+
+        configureTask?.cancel()
+        configureTask = Task { [weak self] in
+            guard let self else { return }
+
             do {
+                defer { isConfiguring = false }
+
                 // Camera 추가
                 AppLog.debug("S1. Camera added", category: .space)
                 rotationCamera.addToScene(content)
@@ -85,6 +104,10 @@ final class SpaceController {
                 messageEntity.components.set(InputTargetComponent())
 
                 messageBubbleTemplateEntity = messageEntity
+
+                didFinishConfigure = true
+                flushReadyHandlers()
+
                 trySyncIfPossible()
             } catch {
                 AppLog.error(
@@ -94,6 +117,12 @@ final class SpaceController {
                 )
             }
         }
+    }
+
+    private func flushReadyHandlers() {
+        let handlers = readyHandlers
+        readyHandlers.removeAll()
+        handlers.forEach { $0() }
     }
 }
 

@@ -1,18 +1,184 @@
 {
   "fill" : {
-    "automatic-gradient" : "extended-srgb:0.00000,0.53333,1.00000,1.00000"
+    "linear-gradient" : [
+      "display-p3:0.71020,0.69483,0.78679,1.00000",
+      "display-p3:0.61328,0.76784,0.77520,1.00000"
+    ],
+    "orientation" : {
+      "start" : {
+        "x" : 0.5,
+        "y" : 0
+      },
+      "stop" : {
+        "x" : 0.5,
+        "y" : 0.7
+      }
+    }
   },
   "groups" : [
     {
       "layers" : [
         {
-          "image-name" : "Gemini_Generated_Image_dkhgkjdkhgkjdkhg.png",
-          "name" : "Gemini_Generated_Image_dkhgkjdkhgkjdkhg",
+          "blend-mode" : "normal",
+          "glass" : true,
+          "hidden" : true,
+          "image-name" : "iconSmall.png",
+          "name" : "iconSmall",
           "position" : {
-            "scale" : 1.45,
+            "scale" : 1.2,
             "translation-in-points" : [
               0,
               0
+            ]
+          }
+        }
+      ],
+      "shadow" : {
+        "kind" : "neutral",
+        "opacity" : 0.5
+      },
+      "translucency" : {
+        "enabled" : true,
+        "value" : 0.5
+      }
+    },
+    {
+      "layers" : [
+        {
+          "blend-mode" : "normal",
+          "hidden" : true,
+          "image-name" : "whiteCloud.png",
+          "name" : "whiteCloud",
+          "position" : {
+            "scale" : 1.2,
+            "translation-in-points" : [
+              0,
+              0
+            ]
+          }
+        }
+      ],
+      "shadow" : {
+        "kind" : "neutral",
+        "opacity" : 0.5
+      },
+      "translucency" : {
+        "enabled" : true,
+        "value" : 0.5
+      }
+    },
+    {
+      "layers" : [
+        {
+          "blend-mode" : "lighten",
+          "hidden" : true,
+          "image-name" : "icon6 2.png",
+          "name" : "icon6 2",
+          "position" : {
+            "scale" : 0.35,
+            "translation-in-points" : [
+              0,
+              0
+            ]
+          }
+        }
+      ],
+      "shadow" : {
+        "kind" : "neutral",
+        "opacity" : 0.5
+      },
+      "translucency" : {
+        "enabled" : true,
+        "value" : 0.5
+      }
+    },
+    {
+      "layers" : [
+        {
+          "hidden" : true,
+          "image-name" : "icon.png",
+          "name" : "icon",
+          "position" : {
+            "scale" : 0.8,
+            "translation-in-points" : [
+              0,
+              0
+            ]
+          }
+        }
+      ],
+      "shadow" : {
+        "kind" : "neutral",
+        "opacity" : 0.5
+      },
+      "translucency" : {
+        "enabled" : true,
+        "value" : 0.5
+      }
+    },
+    {
+      "hidden" : true,
+      "layers" : [
+        {
+          "blend-mode" : "lighten",
+          "hidden" : false,
+          "image-name" : "icon 2.png",
+          "name" : "icon 2",
+          "position" : {
+            "scale" : 0.7,
+            "translation-in-points" : [
+              94.99999999999989,
+              131.375
+            ]
+          }
+        },
+        {
+          "blend-mode" : "plus-darker",
+          "image-name" : "pin.png",
+          "name" : "pin",
+          "position" : {
+            "scale" : 1.2,
+            "translation-in-points" : [
+              -89.80000000000007,
+              0.39999999999997726
+            ]
+          }
+        }
+      ],
+      "shadow" : {
+        "kind" : "neutral",
+        "opacity" : 0.5
+      },
+      "translucency" : {
+        "enabled" : true,
+        "value" : 0.5
+      }
+    },
+    {
+      "hidden" : false,
+      "layers" : [
+        {
+          "blend-mode" : "plus-darker",
+          "image-name" : "pin.png",
+          "name" : "pin",
+          "position" : {
+            "scale" : 0.55,
+            "translation-in-points" : [
+              154.2249999999999,
+              -149.0968749999999
+            ]
+          }
+        },
+        {
+          "blend-mode" : "normal",
+          "hidden" : false,
+          "image-name" : "icon 2.png",
+          "name" : "icon 2",
+          "position" : {
+            "scale" : 0.9,
+            "translation-in-points" : [
+              -0.6000000000000227,
+              90.61875000000009
             ]
           }
         }

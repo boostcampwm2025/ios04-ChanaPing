@@ -8,10 +8,10 @@
 
 /* Begin PBXBuildFile section */
 		1628F47E2EF5376C005E6C42 /* NMapsMap in Frameworks */ = {isa = PBXBuildFile; productRef = 1628F47D2EF5376C005E6C42 /* NMapsMap */; };
-		16EFC15D2F1093210010465C /* meomun.icon in Resources */ = {isa = PBXBuildFile; fileRef = 16EFC15C2F1093210010465C /* meomun.icon */; };
 		531A22FE2EF9367C0014BE96 /* Secrets.example.xcconfig in Resources */ = {isa = PBXBuildFile; fileRef = 531A22FD2EF9367C0014BE96 /* Secrets.example.xcconfig */; };
 		531A23002EF936BA0014BE96 /* Config.xcconfig in Resources */ = {isa = PBXBuildFile; fileRef = 531A22FF2EF936BA0014BE96 /* Config.xcconfig */; };
 		7866C0112F0EDCCC00C69ADE /* SeoulCityHall.gpx in Resources */ = {isa = PBXBuildFile; fileRef = 7866C0102F0EDCCC00C69ADE /* SeoulCityHall.gpx */; };
+		9002D93D2F31439A00D63FCC /* meomun.icon in Resources */ = {isa = PBXBuildFile; fileRef = 9002D93C2F31439A00D63FCC /* meomun.icon */; };
 		90E847342F0B899D005C8966 /* Secrets.xcconfig in Resources */ = {isa = PBXBuildFile; fileRef = 90E847332F0B899D005C8966 /* Secrets.xcconfig */; };
 /* End PBXBuildFile section */
 
@@ -27,10 +27,10 @@
 
 /* Begin PBXFileReference section */
 		1628F46A2EF53602005E6C42 /* Meomun.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Meomun.app; sourceTree = BUILT_PRODUCTS_DIR; };
-		16EFC15C2F1093210010465C /* meomun.icon */ = {isa = PBXFileReference; lastKnownFileType = folder.iconcomposer.icon; path = meomun.icon; sourceTree = "<group>"; };
 		531A22FD2EF9367C0014BE96 /* Secrets.example.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = Secrets.example.xcconfig; sourceTree = "<group>"; };
 		531A22FF2EF936BA0014BE96 /* Config.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = Config.xcconfig; sourceTree = "<group>"; };
 		7866C0102F0EDCCC00C69ADE /* SeoulCityHall.gpx */ = {isa = PBXFileReference; lastKnownFileType = text.xml; path = SeoulCityHall.gpx; sourceTree = "<group>"; };
+		9002D93C2F31439A00D63FCC /* meomun.icon */ = {isa = PBXFileReference; lastKnownFileType = folder.iconcomposer.icon; path = meomun.icon; sourceTree = "<group>"; };
 		90E847332F0B899D005C8966 /* Secrets.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = Secrets.xcconfig; sourceTree = "<group>"; };
 		AC82E3762F1EAEFB0028A081 /* MeomunTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = MeomunTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
@@ -90,7 +90,7 @@
 				1628F46C2EF53602005E6C42 /* Meomun */,
 				AC82E3772F1EAEFB0028A081 /* MeomunTests */,
 				1628F46B2EF53602005E6C42 /* Products */,
-				16EFC15C2F1093210010465C /* meomun.icon */,
+				9002D93C2F31439A00D63FCC /* meomun.icon */,
 				16EFC2AE2F18378F0010465C /* Frameworks */,
 			);
 			sourceTree = "<group>";
@@ -211,10 +211,10 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				9002D93D2F31439A00D63FCC /* meomun.icon in Resources */,
 				7866C0112F0EDCCC00C69ADE /* SeoulCityHall.gpx in Resources */,
 				90E847342F0B899D005C8966 /* Secrets.xcconfig in Resources */,
 				531A23002EF936BA0014BE96 /* Config.xcconfig in Resources */,
-				16EFC15D2F1093210010465C /* meomun.icon in Resources */,
 				531A22FE2EF9367C0014BE96 /* Secrets.example.xcconfig in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;

@@ -8,6 +8,5 @@
 import Foundation
 
 enum MapDestination: Hashable {
-    case space(place: Place)
     case messageComposer(location: Coordinate, place: Place?)
 }

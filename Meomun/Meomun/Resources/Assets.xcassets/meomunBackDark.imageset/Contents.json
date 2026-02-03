@@ -1,17 +1,17 @@
 {
   "images" : [
     {
-      "filename" : "placeSymbol 1.svg",
+      "filename" : "meomunBackDark.png",
       "idiom" : "universal",
       "scale" : "1x"
     },
     {
-      "filename" : "placeSymbol.svg",
+      "filename" : "meomunBackDark 1.png",
       "idiom" : "universal",
       "scale" : "2x"
     },
     {
-      "filename" : "placeSymbol 2.svg",
+      "filename" : "meomunBackDark 2.png",
       "idiom" : "universal",
       "scale" : "3x"
     }
