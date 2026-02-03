@@ -35,7 +35,6 @@ final class TimelineListStore: Store {
 
     enum Intent: Equatable {
         case onAppear
-        case setMessages([Message])
 
         case requestDeleteSelectedMessages          // 편집 모드 -> 삭제
         case confirmDeleteSelectedMessages          // 얼럿 - 삭제
@@ -50,7 +49,6 @@ final class TimelineListStore: Store {
     }
 
     enum Action {
-        case setMessages([Message])
         case addMessages([Message])
         case toggleMessageSelection(MessageID)
         case clearSelectedMessageIDs
@@ -186,12 +184,6 @@ final class TimelineListStore: Store {
                 continuation.yield(.hideAlert)
                 continuation.finish()
             }
-
-        case .setMessages(let messages):
-            return .init { continuation in
-                continuation.yield(.setMessages(messages))
-                continuation.finish()
-            }
         }
     }
 
@@ -199,9 +191,6 @@ final class TimelineListStore: Store {
         var newState = state
 
         switch action {
-        case .setMessages(let messages):
-            newState.messages = messages
-            cleanupSectionIfNeeded(&newState)
 
         case .addMessages(let messages):
             newState.messages += messages
