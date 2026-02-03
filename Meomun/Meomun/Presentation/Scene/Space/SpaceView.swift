@@ -138,6 +138,9 @@ struct SpaceView: View {
                 selectionBar
                     .opacity(!showPortal ? 1 : 0)
             }
+            .overlay(alignment: .top) {
+                SpaceOnboardingTipView()
+            }
             .animation(.spring(response: 0.25, dampingFraction: 0.9), value: store.state.selectedMessageID)
             .allowsHitTesting(store.state.deleteStatus == .idle)
             .overlay(alignment: .top) {
@@ -153,6 +156,7 @@ struct SpaceView: View {
                     showPortal = true
                 }
                 await store.send(intent: .onAppear(placeID: store.place.id))
+                SpaceIntroTip.isReady = true
             }
             .onChange(of: store.state.messages.map(\.id)) {
                 spaceController.sync(messages: store.state.messages)

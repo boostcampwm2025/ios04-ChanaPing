@@ -7,10 +7,27 @@
 
 import SwiftUI
 import SwiftData
+import TipKit
 
 @main
 struct MeomunApp: App {
     var meomunModelContainer: ModelContainer = AppDataConfig.makeContainer()
+
+    init() {
+        do {
+            #if DEBUG
+            // Uncomment while testing tips if they don't appear due to stored display history.
+            try Tips.resetDatastore()
+            #endif
+
+            try Tips.configure([
+                .displayFrequency(.immediate)
+            ])
+        } catch {
+            // TipKit configuration failure should not block app launch.
+            AppLog.error("[TipKit] configure failed: \(error)", category: .main)
+        }
+    }
 
     var body: some Scene {
         WindowGroup {
