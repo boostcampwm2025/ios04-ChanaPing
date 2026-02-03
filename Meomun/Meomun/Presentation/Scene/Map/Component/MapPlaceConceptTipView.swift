@@ -13,6 +13,7 @@ struct MapPlaceConceptTipView: View {
         TipView(MapPlaceConceptTip())
             .padding(.top, 12)
             .padding(.horizontal, 16)
+            .shadow(color: .black.opacity(0.12), radius: 18, x: 0, y: 6)
     }
 }
 
@@ -20,15 +21,11 @@ struct MapPlaceConceptTip: Tip {
     @Parameter static var isReady: Bool = false
 
     var title: Text {
-        Text("지도에 남긴 메세지를 찾아보세요!")
+        Text("지도에서 남긴 메시지를 확인해요.")
     }
 
     var message: Text? {
-        Text("메세지를 탭하면 그 장소에 남겨진 메세지를 모아볼 수 있어요.")
-    }
-
-    var image: Image? {
-        Image(systemName: "mappin.and.ellipse")
+        Text("메시지를 탭하면 그 장소에 남겨진 메시지를 모아볼 수 있어요.")
     }
 
     var rules: [Rule] {

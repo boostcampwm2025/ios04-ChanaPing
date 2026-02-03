@@ -13,6 +13,7 @@ struct TimelineSectionTipView: View {
         TipView(TimelineSectionTip(), arrowEdge: .top)
             .padding(.top, 12)
             .padding(.horizontal, 16)
+            .shadow(color: .black.opacity(0.12), radius: 18, x: 0, y: 6)
     }
 }
 
@@ -22,15 +23,11 @@ struct TimelineSectionTip: Tip {
     @Parameter static var isEditing: Bool = false
 
     var title: Text {
-        Text("월별 기록을 한눈에")
+        Text("시간 순으로 기록을 확인해요.")
     }
 
     var message: Text? {
-        Text("상단의 월(YYYY.MM) 옆 흔적 따라가기를 탭하면 해당 달의 기록을 모아볼 수 있어요.")
-    }
-
-    var image: Image? {
-        Image(systemName: "calendar")
+        Text("흔적 따라가기를 탭하면 해당 달의 기록을 모아볼 수 있어요.")
     }
 
     var rules: [Rule] {

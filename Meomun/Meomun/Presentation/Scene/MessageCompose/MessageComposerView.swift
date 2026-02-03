@@ -6,6 +6,7 @@
 //
 
 import SwiftUI
+import TipKit
 
 fileprivate enum Constants {
     static let navigationTitle = "잠시 남겨놓기"
@@ -118,13 +119,11 @@ struct MessageComposerView: View {
 private extension MessageComposerView {
     var content: some View {
         VStack(alignment: .center, spacing: 12) {
-            MessageComposerPlaceConceptTipView()
             Spacer()
             editorSection
             Spacer(minLength: 0)
             placeSection
             Spacer(minLength: 0)
-            MessageComposerConfirmDisabledTipView()
             confirmSection
             Spacer(minLength: 0)
         }
@@ -148,6 +147,7 @@ private extension MessageComposerView {
             .font(.headline.bold())
             .foregroundStyle(Color.mmSecondary)
             .frame(maxWidth: .infinity, alignment: .leading)
+            .popoverTip(MessageComposerPlaceConceptTip())
 
         MessageTextEditor(
             text: messageBinding,

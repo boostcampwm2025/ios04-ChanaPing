@@ -20,15 +20,11 @@ struct MessageComposerPlaceConceptTip: Tip {
     @Parameter static var isReady: Bool = false
 
     var title: Text {
-        Text("이 말은 ‘지금 머문 곳’에 남아요")
+        Text("이 메세지는 ‘지금 머문 곳’에 남아요")
     }
 
     var message: Text? {
-        Text("작성한 메시지는 현재 위치(머문 장소)와 함께 저장돼요. 장소를 선택하면 더 정확해져요.")
-    }
-
-    var image: Image? {
-        Image(systemName: "mappin.and.ellipse")
+        Text("작성한 메시지는 현재 위치와 함께 저장돼요.")
     }
 
     var rules: [Rule] {

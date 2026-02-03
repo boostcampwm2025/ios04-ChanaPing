@@ -22,15 +22,11 @@ struct MessageComposerConfirmDisabledTip: Tip {
     @Parameter static var hasStartedTyping: Bool = false
 
     var title: Text {
-        Text("‘확인’이 아직 비활성화예요")
+        Text("장소 태그를 입력해 보세요.")
     }
 
     var message: Text? {
         Text("메시지를 입력하면 ‘확인’ 버튼이 활성화돼요.")
-    }
-
-    var image: Image? {
-        Image(systemName: "checkmark.circle")
     }
 
     var rules: [Rule] {
