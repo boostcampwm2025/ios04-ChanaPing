@@ -7,27 +7,45 @@
 
 import Foundation
 
-struct MessageTimestampFormatter {
-    static func string(from date: Date) -> String {
-        let now = Date()
+enum MessageTimestampFormatterStyle {
+    case date
+    case dateTime
+}
+
+final class MessageTimestampFormatter {
+    let locale: Locale
+
+    private lazy var relativeFormatter: RelativeDateTimeFormatter = {
+        let formatter = RelativeDateTimeFormatter()
+        formatter.unitsStyle = .full
+        formatter.locale = locale
+        return formatter
+    }()
+
+    init(locale: Locale = .current) {
+        self.locale = locale
+    }
+
+    func string(from date: Date, style: MessageTimestampFormatterStyle, now: Date = Date()) -> String {
         let elapsed = now.timeIntervalSince(date)
         let oneDay: TimeInterval = 60 * 60 * 24
 
         if elapsed < oneDay {
-            return relativeString(from: date, now: now)
+            return relativeFormatter.localizedString(for: date, relativeTo: now)
         } else {
-            return absoluteString(from: date)
+            return absoluteString(from: date, style: style)
         }
     }
 
-    static func relativeString(from date: Date, now: Date) -> String {
-        let formatter = RelativeDateTimeFormatter()
-        formatter.unitsStyle = .full
-        return formatter.localizedString(for: date, relativeTo: now)
-    }
+    private func absoluteString(from date: Date, style: MessageTimestampFormatterStyle) -> String {
+        switch style {
+        case .date:
+            return date.formatted(.dateTime.year().month().day().locale(locale))
 
-    static func absoluteString(from date: Date) -> String {
-        return date.formatted(.dateTime.locale(Locale.current)
-        )
+        case .dateTime:
+            return date.formatted(
+                Date.FormatStyle(date: .complete, time: .shortened).locale(locale)
+            )
+        }
     }
 }

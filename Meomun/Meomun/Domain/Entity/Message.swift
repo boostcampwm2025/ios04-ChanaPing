@@ -26,7 +26,10 @@ extension Message {
         }
     }
 
-    var displayDateString: String {
-        return MessageTimestampFormatter.string(from: createdAt)
+    func displayDateString(
+        using formatter: MessageTimestampFormatter,
+        style: MessageTimestampFormatterStyle = .date
+    ) -> String {
+        formatter.string(from: createdAt, style: style)
     }
 }

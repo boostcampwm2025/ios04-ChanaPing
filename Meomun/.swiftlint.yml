@@ -27,12 +27,17 @@ line_length:
   ignores_comments: true                   # 주석에 대해 행 길이 제한 미적용
   ignores_interpolated_strings: true       # 보간된 문자열 행 길이 제한 미적용
 
+function_parameter_count:
+  warning: 7
 function_body_length:
-  warning: 70  # 함수는 70라인 이하로 유지 (하나의 역할만!)
+  warning: 100  # 함수는 100라인 이하로 유지
 type_body_length:
   warning: 300 # 클래스/구조체는 300라인 이하로 유지
 file_length:
   warning: 500 # 파일 크기 제한
+large_tuple:
+  warning: 3
+  error: 4
 
 # 4. 이름 규칙 커스터마이징
 identifier_name:
