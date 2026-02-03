@@ -7,7 +7,7 @@
 
 import SwiftUI
 
-final class BubbleChevronDrawer: BubbleDrawable {
+struct BubbleChevronDrawer: BubbleDrawable {
     private let point: CGPoint
 
     init(point: CGPoint) {
@@ -15,8 +15,7 @@ final class BubbleChevronDrawer: BubbleDrawable {
     }
 
     func draw(in context: CGContext, colorScheme: ColorScheme) {
-        let tabActive = BubbleStyleConstants.Colors.tabActive(colorScheme)
-
+        let tabActive = BubbleStyleConstants.Colors.tabActive
         // 배경 원
         let circleSize = BubbleLayoutConstants.chevronBackgroundSize
         let circleRect = CGRect(

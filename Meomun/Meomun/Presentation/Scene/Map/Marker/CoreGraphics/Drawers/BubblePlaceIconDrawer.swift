@@ -7,7 +7,7 @@
 
 import SwiftUI
 
-final class BubblePlaceIconDrawer: BubbleDrawable {
+struct BubblePlaceIconDrawer: BubbleDrawable {
     private let centerPoint: CGPoint
 
     init(centerPoint: CGPoint) {
@@ -33,14 +33,14 @@ final class BubblePlaceIconDrawer: BubbleDrawable {
         context.fillEllipse(in: circleRect)
 
         // 아이콘 이미지
-        if let icon = UIImage(named: "spaceIcon") {
-            let iconRect = CGRect(
-                x: centerPoint.x - iconSize / 2,
-                y: centerPoint.y - iconSize / 2,
-                width: iconSize,
-                height: iconSize
-            )
-            icon.draw(in: iconRect)
-        }
+        let icon = UIImage(resource: .spaceIcon)
+
+        let iconRect = CGRect(
+            x: centerPoint.x - iconSize / 2,
+            y: centerPoint.y - iconSize / 2,
+            width: iconSize,
+            height: iconSize
+        )
+        icon.draw(in: iconRect)
     }
 }

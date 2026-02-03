@@ -7,7 +7,7 @@
 
 import SwiftUI
 
-final class BubbleBackgroundDrawer: BubbleDrawable {
+struct BubbleBackgroundDrawer: BubbleDrawable {
     private let rect: CGRect
     private let cornerRadius: CGFloat
 
@@ -17,7 +17,7 @@ final class BubbleBackgroundDrawer: BubbleDrawable {
     }
 
     func draw(in context: CGContext, colorScheme: ColorScheme) {
-        let backgroundColor = BubbleStyleConstants.Colors.background(colorScheme)
+        let backgroundColor = BubbleStyleConstants.Colors.background
 
         // 그림자 설정
         context.setShadow(

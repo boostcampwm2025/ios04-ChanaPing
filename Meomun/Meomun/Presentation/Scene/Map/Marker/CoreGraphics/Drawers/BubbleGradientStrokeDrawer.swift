@@ -7,7 +7,7 @@
 
 import SwiftUI
 
-final class BubbleGradientStrokeDrawer: BubbleDrawable {
+struct BubbleGradientStrokeDrawer: BubbleDrawable {
     private let rect: CGRect
     private let cornerRadius: CGFloat
     private let colorType: BubbleStyleConstants.GradientStroke.ColorType

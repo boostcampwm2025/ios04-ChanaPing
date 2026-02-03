@@ -7,7 +7,7 @@
 
 import SwiftUI
 
-final class BubbleStackBackDrawer: BubbleDrawable {
+struct BubbleStackBackDrawer: BubbleDrawable {
     private let rect: CGRect
 
     init(rect: CGRect) {

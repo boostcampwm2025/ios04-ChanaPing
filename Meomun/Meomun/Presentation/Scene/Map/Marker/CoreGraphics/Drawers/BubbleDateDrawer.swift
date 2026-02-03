@@ -7,7 +7,7 @@
 
 import SwiftUI
 
-final class BubbleDateDrawer: BubbleDrawable {
+struct BubbleDateDrawer: BubbleDrawable {
     private let dateString: String
     private let point: CGPoint
     private let maxWidth: CGFloat
@@ -36,7 +36,7 @@ final class BubbleDateDrawer: BubbleDrawable {
 
         let attributes: [NSAttributedString.Key: Any] = [
             .font: BubbleStyleConstants.Fonts.date,
-            .foregroundColor: BubbleStyleConstants.Colors.textSecondary(colorScheme)
+            .foregroundColor: BubbleStyleConstants.Colors.textSecondary
         ]
 
         let attributedString = NSAttributedString(

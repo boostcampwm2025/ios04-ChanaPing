@@ -7,7 +7,7 @@
 
 import SwiftUI
 
-final class BubbleLocationDrawer: BubbleDrawable {
+struct BubbleLocationDrawer: BubbleDrawable {
     private let locationName: String
     private let point: CGPoint
 
@@ -29,7 +29,7 @@ final class BubbleLocationDrawer: BubbleDrawable {
 
         let attributes: [NSAttributedString.Key: Any] = [
             .font: BubbleStyleConstants.Fonts.location,
-            .foregroundColor: BubbleStyleConstants.Colors.textSecondary(colorScheme)
+            .foregroundColor: BubbleStyleConstants.Colors.textSecondary
         ]
 
         let attributedString = NSAttributedString(
@@ -41,7 +41,6 @@ final class BubbleLocationDrawer: BubbleDrawable {
     }
 
     private func drawMappinIcon(at point: CGPoint, in context: CGContext) {
-        // SF Symbol "mappin.and.ellipse" 그리기
         if let icon = UIImage(systemName: "mappin.and.ellipse") {
             let iconSize = BubbleLayoutConstants.locationIconSize
             let iconRect = CGRect(

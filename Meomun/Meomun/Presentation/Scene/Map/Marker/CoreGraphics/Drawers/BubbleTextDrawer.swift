@@ -7,7 +7,7 @@
 
 import SwiftUI
 
-final class BubbleTextDrawer: BubbleDrawable {
+struct BubbleTextDrawer: BubbleDrawable {
     private let text: String
     private let point: CGPoint
     private let maxWidth: CGFloat
@@ -40,7 +40,7 @@ final class BubbleTextDrawer: BubbleDrawable {
 
         let attributes: [NSAttributedString.Key: Any] = [
             .font: BubbleStyleConstants.Fonts.text,
-            .foregroundColor: BubbleStyleConstants.Colors.textPrimary(colorScheme),
+            .foregroundColor: BubbleStyleConstants.Colors.textPrimary,
             .paragraphStyle: paragraphStyle
         ]
 
