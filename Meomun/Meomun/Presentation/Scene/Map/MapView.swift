@@ -220,7 +220,7 @@ private extension MapView {
                 ),
                 onClose: { isSuccess in
                     if isSuccess {
-                        Task { await store.send(intent: .refreshVisibleMessages) }
+                        send(.refreshVisibleMessages)
                     }
 
                     onClose()
@@ -246,7 +246,7 @@ private extension MapView {
             }
         )
         .onDisappear {
-            Task { await store.send(intent: .refreshVisibleMessages) }
+            send(.refreshVisibleMessages)
         }
     }
 }
@@ -304,7 +304,7 @@ private extension MapView {
                 ),
                 deleteMessagesUseCase: DeleteMessagesUseCaseImpl(messageRepository: MessageRepositoryImpl()),
                 onDeletedMessages: { _ in
-                    Task { await store.send(intent: .refreshVisibleMessages) }
+                    send(.refreshVisibleMessages)
                 }
             ),
             isEditing: false,
@@ -312,11 +312,15 @@ private extension MapView {
             onBecameEmpty: {
                 Task { @MainActor in
                     try? await Task.sleep(for: .milliseconds(1000))
+
+                    guard isTimelineListPresented else { return }
+
                     withAnimation(.spring(response: 0.25, dampingFraction: 0.9)) {
                         isTimelineListPresented = false
                     }
-                    send(.dismissTimelineView)
                 }
+                
+                send(.dismissTimelineView)
             }
         )
     }
