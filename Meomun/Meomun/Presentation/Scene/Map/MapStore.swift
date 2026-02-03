@@ -119,9 +119,6 @@ final class MapStore: Store {
                     )
                 }
 
-                continuation.finish()
-                return
-
             case .userLocationReady(let coordinate):
                 continuation.yield(.setCameraCoordinate(coordinate))
 
@@ -133,9 +130,6 @@ final class MapStore: Store {
                     )
                 }
 
-                continuation.finish()
-                return
-
             case .onDisappear:
                 self.getNearbyMessageTask?.cancel()
                 self.getNearbyMessageTask = nil
@@ -143,11 +137,9 @@ final class MapStore: Store {
 
             case .userDidInteractMap:
                 continuation.yield(.setFollowingUser(false))
-                continuation.finish()
 
             case .followUserRequested:
                 continuation.yield(.setFollowingUser(true))
-                continuation.finish()
 
             case .cameraDidIdle(let coordinate, let boundingBox, let snapshot):
                 continuation.yield(.setCameraCoordinate(coordinate))
@@ -212,11 +204,9 @@ final class MapStore: Store {
             case .tapPlaceMarker(let messages):
                 let items = self.groupMessagesByPlace(messages)
                 continuation.yield(.setCarouselItems(items))
-                continuation.finish()
 
             case .dismissPlaceCarousel:
                 continuation.yield(.setCarouselItems([]))
-                continuation.finish()
 
             case .dismissTimelineView:
                 continuation.yield(.setSelectedNoPlace([]))
@@ -278,8 +268,6 @@ final class MapStore: Store {
         case .setToastMessage(let message):
             newState.toastMessage = message
         }
-
-        AppLog.debug("[MapView] message: \(newState.messages.count)", category: .store)
 
         return newState
     }

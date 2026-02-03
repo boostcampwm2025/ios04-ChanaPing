@@ -176,24 +176,16 @@ private extension PlaceSearchStore {
     @MainActor
     func handleSearchError(_ error: Error) {
         if let urlError = error as? URLError, urlError.code == .cancelled {
-            AppLog.debug("Search cancelled", category: .store)
+            AppLog.error("Search cancelled", category: .store)
             return
         }
 
-        if case let NetworkError.serverError(statusCode, data) = error {
+        if case let NetworkError.serverError(statusCode, _) = error {
             AppLog.error(
                 "LocalSearch server error",
                 category: .network,
                 error: error
             )
-
-            if let data,
-               let body = String(data: data, encoding: .utf8) {
-                AppLog.debug(
-                    "Response body: \(body)",
-                    category: .network
-                )
-            }
 
             apply(.setPhase(.failed("검색 중 오류가 발생했습니다. (\(statusCode))")))
         } else if case NetworkError.noConnection = error {

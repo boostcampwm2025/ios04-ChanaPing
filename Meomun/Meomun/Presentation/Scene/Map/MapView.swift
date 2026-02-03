@@ -334,7 +334,6 @@ private extension MapView {
                         isTimelineListPresented = false
                     }
                 }
-                
                 send(.dismissTimelineView)
             }
         )
