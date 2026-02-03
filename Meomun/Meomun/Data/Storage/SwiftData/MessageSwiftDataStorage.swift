@@ -81,8 +81,9 @@ actor MessageSwiftDataStorage: MessageStorage {
         var descriptor = FetchDescriptor<MessageModel>(
             sortBy: [SortDescriptor(\.createdAt, order: .reverse)]
         )
-        descriptor.fetchLimit = pageSize
-        descriptor.fetchOffset = max(0, page) * pageSize
+        // TODO: 페이지네이션 구현 후 살리기
+        // descriptor.fetchLimit = pageSize
+        // descriptor.fetchOffset = max(0, page) * pageSize
 
         let results = try context.fetch(descriptor)
         return results.map { $0.toDTO() }
