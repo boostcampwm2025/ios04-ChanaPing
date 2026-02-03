@@ -9,7 +9,7 @@ import SwiftUI
 import TipKit
 
 fileprivate enum Constants {
-    static let navigationTitle = "머물기"
+    static let navigationTitle = "머무르기"
     static let textEditorTitle = "지금 이 공간에 남겨볼까요?"
     static let textEditorPlaceholder = "여기서 떠오른 한 줄을 적어보세요."
     static let placeTip = """
