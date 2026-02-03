@@ -12,6 +12,8 @@ import SwiftUI
 struct SettingView: View {
     @StateObject private var store: SettingStore
     @Environment(\.scenePhase) private var scenePhase
+    @Environment(\.setTabBarHidden) private var setTabBarHidden
+    @Environment(\.setNavBarHidden) private var setNavBarHidden
     @State private var permissionStatus = LocationPermissionStatus.current
 
     private let mapView: NMFMapView = .init()
@@ -30,14 +32,26 @@ struct SettingView: View {
 
                     NavigationRow(title: "이용약관") {
                         TermsOfServiceView()
+                            .onAppear {
+                                setTabBarHidden(true)
+                                setNavBarHidden(true)
+                            }
                     }
 
                     NavigationRow(title: "개인정보처리방침") {
                         PrivacyPolicyView()
+                            .onAppear {
+                                setTabBarHidden(true)
+                                setNavBarHidden(true)
+                            }
                     }
 
                     NavigationRow(title: "오픈소스 라이선스") {
                         OpenSourceLicensesView()
+                            .onAppear {
+                                setTabBarHidden(true)
+                                setNavBarHidden(true)
+                            }
                     }
 
                     ActionRow(title: "네이버 지도 법적 공지") {
@@ -93,6 +107,8 @@ struct SettingView: View {
         }
         .onAppear {
             permissionStatus = LocationPermissionStatus.current
+            setTabBarHidden(false)
+            setNavBarHidden(false)
         }
         .onChange(of: scenePhase) { _, newPhase in
             if newPhase == .active {
@@ -185,31 +201,5 @@ private enum LocationPermissionStatus {
         case .unknown:
             return .unknown
         }
-    }
-}
-
-// MARK: - Placeholder Destinations
-
-private struct TermsOfServiceView: View {
-    var body: some View {
-        Text("이용약관 화면")
-            .frame(maxWidth: .infinity, maxHeight: .infinity)
-            .background(Color(.mmBackground))
-    }
-}
-
-private struct PrivacyPolicyView: View {
-    var body: some View {
-        Text("개인정보처리방침 화면")
-            .frame(maxWidth: .infinity, maxHeight: .infinity)
-            .background(Color(.mmBackground))
-    }
-}
-
-private struct OpenSourceLicensesView: View {
-    var body: some View {
-        Text("오픈소스 라이선스 화면")
-            .frame(maxWidth: .infinity, maxHeight: .infinity)
-            .background(Color(.mmBackground))
     }
 }
