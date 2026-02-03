@@ -285,8 +285,9 @@ extension TimelineListView {
 }
 
 // MARK: - TipKit state sync
+
 private extension TimelineListView {
-    private func syncTimelineTipState(isFirstAppear: Bool = false) {
+    func syncTimelineTipState(isFirstAppear: Bool = false) {
         if isFirstAppear {
             TimelineSectionTip.isReady = true
         }
