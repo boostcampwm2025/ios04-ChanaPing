@@ -41,7 +41,7 @@ private extension RotatingMessageStack {
                 .frame(height: 36, alignment: .center)
                 .clipped()
 
-            Text(message.displayDateString)
+            Text(message.displayDateString(using: AppConfig.timestampFormatter))
                 .font(.system(size: 11, weight: .semibold))
                 .foregroundStyle(Color.gray.opacity(0.8))
                 .frame(maxWidth: .infinity, alignment: .trailing)

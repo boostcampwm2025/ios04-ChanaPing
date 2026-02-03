@@ -17,6 +17,7 @@ struct TimelineListView: View {
     @Environment(\.setTabBarHidden) private var setTabBarHidden
     @StateObject private var store: TimelineListStore
     private let configuration: Configuration
+    private let onBecameEmpty: () -> Void
 
     // 외부 편집 상태 (SSOT: MainTabStore)
     private let isEditing: Bool
@@ -27,11 +28,14 @@ struct TimelineListView: View {
     init(store: TimelineListStore,
          isEditing: Bool,
          configuration: Configuration = .full,
-         onEditingChanged: @escaping (Bool) -> Void = { _ in }) {
+         onEditingChanged: @escaping (Bool) -> Void = { _ in },
+         onBecameEmpty: @escaping () -> Void = { }
+    ) {
         _store = StateObject(wrappedValue: store)
         self.isEditing = isEditing
         self.configuration = configuration
         self.onEditingChanged = onEditingChanged
+        self.onBecameEmpty = onBecameEmpty
     }
 
     private func send(_ intent: TimelineListStore.Intent) {
@@ -42,11 +46,18 @@ struct TimelineListView: View {
         VStack {
             if !store.state.messages.isEmpty {
                 content
-                    .padding(.top, 10)
+//                    .padding(.top, 10)
             } else {
                 emptyContent
             }
         }
+        .fullScreenCover(isPresented: isSelectedSectionOverlayPresentedBinding) {
+            if store.state.selectedSection != nil {
+                sectionOverlay
+                    .presentationBackground(.clear)
+            }
+        }
+        .transaction({ transaction in transaction.disablesAnimations = true })
         .overlay(alignment: .bottom) {
             if store.state.isEditing {
                 selectionBar
@@ -66,6 +77,10 @@ struct TimelineListView: View {
         .onChange(of: store.state.deleteStatus) { _, _ in
             setTabBarHidden(shouldHideTabBar)
         }
+        .onChange(of: store.state.messages.isEmpty) { _, isEmpty in
+            guard isEmpty else { return }
+            onBecameEmpty()
+        }
         .animation(.spring(response: 0.25, dampingFraction: 0.9), value: store.state.isEditing)
         .background(Color.mmBackground)
         .mmAlert(
@@ -80,15 +95,6 @@ struct TimelineListView: View {
                     .transition(.identity) // 애니메이션 없음
             }
         }
-        .overlay {
-            if store.state.selectedSection != nil {
-                sectionOverlay
-                    .frame(maxWidth: .infinity, maxHeight: .infinity)
-                    .ignoresSafeArea()
-                    .transition(.opacity)
-            }
-        }
-        .animation(.easeInOut(duration: 0.3), value: store.state.selectedSection != nil)
     }
 }
 
@@ -129,7 +135,7 @@ private extension TimelineListView {
                     }
                 }
             }
-            .padding(.top, 0)
+            .padding(.top, configuration.showsFooter && configuration.showsEditButton ? 0 : 44)
             .padding(.bottom, 16)
 
             if configuration.showsFooter && !store.state.messages.isEmpty {
@@ -272,7 +278,7 @@ extension TimelineListView {
 
         static let full = Configuration(showsFooter: true, showsEditButton: true)
 
-        static let bottomSheet = Configuration(showsFooter: false, showsEditButton: false)
+        static let bottomSheet = Configuration(showsFooter: true, showsEditButton: false)
     }
 }
 

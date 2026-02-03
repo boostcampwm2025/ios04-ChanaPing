@@ -26,4 +26,6 @@ enum AppConfig {
         }
         return key
     }
+
+    static let timestampFormatter: MessageTimestampFormatter = MessageTimestampFormatter()
 }
