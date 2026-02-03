@@ -19,10 +19,6 @@ final class LocationProvider: NSObject, ObservableObject {
     // 연속 추적이 이미 시작된 상태인지 여부(멱등성)
     private var isContinuousUpdating = false
 
-    // one-shot 대기자 (공간 화면에서 작성 버튼 탭 시 사용)
-    private var oneShotContinuations: [CheckedContinuation<Coordinate, Error>] = []
-    private var isRequestingOneShot = false
-
     // 위치 권한 허용 여부
     var hasAuthorized: Bool {
         authorizationStatus == .authorizedWhenInUse || authorizationStatus == .authorizedAlways
@@ -113,33 +109,23 @@ extension LocationProvider: CLLocationManagerDelegate {
         _ manager: CLLocationManager,
         didUpdateLocations locations: [CLLocation]
     ) {
-        isRequestingOneShot = false
-
         if wantsContinuousUpdates {
             isContinuousUpdating = true
         }
 
-        guard let last = locations.last else {
-            failOneShots(LocationError.noLocation)
-            return
-        }
+        guard let last = locations.last else { return }
 
         let coordinate = Coordinate(latitude: last.coordinate.latitude,
                                     longitude: last.coordinate.longitude)
         current = coordinate
-        succeedOneShots(coordinate)
     }
 
     func locationManager(_ manager: CLLocationManager, didFailWithError error: Error) {
-        isRequestingOneShot = false
-
         AppLog.error(
             "위치 업데이트 실패",
             category: .location,
             error: error
         )
-
-        failOneShots(error)
     }
 
     private func handleAuthorizationRevoked() {
@@ -151,23 +137,5 @@ extension LocationProvider: CLLocationManagerDelegate {
             manager.stopUpdatingLocation()
         }
         isContinuousUpdating = false
-
-        // one-shot 대기자 정리
-        isRequestingOneShot = false
-        failOneShots(LocationError.notAuthorized)
-    }
-
-    private func succeedOneShots(_ coordinate: Coordinate) {
-        guard !oneShotContinuations.isEmpty else { return }
-        let continuations = oneShotContinuations
-        oneShotContinuations.removeAll()
-        continuations.forEach { $0.resume(returning: coordinate) }
-    }
-
-    private func failOneShots(_ error: Error) {
-        guard !oneShotContinuations.isEmpty else { return }
-        let continuations = oneShotContinuations
-        oneShotContinuations.removeAll()
-        continuations.forEach { $0.resume(throwing: error) }
     }
 }
