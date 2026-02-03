@@ -34,6 +34,17 @@ struct MeomunApp: App {
             if let locationProvider: LocationProvider = DIContainer.resolve(),
                let rootStore: RootStore = DIContainer.resolve() {
                 RootView(locationProvider: locationProvider, store: rootStore)
+                    .task {
+                        // 프로파일링용 더미 데이터 생성
+                        do {
+                            if let storage: MessageSwiftDataStorage = DIContainer.resolve() {
+                                try await storage.seedProfilingData(markerCount: 10)
+                                AppLog.info("프로파일링 더미 데이터 생성 완료", category: .main)
+                            }
+                        } catch {
+                            AppLog.error("프로파일링 더미 데이터 생성 실패", category: .main, error: error)
+                        }
+                    }
             } else {
                 DIErrorFallbackView()
                     .onAppear {
