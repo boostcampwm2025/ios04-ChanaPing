@@ -6,6 +6,7 @@
 //
 
 import SwiftUI
+import TipKit
 
 fileprivate enum Constants {
     static let navigationTitle = "머문"
@@ -49,6 +50,10 @@ struct MapView: View {
             .overlay(alignment: .bottomTrailing) {
                 writeButton
                     .padding(.bottom, MMLayout.tabBarBottomOffset)
+            }
+            .overlay(alignment: .top) {
+                MapPlaceConceptTipView()
+                    .padding(.top, MMLayout.belowNavigationToolbarOffset)
             }
             .overlay(alignment: .bottom) {
                 if !store.state.carouselItems.isEmpty {
@@ -117,6 +122,7 @@ struct MapView: View {
                 setTabBarHidden(false)
                 setNavBarHidden(false)
                 locationProvider.startContinuous()
+                MapPlaceConceptTip.isReady = true
             }
             .onDisappear {
                 send(.onDisappear)
