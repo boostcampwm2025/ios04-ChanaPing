@@ -16,8 +16,6 @@ final class MessageRepositoryImpl: MessageRepository {
     }
 
     func createMessage(_ request: CreateMessageRequest) async throws {
-        AppLog.debug("createMessage 진입", category: .repository)
-        AppLog.debug(String(describing: request), category: .repository)
         let placeDTO: PlaceDTO? = request.place.map { place in
             PlaceDTO(
                 placeId: place.id.value,

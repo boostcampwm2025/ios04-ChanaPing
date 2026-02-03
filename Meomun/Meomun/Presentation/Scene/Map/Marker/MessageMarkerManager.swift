@@ -156,8 +156,6 @@ extension MessageMarkerManager {
         onTapPlace: (([Message]) -> Void)?,
         onTapNoPlace: (([Message]) -> Void)?
     ) {
-        AppLog.debug("[MessageMarkerManager] loadMessages: \(messages.count) messages", category: .location)
-
         // 바인딩 저장
         boundMapView = mapView
 
@@ -870,8 +868,6 @@ private extension MessageMarkerManager {
         // 2) cluster item map 구성
         var keyTagMap: [ItemKey: NSObject] = [:]
         keyTagMap.reserveCapacity(desiredGroupKeys.count)
-
-        AppLog.debug("[MessageMarkerManager] update \(desiredGroupKeys.count) messages", category: .location)
 
         for groupKey in desiredGroupKeys {
             let coord = groupKey.coordinate

@@ -60,11 +60,9 @@ final class SpaceController {
                 defer { isConfiguring = false }
 
                 // Camera 추가
-                AppLog.debug("S1. Camera added", category: .space)
                 rotationCamera.addToScene(content)
 
                 // SpaceRoot 생성: 돔/버블 오브젝트를 한 곳에 묶는 컨테이너
-                AppLog.debug("S2. SpaceRoot created", category: .space)
                 let root = Entity()
                 root.name = "SpaceRoot"
                 content.add(root)
@@ -72,14 +70,12 @@ final class SpaceController {
                 spaceRootEntity = root
 
                 // Dome 로드
-                AppLog.debug("S3. Dome loaded", category: .space)
                 let domeEntity = try await Entity(named: "Dome.usdz")
                 domeEntity.name = "Dome"
                 self.domeEntity = domeEntity
 
                 // 머테리얼 세팅
                 if let domeEnvironment = domeEnvironment {
-                    AppLog.debug("S4. Materials configured", category: .space)
                     materialConfigurator.configureDome(
                         domeEntity: domeEntity,
                         dayPart: domeEnvironment.dayPart
@@ -94,7 +90,6 @@ final class SpaceController {
                 root.addChild(domeEntity)
 
                 // Message template 로드
-                AppLog.debug("S5. Message template loaded", category: .space)
                 let messageEntity = try await Entity(named: "Message.usdz")
                 messageEntity.name = "MessageBubble"
 
@@ -130,8 +125,6 @@ final class SpaceController {
 
 extension SpaceController {
     func sync(messages: [Message]) {
-        AppLog.debug("SpaceController sync: \(messages.count)", category: .space)
-
         pendingMessages = messages
         trySyncIfPossible()
     }
@@ -142,7 +135,6 @@ extension SpaceController {
         guard let domeEntity else { return }
 
         // 머테리얼 업데이트
-        AppLog.debug("Dome Materials updated", category: .space)
         materialConfigurator.configureDome(
             domeEntity: domeEntity,
             dayPart: domeEnvironment.dayPart
@@ -155,14 +147,8 @@ extension SpaceController {
     }
 
     private func trySyncIfPossible() {
-        guard let root = spaceRootEntity else {
-            AppLog.debug("trySync blocked: root is nil", category: .space)
-            return
-        }
-        guard let template = messageBubbleTemplateEntity else {
-            AppLog.debug("trySync blocked: template is nil", category: .space)
-            return
-        }
+        guard let root = spaceRootEntity else { return }
+        guard let template = messageBubbleTemplateEntity else { return }
 
         let snapshot = pendingMessages
 

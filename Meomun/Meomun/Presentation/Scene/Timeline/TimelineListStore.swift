@@ -84,7 +84,7 @@ final class TimelineListStore: Store {
                         let messages = try await fetchRecentMessagesUseCase.execute(page: 0, pageSize: 10)
                         continuation.yield(.addMessages(messages))
                     } catch {
-                        AppLog.debug(error.localizedDescription, category: .store)
+                        AppLog.error(error.localizedDescription, category: .store, error: error)
                     }
 
                     continuation.finish()
@@ -213,7 +213,6 @@ final class TimelineListStore: Store {
             newState.messages.removeAll { messageIDs.contains($0.id) }
             newState.selectedMessageIDs.subtract(messageIDs)
             cleanupSectionIfNeeded(&newState)
-            AppLog.debug("[TimelineListStore] Deleted messages: \(newState.messages.count) left", category: .store)
 
         case .showDeleteAlert(let alert):
             newState.deleteAlert = alert

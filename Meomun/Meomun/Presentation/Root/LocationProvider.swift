@@ -42,7 +42,6 @@ final class LocationProvider: NSObject, ObservableObject {
             manager.requestWhenInUseAuthorization()
 
         case .authorizedWhenInUse, .authorizedAlways:
-            AppLog.debug("authorized -> requestLocation() for warm-up", category: .location)
             manager.requestLocation()
 
         case .denied, .restricted:
@@ -63,13 +62,9 @@ final class LocationProvider: NSObject, ObservableObject {
             return
         }
 
-        guard isContinuousUpdating == false else {
-            AppLog.debug("startContinuous() skipped (already updating)", category: .location)
-            return
-        }
+        guard isContinuousUpdating == false else { return }
 
         isContinuousUpdating = true
-        AppLog.debug("startUpdatingLocation()", category: .location)
         manager.startUpdatingLocation()
     }
 
@@ -77,40 +72,11 @@ final class LocationProvider: NSObject, ObservableObject {
     func stopContinuous() {
         wantsContinuousUpdates = false
 
-        guard isContinuousUpdating else {
-            AppLog.debug("stopContinuous() skipped (not updating)", category: .location)
-            return
-        }
+        guard isContinuousUpdating else { return }
 
         isContinuousUpdating = false
-        AppLog.debug("stopUpdatingLocation()", category: .location)
+
         manager.stopUpdatingLocation()
-    }
-
-    // 공간 화면: 작성 버튼 탭 시점의 최신 좌표 one-shot으로 받기
-    func requestCurrentOnce() async throws -> Coordinate {
-        // 권한 상태가 거부면 에러
-        guard manager.authorizationStatus == .authorizedWhenInUse
-                || manager.authorizationStatus == .authorizedAlways else {
-            throw LocationError.notAuthorized
-        }
-
-        return try await withCheckedThrowingContinuation { continuation in
-            oneShotContinuations.append(continuation)
-
-            // 이미 one-shot 요청 중이면 합류만 하고 종료
-            if isRequestingOneShot {
-                AppLog.debug(
-                    "one-shot location request joined (already requesting)",
-                    category: .location
-                )
-                return
-            }
-
-            isRequestingOneShot = true
-            AppLog.debug("requestLocation() one-shot", category: .location)
-            manager.requestLocation()
-        }
     }
 
     enum LocationError: Error {
@@ -182,7 +148,6 @@ extension LocationProvider: CLLocationManagerDelegate {
 
         // 연속 추적 중이면 중단
         if isContinuousUpdating {
-            AppLog.debug("authorization revoked -> stopUpdatingLocation()", category: .location)
             manager.stopUpdatingLocation()
         }
         isContinuousUpdating = false

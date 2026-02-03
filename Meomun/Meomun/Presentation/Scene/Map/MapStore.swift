@@ -279,8 +279,6 @@ final class MapStore: Store {
             newState.toastMessage = message
         }
 
-        AppLog.debug("[MapView] message: \(newState.messages.count)", category: .store)
-
         return newState
     }
 
