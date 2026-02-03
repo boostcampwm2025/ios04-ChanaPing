@@ -161,8 +161,6 @@ extension LocationProvider: CLLocationManagerDelegate {
         let coordinate = Coordinate(latitude: last.coordinate.latitude,
                                     longitude: last.coordinate.longitude)
         current = coordinate
-        AppLog.debug("Current location updated", category: .location)
-
         succeedOneShots(coordinate)
     }
 
