@@ -122,11 +122,7 @@ private extension TimelineListView {
                                 showTopLine: index != 0,
                                 showBottomLine: index != monthMessages.count - 1,
                                 selectionState: store.selectionState(for: message),
-                                onDelete: {
-                                    Task {
-                                        await store.send(intent: .requestDeleteMessage(message.id))
-                                    }
-                                }
+                                onDelete: { send(.requestDeleteMessage(message.id)) }
                             )
                             .onAppear {
                                 if !store.state.enableFetching { return }
