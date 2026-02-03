@@ -27,6 +27,8 @@ struct MeomunApp: App {
             // TipKit configuration failure should not block app launch.
             AppLog.error("[TipKit] configure failed: \(error)", category: .main)
         }
+
+        DIContainer.registerDependencies()
     }
 
     var body: some Scene {

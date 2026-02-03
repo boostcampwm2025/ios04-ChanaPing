@@ -40,3 +40,40 @@ final class DIContainer {
         return dependency
     }
 }
+
+extension DIContainer {
+    static func registerDependencies() {
+        let networkMonitor = NetworkMonitor()
+        let appSettingsOpner = AppSettingsOpener()
+        let locationProvider = LocationProvider()
+
+        // MARK: - Data
+
+        let messageStorage = MessageSwiftDataStorage.shared
+        let messageRepositoryImpl = MessageRepositoryImpl(storage: messageStorage)
+
+        // MARK: - Domain
+
+        let getNearbyMessagesUseCaseImpl = GetNearbyMessagesUseCaseImpl(messageRepository: messageRepositoryImpl)
+        let fetchRecentMessagesUseCaseImpl = FetchRecentMessagesUseCaseImpl(repository: messageRepositoryImpl)
+        let deleteMessagesUseCaseImpl = DeleteMessagesUseCaseImpl(messageRepository: messageRepositoryImpl)
+        let resetMessageUseCaseImpl = ResetMessagesUseCaseImpl(messageRepository: messageRepositoryImpl)
+
+        // MARK: - Presentation
+
+        let rootStore = RootStore(locationProvider: locationProvider, appSettingsOpener: appSettingsOpner)
+        let mainTabStore = MainTabStore()
+        let mapStore = MapStore(getNearbyMessagesUseCase: getNearbyMessagesUseCaseImpl, networkMonitor: networkMonitor)
+        let timeLineListStore = TimelineListStore(fetchRecentMessagesUseCase: fetchRecentMessagesUseCaseImpl, deleteMessagesUseCase: deleteMessagesUseCaseImpl)
+        let settingStore = SettingStore(appSettingsOpener: appSettingsOpner, resetMessagesUseCase: resetMessageUseCaseImpl)
+
+        // MARK: - register
+
+        DIContainer.shared.register(locationProvider)
+        DIContainer.shared.register(rootStore)
+        DIContainer.shared.register(mainTabStore)
+        DIContainer.shared.register(mapStore)
+        DIContainer.shared.register(timeLineListStore)
+        DIContainer.shared.register(settingStore)
+    }
+}
