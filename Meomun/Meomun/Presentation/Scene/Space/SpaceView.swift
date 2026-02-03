@@ -34,6 +34,8 @@ struct SpaceView: View {
     var body: some View {
         NavigationStack(path: $path) {
             ZStack {
+                Color.white.ignoresSafeArea()
+
                 RealityView { content in
                     // 가상 카메라 모드 설정 (AR이 아닌 3D 공간)
                     content.camera = .virtual
