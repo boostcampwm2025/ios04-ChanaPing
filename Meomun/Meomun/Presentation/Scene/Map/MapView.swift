@@ -133,16 +133,16 @@ struct MapView: View {
                 send(.onDisappear)
                 locationProvider.stopContinuous()
             }
-            .sheet(isPresented: isTimelineListPresentedBinding) {
-                timeLineListView
-                    .presentationDetents(.init(arrayLiteral: .medium, .large))
-                    .presentationDragIndicator(.visible)
-            }
             .fullScreenCover(isPresented: isPlaceSearchPresentedBinding) {
                 placeSearchOverlay
                     .presentationBackground(.clear)
             }
             .transaction { $0.disablesAnimations = true }
+            .sheet(isPresented: isTimelineListPresentedBinding) {
+                timeLineListView
+                    .presentationDetents(.init(arrayLiteral: .medium, .large))
+                    .presentationDragIndicator(.visible)
+            }
         }
         .mmToast(toastBinding, bottomPadding: 100)
     }
