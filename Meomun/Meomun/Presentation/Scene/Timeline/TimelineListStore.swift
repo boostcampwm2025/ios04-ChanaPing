@@ -355,4 +355,8 @@ extension TimelineListStore {
     func messages(in section: YearMonth) -> [Message] {
         state.sections.first(where: { $0.key == section })?.value ?? []
     }
+
+    func isLastMessage(messageId: MessageID) -> Bool {
+        state.messages.last?.id == messageId
+    }
 }

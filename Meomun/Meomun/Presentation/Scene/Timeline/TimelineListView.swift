@@ -128,6 +128,11 @@ private extension TimelineListView {
                                     }
                                 }
                             )
+                            .onAppear {
+                                if !store.state.enableFetching { return }
+                                guard store.isLastMessage(messageId: message.id) else { return }
+                                send(.requestNextPage)
+                            }
                             .animation(.spring(response: 0.3, dampingFraction: 0.6), value: store.state.isEditing)
                             .onTapGesture { send(.tapMessage(message.id)) }
                         }
@@ -163,19 +168,32 @@ private extension TimelineListView {
         }
     }
 
+    @ViewBuilder
     var footer: some View {
         VStack(spacing: 10) {
-            Image(systemName: "book.pages")
-                .font(.system(size: 26, weight: .regular))
-                .foregroundStyle(Color.mmSecondary)
+            if store.state.pagination.hasReachedEndPage {
+                Image(systemName: "book.pages")
+                    .font(.system(size: 26, weight: .regular))
+                    .foregroundStyle(Color.mmSecondary)
 
-            Text("END OF RECORDS")
-                .font(.footnote.weight(.semibold))
-                .tracking(1.2)
-                .foregroundStyle(Color.mmSecondary)
+                Text("END OF RECORDS")
+                    .font(.footnote.weight(.semibold))
+                    .tracking(1.2)
+                    .foregroundStyle(Color.mmSecondary)
+
+            } else if store.state.pagination.isLoadingNextPage {
+                ProgressView()
+                    .padding(.top, 8)
+
+                Text("내 기록 불러오는 중...")
+                    .font(.footnote.weight(.semibold))
+                    .foregroundStyle(Color.mmSecondary)
+            } else {
+                EmptyView()
+            }
         }
         .frame(maxWidth: .infinity)
-        .padding(.bottom, 100)
+        .padding(.bottom, 30)
     }
 
     var selectionBar: some View {
