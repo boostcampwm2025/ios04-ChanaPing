@@ -268,6 +268,55 @@ private extension TimelineListStore {
             }
         }
     }
+
+    func loadPage(page: Int) -> AsyncStream<Action> {
+        AsyncStream { continuation in
+            // 1. fetching 조건 확인
+            guard state.enableFetching else {
+                continuation.finish()
+                return
+            }
+
+            // 2. 마지막 페이지 도달 여부 확인
+            guard state.pagination.hasReachedEndPage == false else {
+                continuation.finish()
+                return
+            }
+
+            // 3. 페이지 로딩 상태 확인
+            guard state.pagination.isLoadingNextPage == false else {
+                continuation.finish()
+                return
+            }
+
+            continuation.yield(.setLoadingNextPage(true))
+
+            let pageSize = state.pagination.pageSize
+
+            Task {
+                defer {
+                    continuation.yield(.setLoadingNextPage(false))
+                    continuation.finish()
+                }
+
+                do {
+                    let newMessages = try await fetchRecentMessagesUseCase.execute(
+                        page: page,
+                        pageSize: pageSize
+                    )
+
+                    continuation.yield(.addMessages(newMessages))
+                    continuation.yield(.setCurrentPage(page + 1))
+
+                    if newMessages.count < pageSize {
+                        continuation.yield(.setReachedEndPage(true))
+                    }
+                } catch {
+                    AppLog.error(error.localizedDescription, category: .store, error: error)
+                }
+            }
+        }
+    }
 }
 
 // MARK: Section Helper
