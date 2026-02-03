@@ -25,7 +25,7 @@ struct MeomunApp: App {
             ])
         } catch {
             // TipKit configuration failure should not block app launch.
-            print("[TipKit] configure failed: \(error)")
+            AppLog.error("[TipKit] configure failed: \(error)", category: .main)
         }
     }
 
