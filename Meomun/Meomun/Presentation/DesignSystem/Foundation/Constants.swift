@@ -24,6 +24,9 @@ enum MMCornerRadius {
 }
 
 enum MMLayout {
+    /// 네비게이션 툴 아래 컴포넌트를 올릴 때 사용하는 top offset
+    static let belowNavigationToolbarOffset: CGFloat = 70
+
     /// 탭바 위에 컴포넌트를 올릴 때 사용하는 bottom offset (탭바 + 여유 공간)
     static let aboveTabBarOffset: CGFloat = 90
 

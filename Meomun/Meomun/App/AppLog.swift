@@ -19,6 +19,7 @@ enum LogCategory: String {
     case resource = "Resource"  // 모델, material, 에셋 로딩 관련
     case login = "Login"
     case storage = "Storage"
+    case main = "Main"
 }
 
 enum AppLog {
