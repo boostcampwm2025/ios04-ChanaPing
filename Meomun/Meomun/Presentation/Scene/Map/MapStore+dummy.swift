@@ -7,6 +7,7 @@
 
 import Foundation
 
+// swiftlint:disable file_length
 extension MapStore {
     // MARK: - 오프셋 상수
     // 북동쪽 오프셋 (위도 +0.0037, 경도 +0.0044)
@@ -27,6 +28,7 @@ extension MapStore {
     }
 
     // MARK: - 기존 더미 데이터
+    // swiftlint:disable:next function_body_length
     private func getOriginalDummyMessages() -> [Message] {
         // ───────────── 세종문화회관 (회전 그룹) ─────────────
         let place1 = Place(
