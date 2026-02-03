@@ -180,7 +180,7 @@ private extension PlaceSearchStore {
             return
         }
 
-        if case let NetworkError.serverError(statusCode, data) = error {
+        if case let NetworkError.serverError(statusCode, _) = error {
             AppLog.error(
                 "LocalSearch server error",
                 category: .network,

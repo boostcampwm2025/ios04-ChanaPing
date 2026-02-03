@@ -23,7 +23,6 @@ final class SpaceStore: Store {
         case setMessages([Message])
         case setDomeEnvironment(DomeEnvironment)
         case setError(String)
-        case setUserLocation(Coordinate)
         case setCurrentPlaceID(PlaceID)
         case setToastMessage(String?)
         case setSelectedMessage(MessageID?)
@@ -38,7 +37,6 @@ final class SpaceStore: Store {
         var errorMessage: String = ""
         var messages: [Message] = []
         var domeEnvironment: DomeEnvironment?
-        var userLocation: Coordinate?           // TODO: - 지도 > 공간 진입 시점 좌표 넘겨주고, 옵셔널 지우기
         var currentPlaceID: PlaceID?
         var toastMessage: String?
         var selectedMessageID: MessageID?
@@ -117,9 +115,6 @@ final class SpaceStore: Store {
 
         case .setError(let message):
             newState.errorMessage = message
-
-        case .setUserLocation(let location):
-            newState.userLocation = location
 
         case .setCurrentPlaceID(let placeID):
             newState.currentPlaceID = placeID
