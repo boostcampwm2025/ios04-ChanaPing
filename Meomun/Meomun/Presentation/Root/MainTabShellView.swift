@@ -37,6 +37,7 @@ struct MainTabShellView: View {
                     .padding(.top, 12)
                     .transition(.opacity)
                     .zIndex(99)
+                    .background(store.state.selectedTab == .record ? Color.mmBackground : Color.clear)
             }
         }
         .safeAreaInset(edge: .bottom) {

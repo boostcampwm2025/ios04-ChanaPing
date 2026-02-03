@@ -42,6 +42,7 @@ struct TimelineListView: View {
         VStack {
             if !store.state.messages.isEmpty {
                 content
+                    .padding(.top, 10)
             } else {
                 emptyContent
             }
@@ -128,7 +129,7 @@ private extension TimelineListView {
                     }
                 }
             }
-            .padding(.top, 10)
+            .padding(.top, 0)
             .padding(.bottom, 16)
 
             if configuration.showsFooter && !store.state.messages.isEmpty {
