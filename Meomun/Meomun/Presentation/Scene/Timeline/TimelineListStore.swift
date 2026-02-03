@@ -9,7 +9,17 @@ import Foundation
 import Combine
 
 final class TimelineListStore: Store {
+    struct Pagination: Equatable {
+        var currentPage: Int = 0
+        var pageSize: Int = 10
+        var isLoadingNextPage: Bool = false
+        var hasReachedEndPage: Bool = false
+    }
+
     struct State: Equatable {
+        var enableFetching: Bool = true
+        var pagination: Pagination = .init()
+
         var messages: [Message] = []
         var selectedSection: YearMonth?
         var isEditing: Bool = false
@@ -26,6 +36,7 @@ final class TimelineListStore: Store {
     enum Intent: Equatable {
         case onAppear
         case setMessages([Message])
+
         case requestDeleteSelectedMessages          // 편집 모드 -> 삭제
         case confirmDeleteSelectedMessages          // 얼럿 - 삭제
         case requestDeleteMessage(MessageID)        // 단일 메시지 삭제 요청 (메뉴 버튼)
@@ -63,7 +74,11 @@ final class TimelineListStore: Store {
         deleteMessagesUseCase: DeleteMessagesUseCase,
         onDeletedMessages: @escaping (Set<MessageID>) -> Void = { _ in }
     ) {
-        self.state = State(messages: initialMessages)
+        if initialMessages.isEmpty {
+            self.state = .init()
+        } else {
+            self.state = .init(enableFetching: false, messages: initialMessages)
+        }
         self.fetchRecentMessagesUseCase = fetchRecentMessagesUseCase
         self.deleteMessagesUseCase = deleteMessagesUseCase
         self.onDeletedMessages = onDeletedMessages
