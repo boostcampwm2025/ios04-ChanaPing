@@ -6,7 +6,7 @@
 //
 
 @MainActor
-protocol MarkerAttaching {
+protocol MarkerAttaching: AnyObject {
     func attach(_ marker: MarkerProtocol, to mapView: MapViewProtocol)
     func detach(_ marker: MarkerProtocol)
 }
@@ -19,7 +19,7 @@ final class MarkerRegistry {
     private var markers: [MarkerGroupKey: MarkerProtocol] = [:]
 
     private let markerFactory: MarkerFactoryProtocol
-    private var attacher: MarkerAttaching?
+    private weak var attacher: MarkerAttaching?
 
     init(markerFactory: MarkerFactoryProtocol) {
         self.markerFactory = markerFactory
