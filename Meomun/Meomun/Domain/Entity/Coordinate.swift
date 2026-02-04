@@ -11,18 +11,18 @@ struct Coordinate: Sendable, Equatable, Hashable {
     let latitude: Double
     let longitude: Double
 
-    // 소수점 5자리 정밀도 (약 1.1m 오차)
-    private static let precision: Double = 100_000
+    // 소수점 4자리 정밀도 (약 11m 오차)
+    private static let precision: Double = 10_000
 
     /// 서울 시청
     static let seoulCity: Coordinate = .init(latitude: 37.5665, longitude: 126.9780)
 
     private var normalizedLatitude: Int {
-        Int((latitude * Self.precision).rounded())
+        Int((latitude * Self.precision))
     }
 
     private var normalizedLongitude: Int {
-        Int((longitude * Self.precision).rounded())
+        Int((longitude * Self.precision))
     }
 
     func distance(to other: Coordinate) -> Double {
