@@ -213,77 +213,34 @@ extension MessageMarkerManager {
             noPlaceStore: noPlaceMessagesByCoord
         )
 
-        // 1) 새 스토어를 로컬에서 구성
-        // - Place 먼저 저장 -> NoPlace 저장(Place 겹치면 offset 적용)
-        var newPlace: [Coordinate: [Message]] = [:]
-        var newNoPlace: [Coordinate: [Message]] = [:]
-
-        let sorted = messages.sorted { $0.createdAt < $1.createdAt }
-
-        // 1-1) Place
-        for message in sorted where message.placeTag != nil {
-            guard let coordinate = message.placeTag?.coordinate else { return }
-            newPlace[coordinate, default: []].append(message)
-        }
-
-        // 1-2) NoPlace (Place가 있는 좌표와 동일하면 offset 적용)
-        for message in sorted where message.placeTag == nil {
-            let originalCoordinate = message.coordinate
-            let displayCoordinate: Coordinate
-
-            if newPlace[originalCoordinate] != nil {
-                displayCoordinate = originalCoordinate.offset(for: message.id)
-            } else {
-                displayCoordinate = originalCoordinate
-            }
-            newNoPlace[displayCoordinate, default: []].append(message)
-        }
-
-        // 2) newKeys
-        let newKeys = makeAllGroupKeys(placeStore: newPlace, noPlaceStore: newNoPlace)
-
-        // 3) diff 계산
-        let removed = oldKeys.subtracting(newKeys)
-        let added = newKeys.subtracting(oldKeys)
-        let common = oldKeys.intersection(newKeys)
-
-        // 4) changed 판단
-        var changed = Set<MarkerGroupKey>()
-        changed.reserveCapacity(common.count)
-
-        for key in common {
-            let oldHash = idsHashForKey(
-                key,
+        let oldSnapshot = MessageMarkerSnapshot(
+            placeStore: placeMessagesByCoord,
+            noPlaceStore: noPlaceMessagesByCoord,
+            allKeys: makeAllGroupKeys(
                 placeStore: placeMessagesByCoord,
                 noPlaceStore: noPlaceMessagesByCoord
             )
+        )
 
-            let newHash = idsHashForKey(
-                key,
-                placeStore: newPlace,
-                noPlaceStore: newNoPlace
-            )
+        let newSnapshot = MessageMarkerSnapshotBuilder.build(from: messages)
 
-            if oldHash != newHash {
-                changed.insert(key)
-            }
-        }
+        let diff = MessageMarkerDiffCalculator.diff(old: oldSnapshot, new: newSnapshot)
 
-        // 5) 데이터 저장소 최신화
-        placeMessagesByCoord = newPlace
-        noPlaceMessagesByCoord = newNoPlace
+        // 데이터 저장소 최신화
+        placeMessagesByCoord = newSnapshot.placeStore
+        noPlaceMessagesByCoord = newSnapshot.noPlaceStore
 
         if isClusterMode {
             syncClusterItemsIfNeeded()
         }
 
-        // 6) 지도에서 사라질 마커 제거
-        for key in removed {
+        // 지도에서 사라질 마커 제거
+        for key in diff.removed {
             removeMarker(for: key)
         }
 
-        // 7) added + changed 업데이트
-        for key in added.union(changed) {
+        // added + changed 업데이트
+        for key in diff.added.union(diff.changed) {
             updateMarkersForKey(
                 key,
                 mapView: mapView,
