@@ -44,4 +44,54 @@ struct BubblePlacer {
         // 실패 시 fallback
         return SIMD3<Float>(minimumDistanceFromViewAxis, yRange.upperBound, -radiusRange.upperBound)
     }
+
+    func randomNonOverlappingPositionInsideHemisphere(
+        radiusRange: ClosedRange<Float>,
+        yRange: ClosedRange<Float>,
+        minimumDistanceFromCenter: Float,
+        minimumDistanceFromViewAxis: Float,
+        maxAttempts: Int,
+        requiredRadius: Float,
+        existing: [BubblePlacementRecord],
+        spacing: Float
+    ) -> SIMD3<Float> {
+        for _ in 0..<maxAttempts {
+            let candidate = randomPositionInsideHemisphere(
+                radiusRange: radiusRange,
+                yRange: yRange,
+                minimumDistanceFromCenter: minimumDistanceFromCenter,
+                minimumDistanceFromViewAxis: minimumDistanceFromViewAxis,
+                maxAttempts: 1
+            )
+
+            if isValid(candidate: candidate, requiredRadius: requiredRadius, existing: existing, spacing: spacing) {
+                return candidate
+            }
+        }
+
+        // 실패 시 fallback: 그냥 기본 배치
+        return randomPositionInsideHemisphere(
+            radiusRange: radiusRange,
+            yRange: yRange,
+            minimumDistanceFromCenter: minimumDistanceFromCenter,
+            minimumDistanceFromViewAxis: minimumDistanceFromViewAxis,
+            maxAttempts: maxAttempts
+        )
+    }
+
+    private func isValid(
+        candidate: SIMD3<Float>,
+        requiredRadius: Float,
+        existing: [BubblePlacementRecord],
+        spacing: Float
+    ) -> Bool {
+        for record in existing {
+            let minDistance = requiredRadius + record.radius + spacing
+            let distanceSquared = simd_distance_squared(candidate, record.position)
+            if distanceSquared < (minDistance * minDistance) {
+                return false
+            }
+        }
+        return true
+    }
 }
