@@ -14,12 +14,13 @@ fileprivate enum Constants {
 }
 
 struct MainTabShellView: View {
-    @StateObject private var mapStore = MapStore(
-        getNearbyMessagesUseCase: GetNearbyMessagesUseCaseImpl(messageRepository: MessageRepositoryImpl()),
-        networkMonitor: NetworkMonitor()
-    )
+    @StateObject private var mapStore: MapStore
+    @StateObject private var store: MainTabStore
 
-    @StateObject private var store = MainTabStore()
+    init() {
+        _mapStore = StateObject(wrappedValue: DIContainer.resolveOrDie())
+        _store = StateObject(wrappedValue: DIContainer.resolveOrDie())
+    }
 
     var body: some View {
         ZStack {
@@ -71,22 +72,12 @@ struct MainTabShellView: View {
         case .map:
             MapView(
                 store: mapStore,
-                messageMarkerManager: MessageMarkerManager(
-                    rotationAnimator: .init(),
-                    bubbleImageRenderer: .init()
-                )
+                messageMarkerManager: DIContainer.resolveOrDie()
             )
 
         case .record:
             TimelineListView(
-                store: TimelineListStore(
-                    fetchRecentMessagesUseCase: FetchRecentMessagesUseCaseImpl(
-                        repository: MessageRepositoryImpl()
-                    ),
-                    deleteMessagesUseCase: DeleteMessagesUseCaseImpl(
-                        messageRepository: MessageRepositoryImpl()
-                    )
-                ),
+                store: DIContainer.resolveOrDie(),
                 isEditing: store.state.isRecordEditing,
                 onEditingChanged: { isEditing in
                     Task { await store.send(intent: .setRecordEditing(isEditing)) }
@@ -95,12 +86,7 @@ struct MainTabShellView: View {
 
         case .setting:
             NavigationStack {
-                SettingView(
-                    store: SettingStore(
-                        appSettingsOpener: AppSettingsOpener(),
-                        resetMessagesUseCase: ResetMessagesUseCaseImpl(messageRepository: MessageRepositoryImpl())
-                    )
-                )
+                SettingView(store: DIContainer.resolveOrDie())
             }
         }
     }
