@@ -11,8 +11,8 @@ protocol MarkerAttaching {
     func detach(_ marker: MarkerProtocol)
 }
 
-/// markers 딕셔너리의 소유권 + 마커 생성/재사용/삭제/일괄 attach/detach 책임만 담당.
-/// - 클러스터 모드 정책(isClusterMode)은 밖에서 주입(MarkerAttaching)으로 통제.
+/// 마커 저장소 + 생명주기(생성/재사용/삭제) + 일괄 attach/detach 만 담당.
+/// "언제 attach할지"는 외부(MessageMarkerManager)가 결정.
 @MainActor
 final class MarkerRegistry {
 
@@ -47,7 +47,10 @@ final class MarkerRegistry {
         coordinate: Coordinate,
         mapView: MapViewProtocol
     ) -> MarkerProtocol {
-        if let existing = markers[key] { return existing }
+        if let existing = markers[key] {
+            attacher?.attach(existing, to: mapView)
+            return existing
+        }
 
         let marker = markerFactory.makeMarker(coordinate: coordinate)
         attacher?.attach(marker, to: mapView)
@@ -64,23 +67,16 @@ final class MarkerRegistry {
     }
 
     func removeAll() {
-        for (_, marker) in markers {
-            attacher?.detach(marker)
-        }
-
+        markers.values.forEach { attacher?.detach($0) }
         markers.removeAll()
     }
 
     func detachAll() {
-        for (_, marker) in markers {
-            attacher?.detach(marker)
-        }
+        markers.values.forEach { attacher?.detach($0) }
     }
 
     func attachAll(to mapView: MapViewProtocol) {
-        for (_, marker) in markers {
-            attacher?.attach(marker, to: mapView)
-        }
+        markers.values.forEach { attacher?.attach($0, to: mapView) }
     }
 }
 

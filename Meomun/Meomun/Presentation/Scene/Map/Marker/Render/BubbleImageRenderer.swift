@@ -66,7 +66,7 @@ final class BubbleImageRenderer: BubbleImageRendering {
         message: Message,
         scale: CGFloat? = nil
     ) async -> UIImage {
-        let bubble = DecoratedMessageBubble(
+        let bubble = await DecoratedMessageBubble(
             message: message,
             layout: .flexible
         )
@@ -90,7 +90,7 @@ final class BubbleImageRenderer: BubbleImageRendering {
         progress: Double,
         scale: CGFloat? = nil
     ) async -> UIImage {
-        let bubble = DecoratedMessageBubble(
+        let bubble = await DecoratedMessageBubble(
             message: current,
             layout: .fixedSize(rotatingBubbleWidth),
             rotating: (current: current, next: next, progress: progress)

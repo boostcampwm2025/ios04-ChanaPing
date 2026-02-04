@@ -133,6 +133,12 @@ final class MapViewController: UIViewController {
 
     override func viewWillAppear(_ animated: Bool) {
         super.viewWillAppear(animated)
+
+        messageMarkerManager.onViewWillAppear(
+            mapView: mapViewAdapter,
+            zoomLevel: naverMapView.mapView.zoomLevel
+        )
+
         startBubbleRotationTimer()
     }
 
@@ -335,7 +341,10 @@ extension MapViewController: NMFMapViewCameraDelegate {
         let snapshot = currentSnapshot(from: mapView)
 
         onCameraIdle?(coordinate, domainBounds, snapshot)
-        messageMarkerManager.updateClusterModeIfNeeded(zoomLevel: mapView.zoomLevel)
+        messageMarkerManager.updateClusterModeIfNeeded(
+            zoomLevel: mapView.zoomLevel,
+            mapView: mapViewAdapter
+        )
     }
 
     func mapView(_ mapView: NMFMapView, cameraDidChangeByReason reason: Int, animated: Bool) {

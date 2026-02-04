@@ -103,6 +103,12 @@ extension MessageMarkerManager {
 
 extension MessageMarkerManager {
 
+    func onViewWillAppear(mapView: MapViewProtocol, zoomLevel: Double) {
+        clusterController.bind(mapView: mapView)
+        clusterController.updateModeIfNeeded(zoomLevel: zoomLevel)
+        markerRegistry.attachAll(to: mapView)
+    }
+
     /// 메시지 스냅샷을 적용하여 지도 마커를 최소 갱신합니다.
     /// - 클러스터러 bind 및 클러스터 items 동기화 포함
     func loadMessages(
@@ -111,9 +117,6 @@ extension MessageMarkerManager {
         onTapPlace: (([Message]) -> Void)?,
         onTapNoPlace: (([Message]) -> Void)?
     ) {
-        // 클러스터러 준비
-        clusterController.bind(mapView: mapView)
-
         applySnapshot(
             messages,
             mapView: mapView,
@@ -123,8 +126,9 @@ extension MessageMarkerManager {
     }
 
     /// 줌 레벨 변경에 따라 클러스터 모드 전환을 시도합니다.
-    func updateClusterModeIfNeeded(zoomLevel: Double) {
+    func updateClusterModeIfNeeded(zoomLevel: Double, mapView: MapViewProtocol) {
         clusterController.updateModeIfNeeded(zoomLevel: zoomLevel)
+        markerRegistry.attachAll(to: mapView)
     }
 }
 
