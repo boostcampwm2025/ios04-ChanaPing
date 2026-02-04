@@ -24,11 +24,10 @@ struct BubbleCompositor {
     /// - Parameters:
     ///   - drawables: 그릴 Drawable 배열
     ///   - baseImage: nil이면 clear 후 그리기, 있으면 이 이미지를 먼저 그린 뒤 drawables 그리기 (캐시 베이스 + 애니메이션 레이어 합성용)
-    ///   - opaque: false면 투명 배경 (위치 레이어 캐시용)
-    func render(drawables: [BubbleDrawable], over baseImage: UIImage? = nil, opaque: Bool = true) -> UIImage {
+    func render(drawables: [BubbleDrawable], over baseImage: UIImage? = nil) -> UIImage {
         let format = UIGraphicsImageRendererFormat()
         format.scale = scale
-        format.opaque = opaque
+        format.opaque = false
 
         let renderer = UIGraphicsImageRenderer(size: size, format: format)
 
@@ -51,6 +50,7 @@ struct BubbleCompositor {
     func composite(base: UIImage, top: UIImage) -> UIImage {
         let format = UIGraphicsImageRendererFormat()
         format.scale = scale
+        format.opaque = false
 
         let renderer = UIGraphicsImageRenderer(size: size, format: format)
 

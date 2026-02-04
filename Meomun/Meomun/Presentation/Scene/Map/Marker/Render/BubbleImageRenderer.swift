@@ -117,7 +117,7 @@ final class BubbleImageRenderer: BubbleImageRendering {
             baseImage = cached
         } else {
             let baseDrawables = BubbleDrawableFactory.makeBaseDrawables(rect: rect, hasPlaceTag: hasPlaceTag)
-            baseImage = compositor.render(drawables: baseDrawables, opaque: false)
+            baseImage = compositor.render(drawables: baseDrawables)
             await bubbleImageCache.setBaseImage(baseImage, hasPlaceTag: hasPlaceTag)
         }
 
@@ -127,7 +127,7 @@ final class BubbleImageRenderer: BubbleImageRendering {
             locationImage = cached
         } else {
             let locationDrawable = BubbleDrawableFactory.makeLocationDrawable(rect: rect, locationName: locationText)
-            locationImage = compositor.render(drawables: [locationDrawable], opaque: false)
+            locationImage = compositor.render(drawables: [locationDrawable])
             await bubbleImageCache.setLocationTextImage(locationImage, locationText: locationText)
         }
 
@@ -141,6 +141,6 @@ final class BubbleImageRenderer: BubbleImageRendering {
             progress: progress,
             rect: rect
         )
-        return compositor.render(drawables: animationDrawables, over: underlay, opaque: false)
+        return compositor.render(drawables: animationDrawables, over: underlay)
     }
 }
