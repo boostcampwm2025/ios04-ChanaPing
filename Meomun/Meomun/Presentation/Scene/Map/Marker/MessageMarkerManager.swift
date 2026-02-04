@@ -34,30 +34,23 @@ final class MessageMarkerManager: MarkerAttaching {
 
     private let clusterController: MarkerClusteringControlling
 
-    /// 외부 바인딩(카메라 이벤트에서 모드 전환용)
-    private weak var boundMapView: MapViewProtocol?
-
-    // MARK: - Factory
-
-    private let markerFactory: MarkerFactoryProtocol
-    private let clustererFactory: ClustererFactoryProtocol
-
     // MARK: - Dependencies
 
     private let rotationAnimator: MessageRotationAnimating
     private let bubbleImageRenderer: BubbleImageRendering
+    private let tapRoutingPolicy: MarkerTapRouting
 
     init(
         markerFactory: MarkerFactoryProtocol,
         clustererFactory: ClustererFactoryProtocol,
         rotationAnimator: MessageRotationAnimating,
         bubbleImageRenderer: BubbleImageRendering,
+        tapRoutingPolicy: MarkerTapRouting = MarkerTapRoutingPolicy(),
         displayLimit: Int = 10
     ) {
-        self.markerFactory = markerFactory
-        self.clustererFactory = clustererFactory
         self.rotationAnimator = rotationAnimator
         self.bubbleImageRenderer = bubbleImageRenderer
+        self.tapRoutingPolicy = tapRoutingPolicy
         self.displayLimit = displayLimit
 
         self.renderScheduler = MarkerRenderScheduler(renderer: bubbleImageRenderer)
@@ -110,9 +103,6 @@ extension MessageMarkerManager {
         onTapPlace: (([Message]) -> Void)?,
         onTapNoPlace: (([Message]) -> Void)?
     ) {
-        // 바인딩 저장
-        boundMapView = mapView
-
         // 클러스터러 준비
         clusterController.bind(mapView: mapView)
 
@@ -267,52 +257,22 @@ extension MessageMarkerManager {
         onTapPlace: (([Message]) -> Void)?,
         onTapNoPlace: (([Message]) -> Void)?
     ) {
-        let coord = key.coordinate
+        updateMarker(
+            coord: key.coordinate,
+            isPlace: key.isPlace,
+            mapView: mapView
+        ) { [weak self] messages in
+            guard let self else { return }
 
-        if key.isPlace {
-            updateMarker(coord: coord, isPlace: true, mapView: mapView) { messages in
-                let uniquePlaces = Set(messages.compactMap { $0.placeTag })
-                if uniquePlaces.count == 1 {
-                    onTapPlace?(messages)
-                }
-            }
-        } else {
-            updateMarker(coord: coord, isPlace: false, mapView: mapView) { messages in
-                onTapNoPlace?(messages)
-            }
-        }
-    }
+            guard let route = self.tapRoutingPolicy.route(
+                isPlaceMarker: key.isPlace,
+                messages: messages
+            ) else { return }
 
-    /// 특정 좌표의 마커들을 업데이트합니다.
-    ///
-    /// 하나의 좌표에는 최대 2개의 마커가 있을 수 있습니다:
-    /// 1. Place 마커: 장소 태그가 있는 메시지들
-    /// 2. NoPlace 마커: 장소 태그가 없는 메시지들
-    private func updateMarkersForCoordinate(
-        _ coord: Coordinate,
-        mapView: MapViewProtocol,
-        onTapPlace: (([Message]) -> Void)?,
-        onTapNoPlace: (([Message]) -> Void)?
-    ) {
-        // Place가 없고, 기존 place 마커도 없다면 스킵
-        if (placeMessagesByCoord[coord]?.isEmpty ?? true)
-            && markerRegistry.marker(for: .init(coordinate: coord, isPlace: true)) == nil {
-            // 아무 동작 X
-        } else {
-            updateMarker(coord: coord, isPlace: true, mapView: mapView) { messages in
-                // Place가 있는 메시지만 필터링하여 전달
-                let placeMessages = messages.filter { $0.placeTag != nil }
-                guard !placeMessages.isEmpty else { return }
-                onTapPlace?(placeMessages)
-            }
-        }
-
-        // NoPlace가 없고, 기존 noPlace 마커도 없다면 스킵
-        if (noPlaceMessagesByCoord[coord]?.isEmpty ?? true)
-            && markerRegistry.marker(for: .init(coordinate: coord, isPlace: false)) == nil {
-            // 아무 동작 X
-        } else {
-            updateMarker(coord: coord, isPlace: false, mapView: mapView) { messages in
+            switch route {
+            case .place(messages: let messages):
+                onTapPlace?(messages)
+            case .noPlace(messages: let messages):
                 onTapNoPlace?(messages)
             }
         }
