@@ -229,14 +229,8 @@ private extension MapView {
             store: .init(
                 currentLocation: location,
                 currentPlace: place,
-                createMessage: CreateMessageUseCaseImpl(
-                    messageRepository: MessageRepositoryImpl()
-                ),
-                reverseGeocoding: ReverseGeocodeUseCaseImpl(
-                    repository: ReverseGeocodeRepositoryImpl(
-                        remote: SupabaseServiceImpl(network: NetworkClientImpl())
-                    )
-                ),
+                createMessage: DIContainer.resolveOrDie(),
+                reverseGeocoding: DIContainer.resolveOrDie(),
                 onClose: { isSuccess in
                     if isSuccess {
                         send(.refreshVisibleMessages)
@@ -251,12 +245,8 @@ private extension MapView {
     private func spaceView(place: Place) -> some View {
         SpaceView(
             store: .init(
-                fetchPlaceMessagesUseCase: FetchPlaceMessagesUseCaseImpl(
-                    messageRepository: MessageRepositoryImpl()
-                ),
-                deleteMessagesUseCase: DeleteMessagesUseCaseImpl(
-                    messageRepository: MessageRepositoryImpl()
-                ),
+                fetchPlaceMessagesUseCase: DIContainer.resolveOrDie(),
+                deleteMessagesUseCase: DIContainer.resolveOrDie(),
                 place: place
             )
         )
@@ -274,11 +264,7 @@ private extension MapView {
         if let current = locationProvider.current {
             PlaceSearchOverlayView(
                 store: PlaceSearchStore(
-                    searchPlaces: SearchNearbyPlaceUseCaseImpl(
-                        placeRepository: NaverPlaceSearchRepositoryImpl(
-                            remote: SupabaseServiceImpl(network: NetworkClientImpl())
-                        )
-                    ),
+                    searchPlaces: DIContainer.resolveOrDie(),
                     userLocation: current,
                     onSelect: { place in
                         send(.selectPlace(place))
@@ -314,10 +300,8 @@ private extension MapView {
         TimelineListView(
             store: TimelineListStore(
                 initialMessages: store.state.selectedNoPlaceMessages,
-                fetchRecentMessagesUseCase: FetchRecentMessagesUseCaseImpl(
-                    repository: MessageRepositoryImpl()
-                ),
-                deleteMessagesUseCase: DeleteMessagesUseCaseImpl(messageRepository: MessageRepositoryImpl()),
+                fetchRecentMessagesUseCase: DIContainer.resolveOrDie(),
+                deleteMessagesUseCase: DIContainer.resolveOrDie(),
                 onDeletedMessages: { _ in
                     send(.refreshVisibleMessages)
                 }

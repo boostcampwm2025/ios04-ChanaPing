@@ -5,6 +5,8 @@
 //  Created by hoon on 2/3/26.
 //
 
+import SwiftData
+
 final class DIContainer {
     private static var shared = DIContainer()
 
@@ -76,16 +78,36 @@ extension DIContainer {
     static func registerDependencies() {
         // MARK: - Infra / App
 
+        let modelContainer = AppDataConfig.makeContainer()
+        DIContainer.register(modelContainer)
         DIContainer.registerFactory(NetworkMonitoring.self) { NetworkMonitor() }
         DIContainer.registerFactory(AppSettingsOpening.self) { AppSettingsOpener() }
         DIContainer.registerFactory(LocationProvider.self) { LocationProvider() }
+        DIContainer.registerFactory(NetworkClient.self) {
+            NetworkClientImpl(decoder: JSONDecoders.iso8601)
+        }
+        DIContainer.registerFactory(SupabaseService.self) {
+            let client: NetworkClient = DIContainer.resolveOrDie()
+            return SupabaseServiceImpl(network: client)
+        }
 
         // MARK: - Data
 
-        DIContainer.registerFactory(MessageStorage.self) { MessageSwiftDataStorage.shared }
+        DIContainer.registerFactory(MessageStorage.self) {
+            let container: ModelContainer = DIContainer.resolveOrDie()
+            return MessageSwiftDataStorage(container: container)
+        }
         DIContainer.registerFactory(MessageRepository.self) {
             let storage: MessageStorage = DIContainer.resolveOrDie()
             return MessageRepositoryImpl(storage: storage)
+        }
+        DIContainer.registerFactory(PlaceRepository.self) {
+            let remote: SupabaseService = DIContainer.resolveOrDie()
+            return NaverPlaceSearchRepositoryImpl(remote: remote)
+        }
+        DIContainer.registerFactory(ReverseGeocodeRepository.self) {
+            let remote: SupabaseService = DIContainer.resolveOrDie()
+            return ReverseGeocodeRepositoryImpl(remote: remote)
         }
 
         // MARK: - Domain
@@ -93,6 +115,14 @@ extension DIContainer {
         DIContainer.registerFactory(GetNearbyMessagesUseCase.self) {
             let repo: MessageRepository = DIContainer.resolveOrDie()
             return GetNearbyMessagesUseCaseImpl(messageRepository: repo)
+        }
+        DIContainer.registerFactory(CreateMessageUseCase.self) {
+            let repo: MessageRepository = DIContainer.resolveOrDie()
+            return CreateMessageUseCaseImpl(messageRepository: repo)
+        }
+        DIContainer.registerFactory(FetchPlaceMessagesUseCase.self) {
+            let repo: MessageRepository = DIContainer.resolveOrDie()
+            return FetchPlaceMessagesUseCaseImpl(messageRepository: repo)
         }
         DIContainer.registerFactory(FetchRecentMessagesUseCase.self) {
             let repo: MessageRepository = DIContainer.resolveOrDie()
@@ -106,9 +136,17 @@ extension DIContainer {
             let repo: MessageRepository = DIContainer.resolveOrDie()
             return ResetMessagesUseCaseImpl(messageRepository: repo)
         }
+        DIContainer.registerFactory(ReverseGeocodeUseCase.self) {
+            let repo: ReverseGeocodeRepository = DIContainer.resolveOrDie()
+            return ReverseGeocodeUseCaseImpl(repository: repo)
+        }
+        DIContainer.registerFactory(SearchNearbyPlaceUseCase.self) {
+            let repo: PlaceRepository = DIContainer.resolveOrDie()
+            return SearchNearbyPlaceUseCaseImpl(placeRepository: repo)
+        }
 
         // MARK: - Presentation
-        
+
         DIContainer.registerFactory(RootStore.self) {
             let locationProvider: LocationProvider = DIContainer.resolveOrDie()
             let appSettingsOpener: AppSettingsOpening = DIContainer.resolveOrDie()

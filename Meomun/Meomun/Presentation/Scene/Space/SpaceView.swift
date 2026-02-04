@@ -113,14 +113,8 @@ struct SpaceView: View {
                         store: .init(
                             currentLocation: location,
                             currentPlace: place,
-                            createMessage: CreateMessageUseCaseImpl(
-                                messageRepository: MessageRepositoryImpl()
-                            ),
-                            reverseGeocoding: ReverseGeocodeUseCaseImpl(
-                                repository: ReverseGeocodeRepositoryImpl(
-                                    remote: SupabaseServiceImpl(network: NetworkClientImpl())
-                                )
-                            ),
+                            createMessage: DIContainer.resolveOrDie(),
+                            reverseGeocoding: DIContainer.resolveOrDie(),
                             onClose: { _ in
                                 path.removeLast()
                                 showPortal = false

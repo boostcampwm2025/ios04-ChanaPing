@@ -341,7 +341,7 @@ private extension TimelineListView {
                 )
             ),
             deleteMessagesUseCase: DeleteMessagesUseCaseImpl(
-                messageRepository: MessageRepositoryImpl()
+                messageRepository: MessageRepositoryImpl(storage: MessageInMemoryStorage.shared)
             )
         ),
         isEditing: false,

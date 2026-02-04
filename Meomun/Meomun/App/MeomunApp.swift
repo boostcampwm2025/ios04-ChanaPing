@@ -11,8 +11,6 @@ import TipKit
 
 @main
 struct MeomunApp: App {
-    var meomunModelContainer: ModelContainer = AppDataConfig.makeContainer()
-
     init() {
         do {
             #if DEBUG
@@ -36,9 +34,6 @@ struct MeomunApp: App {
             if let locationProvider: LocationProvider = DIContainer.resolve(),
                let rootStore: RootStore = DIContainer.resolve() {
                 RootView(locationProvider: locationProvider, store: rootStore)
-                    .task {
-                        await MessageSwiftDataStorage.shared.configure(container: meomunModelContainer)
-                    }
             } else {
                 DIErrorFallbackView()
                     .onAppear {
