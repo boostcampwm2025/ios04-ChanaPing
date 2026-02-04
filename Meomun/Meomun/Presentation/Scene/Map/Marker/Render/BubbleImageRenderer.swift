@@ -88,16 +88,22 @@ final class BubbleImageRenderer: BubbleImageRendering {
     ) async -> UIImage {
         let hasPlaceTag = current.placeTag != nil
         let locationText = current.displayLocationName
-        let size = CGSize(
-            width: BubbleLayoutConstants.width + 60,  // padding 30 좌우
-            height: BubbleLayoutConstants.height + 80 + (hasPlaceTag ? 90 : 30)
-        )
-        let rect = CGRect(
-            x: 30,
-            y: 40 + (hasPlaceTag ? 80 : 0),
-            width: BubbleLayoutConstants.width,
-            height: BubbleLayoutConstants.height
-        )
+
+        // 캔버스 = 버블 + 스택 배경/아이콘 여백만 반영. 스택백 offset, place 아이콘 상단
+        let bubbleHeight = BubbleLayoutConstants.height
+        let bubbleWidth = BubbleLayoutConstants.width
+        let stackBackInset = BubbleLayoutConstants.stackBackOffset1.width
+        let placeIconTopInset = BubbleLayoutConstants.placeIconSize
+
+        let size: CGSize
+        let rect: CGRect
+        if hasPlaceTag {
+            size = CGSize(width: bubbleWidth, height: placeIconTopInset + bubbleHeight)
+            rect = CGRect(x: 0, y: placeIconTopInset, width: bubbleWidth, height: bubbleHeight)
+        } else {
+            size = CGSize(width: bubbleWidth + stackBackInset, height: bubbleHeight + stackBackInset)
+            rect = CGRect(x: 0, y: 0, width: bubbleWidth, height: bubbleHeight)
+        }
         let scaleToUse = scale ?? UIScreen.main.scale
         let compositor = BubbleCompositor(
             size: size,
@@ -111,7 +117,7 @@ final class BubbleImageRenderer: BubbleImageRendering {
             baseImage = cached
         } else {
             let baseDrawables = BubbleDrawableFactory.makeBaseDrawables(rect: rect, hasPlaceTag: hasPlaceTag)
-            baseImage = compositor.render(drawables: baseDrawables)
+            baseImage = compositor.render(drawables: baseDrawables, opaque: false)
             await bubbleImageCache.setBaseImage(baseImage, hasPlaceTag: hasPlaceTag)
         }
 
@@ -135,6 +141,6 @@ final class BubbleImageRenderer: BubbleImageRendering {
             progress: progress,
             rect: rect
         )
-        return compositor.render(drawables: animationDrawables, over: underlay)
+        return compositor.render(drawables: animationDrawables, over: underlay, opaque: false)
     }
 }
