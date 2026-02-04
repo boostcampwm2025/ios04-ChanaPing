@@ -10,8 +10,6 @@ import UIKit
 
 @MainActor
 protocol BubbleImageRendering {
-    func setColorScheme(_ traitCollection: UITraitCollection)
-
     func renderSingleBubble(
         message: Message,
         scale: CGFloat?
@@ -47,16 +45,6 @@ final class BubbleImageRenderer: BubbleImageRendering {
 
     init(rotatingBubbleWidth: CGFloat = 170) {
         self.rotatingBubbleWidth = rotatingBubbleWidth
-    }
-
-    /// trait에 맞춰 렌더링 할 색 모드를 설정합니다.
-    func setColorScheme(_ traitCollection: UITraitCollection) {
-        switch traitCollection.userInterfaceStyle {
-        case .dark:
-            currentColorScheme = .dark
-        default:
-            currentColorScheme = .light
-        }
     }
 
     /// 단일 메시지 버블 이미지를 렌더링합니다.

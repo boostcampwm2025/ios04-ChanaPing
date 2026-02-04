@@ -14,7 +14,7 @@ struct BubbleCompositor {
     private let colorScheme: ColorScheme
     private let scale: CGFloat
 
-    init(size: CGSize, colorScheme: ColorScheme, scale: CGFloat = UIScreen.main.scale) {
+    init(size: CGSize, colorScheme: ColorScheme = .light, scale: CGFloat = UIScreen.main.scale) {
         self.size = size
         self.colorScheme = colorScheme
         self.scale = scale
