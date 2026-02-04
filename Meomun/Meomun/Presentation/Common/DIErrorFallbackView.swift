@@ -17,6 +17,10 @@ struct DIErrorFallbackView: View {
             Text("잠시 후 다시 실행해주세요.")
                 .font(.body)
                 .foregroundStyle(.secondary)
+
+            Button("앱 종료") {
+                exit(0)
+            }
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
         .background(Color.mmBackground)
