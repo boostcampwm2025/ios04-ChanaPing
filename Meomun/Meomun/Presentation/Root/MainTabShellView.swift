@@ -70,9 +70,10 @@ struct MainTabShellView: View {
     private func contentView(for tab: MainTab) -> some View {
         switch tab {
         case .map:
+            let factory: MessageMarkerManagerFactory = DIContainer.resolveOrDie()
             MapView(
                 store: mapStore,
-                messageMarkerManager: DIContainer.resolveOrDie()
+                messageMarkerManager: factory.make()
             )
 
         case .record:

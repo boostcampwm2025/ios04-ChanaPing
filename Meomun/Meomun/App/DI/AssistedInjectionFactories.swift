@@ -55,3 +55,13 @@ struct SpaceStoreFactory {
         )
     }
 }
+
+struct MessageMarkerManagerFactory {
+    @MainActor
+    func make() -> MessageMarkerManager {
+        MessageMarkerManager(
+            rotationAnimator: .init(),
+            bubbleImageRenderer: .init()
+        )
+    }
+}

@@ -152,7 +152,6 @@ final class DIContainer {
 }
 
 extension DIContainer {
-    @MainActor
     static func registerDependencies() {
         // MARK: - Infra / App
 
@@ -226,7 +225,7 @@ extension DIContainer {
             return SearchNearbyPlaceUseCaseImpl(placeRepository: repo)
         }
 
-        // MARK: - Presentation
+        // MARK: - Presentation Factory
 
         DIContainer.registerFactory(MessageComposerStoreFactory.self) {
             let createMessage: CreateMessageUseCase = DIContainer.resolveOrDie()
@@ -248,6 +247,12 @@ extension DIContainer {
                 deleteMessagesUseCase: deleteMessages
             )
         }
+        DIContainer.registerFactory(MessageMarkerManagerFactory.self) {
+            MessageMarkerManagerFactory()
+        }
+
+        // MARK: - Presentation Store
+
         DIContainer.registerFactory(RootStore.self) {
             let locationProvider: LocationProvider = DIContainer.resolveOrDie()
             let appSettingsOpener: AppSettingsOpening = DIContainer.resolveOrDie()
@@ -268,14 +273,6 @@ extension DIContainer {
             let appSettingsOpener: AppSettingsOpening = DIContainer.resolveOrDie()
             let resetMessages: ResetMessagesUseCase = DIContainer.resolveOrDie()
             return SettingStore(appSettingsOpener: appSettingsOpener, resetMessagesUseCase: resetMessages)
-        }
-        DIContainer.registerFactory(MessageMarkerManager.self) {
-            let rotationAnimator = MessageRotationAnimator()
-            let bubbleImageRenderer = BubbleImageRenderer()
-            return MessageMarkerManager(
-                rotationAnimator: rotationAnimator,
-                bubbleImageRenderer: bubbleImageRenderer
-            )
         }
     }
 }
