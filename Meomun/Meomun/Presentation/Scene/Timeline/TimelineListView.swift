@@ -307,6 +307,7 @@ private extension TimelineListView {
 
     @MainActor
     private func triggerRefreshIfPossible() async {
+        guard store.state.enableFetching == true else { return }
         guard store.state.isEditing == false else { return }
         guard store.state.deleteStatus == .idle else { return }
         guard store.state.isRefreshing == false else { return }
@@ -322,6 +323,7 @@ private extension TimelineListView {
             try? await Task.sleep(for: .milliseconds(100))
         }
 
+        guard store.state.isRefreshing == false else { return }
         await store.send(intent: .setToast("새로고침 완료!"))
     }
 }
