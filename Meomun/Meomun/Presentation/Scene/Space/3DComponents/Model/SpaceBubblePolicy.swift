@@ -41,4 +41,6 @@ enum SpaceBubblePositionPolicy {
     static let minDistanceFromCenter: Float = 1.3
     static let minDistanceFromViewAxis: Float = 0.25
     static let maxAttempts: Int = 60
+
+    static let minBubbleSpacing: Float = 0.3
 }
