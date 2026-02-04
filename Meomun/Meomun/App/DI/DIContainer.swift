@@ -228,6 +228,26 @@ extension DIContainer {
 
         // MARK: - Presentation
 
+        DIContainer.registerFactory(MessageComposerStoreFactory.self) {
+            let createMessage: CreateMessageUseCase = DIContainer.resolveOrDie()
+            let reverseGeocoding: ReverseGeocodeUseCase = DIContainer.resolveOrDie()
+            return MessageComposerStoreFactory(
+                createMessage: createMessage,
+                reverseGeocoding: reverseGeocoding
+            )
+        }
+        DIContainer.registerFactory(PlaceSearchStoreFactory.self) {
+            let searchPlaces: SearchNearbyPlaceUseCase = DIContainer.resolveOrDie()
+            return PlaceSearchStoreFactory(searchPlaces: searchPlaces)
+        }
+        DIContainer.registerFactory(SpaceStoreFactory.self) {
+            let fetchPlaceMessages: FetchPlaceMessagesUseCase = DIContainer.resolveOrDie()
+            let deleteMessages: DeleteMessagesUseCase = DIContainer.resolveOrDie()
+            return SpaceStoreFactory(
+                fetchPlaceMessagesUseCase: fetchPlaceMessages,
+                deleteMessagesUseCase: deleteMessages
+            )
+        }
         DIContainer.registerFactory(RootStore.self) {
             let locationProvider: LocationProvider = DIContainer.resolveOrDie()
             let appSettingsOpener: AppSettingsOpening = DIContainer.resolveOrDie()

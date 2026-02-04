@@ -225,17 +225,16 @@ private extension MapView {
         place: Place?,
         onClose: @escaping () -> Void
     ) -> some View {
-        MessageComposerView(
-            store: .init(
+        let factory: MessageComposerStoreFactory = DIContainer.resolveOrDie()
+
+        return MessageComposerView(
+            store: factory.make(
                 currentLocation: location,
                 currentPlace: place,
-                createMessage: DIContainer.resolveOrDie(),
-                reverseGeocoding: DIContainer.resolveOrDie(),
                 onClose: { isSuccess in
                     if isSuccess {
                         send(.refreshVisibleMessages)
                     }
-
                     onClose()
                 }
             )
@@ -243,12 +242,10 @@ private extension MapView {
     }
 
     private func spaceView(place: Place) -> some View {
-        SpaceView(
-            store: .init(
-                fetchPlaceMessagesUseCase: DIContainer.resolveOrDie(),
-                deleteMessagesUseCase: DIContainer.resolveOrDie(),
-                place: place
-            )
+        let factory: SpaceStoreFactory = DIContainer.resolveOrDie()
+
+        return SpaceView(
+            store: factory.make(place: place)
         )
         .onDisappear {
             send(.refreshVisibleMessages)
@@ -262,9 +259,9 @@ private extension MapView {
     @ViewBuilder
     var placeSearchOverlay: some View {
         if let current = locationProvider.current {
+            let factory: PlaceSearchStoreFactory = DIContainer.resolveOrDie()
             PlaceSearchOverlayView(
-                store: PlaceSearchStore(
-                    searchPlaces: DIContainer.resolveOrDie(),
+                store: factory.make(
                     userLocation: current,
                     onSelect: { place in
                         send(.selectPlace(place))

@@ -109,12 +109,11 @@ struct SpaceView: View {
             .navigationDestination(for: SpaceDestination.self) { destination in
                 switch destination {
                 case .composer(let location, let place):
+                    let factory: MessageComposerStoreFactory = DIContainer.resolveOrDie()
                     MessageComposerView(
-                        store: .init(
+                        store: factory.make(
                             currentLocation: location,
                             currentPlace: place,
-                            createMessage: DIContainer.resolveOrDie(),
-                            reverseGeocoding: DIContainer.resolveOrDie(),
                             onClose: { _ in
                                 path.removeLast()
                                 showPortal = false

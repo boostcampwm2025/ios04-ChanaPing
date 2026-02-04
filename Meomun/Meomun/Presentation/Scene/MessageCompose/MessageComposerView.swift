@@ -207,9 +207,10 @@ private extension MessageComposerView {
     }
 
     var placeSearchOverlay: some View {
-        PlaceSearchOverlayView(
-            store: PlaceSearchStore(
-                searchPlaces: DIContainer.resolveOrDie(),
+        let factory: PlaceSearchStoreFactory = DIContainer.resolveOrDie()
+
+        return PlaceSearchOverlayView(
+            store: factory.make(
                 userLocation: store.state.startLocation,
                 onSelect: { send(.selectPlace($0)) },
                 onDismiss: { send(.dismissPlaceSearch) }
