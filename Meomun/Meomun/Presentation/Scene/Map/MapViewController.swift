@@ -129,15 +129,11 @@ final class MapViewController: UIViewController {
 
         // 앱 라이프사이클 옵저버 등록
         registerAppLifecycleObservers()
-
-        // 라이트 모드 <-> 다크 모드 변경 옵저버 등록
-        registerTraitObserver()
     }
 
     override func viewWillAppear(_ animated: Bool) {
         super.viewWillAppear(animated)
         startBubbleRotationTimer()
-        messageMarkerManager.setColorScheme(traitCollection)
     }
 
     override func viewDidDisappear(_ animated: Bool) {
@@ -190,13 +186,6 @@ extension MapViewController {
         let center = NotificationCenter.default
         appLifecycleObservers.forEach { center.removeObserver($0) }
         appLifecycleObservers.removeAll()
-    }
-
-    private func registerTraitObserver() {
-        registerForTraitChanges([UITraitUserInterfaceStyle.self]) { [weak self] (controller: Self, _) in
-            self?.messageMarkerManager.setColorScheme(controller.traitCollection)
-            self?.messageMarkerManager.rebuildAllMarkers()
-        }
     }
 }
 
