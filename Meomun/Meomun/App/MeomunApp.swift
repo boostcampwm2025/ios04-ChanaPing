@@ -37,7 +37,7 @@ struct MeomunApp: App {
             } else {
                 DIErrorFallbackView()
                     .onAppear {
-                        AppLog.error("DIContainer resolve failed at app launch", category: .DIContainer)
+                        AppLog.error("DIContainer resolve failed at app launch", category: .diContainer)
                     }
             }
         }

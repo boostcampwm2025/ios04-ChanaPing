@@ -125,7 +125,7 @@ final class DIContainer {
         let dependency: T? = resolve(type)
 
         guard let dependency else {
-            AppLog.error("\(key) Dependency가 없음", category: .DIContainer)
+            AppLog.error("\(key) Dependency가 없음", category: .diContainer)
             #if DEBUG
             assertionFailure("\(key) Dependency가 없음")
             #endif
@@ -140,7 +140,7 @@ final class DIContainer {
         let dependency: T? = resolve(type, key: key)
 
         guard let dependency else {
-            AppLog.error("\(name) Dependency가 없음 (key: \(key))", category: .DIContainer)
+            AppLog.error("\(name) Dependency가 없음 (key: \(key))", category: .diContainer)
             #if DEBUG
             assertionFailure("\(name) Dependency가 없음 (key: \(key))")
             #endif
