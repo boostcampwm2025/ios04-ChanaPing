@@ -160,8 +160,23 @@ extension SpaceController {
                 messages: snapshot,
                 templateEntity: template
             )
-        }
 
+            bringOneBubbleIntoView(root: root)
+        }
+    }
+
+    private func bringOneBubbleIntoView(root: Entity) {
+        let bubbleEntities = root.allDescendants().filter { $0.name.hasPrefix("MessageBubble-") }
+        guard let first = bubbleEntities.first else { return }
+
+        // 카메라 앞에 랜덤 배치
+        let distance = SpaceBubblePositionPolicy.minDistanceFromCenter
+        let x = Float.random(in: SpaceBubblePositionPolicy.minXPosition...SpaceBubblePositionPolicy.maxXPosition)
+        AppLog.debug("\(x)", category: .space)
+        let y = Float.random(in: SpaceBubblePositionPolicy.minYPosition...SpaceBubblePositionPolicy.maxYPosition)
+        let z = rotationCamera.position.z - distance
+
+        first.position = SIMD3<Float>(x, y, z)
     }
 }
 
@@ -181,5 +196,18 @@ extension SpaceController {
 
     func endDrag() {
         rotationCamera.endDrag()
+    }
+}
+
+private extension Entity {
+    func allDescendants() -> [Entity] {
+        var descendants: [Entity] = []
+
+        for child in children {
+            descendants.append(child)
+            descendants.append(contentsOf: child.allDescendants())
+        }
+
+        return descendants
     }
 }
