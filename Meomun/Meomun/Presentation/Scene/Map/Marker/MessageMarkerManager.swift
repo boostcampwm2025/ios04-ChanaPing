@@ -61,13 +61,18 @@ final class MessageMarkerManager: MarkerAttaching {
         self.displayLimit = displayLimit
 
         self.renderScheduler = MarkerRenderScheduler(renderer: bubbleImageRenderer)
-        self.markerRegistry = MarkerRegistry(markerFactory: markerFactory, attacher: self)
+
+        let registry = MarkerRegistry(markerFactory: markerFactory)
+        self.markerRegistry = registry
+
         self.clusterController = MarkerClusterController(
             maxZoom: 16,
             clustererFactory: clustererFactory,
             itemsBuilder: ClusterItemsBuilder(),
-            markerRegistry: markerRegistry
+            markerRegistry: registry
         )
+
+        registry.setAttacher(self)
     }
 }
 
@@ -121,13 +126,6 @@ extension MessageMarkerManager {
 
     func updateClusterModeIfNeeded(zoomLevel: Double) {
         clusterController.updateModeIfNeeded(zoomLevel: zoomLevel)
-
-        if clusterController.isClusterMode {
-            clusterController.syncItems(
-                placeStore: placeMessagesByCoord,
-                noPlaceStore: noPlaceMessagesByCoord
-            )
-        }
     }
 }
 
@@ -180,12 +178,10 @@ extension MessageMarkerManager {
         placeMessagesByCoord = newSnapshot.placeStore
         noPlaceMessagesByCoord = newSnapshot.noPlaceStore
 
-        if clusterController.isClusterMode {
-            clusterController.syncItems(
-                placeStore: placeMessagesByCoord,
-                noPlaceStore: noPlaceMessagesByCoord
-            )
-        }
+        clusterController.onSnapshotUpdated(
+            placeStore: placeMessagesByCoord,
+            noPlaceStore: noPlaceMessagesByCoord
+        )
 
         // 지도에서 사라질 마커 제거
         for key in diff.removed {

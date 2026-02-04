@@ -19,13 +19,13 @@ final class MarkerRegistry {
     private var markers: [MarkerGroupKey: MarkerProtocol] = [:]
 
     private let markerFactory: MarkerFactoryProtocol
-    private let attacher: MarkerAttaching
+    private var attacher: MarkerAttaching?
 
-    init(
-        markerFactory: MarkerFactoryProtocol,
-        attacher: MarkerAttaching
-    ) {
+    init(markerFactory: MarkerFactoryProtocol) {
         self.markerFactory = markerFactory
+    }
+
+    func setAttacher(_ attacher: MarkerAttaching) {
         self.attacher = attacher
     }
 
@@ -47,27 +47,25 @@ final class MarkerRegistry {
         coordinate: Coordinate,
         mapView: MapViewProtocol
     ) -> MarkerProtocol {
-        if let existing = markers[key] {
-            return existing
-        }
+        if let existing = markers[key] { return existing }
 
         let marker = markerFactory.makeMarker(coordinate: coordinate)
-        markers[key] = marker
+        attacher?.attach(marker, to: mapView)
 
-        attacher.attach(marker, to: mapView)
+        markers[key] = marker
         return marker
     }
 
     func remove(key: MarkerGroupKey) {
         guard let marker = markers[key] else { return }
 
-        attacher.detach(marker)
+        attacher?.detach(marker)
         markers.removeValue(forKey: key)
     }
 
     func removeAll() {
         for (_, marker) in markers {
-            attacher.detach(marker)
+            attacher?.detach(marker)
         }
 
         markers.removeAll()
@@ -75,13 +73,13 @@ final class MarkerRegistry {
 
     func detachAll() {
         for (_, marker) in markers {
-            attacher.detach(marker)
+            attacher?.detach(marker)
         }
     }
 
     func attachAll(to mapView: MapViewProtocol) {
         for (_, marker) in markers {
-            attacher.attach(marker, to: mapView)
+            attacher?.attach(marker, to: mapView)
         }
     }
 }

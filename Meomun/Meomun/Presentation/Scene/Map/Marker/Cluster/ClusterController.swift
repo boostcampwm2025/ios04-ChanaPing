@@ -11,7 +11,7 @@ protocol MarkerClusteringControlling: AnyObject {
     func bind(mapView: MapViewProtocol)
     func updateModeIfNeeded(zoomLevel: Double)
 
-    func syncItems(
+    func onSnapshotUpdated(
         placeStore: [Coordinate: [Message]],
         noPlaceStore: [Coordinate: [Message]]
     )
@@ -23,13 +23,16 @@ final class MarkerClusterController: MarkerClusteringControlling {
     private let maxZoom: Double
     private let clustererFactory: ClustererFactoryProtocol
     private let itemsBuilder: ClusterItemsBuilding
+    private let markerRegistry: MarkerRegistry
 
     private var clusterer: ClustererProtocol?
     private weak var mapView: MapViewProtocol?
 
     private(set) var isClusterMode: Bool = false
 
-    private let markerRegistry: MarkerRegistry
+    private var cachedPlaceStore: [Coordinate: [Message]] = [:]
+    private var cachedNoPlaceStore: [Coordinate: [Message]] = [:]
+
 
     init(
         maxZoom: Double,
@@ -46,6 +49,12 @@ final class MarkerClusterController: MarkerClusteringControlling {
     func bind(mapView: MapViewProtocol) {
         self.mapView = mapView
         setupClustererIfNeeded()
+
+        if isClusterMode {
+            markerRegistry.detachAll()
+            clusterer?.attach(to: mapView)
+            syncFromCache()
+        }
     }
 
     func updateModeIfNeeded(zoomLevel: Double) {
@@ -59,17 +68,16 @@ final class MarkerClusterController: MarkerClusteringControlling {
         setClusterMode(shouldCluster, mapView: mapView)
     }
 
-    func syncItems(
-        placeStore: [Coordinate : [Message]],
-        noPlaceStore: [Coordinate : [Message]]
+    func onSnapshotUpdated(
+        placeStore: [Coordinate: [Message]],
+        noPlaceStore: [Coordinate: [Message]]
     ) {
-        guard isClusterMode else { return }
+        cachedPlaceStore = placeStore
+        cachedNoPlaceStore = noPlaceStore
 
-        setupClustererIfNeeded()
-        let items = itemsBuilder.build(
-            placeStore: placeStore,
-            noPlaceStore: noPlaceStore
-        )
+        // 모드면 즉시 반영, 아니면 캐시만 갱신
+        guard isClusterMode else { return }
+        syncFromCache()
     }
 
     private func setupClustererIfNeeded() {
@@ -91,7 +99,8 @@ final class MarkerClusterController: MarkerClusteringControlling {
             // 2) 클러스터러 attach (attach 이후 addAll/clear가 반영되도록 순서 고정)
             clusterer?.attach(to: mapView)
 
-            // 3) 아이템은 외부에서 넣어줌
+            // 3) 모드 전환 즉시 최신 캐시로 동기화
+            syncFromCache()
         } else {
             // 1) 클러스터 숨김
             clusterer?.attach(to: nil)
@@ -99,6 +108,16 @@ final class MarkerClusterController: MarkerClusteringControlling {
             // 2) 개별 마커 복원
             markerRegistry.attachAll(to: mapView)
         }
+    }
+
+    private func syncFromCache() {
+        guard let clusterer, isClusterMode else { return }
+
+        let items = itemsBuilder.build(
+            placeStore: cachedPlaceStore,
+            noPlaceStore: cachedNoPlaceStore
+        )
+        clusterer.setItems(items)
     }
 }
 
