@@ -10,8 +10,7 @@ import Foundation
 final class MessageRepositoryImpl: MessageRepository {
     private let storage: MessageStorage
 
-    // TODO: DI 구현 후 디폴트 파라미터 제거
-    init(storage: MessageStorage = MessageSwiftDataStorage.shared) {
+    init(storage: MessageStorage) {
         self.storage = storage
     }
 

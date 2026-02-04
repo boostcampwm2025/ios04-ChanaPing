@@ -14,29 +14,14 @@ fileprivate enum Constants {
 }
 
 struct MainTabShellView: View {
-    @StateObject private var mapStore = MapStore(
-        getNearbyMessagesUseCase: GetNearbyMessagesUseCaseImpl(messageRepository: MessageRepositoryImpl()),
-        networkMonitor: NetworkMonitor()
-    )
-
-    @StateObject private var store = MainTabStore()
-
-    @State private var leafUpdater = LeafMarkerUpdater()
-    @State private var clusterUpdater = ClusterMarkerUpdater()
+    @StateObject private var mapStore: MapStore
+    @StateObject private var store: MainTabStore
     @State private var markerManager: MessageMarkerManager
 
     init() {
-        let leaf = LeafMarkerUpdater()
-        let cluster = ClusterMarkerUpdater()
-        _leafUpdater = State(initialValue: leaf)
-        _clusterUpdater = State(initialValue: cluster)
-
-        _markerManager = State(initialValue: MessageMarkerManager(
-            markerFactory: NaverMarkerFactory(),
-            clustererFactory: NaverClustererFactory(leaf: leaf, cluster: cluster),
-            rotationAnimator: MessageRotationAnimator(),
-            bubbleImageRenderer: BubbleImageRenderer()
-        ))
+        _mapStore = StateObject(wrappedValue: DIContainer.resolveOrDie())
+        _store = StateObject(wrappedValue: DIContainer.resolveOrDie())
+        _markerManager = State(initialValue: DIContainer.resolveOrDie())
     }
 
     var body: some View {
@@ -93,15 +78,9 @@ struct MainTabShellView: View {
             )
 
         case .record:
+            let factory: TimelineListStoreFactory = DIContainer.resolveOrDie()
             TimelineListView(
-                store: TimelineListStore(
-                    fetchRecentMessagesUseCase: FetchRecentMessagesUseCaseImpl(
-                        repository: MessageRepositoryImpl()
-                    ),
-                    deleteMessagesUseCase: DeleteMessagesUseCaseImpl(
-                        messageRepository: MessageRepositoryImpl()
-                    )
-                ),
+                store: factory.make(),
                 isEditing: store.state.isRecordEditing,
                 onEditingChanged: { isEditing in
                     Task { await store.send(intent: .setRecordEditing(isEditing)) }
@@ -110,12 +89,7 @@ struct MainTabShellView: View {
 
         case .setting:
             NavigationStack {
-                SettingView(
-                    store: SettingStore(
-                        appSettingsOpener: AppSettingsOpener(),
-                        resetMessagesUseCase: ResetMessagesUseCaseImpl(messageRepository: MessageRepositoryImpl())
-                    )
-                )
+                SettingView(store: DIContainer.resolveOrDie())
             }
         }
     }

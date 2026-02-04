@@ -20,6 +20,7 @@ enum LogCategory: String {
     case login = "Login"
     case storage = "Storage"
     case main = "Main"
+    case diContainer = "DIContainer"
 }
 
 enum AppLog {

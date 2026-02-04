@@ -124,7 +124,7 @@ struct SettingView: View {
             store: .init(
                 appSettingsOpener: AppSettingsOpener(),
                 resetMessagesUseCase: ResetMessagesUseCaseImpl(
-                    messageRepository: MessageRepositoryImpl()
+                    messageRepository: MessageRepositoryImpl(storage: MessageInMemoryStorage.shared)
                 )
             )
         )

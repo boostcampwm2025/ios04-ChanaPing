@@ -33,7 +33,6 @@ final class MarkerClusterController: MarkerClusteringControlling {
     private var cachedPlaceStore: [Coordinate: [Message]] = [:]
     private var cachedNoPlaceStore: [Coordinate: [Message]] = [:]
 
-
     init(
         maxZoom: Double,
         clustererFactory: ClustererFactoryProtocol,

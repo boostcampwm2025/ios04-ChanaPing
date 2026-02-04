@@ -11,8 +11,6 @@ import TipKit
 
 @main
 struct MeomunApp: App {
-    var meomunModelContainer: ModelContainer = AppDataConfig.makeContainer()
-
     init() {
         do {
             #if DEBUG
@@ -27,14 +25,21 @@ struct MeomunApp: App {
             // TipKit configuration failure should not block app launch.
             AppLog.error("[TipKit] configure failed: \(error)", category: .main)
         }
+
+        DIContainer.registerDependencies()
     }
 
     var body: some Scene {
         WindowGroup {
-            RootView()
-                .task {
-                    await MessageSwiftDataStorage.shared.configure(container: meomunModelContainer)
-                }
+            if let locationProvider: LocationProvider = DIContainer.resolve(),
+               let rootStore: RootStore = DIContainer.resolve() {
+                RootView(locationProvider: locationProvider, store: rootStore)
+            } else {
+                DIErrorFallbackView()
+                    .onAppear {
+                        AppLog.error("DIContainer resolve failed at app launch", category: .diContainer)
+                    }
+            }
         }
     }
 }

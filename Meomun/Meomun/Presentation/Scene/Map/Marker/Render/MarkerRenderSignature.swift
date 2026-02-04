@@ -22,7 +22,7 @@ enum MessageMarkerRenderDecision: Equatable {
 }
 
 enum MessageMarkerRenderPolicy {
-    
+
     static func makeSignature(
         markerType: MarkerType,
         messages: [Message]
