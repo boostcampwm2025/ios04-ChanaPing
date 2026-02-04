@@ -33,11 +33,11 @@ final class SpaceMessageBubbleFactory {
 
         // 버블 랜덤 배치
         bubbleRootEntity.position = bubblePlacer.randomPositionInsideHemisphere(
-            radiusRange: 1.4...1.7,
-            yRange: 0.7...1.2,
-            minimumDistanceFromCenter: 1.3,
-            minimumDistanceFromViewAxis: 0.25,
-            maxAttempts: 60
+            radiusRange: SpaceBubblePositionPolicy.minRadius...SpaceBubblePositionPolicy.maxRadius,
+            yRange: SpaceBubblePositionPolicy.minYPosition...SpaceBubblePositionPolicy.maxYPosition,
+            minimumDistanceFromCenter: SpaceBubblePositionPolicy.minDistanceFromCenter,
+            minimumDistanceFromViewAxis: SpaceBubblePositionPolicy.minDistanceFromViewAxis,
+            maxAttempts: SpaceBubblePositionPolicy.maxAttempts
         )
 
         // messageBubbleTemplateEntity 복제
