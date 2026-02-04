@@ -5,6 +5,7 @@
 //  Created by hoon on 2/3/26.
 //
 
+import Foundation
 import SwiftData
 
 enum MessageStorageKey: String {
@@ -17,6 +18,7 @@ final class DIContainer {
 
     private init() { }
 
+    private let lock = NSRecursiveLock()
     private var instances: [ObjectIdentifier: Any] = [:]
     private var factories: [ObjectIdentifier: () -> Any] = [:]
     private var keyedInstances: [KeyedIdentifier: Any] = [:]
@@ -69,26 +71,36 @@ final class DIContainer {
     }
 
     private func register<T>(_ dependency: T, as type: T.Type) {
+        lock.lock()
+        defer { lock.unlock() }
         let key = ObjectIdentifier(type)
         instances[key] = dependency as Any
     }
 
     private func register<T>(_ dependency: T, as type: T.Type, key: AnyHashable) {
+        lock.lock()
+        defer { lock.unlock() }
         let id = KeyedIdentifier(typeId: ObjectIdentifier(type), key: key)
         keyedInstances[id] = dependency as Any
     }
 
     private func registerFactory<T>(_ type: T.Type, factory: @escaping () -> T) {
+        lock.lock()
+        defer { lock.unlock() }
         let key = ObjectIdentifier(type)
         factories[key] = factory
     }
 
     private func registerFactory<T>(_ type: T.Type, key: AnyHashable, factory: @escaping () -> T) {
+        lock.lock()
+        defer { lock.unlock() }
         let id = KeyedIdentifier(typeId: ObjectIdentifier(type), key: key)
         keyedFactories[id] = factory
     }
 
     private func resolve<T>(_ type: T.Type) -> T? {
+        lock.lock()
+        defer { lock.unlock() }
         let key = ObjectIdentifier(type)
 
         if let existing = instances[key] as? T {
@@ -105,6 +117,8 @@ final class DIContainer {
     }
 
     private func resolve<T>(_ type: T.Type, key: AnyHashable) -> T? {
+        lock.lock()
+        defer { lock.unlock() }
         let id = KeyedIdentifier(typeId: ObjectIdentifier(type), key: key)
 
         if let existing = keyedInstances[id] as? T {
