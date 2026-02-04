@@ -16,26 +16,12 @@ fileprivate enum Constants {
 struct MainTabShellView: View {
     @StateObject private var mapStore: MapStore
     @StateObject private var store: MainTabStore
-
-    @State private var leafUpdater = LeafMarkerUpdater()
-    @State private var clusterUpdater = ClusterMarkerUpdater()
     @State private var markerManager: MessageMarkerManager
 
     init() {
         _mapStore = StateObject(wrappedValue: DIContainer.resolveOrDie())
         _store = StateObject(wrappedValue: DIContainer.resolveOrDie())
-
-        let leaf = LeafMarkerUpdater()
-        let cluster = ClusterMarkerUpdater()
-        _leafUpdater = State(initialValue: leaf)
-        _clusterUpdater = State(initialValue: cluster)
-
-        _markerManager = State(initialValue: MessageMarkerManager(
-            markerFactory: NaverMarkerFactory(),
-            clustererFactory: NaverClustererFactory(leaf: leaf, cluster: cluster),
-            rotationAnimator: MessageRotationAnimator(),
-            bubbleImageRenderer: BubbleImageRenderer()
-        ))
+        _markerManager = State(initialValue: DIContainer.resolveOrDie())
     }
 
     var body: some View {
@@ -86,7 +72,6 @@ struct MainTabShellView: View {
     private func contentView(for tab: MainTab) -> some View {
         switch tab {
         case .map:
-            let factory: MessageMarkerManagerFactory = DIContainer.resolveOrDie()
             MapView(
                 store: mapStore,
                 messageMarkerManager: markerManager

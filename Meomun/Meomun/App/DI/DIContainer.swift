@@ -159,6 +159,11 @@ extension DIContainer {
         registerPresentationFactories()
         registerPresentationStores()
     }
+
+    @MainActor
+    static func registerAsyncDependencies() {
+        registerMarker()
+    }
 }
 
 private extension DIContainer {
@@ -263,8 +268,41 @@ private extension DIContainer {
                 deleteMessagesUseCase: deleteMessages
             )
         }
-        DIContainer.registerFactory(MessageMarkerManagerFactory.self) {
-            MessageMarkerManagerFactory()
+    }
+
+    @MainActor
+    static func registerMarker() {
+        DIContainer.registerFactory(LeafMarkerUpdater.self) {
+            LeafMarkerUpdater()
+        }
+        DIContainer.registerFactory(ClusterMarkerUpdater.self) {
+            ClusterMarkerUpdater()
+        }
+        DIContainer.registerFactory(MarkerFactoryProtocol.self) {
+            NaverMarkerFactory()
+        }
+        DIContainer.registerFactory(ClustererFactoryProtocol.self) {
+            let leafMarkerUpdater: LeafMarkerUpdater = DIContainer.resolveOrDie()
+            let clusterMarkerUpdater: ClusterMarkerUpdater = DIContainer.resolveOrDie()
+            return NaverClustererFactory(leaf: leafMarkerUpdater, cluster: clusterMarkerUpdater)
+        }
+        DIContainer.registerFactory(MessageRotationAnimating.self) {
+            MessageRotationAnimator()
+        }
+        DIContainer.registerFactory(BubbleImageRendering.self) {
+            BubbleImageRenderer()
+        }
+        DIContainer.registerFactory(MessageMarkerManager.self) {
+            let markerFactory: MarkerFactoryProtocol = DIContainer.resolveOrDie()
+            let clustererFactory: ClustererFactoryProtocol = DIContainer.resolveOrDie()
+            let rotationAnimator: MessageRotationAnimating = DIContainer.resolveOrDie()
+            let bubbleImageRenderer: BubbleImageRendering = DIContainer.resolveOrDie()
+            return MessageMarkerManager(
+                markerFactory: markerFactory,
+                clustererFactory: clustererFactory,
+                rotationAnimator: rotationAnimator,
+                bubbleImageRenderer: bubbleImageRenderer
+            )
         }
     }
 

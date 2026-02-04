@@ -56,16 +56,6 @@ struct SpaceStoreFactory {
     }
 }
 
-struct MessageMarkerManagerFactory {
-    @MainActor
-    func make() -> MessageMarkerManager {
-        MessageMarkerManager(
-            rotationAnimator: .init(),
-            bubbleImageRenderer: .init()
-        )
-    }
-}
-
 struct TimelineListStoreFactory {
     let fetchRecentMessagesUseCase: FetchRecentMessagesUseCase
     let deleteMessagesUseCase: DeleteMessagesUseCase
