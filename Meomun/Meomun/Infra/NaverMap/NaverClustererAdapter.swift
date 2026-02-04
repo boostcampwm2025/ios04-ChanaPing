@@ -12,6 +12,7 @@ import NMapsMap
 final class NaverClustererAdapter: ClustererProtocol {
 
     private let clusterer: NMCClusterer<ItemKey>
+    private var lastKeys: [ItemKey] = []
 
     private let leafUpdater: NMCLeafMarkerUpdater
     private let clusterUpdater: NMCClusterMarkerUpdater
@@ -46,6 +47,10 @@ final class NaverClustererAdapter: ClustererProtocol {
     }
 
     func setItems(_ items: [ClusterItem]) {
+        if !lastKeys.isEmpty {
+            clusterer.removeAll(lastKeys)
+        }
+
         var map: [ItemKey: NSObject] = [:]
         map.reserveCapacity(items.count)
 
@@ -54,6 +59,8 @@ final class NaverClustererAdapter: ClustererProtocol {
             let key = ItemKey(identifier: item.id, position: pos)
             map[key] = item.tag
         }
+
+        lastKeys = Array(map.keys)
         clusterer.addAll(map)
     }
 }
