@@ -16,6 +16,7 @@ fileprivate enum Constants {
 struct TimelineListView: View {
     @Environment(\.setTabBarHidden) private var setTabBarHidden
     @StateObject private var store: TimelineListStore
+
     private let configuration: Configuration
     private let onBecameEmpty: () -> Void
 
@@ -151,6 +152,9 @@ private extension TimelineListView {
             if configuration.showsFooter && !store.state.messages.isEmpty {
                 footer
             }
+        }
+        .refreshable {
+            await triggerRefreshIfPossible()
         }
     }
 
@@ -290,6 +294,24 @@ private extension TimelineListView {
         case .success: return Constants.deleteSuccessMessage
         case .fail: return Constants.deleteFailMessage
         case .idle: return ""
+        }
+    }
+
+    @MainActor
+    private func triggerRefreshIfPossible() async {
+        guard store.state.isEditing == false else { return }
+        guard store.state.deleteStatus == .idle else { return }
+        guard store.state.isRefreshing == false else { return }
+        guard store.state.pagination.isLoadingNextPage == false else { return }
+
+        let generator = UIImpactFeedbackGenerator(style: .medium)
+        generator.impactOccurred()
+
+        await store.send(intent: .refresh)
+
+        let deadline = Date().addingTimeInterval(2.0)
+        while store.state.isRefreshing, Date() < deadline {
+            try? await Task.sleep(for: .milliseconds(50))
         }
     }
 }
