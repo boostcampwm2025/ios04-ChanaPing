@@ -1,10 +1,3 @@
-//
-//  MessageMarkerManager.swift
-//  Meomun
-//
-//  Created by MinwooJe on 1/14/26.
-//
-
 import UIKit
 
 // MARK: - MessageMarkerManager
