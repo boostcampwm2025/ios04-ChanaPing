@@ -8,16 +8,10 @@
 import Foundation
 
 /// 클러스터 아이템(클러스터링 대상)의 추상 데이터
-struct ClusterItem: Hashable {
+struct ClusterItem {
     let id: Int
     let coordinate: Coordinate
     let tag: NSObject
-
-    init(id: Int, coordinate: Coordinate, tag: NSObject) {
-        self.id = id
-        self.coordinate = coordinate
-        self.tag = tag
-    }
 }
 
 /// 클러스터러 포트.
