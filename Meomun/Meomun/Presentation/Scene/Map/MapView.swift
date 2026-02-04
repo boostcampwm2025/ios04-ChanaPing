@@ -294,11 +294,11 @@ private extension MapView {
     }
 
     var timeLineListView: some View {
-        TimelineListView(
-            store: TimelineListStore(
+        let factory: TimelineListStoreFactory = DIContainer.resolveOrDie()
+
+        return TimelineListView(
+            store: factory.make(
                 initialMessages: store.state.selectedNoPlaceMessages,
-                fetchRecentMessagesUseCase: DIContainer.resolveOrDie(),
-                deleteMessagesUseCase: DIContainer.resolveOrDie(),
                 onDeletedMessages: { _ in
                     send(.refreshVisibleMessages)
                 }

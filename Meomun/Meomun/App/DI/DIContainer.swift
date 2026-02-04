@@ -247,6 +247,14 @@ extension DIContainer {
                 deleteMessagesUseCase: deleteMessages
             )
         }
+        DIContainer.registerFactory(TimelineListStoreFactory.self) {
+            let fetchRecent: FetchRecentMessagesUseCase = DIContainer.resolveOrDie()
+            let deleteMessages: DeleteMessagesUseCase = DIContainer.resolveOrDie()
+            return TimelineListStoreFactory(
+                fetchRecentMessagesUseCase: fetchRecent,
+                deleteMessagesUseCase: deleteMessages
+            )
+        }
         DIContainer.registerFactory(MessageMarkerManagerFactory.self) {
             MessageMarkerManagerFactory()
         }
@@ -263,11 +271,6 @@ extension DIContainer {
             let useCase: GetNearbyMessagesUseCase = DIContainer.resolveOrDie()
             let networkMonitor: NetworkMonitoring = DIContainer.resolveOrDie()
             return MapStore(getNearbyMessagesUseCase: useCase, networkMonitor: networkMonitor)
-        }
-        DIContainer.registerFactory(TimelineListStore.self) {
-            let fetchRecent: FetchRecentMessagesUseCase = DIContainer.resolveOrDie()
-            let deleteMessages: DeleteMessagesUseCase = DIContainer.resolveOrDie()
-            return TimelineListStore(fetchRecentMessagesUseCase: fetchRecent, deleteMessagesUseCase: deleteMessages)
         }
         DIContainer.registerFactory(SettingStore.self) {
             let appSettingsOpener: AppSettingsOpening = DIContainer.resolveOrDie()

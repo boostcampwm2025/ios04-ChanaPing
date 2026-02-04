@@ -1,5 +1,5 @@
 //
-//  StoreFactories.swift
+//  AssistedInjectionFactories.swift
 //  Meomun
 //
 //  Created by hoon on 2/4/26.
@@ -62,6 +62,23 @@ struct MessageMarkerManagerFactory {
         MessageMarkerManager(
             rotationAnimator: .init(),
             bubbleImageRenderer: .init()
+        )
+    }
+}
+
+struct TimelineListStoreFactory {
+    let fetchRecentMessagesUseCase: FetchRecentMessagesUseCase
+    let deleteMessagesUseCase: DeleteMessagesUseCase
+
+    func make(
+        initialMessages: [Message] = [],
+        onDeletedMessages: @escaping (Set<MessageID>) -> Void = { _ in }
+    ) -> TimelineListStore {
+        TimelineListStore(
+            initialMessages: initialMessages,
+            fetchRecentMessagesUseCase: fetchRecentMessagesUseCase,
+            deleteMessagesUseCase: deleteMessagesUseCase,
+            onDeletedMessages: onDeletedMessages
         )
     }
 }

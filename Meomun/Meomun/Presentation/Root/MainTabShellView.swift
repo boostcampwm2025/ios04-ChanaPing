@@ -77,8 +77,9 @@ struct MainTabShellView: View {
             )
 
         case .record:
+            let factory: TimelineListStoreFactory = DIContainer.resolveOrDie()
             TimelineListView(
-                store: DIContainer.resolveOrDie(),
+                store: factory.make(),
                 isEditing: store.state.isRecordEditing,
                 onEditingChanged: { isEditing in
                     Task { await store.send(intent: .setRecordEditing(isEditing)) }
