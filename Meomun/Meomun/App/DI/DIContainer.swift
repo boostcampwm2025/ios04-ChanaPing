@@ -153,8 +153,16 @@ final class DIContainer {
 
 extension DIContainer {
     static func registerDependencies() {
-        // MARK: - Infra / App
+        registerInfra()
+        registerData()
+        registerDomain()
+        registerPresentationFactories()
+        registerPresentationStores()
+    }
+}
 
+private extension DIContainer {
+    static func registerInfra() {
         let modelContainer = AppDataConfig.makeContainer()
         DIContainer.register(modelContainer)
         DIContainer.registerFactory(NetworkMonitoring.self) { NetworkMonitor() }
@@ -167,9 +175,9 @@ extension DIContainer {
             let client: NetworkClient = DIContainer.resolveOrDie()
             return SupabaseServiceImpl(network: client)
         }
+    }
 
-        // MARK: - Data
-
+    static func registerData() {
         DIContainer.registerFactory(MessageStorage.self, key: MessageStorageKey.swiftData) {
             let container: ModelContainer = DIContainer.resolveOrDie()
             return MessageSwiftDataStorage(container: container)
@@ -189,9 +197,9 @@ extension DIContainer {
             let remote: SupabaseService = DIContainer.resolveOrDie()
             return ReverseGeocodeRepositoryImpl(remote: remote)
         }
+    }
 
-        // MARK: - Domain
-
+    static func registerDomain() {
         DIContainer.registerFactory(GetNearbyMessagesUseCase.self) {
             let repo: MessageRepository = DIContainer.resolveOrDie()
             return GetNearbyMessagesUseCaseImpl(messageRepository: repo)
@@ -224,9 +232,9 @@ extension DIContainer {
             let repo: PlaceRepository = DIContainer.resolveOrDie()
             return SearchNearbyPlaceUseCaseImpl(placeRepository: repo)
         }
+    }
 
-        // MARK: - Presentation Factory
-
+    static func registerPresentationFactories() {
         DIContainer.registerFactory(MessageComposerStoreFactory.self) {
             let createMessage: CreateMessageUseCase = DIContainer.resolveOrDie()
             let reverseGeocoding: ReverseGeocodeUseCase = DIContainer.resolveOrDie()
@@ -258,9 +266,9 @@ extension DIContainer {
         DIContainer.registerFactory(MessageMarkerManagerFactory.self) {
             MessageMarkerManagerFactory()
         }
+    }
 
-        // MARK: - Presentation Store
-
+    static func registerPresentationStores() {
         DIContainer.registerFactory(RootStore.self) {
             let locationProvider: LocationProvider = DIContainer.resolveOrDie()
             let appSettingsOpener: AppSettingsOpening = DIContainer.resolveOrDie()
