@@ -10,5 +10,3 @@ import Foundation
 public protocol MarkerFactoryProtocol {
     func makeMarker(coordinate: Coordinate) -> MarkerProtocol
 }
-
-

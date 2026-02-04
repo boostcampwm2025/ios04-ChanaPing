@@ -11,7 +11,6 @@ import NMapsMap
 /// NMCClusterer를 ClustererProtocol로 감싼 어댑터
 public final class NaverClustererAdapter: ClustererProtocol {
 
-    // 내부에서만 ItemKey 사용
     private let clusterer: NMCClusterer<ItemKey>
 
     private let leafUpdater: NMCLeafMarkerUpdater

@@ -34,7 +34,6 @@ public final class NaverMarkerAdapter: MarkerProtocol {
             return
         }
         guard let naver = mapView as? NaverMapViewAdapter else {
-            // 다른 지도 SDK로 교체될 경우를 대비한 방어
             marker.mapView = nil
             currentMapView = nil
             return
