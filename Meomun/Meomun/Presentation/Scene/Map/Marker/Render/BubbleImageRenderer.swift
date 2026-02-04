@@ -8,6 +8,7 @@
 import SwiftUI
 import UIKit
 
+@MainActor
 protocol BubbleImageRendering {
     func setColorScheme(_ traitCollection: UITraitCollection)
 
@@ -35,7 +36,7 @@ extension BubbleImageRendering {
 }
 
 /// 마커 이미지 렌더링을 담당하는 클래스
-@MainActor
+
 final class BubbleImageRenderer: BubbleImageRendering {
 
     /// 회전 버블의 고정 너비
@@ -66,7 +67,7 @@ final class BubbleImageRenderer: BubbleImageRendering {
         message: Message,
         scale: CGFloat? = nil
     ) async -> UIImage {
-        let bubble = await DecoratedMessageBubble(
+        let bubble = DecoratedMessageBubble(
             message: message,
             layout: .flexible
         )
@@ -75,7 +76,10 @@ final class BubbleImageRenderer: BubbleImageRendering {
             .padding(20)
             .offset(y: 10)
 
-        return await render(view: safeBubble, scale: scale ?? UIScreen.main.scale)
+        let renderer = ImageRenderer(content: safeBubble)
+        renderer.scale = scale ?? UIScreen.main.scale
+        renderer.isOpaque = false
+        return renderer.uiImage ?? UIImage()
     }
 
     /// 애니메이션 진행도에 따른 회전 버블의 이미지를 렌더링합니다.
@@ -90,37 +94,32 @@ final class BubbleImageRenderer: BubbleImageRendering {
         progress: Double,
         scale: CGFloat? = nil
     ) async -> UIImage {
-        let bubble = await DecoratedMessageBubble(
-            message: current,
-            layout: .fixedSize(rotatingBubbleWidth),
-            rotating: (current: current, next: next, progress: progress)
-        ) { _ in
-            RotatingMessageStack(
-                current: current,
-                next: next,
-                progress: progress
-            )
-        }
+        let hasPlaceTag = current.placeTag != nil
+        let size = CGSize(
+            width: BubbleLayoutConstants.width + 60,  // padding 30 좌우
+            height: BubbleLayoutConstants.height + 80 + (hasPlaceTag ? 90 : 30)
+        )
+        let rect = CGRect(
+            x: 30,
+            y: 40 + (hasPlaceTag ? 80 : 0),
+            width: BubbleLayoutConstants.width,
+            height: BubbleLayoutConstants.height
+        )
 
-        let safeBubble = bubble
-            .padding(.horizontal, 30)
-            .padding(.vertical, 40)
-            .padding(.bottom, current.placeTag != nil ? 90 : 30)
-            .offset(y: current.placeTag != nil ? 80 : 0)
+        // Factory로 Drawable 생성
+        let drawables = BubbleDrawableFactory.makeRotatingBubble(
+            current: current,
+            next: next,
+            progress: progress,
+            rect: rect
+        )
 
-        return await render(view: safeBubble, scale: scale ?? UIScreen.main.scale)
-    }
-}
+        // Compositor로 렌더링
+        let compositor = BubbleCompositor(
+            size: size,
+            colorScheme: currentColorScheme
+        )
 
-extension BubbleImageRenderer {
-    private func render<V: View>(view: V, scale: CGFloat) async -> UIImage {
-        await Task.yield()
-
-        let content = view.environment(\.colorScheme, currentColorScheme)
-
-        let renderer = ImageRenderer(content: content)
-        renderer.scale = scale
-        renderer.isOpaque = false
-        return renderer.uiImage ?? UIImage()
+        return compositor.render(drawables: drawables)
     }
 }
