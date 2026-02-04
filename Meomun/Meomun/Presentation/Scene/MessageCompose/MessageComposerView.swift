@@ -207,13 +207,10 @@ private extension MessageComposerView {
     }
 
     var placeSearchOverlay: some View {
-        PlaceSearchOverlayView(
-            store: PlaceSearchStore(
-                searchPlaces: SearchNearbyPlaceUseCaseImpl(
-                    placeRepository: NaverPlaceSearchRepositoryImpl(
-                        remote: SupabaseServiceImpl(network: NetworkClientImpl())
-                    )
-                ),
+        let factory: PlaceSearchStoreFactory = DIContainer.resolveOrDie()
+
+        return PlaceSearchOverlayView(
+            store: factory.make(
                 userLocation: store.state.startLocation,
                 onSelect: { send(.selectPlace($0)) },
                 onDismiss: { send(.dismissPlaceSearch) }
@@ -373,7 +370,7 @@ private extension MessageComposerView {
                     )
                 ),
                 createMessage: CreateMessageUseCaseImpl(
-                    messageRepository: MessageRepositoryImpl()
+                    messageRepository: MessageRepositoryImpl(storage: MessageInMemoryStorage.shared)
                 ),
                 reverseGeocoding: ReverseGeocodeUseCaseImpl(
                     repository: ReverseGeocodeRepositoryImpl(

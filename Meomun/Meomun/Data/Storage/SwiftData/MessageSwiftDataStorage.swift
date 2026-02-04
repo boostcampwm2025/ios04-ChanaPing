@@ -9,21 +9,13 @@ import SwiftData
 import Foundation
 
 actor MessageSwiftDataStorage: MessageStorage {
-    static let shared = MessageSwiftDataStorage()
+    private let container: ModelContainer
 
-    private var container: ModelContainer?
-
-    func configure(container: ModelContainer) {
-        if self.container != nil {
-            AppLog.warn("configure가 2번 이상 호출됨", category: .storage)
-        }
+    init(container: ModelContainer) {
         self.container = container
     }
 
     private func makeContext() -> ModelContext {
-        guard let container else {
-            fatalError("MessageSwiftDataStorage not configured. Call configure(container:) at app launch.")
-        }
         return ModelContext(container)
     }
 

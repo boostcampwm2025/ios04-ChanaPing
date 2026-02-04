@@ -25,9 +25,9 @@ struct MessageSwiftDataStorageTests {
         return try ModelContainer(for: AppDataConfig.schema, configurations: [config])
     }
 
-    private func makeStorage() -> MessageSwiftDataStorage {
+    private func makeStorage(container: ModelContainer) -> MessageSwiftDataStorage {
         // 테스트마다 새 인스턴스를 만들어서 격리.
-        MessageSwiftDataStorage()
+        MessageSwiftDataStorage(container: container)
     }
 
     private func makeCreateDTO(
@@ -76,8 +76,7 @@ struct MessageSwiftDataStorageTests {
     @Test("create가 성공하면, fetchRecent로 저장 결과를 확인할 수 있다")
     func create() async throws {
         let container = try makeInMemoryContainer()
-        let storage = makeStorage()
-        await storage.configure(container: container)
+        let storage = makeStorage(container: container)
 
         let dto = makeCreateDTO(content: "hello")
         try await storage.create(for: dto)
@@ -90,8 +89,7 @@ struct MessageSwiftDataStorageTests {
     @Test("특정 place가 있는 데이터만 fetchByPlace로 확인할 수 있다")
     func fetchByPlace() async throws {
         let container = try makeInMemoryContainer()
-        let storage = makeStorage()
-        await storage.configure(container: container)
+        let storage = makeStorage(container: container)
 
         let placeA = makePlaceDTO(id: "A")
         let placeB = makePlaceDTO(id: "B")
@@ -113,8 +111,7 @@ struct MessageSwiftDataStorageTests {
     @Test("특정 id delete 시, fetchRecent에서 삭제된 메시지는 조회되지 않는다")
     func delete() async throws {
         let container = try makeInMemoryContainer()
-        let storage = makeStorage()
-        await storage.configure(container: container)
+        let storage = makeStorage(container: container)
 
         try await storage.create(for: makeCreateDTO(content: "m1"))
         try await storage.create(for: makeCreateDTO(content: "m2"))
@@ -136,8 +133,7 @@ struct MessageSwiftDataStorageTests {
     @Test("데이터가 존재하는 상태에서 reset 이후에도 create/save가 정상 동작한다")
     func reset() async throws {
         let container = try makeInMemoryContainer()
-        let storage = makeStorage()
-        await storage.configure(container: container)
+        let storage = makeStorage(container: container)
 
         try await storage.create(for: makeCreateDTO(content: "before-reset"))
         #expect((try await storage.fetchRecent(page: 0, pageSize: 10)).count == 1)
@@ -155,8 +151,7 @@ struct MessageSwiftDataStorageTests {
     @Test("여러 좌표 데이터가 있는 상태에서, fetchNearby를 호출하면 bounds 범위 내 distance 오름차순 정렬 결과를 반환한다")
     func fetchNearby() async throws {
         let container = try makeInMemoryContainer()
-        let storage = makeStorage()
-        await storage.configure(container: container)
+        let storage = makeStorage(container: container)
 
         // 기준점
         let origin = Coordinate(latitude: 37.0, longitude: 127.0)
