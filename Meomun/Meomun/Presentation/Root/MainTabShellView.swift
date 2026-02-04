@@ -21,6 +21,24 @@ struct MainTabShellView: View {
 
     @StateObject private var store = MainTabStore()
 
+    @State private var leafUpdater = LeafMarkerUpdater()
+    @State private var clusterUpdater = ClusterMarkerUpdater()
+    @State private var markerManager: MessageMarkerManager
+
+    init() {
+        let leaf = LeafMarkerUpdater()
+        let cluster = ClusterMarkerUpdater()
+        _leafUpdater = State(initialValue: leaf)
+        _clusterUpdater = State(initialValue: cluster)
+
+        _markerManager = State(initialValue: MessageMarkerManager(
+            markerFactory: NaverMarkerFactory(),
+            clustererFactory: NaverClustererFactory(leaf: leaf, cluster: cluster),
+            rotationAnimator: .init(),
+            bubbleImageRenderer: .init()
+        ))
+    }
+
     var body: some View {
         ZStack {
             contentView(for: store.state.selectedTab)
@@ -71,10 +89,7 @@ struct MainTabShellView: View {
         case .map:
             MapView(
                 store: mapStore,
-                messageMarkerManager: MessageMarkerManager(
-                    rotationAnimator: .init(),
-                    bubbleImageRenderer: .init()
-                )
+                messageMarkerManager: markerManager
             )
 
         case .record:

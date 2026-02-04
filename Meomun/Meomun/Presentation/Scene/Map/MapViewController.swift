@@ -38,6 +38,7 @@ final class MapViewController: UIViewController {
     // MARK: - Dependencies
 
     private let messageMarkerManager: MessageMarkerManager
+    private lazy var mapViewAdapter: MapViewProtocol = NaverMapViewAdapter(naverMapView.mapView)
 
     // MARK: - Init
 
@@ -61,7 +62,15 @@ final class MapViewController: UIViewController {
     }
 
     required init?(coder: NSCoder) {
-        self.messageMarkerManager = .init(rotationAnimator: .init(), bubbleImageRenderer: .init())
+        self.messageMarkerManager = .init(
+            markerFactory: NaverMarkerFactory(),
+            clustererFactory: NaverClustererFactory(
+                leaf: LeafMarkerUpdater(),
+                cluster: ClusterMarkerUpdater()
+            ),
+            rotationAnimator: .init(),
+            bubbleImageRenderer: .init()
+        )
         self.onTapPlace = nil
         self.onTapNoPlace = nil
         self.onUserGesture = nil
@@ -289,7 +298,7 @@ extension MapViewController {
     func loadMessages(_ messages: [Message]) {
         messageMarkerManager.loadMessages(
             messages,
-            mapView: naverMapView.mapView,
+            mapView: mapViewAdapter,
             onTapPlace: onTapPlace,
             onTapNoPlace: onTapNoPlace
         )
