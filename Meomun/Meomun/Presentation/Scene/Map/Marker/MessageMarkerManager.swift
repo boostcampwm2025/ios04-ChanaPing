@@ -41,14 +41,7 @@ final class MessageMarkerManager {
     /// 한 마커에 표시할 최대 메시지 수 (기본값: 10)
     private let displayLimit: Int
 
-    /// 마커별 렌더링 Task (누적 방지, 최신만 반영)
-    private var renderTasks: [MarkerGroupKey: Task<Void, Never>] = [:]
-
-    /// 페이드 관리용 Task
-    private var fadeTasks: [MarkerGroupKey: Task<Void, Never>] = [:]
-
-    /// 마커 페이드인 여부 상태 플래그
-    private var hasFadedIn: Set<MarkerGroupKey> = []
+    private let renderScheduler: MarkerRenderScheduler
 
     private var lastRenderedSignature: [MarkerGroupKey: MarkerRenderSignature] = [:]
 
@@ -89,6 +82,8 @@ final class MessageMarkerManager {
         self.rotationAnimator = rotationAnimator
         self.bubbleImageRenderer = bubbleImageRenderer
         self.displayLimit = displayLimit
+
+        self.renderScheduler = MarkerRenderScheduler(renderer: bubbleImageRenderer)
     }
 }
 
@@ -349,22 +344,22 @@ extension MessageMarkerManager {
     /// - fadeTasks 취소
     /// - hasFadedIn 초기화
     private func clearAll() {
+        let keys = Set(markers.keys)
+
+        for key in keys {
+            renderScheduler.cancelAllTasks(for: key)
+            renderScheduler.resetFadedInState(for: key)
+        }
+
         // 지도에서 마커 제거
         for (_, marker) in markers {
             marker.setAttached(to: nil)
         }
+
         markers.removeAll()
         animationStates.removeAll()
         placeMessagesByCoord.removeAll()
         noPlaceMessagesByCoord.removeAll()
-
-        for (_, task) in renderTasks { task.cancel() }
-        renderTasks.removeAll()
-
-        for (_, task) in fadeTasks { task.cancel() }
-        fadeTasks.removeAll()
-        hasFadedIn.removeAll()
-
         lastRenderedSignature.removeAll()
     }
 }
@@ -483,7 +478,7 @@ extension MessageMarkerManager {
             markerType: markerType,
             messages: messages,
             lastSignature: lastRenderedSignature[key],
-            hasFadedIn: hasFadedIn.contains(key),
+            hasFadedIn: renderScheduler.hasFadedIn(key),
             hasAnimationState: animationStates[key] != nil
         )
 
@@ -503,10 +498,17 @@ extension MessageMarkerManager {
         case .renderNeeded(signature: let signature):
             // 초기 이미지 렌더
             lastRenderedSignature[key] = signature
-            scheduleInitialRender(
+
+            renderScheduler.scheduleInitialRender(
                 for: key,
                 marker: marker,
-                markerType: markerType
+                markerType: markerType,
+                animationStateProvider: { [weak self] in
+                    self?.animationStates[key]
+                },
+                currentMarkerForKey: { [weak self] in
+                    self?.markers[key]
+                }
             )
         }
     }
@@ -519,13 +521,8 @@ extension MessageMarkerManager {
         markers.removeValue(forKey: key)      // 마커 딕셔너리에서 삭제
         animationStates.removeValue(forKey: key)  // 애니메이션 상태 삭제
 
-        renderTasks[key]?.cancel()
-        renderTasks.removeValue(forKey: key)
-
-        fadeTasks[key]?.cancel()
-        fadeTasks.removeValue(forKey: key)
-
-        hasFadedIn.remove(key)
+        renderScheduler.cancelAllTasks(for: key)
+        renderScheduler.resetFadedInState(for: key)
 
         lastRenderedSignature.removeValue(forKey: key)
     }
@@ -539,62 +536,6 @@ extension MessageMarkerManager {
 
         attachMarker(marker, to: mapView)
         return marker
-    }
-
-    private func scheduleInitialRender(
-        for key: MarkerGroupKey,
-        marker: MarkerProtocol,
-        markerType: MarkerType
-    ) {
-        // 기존 렌더 작업 취소 (최신만 반영)
-        renderTasks[key]?.cancel()
-
-        renderTasks[key] = Task { @MainActor in
-            let image: UIImage
-
-            switch markerType {
-            case .singleBubble(let message):
-                image = await bubbleImageRenderer.renderSingleBubble(message: message)
-
-            case .rotatingBubble(let messages), .stackBubble(let messages):
-                guard messages.count >= 1 else { return }
-
-                if let state = animationStates[key], state.messages.count >= 1 {
-                    let snap = state.messages
-                    let current = state.currentMessage ?? snap[0]
-                    let next = state.nextMessage ?? snap[min(1, snap.count - 1)]
-
-                    image = await bubbleImageRenderer.renderRotatingBubble(
-                        current: current,
-                        next: next,
-                        progress: state.isAnimating ? state.animationProgress : 0
-                    )
-                } else {
-                    // state가 아직 없거나 준비 전이면 messages로 fallback
-                    let current = messages[0]
-                    let next = messages[min(1, messages.count - 1)]
-                    image = await bubbleImageRenderer.renderRotatingBubble(
-                        current: current,
-                        next: next,
-                        progress: 0
-                    )
-                }
-            }
-
-            // 취소되었으면 적용 X
-            guard !Task.isCancelled else { return }
-
-            // 아직 이 key의 현재 마커가 이 marker인지 확인
-            guard markers[key] === marker else { return }
-
-            if hasFadedIn.contains(key) {
-                marker.setIcon(image)
-                marker.alpha = 1.0
-            } else {
-                hasFadedIn.insert(key)
-                applyIconWithFade(image, to: marker, key: key)
-            }
-        }
     }
 }
 
@@ -616,7 +557,18 @@ extension MessageMarkerManager {
             guard let type = MarkerType.from(messages: messages, isPlace: key.isPlace) else {
                 continue
             }
-            scheduleInitialRender(for: key, marker: marker, markerType: type)
+
+            renderScheduler.scheduleInitialRender(
+                for: key,
+                marker: marker,
+                markerType: type,
+                animationStateProvider: { [weak self] in
+                    self?.animationStates[key]
+                },
+                currentMarkerForKey: { [weak self] in
+                    self?.markers[key]
+                }
+            )
         }
     }
 }
@@ -663,25 +615,15 @@ extension MessageMarkerManager {
 
                 // 현재/다음 메시지로 회전 이미지 렌더링
                 if let current, let next {
-
-                    // 기존 렌더 취소 (프레임 누적 방지)
-                    renderTasks[groupKey]?.cancel()
-
-                    renderTasks[groupKey] = Task { @MainActor in
-                        // marker는 Task 안에서 다시 가져오도록 하기 (교체될 수 있으므로)
-                        guard let marker = self.markers[groupKey] else { return }
-
-                        let image = await bubbleImageRenderer.renderRotatingBubble(
-                            current: current,
-                            next: next,
-                            progress: progress
-                        )
-
-                        guard !Task.isCancelled else { return }
-                        guard self.markers[groupKey] === marker else { return }
-
-                        marker.setIcon(image)
-                    }
+                    renderScheduler.scheduleAnimationRender(
+                        for: groupKey,
+                        current: current,
+                        next: next,
+                        progress: progress,
+                        currentMarkerForKey: { [weak self] in
+                            self?.markers[groupKey]
+                        }
+                    )
                 }
             } else {
                 // 대기 중: 시작 시간 확인 후 애니메이션 시작
@@ -691,35 +633,6 @@ extension MessageMarkerManager {
             }
 
             animationStates[groupKey] = state
-        }
-    }
-
-    private func applyIconWithFade(
-        _ image: UIImage,
-        to marker: MarkerProtocol,
-        key: MarkerGroupKey,
-        duration: TimeInterval = 0.5,
-        fps: Double = 60
-    ) {
-        // 기존 페이드 작업 취소
-        fadeTasks[key]?.cancel()
-
-        // 아이콘은 먼저 교체
-        marker.setIcon(image)
-
-        // 시작은 투명
-        marker.alpha = 0.0
-
-        let totalFrames = max(1, Int(duration * fps))
-        let frameNanos = UInt64(1_000_000_000 / fps)
-
-        fadeTasks[key] = Task { @MainActor in
-            for i in 0...totalFrames {
-                if Task.isCancelled { return }
-                marker.alpha = CGFloat(Double(i) / Double(totalFrames))
-                try? await Task.sleep(nanoseconds: frameNanos)
-            }
-            marker.alpha = 1.0
         }
     }
 }
