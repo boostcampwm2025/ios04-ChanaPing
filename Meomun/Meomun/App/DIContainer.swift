@@ -10,31 +10,61 @@ final class DIContainer {
 
     private init() { }
 
-    private var dependencies: [String: Any] = [:]
+    private var instances: [ObjectIdentifier: Any] = [:]
+    private var factories: [ObjectIdentifier: () -> Any] = [:]
 
     static func register<T>(_ dependency: T) {
-        shared.register(dependency)
+        shared.register(dependency, as: T.self)
+    }
+
+    static func registerFactory<T>(_ type: T.Type = T.self, factory: @escaping () -> T) {
+        shared.registerFactory(type, factory: factory)
     }
 
     static func resolve<T>() -> T? {
-        shared.resolve()
+        shared.resolve(T.self)
     }
 
-    private func register<T>(_ dependency: T) {
-        let key = String(describing: T.self)
-        dependencies[key] = dependency as Any
+    static func resolveOrDie<T>() -> T {
+        shared.resolveOrDie(T.self)
     }
 
-    private func resolve<T>() -> T? {
-        let key = String(describing: T.self)
-        let dependency = dependencies[key] as? T
+    private func register<T>(_ dependency: T, as type: T.Type) {
+        let key = ObjectIdentifier(type)
+        instances[key] = dependency as Any
+    }
+
+    private func registerFactory<T>(_ type: T.Type, factory: @escaping () -> T) {
+        let key = ObjectIdentifier(type)
+        factories[key] = factory
+    }
+
+    private func resolve<T>(_ type: T.Type) -> T? {
+        let key = ObjectIdentifier(type)
+
+        if let existing = instances[key] as? T {
+            return existing
+        }
+
+        if let factory = factories[key] {
+            let created = factory()
+            instances[key] = created
+            return created as? T
+        }
+
+        return nil
+    }
+
+    private func resolveOrDie<T>(_ type: T.Type) -> T {
+        let key = String(describing: type)
+        let dependency: T? = resolve(type)
 
         guard let dependency else {
             AppLog.error("\(key) Dependency가 없음", category: .DIContainer)
             #if DEBUG
             assertionFailure("\(key) Dependency가 없음")
             #endif
-            return nil
+            preconditionFailure("\(key) Dependency가 없음")
         }
 
         return dependency
@@ -42,38 +72,71 @@ final class DIContainer {
 }
 
 extension DIContainer {
+    @MainActor
     static func registerDependencies() {
-        let networkMonitor = NetworkMonitor()
-        let appSettingsOpner = AppSettingsOpener()
-        let locationProvider = LocationProvider()
+        // MARK: - Infra / App
+
+        DIContainer.registerFactory(NetworkMonitoring.self) { NetworkMonitor() }
+        DIContainer.registerFactory(AppSettingsOpening.self) { AppSettingsOpener() }
+        DIContainer.registerFactory(LocationProvider.self) { LocationProvider() }
 
         // MARK: - Data
 
-        let messageStorage = MessageSwiftDataStorage.shared
-        let messageRepositoryImpl = MessageRepositoryImpl(storage: messageStorage)
+        DIContainer.registerFactory(MessageStorage.self) { MessageSwiftDataStorage.shared }
+        DIContainer.registerFactory(MessageRepository.self) {
+            let storage: MessageStorage = DIContainer.resolveOrDie()
+            return MessageRepositoryImpl(storage: storage)
+        }
 
         // MARK: - Domain
 
-        let getNearbyMessagesUseCaseImpl = GetNearbyMessagesUseCaseImpl(messageRepository: messageRepositoryImpl)
-        let fetchRecentMessagesUseCaseImpl = FetchRecentMessagesUseCaseImpl(repository: messageRepositoryImpl)
-        let deleteMessagesUseCaseImpl = DeleteMessagesUseCaseImpl(messageRepository: messageRepositoryImpl)
-        let resetMessageUseCaseImpl = ResetMessagesUseCaseImpl(messageRepository: messageRepositoryImpl)
+        DIContainer.registerFactory(GetNearbyMessagesUseCase.self) {
+            let repo: MessageRepository = DIContainer.resolveOrDie()
+            return GetNearbyMessagesUseCaseImpl(messageRepository: repo)
+        }
+        DIContainer.registerFactory(FetchRecentMessagesUseCase.self) {
+            let repo: MessageRepository = DIContainer.resolveOrDie()
+            return FetchRecentMessagesUseCaseImpl(repository: repo)
+        }
+        DIContainer.registerFactory(DeleteMessagesUseCase.self) {
+            let repo: MessageRepository = DIContainer.resolveOrDie()
+            return DeleteMessagesUseCaseImpl(messageRepository: repo)
+        }
+        DIContainer.registerFactory(ResetMessagesUseCase.self) {
+            let repo: MessageRepository = DIContainer.resolveOrDie()
+            return ResetMessagesUseCaseImpl(messageRepository: repo)
+        }
 
         // MARK: - Presentation
-
-        let rootStore = RootStore(locationProvider: locationProvider, appSettingsOpener: appSettingsOpner)
-        let mainTabStore = MainTabStore()
-        let mapStore = MapStore(getNearbyMessagesUseCase: getNearbyMessagesUseCaseImpl, networkMonitor: networkMonitor)
-        let timeLineListStore = TimelineListStore(fetchRecentMessagesUseCase: fetchRecentMessagesUseCaseImpl, deleteMessagesUseCase: deleteMessagesUseCaseImpl)
-        let settingStore = SettingStore(appSettingsOpener: appSettingsOpner, resetMessagesUseCase: resetMessageUseCaseImpl)
-
-        // MARK: - register
-
-        DIContainer.shared.register(locationProvider)
-        DIContainer.shared.register(rootStore)
-        DIContainer.shared.register(mainTabStore)
-        DIContainer.shared.register(mapStore)
-        DIContainer.shared.register(timeLineListStore)
-        DIContainer.shared.register(settingStore)
+        
+        DIContainer.registerFactory(RootStore.self) {
+            let locationProvider: LocationProvider = DIContainer.resolveOrDie()
+            let appSettingsOpener: AppSettingsOpening = DIContainer.resolveOrDie()
+            return RootStore(locationProvider: locationProvider, appSettingsOpener: appSettingsOpener)
+        }
+        DIContainer.registerFactory(MainTabStore.self) { MainTabStore() }
+        DIContainer.registerFactory(MapStore.self) {
+            let useCase: GetNearbyMessagesUseCase = DIContainer.resolveOrDie()
+            let networkMonitor: NetworkMonitoring = DIContainer.resolveOrDie()
+            return MapStore(getNearbyMessagesUseCase: useCase, networkMonitor: networkMonitor)
+        }
+        DIContainer.registerFactory(TimelineListStore.self) {
+            let fetchRecent: FetchRecentMessagesUseCase = DIContainer.resolveOrDie()
+            let deleteMessages: DeleteMessagesUseCase = DIContainer.resolveOrDie()
+            return TimelineListStore(fetchRecentMessagesUseCase: fetchRecent, deleteMessagesUseCase: deleteMessages)
+        }
+        DIContainer.registerFactory(SettingStore.self) {
+            let appSettingsOpener: AppSettingsOpening = DIContainer.resolveOrDie()
+            let resetMessages: ResetMessagesUseCase = DIContainer.resolveOrDie()
+            return SettingStore(appSettingsOpener: appSettingsOpener, resetMessagesUseCase: resetMessages)
+        }
+        DIContainer.registerFactory(MessageMarkerManager.self) {
+            let rotationAnimator = MessageRotationAnimator()
+            let bubbleImageRenderer = BubbleImageRenderer()
+            return MessageMarkerManager(
+                rotationAnimator: rotationAnimator,
+                bubbleImageRenderer: bubbleImageRenderer
+            )
+        }
     }
 }

@@ -40,7 +40,10 @@ struct MeomunApp: App {
                         await MessageSwiftDataStorage.shared.configure(container: meomunModelContainer)
                     }
             } else {
-                EmptyView()
+                DIErrorFallbackView()
+                    .onAppear {
+                        AppLog.error("DIContainer resolve failed at app launch", category: .DIContainer)
+                    }
             }
         }
     }
