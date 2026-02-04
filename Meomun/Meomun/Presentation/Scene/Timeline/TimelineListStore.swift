@@ -20,6 +20,7 @@ final class TimelineListStore: Store {
         var enableFetching: Bool = true
         var pagination: Pagination = .init()
         var isRefreshing: Bool = false
+        var toastMessage: String?
 
         var messages: [Message] = []
         var selectedSection: YearMonth?
@@ -38,6 +39,7 @@ final class TimelineListStore: Store {
         case onAppear
         case requestNextPage
         case refresh
+        case setToast(String?)
 
         case requestDeleteSelectedMessages          // 편집 모드 -> 삭제
         case confirmDeleteSelectedMessages          // 얼럿 - 삭제
@@ -59,6 +61,7 @@ final class TimelineListStore: Store {
 
         case setRefreshing(Bool)
         case prependMessages([Message])
+        case setToastMessage(String?)
 
         case setSelectedSection(YearMonth?)
 
@@ -105,6 +108,12 @@ final class TimelineListStore: Store {
 
         case .refresh:
             return performRefresh()
+
+        case .setToast(let message):
+            return .init { continuation in
+                continuation.yield(.setToastMessage(message))
+                continuation.finish()
+            }
 
         case .tapSection(let section):
             return .init { continuation in
@@ -215,6 +224,9 @@ final class TimelineListStore: Store {
 
             newState.messages = onlyNewMessages + newState.messages
             cleanupSectionIfNeeded(&newState)
+
+        case .setToastMessage(let message):
+            newState.toastMessage = message
 
         case .toggleMessageSelection(let messageID):
             if newState.selectedMessageIDs.contains(messageID) {

@@ -105,6 +105,7 @@ struct TimelineListView: View {
                     .transition(.identity) // 애니메이션 없음
             }
         }
+        .mmToast(toastBinding, bottomPadding: 0)
     }
 }
 
@@ -297,6 +298,13 @@ private extension TimelineListView {
         }
     }
 
+    var toastBinding: Binding<String?> {
+        Binding(
+            get: { store.state.toastMessage },
+            set: { send(.setToast($0)) }
+        )
+    }
+
     @MainActor
     private func triggerRefreshIfPossible() async {
         guard store.state.isEditing == false else { return }
@@ -311,8 +319,10 @@ private extension TimelineListView {
 
         let deadline = Date().addingTimeInterval(2.0)
         while store.state.isRefreshing, Date() < deadline {
-            try? await Task.sleep(for: .milliseconds(50))
+            try? await Task.sleep(for: .milliseconds(100))
         }
+
+        await store.send(intent: .setToast("새로고침 완료!"))
     }
 }
 
