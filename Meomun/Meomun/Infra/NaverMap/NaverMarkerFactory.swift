@@ -8,10 +8,8 @@
 import UIKit
 import NMapsMap
 
-public struct NaverMarkerFactory: MarkerFactoryProtocol {
-    public init() {}
-
-    public func makeMarker(coordinate: Coordinate) -> MarkerProtocol {
+struct NaverMarkerFactory: MarkerFactoryProtocol {
+    func makeMarker(coordinate: Coordinate) -> MarkerProtocol {
         let pos = NMGLatLng(lat: coordinate.latitude, lng: coordinate.longitude)
         let marker = NMFMarker(position: pos)
         marker.anchor = CGPoint(x: 0.5, y: 1.0)

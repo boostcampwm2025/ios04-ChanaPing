@@ -9,25 +9,25 @@ import UIKit
 import NMapsMap
 
 /// NMFMarker를 MarkerProtocol로 감싼 어댑터
-public final class NaverMarkerAdapter: MarkerProtocol {
+final class NaverMarkerAdapter: MarkerProtocol {
 
     private let marker: NMFMarker
     private weak var currentMapView: NMFMapView?
 
-    public init(marker: NMFMarker) {
+    init(marker: NMFMarker) {
         self.marker = marker
     }
 
-    public var alpha: CGFloat {
+    var alpha: CGFloat {
         get { marker.alpha }
         set { marker.alpha = newValue }
     }
 
-    public func setIcon(_ image: UIImage) {
+    func setIcon(_ image: UIImage) {
         marker.iconImage = NMFOverlayImage(image: image)
     }
 
-    public func setAttached(to mapView: MapViewProtocol?) {
+    func setAttached(to mapView: MapViewProtocol?) {
         guard let mapView else {
             marker.mapView = nil
             currentMapView = nil
@@ -42,7 +42,7 @@ public final class NaverMarkerAdapter: MarkerProtocol {
         currentMapView = naver.mapView
     }
 
-    public func setOnTap(_ handler: @escaping () -> Void) {
+    func setOnTap(_ handler: @escaping () -> Void) {
         marker.touchHandler = { _ in
             handler()
             return true

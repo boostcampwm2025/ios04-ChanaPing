@@ -7,6 +7,6 @@
 
 import Foundation
 
-public protocol MarkerFactoryProtocol {
+protocol MarkerFactoryProtocol {
     func makeMarker(coordinate: Coordinate) -> MarkerProtocol
 }

@@ -9,7 +9,7 @@ import UIKit
 
 /// 마커(핀/오버레이)를 추상화한 포트.
 /// alpha, icon, attach/detach, tap handling만 제공.
-public protocol MarkerProtocol: AnyObject {
+protocol MarkerProtocol: AnyObject {
     var alpha: CGFloat { get set }
 
     /// 마커 아이콘(버블 이미지) 설정

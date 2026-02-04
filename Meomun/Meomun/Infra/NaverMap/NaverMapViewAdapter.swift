@@ -9,10 +9,10 @@ import Foundation
 import NMapsMap
 
 /// NMFMapView를 MapViewProtocol로 감싼 어댑터
-public final class NaverMapViewAdapter: MapViewProtocol {
-    public let mapView: NMFMapView
+final class NaverMapViewAdapter: MapViewProtocol {
+    let mapView: NMFMapView
 
-    public init(_ mapView: NMFMapView) {
+    init(_ mapView: NMFMapView) {
         self.mapView = mapView
     }
 }

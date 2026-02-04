@@ -9,14 +9,14 @@ import Foundation
 import NMapsMap
 
 /// NMCClusterer를 ClustererProtocol로 감싼 어댑터
-public final class NaverClustererAdapter: ClustererProtocol {
+final class NaverClustererAdapter: ClustererProtocol {
 
     private let clusterer: NMCClusterer<ItemKey>
 
     private let leafUpdater: NMCLeafMarkerUpdater
     private let clusterUpdater: NMCClusterMarkerUpdater
 
-    public init(
+    init(
         leafUpdater: NMCLeafMarkerUpdater,
         clusterUpdater: NMCClusterMarkerUpdater
     ) {
@@ -29,7 +29,7 @@ public final class NaverClustererAdapter: ClustererProtocol {
         self.clusterer = builder.build()
     }
 
-    public func attach(to mapView: MapViewProtocol?) {
+    func attach(to mapView: MapViewProtocol?) {
         guard let mapView else {
             clusterer.mapView = nil
             return
@@ -41,11 +41,11 @@ public final class NaverClustererAdapter: ClustererProtocol {
         clusterer.mapView = naver.mapView
     }
 
-    public func clear() {
+    func clear() {
         clusterer.clear()
     }
 
-    public func setItems(_ items: [ClusterItem]) {
+    func setItems(_ items: [ClusterItem]) {
         var map: [ItemKey: NSObject] = [:]
         map.reserveCapacity(items.count)
 

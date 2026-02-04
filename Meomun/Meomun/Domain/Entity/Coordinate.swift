@@ -7,9 +7,9 @@
 
 import Foundation
 
-public struct Coordinate: Sendable, Equatable, Hashable {
-    public let latitude: Double
-    public let longitude: Double
+struct Coordinate: Sendable, Equatable, Hashable {
+    let latitude: Double
+    let longitude: Double
 
     // 소수점 5자리 정밀도 (약 1.1m 오차)
     private static let precision: Double = 100_000
@@ -43,12 +43,12 @@ public struct Coordinate: Sendable, Equatable, Hashable {
         return earthRadiusMeters * centralAngle
     }
 
-    static public func == (lhs: Coordinate, rhs: Coordinate) -> Bool {
+    static func == (lhs: Coordinate, rhs: Coordinate) -> Bool {
         lhs.normalizedLatitude == rhs.normalizedLatitude &&
         lhs.normalizedLongitude == rhs.normalizedLongitude
     }
 
-    public func hash(into hasher: inout Hasher) {
+    func hash(into hasher: inout Hasher) {
         hasher.combine(normalizedLatitude)
         hasher.combine(normalizedLongitude)
     }

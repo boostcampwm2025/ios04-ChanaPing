@@ -8,16 +8,11 @@
 import UIKit
 import NMapsMap
 
-public struct NaverClustererFactory: ClustererFactoryProtocol {
-    private let leaf: NMCLeafMarkerUpdater
-    private let cluster: NMCClusterMarkerUpdater
+struct NaverClustererFactory: ClustererFactoryProtocol {
+    let leaf: NMCLeafMarkerUpdater
+    let cluster: NMCClusterMarkerUpdater
 
-    public init(leaf: NMCLeafMarkerUpdater, cluster: NMCClusterMarkerUpdater) {
-        self.leaf = leaf
-        self.cluster = cluster
-    }
-
-    public func makeClusterer() -> ClustererProtocol {
+    func makeClusterer() -> ClustererProtocol {
         NaverClustererAdapter(leafUpdater: leaf, clusterUpdater: cluster)
     }
 }
