@@ -57,14 +57,20 @@ final class TimelineListStore: Store {
         case setReachedEndPage(Bool)
         case addMessages([Message])
 
+        case setRefreshing(Bool)
+        case prependMessages([Message])
+
+        case setSelectedSection(YearMonth?)
+
+        case setEditing(Bool)
         case toggleMessageSelection(MessageID)
         case clearSelectedMessageIDs
-        case setSelectedSection(YearMonth?)
-        case setEditing(Bool)
+
+        case setDeleteStatus(LoadingStatus)
         case deleteMessages(Set<MessageID>)
+
         case showDeleteAlert(MMAlertModel)
         case hideAlert
-        case setDeleteStatus(LoadingStatus)
     }
 
     @Published var state: State
