@@ -7,8 +7,13 @@
 
 import Foundation
 
+protocol MessageRotationAnimating {
+    func shouldStartAnimation(for state: BubbleAnimationState, currentTime: TimeInterval) -> Bool
+    func updateAnimation(for state: inout BubbleAnimationState, currentTime: TimeInterval)
+}
+
 /// 메시지 애니메이션 로직을 관리하는 객체입니다.
-final class MessageRotationAnimator {
+final class MessageRotationAnimator: MessageRotationAnimating {
     private let rotationInterval: TimeInterval
     private let animationDuration: TimeInterval
 

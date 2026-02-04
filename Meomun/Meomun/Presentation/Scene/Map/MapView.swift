@@ -341,23 +341,3 @@ private extension MapView {
         )
     }
 }
-
-#Preview {
-    let rotationAnimator = MessageRotationAnimator()
-    let bubbleImageRenderer = BubbleImageRenderer()
-    let messageMarkerManager = MessageMarkerManager(
-        rotationAnimator: rotationAnimator,
-        bubbleImageRenderer: bubbleImageRenderer
-    )
-
-    return MapView(
-        store: MapStore(
-            getNearbyMessagesUseCase: GetNearbyMessagesUseCaseImpl(
-                messageRepository: MessageRepositoryImpl(storage: MessageInMemoryStorage.shared)
-            ),
-            networkMonitor: NetworkMonitor()
-        ),
-        messageMarkerManager: messageMarkerManager
-    )
-    .environmentObject(LocationProvider())
-}

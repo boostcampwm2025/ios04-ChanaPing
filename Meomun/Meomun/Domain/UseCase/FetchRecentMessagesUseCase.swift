@@ -16,7 +16,7 @@ final class FetchRecentMessagesUseCaseImpl: FetchRecentMessagesUseCase {
         self.repository = repository
     }
 
-    func execute(page: Int, pageSize: Int = 100) async throws -> [Message] {
+    func execute(page: Int, pageSize: Int) async throws -> [Message] {
         try await repository.fetchRecentMessages(page: page, pageSize: pageSize)
     }
 }

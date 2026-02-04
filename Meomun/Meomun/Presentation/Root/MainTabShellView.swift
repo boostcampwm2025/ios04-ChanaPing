@@ -17,9 +17,25 @@ struct MainTabShellView: View {
     @StateObject private var mapStore: MapStore
     @StateObject private var store: MainTabStore
 
+    @State private var leafUpdater = LeafMarkerUpdater()
+    @State private var clusterUpdater = ClusterMarkerUpdater()
+    @State private var markerManager: MessageMarkerManager
+
     init() {
         _mapStore = StateObject(wrappedValue: DIContainer.resolveOrDie())
         _store = StateObject(wrappedValue: DIContainer.resolveOrDie())
+
+        let leaf = LeafMarkerUpdater()
+        let cluster = ClusterMarkerUpdater()
+        _leafUpdater = State(initialValue: leaf)
+        _clusterUpdater = State(initialValue: cluster)
+
+        _markerManager = State(initialValue: MessageMarkerManager(
+            markerFactory: NaverMarkerFactory(),
+            clustererFactory: NaverClustererFactory(leaf: leaf, cluster: cluster),
+            rotationAnimator: MessageRotationAnimator(),
+            bubbleImageRenderer: BubbleImageRenderer()
+        ))
     }
 
     var body: some View {
@@ -73,7 +89,7 @@ struct MainTabShellView: View {
             let factory: MessageMarkerManagerFactory = DIContainer.resolveOrDie()
             MapView(
                 store: mapStore,
-                messageMarkerManager: factory.make()
+                messageMarkerManager: markerManager
             )
 
         case .record:
