@@ -23,10 +23,10 @@ struct MessageMarkerDiffTests {
             DummyMessageFactory.noPlaceMessage(createdAt: 1, coordinate: coordB)
         ]
 
-        let oldSnap = MessageMarkerSnapshotBuilder.build(from: oldMessages, displayLimit: 10)
-        let newSnap = MessageMarkerSnapshotBuilder.build(from: newMessages, displayLimit: 10)
+        let oldSnap = MessageMarkerSnapshotBuilder.build(from: oldMessages)
+        let newSnap = MessageMarkerSnapshotBuilder.build(from: newMessages)
 
-        let diff = MessageMarkerDiffCalculator.diff(old: oldSnap, new: newSnap, displayLimit: 10)
+        let diff = MessageMarkerDiffCalculator.diff(old: oldSnap, new: newSnap)
 
         #expect(diff.removed == [MarkerGroupKey(coordinate: coordA, isPlace: false)])
         #expect(diff.added == [MarkerGroupKey(coordinate: coordB, isPlace: false)])
@@ -46,10 +46,10 @@ struct MessageMarkerDiffTests {
         // new: [m1, m2, m3] => suffix(2)는 [m2, m3]로 변경
         let m3 = DummyMessageFactory.noPlaceMessage(createdAt: 3, coordinate: coord)
 
-        let oldSnap = MessageMarkerSnapshotBuilder.build(from: [m1, m2], displayLimit: limit)
-        let newSnap = MessageMarkerSnapshotBuilder.build(from: [m1, m2, m3], displayLimit: limit)
+        let oldSnap = MessageMarkerSnapshotBuilder.build(from: [m1, m2])
+        let newSnap = MessageMarkerSnapshotBuilder.build(from: [m1, m2, m3])
 
-        let diff = MessageMarkerDiffCalculator.diff(old: oldSnap, new: newSnap, displayLimit: limit)
+        let diff = MessageMarkerDiffCalculator.diff(old: oldSnap, new: newSnap)
 
         #expect(diff.common == [MarkerGroupKey(coordinate: coord, isPlace: false)])
         #expect(diff.changed == [MarkerGroupKey(coordinate: coord, isPlace: false)])
@@ -65,10 +65,10 @@ struct MessageMarkerDiffTests {
         let m1 = DummyMessageFactory.noPlaceMessage(createdAt: 1, coordinate: coord)
         let m2 = DummyMessageFactory.noPlaceMessage(createdAt: 2, coordinate: coord)
 
-        let oldSnap = MessageMarkerSnapshotBuilder.build(from: [m1, m2], displayLimit: limit)
-        let newSnap = MessageMarkerSnapshotBuilder.build(from: [m1, m2], displayLimit: limit)
+        let oldSnap = MessageMarkerSnapshotBuilder.build(from: [m1, m2])
+        let newSnap = MessageMarkerSnapshotBuilder.build(from: [m1, m2])
 
-        let diff = MessageMarkerDiffCalculator.diff(old: oldSnap, new: newSnap, displayLimit: limit)
+        let diff = MessageMarkerDiffCalculator.diff(old: oldSnap, new: newSnap)
 
         #expect(diff.common == [MarkerGroupKey(coordinate: coord, isPlace: false)])
         #expect(diff.changed.isEmpty == true)

@@ -7,15 +7,6 @@
 
 import UIKit
 
-private struct MarkerRenderSignature: Hashable {
-    enum Kind: Int, Hashable { case single, rotating, stack }
-
-    let kind: Kind
-    let firstMessageId: MessageID?      // 초기 아이콘에 쓰는 메시지(=single이면 그거, rotating/stack이면 first)
-    let count: Int                  // 표시 대상(messages: suffix(displayLimit)) 개수
-    let idsHash: Int                // 메시지 묶음 내용 변화 감지용
-}
-
 // MARK: - MessageMarkerManager
 
 /// 지도 위 메시지 마커의 생성, 업데이트, 애니메이션을 관리하는 객체입니다.
@@ -248,35 +239,6 @@ extension MessageMarkerManager {
                 onTapNoPlace: onTapNoPlace
             )
         }
-    }
-
-    private func makeRenderSignature(
-        markerType: MarkerType,
-        messages: [Message]
-    ) -> MarkerRenderSignature {
-        let kind: MarkerRenderSignature.Kind
-        let firstId: MessageID?
-
-        switch markerType {
-        case .singleBubble(let message):
-            kind = .single
-            firstId = message.id
-        case .rotatingBubble(let messages):
-            kind = .rotating
-            firstId = messages.first?.id
-        case .stackBubble(let messages):
-            kind = .stack
-            firstId = messages.first?.id
-        }
-
-        let idsHash = idsHash(messages)
-
-        return MarkerRenderSignature(
-            kind: kind,
-            firstMessageId: firstId,
-            count: messages.count,
-            idsHash: idsHash
-        )
     }
 
     private func syncAnimationStateIfNeeded(
@@ -517,26 +479,36 @@ extension MessageMarkerManager {
             return
         }
 
-        // 3-1. 현재 렌더 시그니처 계산
-        let signature = makeRenderSignature(markerType: markerType, messages: messages)
+        let decision = MessageMarkerRenderPolicy.decide(
+            markerType: markerType,
+            messages: messages,
+            lastSignature: lastRenderedSignature[key],
+            hasFadedIn: hasFadedIn.contains(key),
+            hasAnimationState: animationStates[key] != nil
+        )
 
-        // 3-2. 기존 마커가 있고, 시그니처가 동일하면 아이콘 렌더 스킵
-        if markers[key] != nil,
-           lastRenderedSignature[key] == signature { return }
-
-        // 시그니처 갱신
-        lastRenderedSignature[key] = signature
-
-        // 회전 마커가 이미 운영 중이면 굳이 초기 렌더로 덮지 않기
-        if case .rotatingBubble = markerType, animationStates[key] != nil, hasFadedIn.contains(key) {
+        switch decision {
+        case .skipSameSignature:
             return
-        }
-        if case .stackBubble = markerType, animationStates[key] != nil, hasFadedIn.contains(key) {
-            return
-        }
 
-        // 4. 초기 이미지 렌더 (key 기준 검증 + Task 누적 방지)
-        scheduleInitialRender(for: key, marker: marker, markerType: markerType)
+        case .skipBecauseAnimatingAlready:
+            // 시그니처만 갱신
+            let signature = MessageMarkerRenderPolicy.makeSignature(
+                markerType: markerType,
+                messages: messages
+            )
+            lastRenderedSignature[key] = signature
+            return
+
+        case .renderNeeded(signature: let signature):
+            // 초기 이미지 렌더
+            lastRenderedSignature[key] = signature
+            scheduleInitialRender(
+                for: key,
+                marker: marker,
+                markerType: markerType
+            )
+        }
     }
 
     /// 마커를 지도에서 제거하고 저장소에서 삭제합니다.

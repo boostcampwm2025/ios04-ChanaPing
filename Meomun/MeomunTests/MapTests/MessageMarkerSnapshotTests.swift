@@ -17,7 +17,7 @@ struct MessageMarkerSnapshotTests {
         let messageCoord = DummyMessageFactory.gangnamStationCoordinate
 
         let m1 = DummyMessageFactory.placeMessage(createdAt: 1, coordinate: messageCoord)
-        let snapshot = MessageMarkerSnapshotBuilder.build(from: [m1], displayLimit: 10)
+        let snapshot = MessageMarkerSnapshotBuilder.build(from: [m1])
 
         #expect(snapshot.placeStore[placeCoord]?.count == 1)
         #expect(snapshot.noPlaceStore.isEmpty == true)
@@ -30,7 +30,7 @@ struct MessageMarkerSnapshotTests {
         let coord = DummyMessageFactory.gangnamStationCoordinate
 
         let m1 = DummyMessageFactory.noPlaceMessage(createdAt: 1, coordinate: coord)
-        let snapshot = MessageMarkerSnapshotBuilder.build(from: [m1], displayLimit: 10)
+        let snapshot = MessageMarkerSnapshotBuilder.build(from: [m1])
 
         #expect(snapshot.noPlaceStore[coord]?.count == 1)
         #expect(snapshot.placeStore.isEmpty == true)
@@ -49,7 +49,7 @@ struct MessageMarkerSnapshotTests {
         let id = UUID(uuidString: "AAAAAAAA-BBBB-CCCC-DDDD-EEEEEEEEEEEE")!
         let noPlace = DummyMessageFactory.noPlaceMessage(id: id, createdAt: 2, coordinate: coord)
 
-        let snapshot = MessageMarkerSnapshotBuilder.build(from: [noPlace, place], displayLimit: 10)
+        let snapshot = MessageMarkerSnapshotBuilder.build(from: [noPlace, place])
 
         let expectedOffset = coord.offset(for: MessageID(value: id))
         #expect(snapshot.noPlaceStore[coord] == nil)
@@ -63,7 +63,7 @@ struct MessageMarkerSnapshotTests {
         let m2 = DummyMessageFactory.noPlaceMessage(createdAt: 2, coordinate: coord)
         let m1 = DummyMessageFactory.noPlaceMessage(createdAt: 1, coordinate: coord)
 
-        let snapshot = MessageMarkerSnapshotBuilder.build(from: [m2, m1], displayLimit: 10)
+        let snapshot = MessageMarkerSnapshotBuilder.build(from: [m2, m1])
         let list = snapshot.noPlaceStore[coord] ?? []
 
         #expect(list.count == 2)
