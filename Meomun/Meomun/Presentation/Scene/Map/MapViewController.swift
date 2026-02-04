@@ -68,8 +68,8 @@ final class MapViewController: UIViewController {
                 leaf: LeafMarkerUpdater(),
                 cluster: ClusterMarkerUpdater()
             ),
-            rotationAnimator: .init(),
-            bubbleImageRenderer: .init()
+            rotationAnimator: MessageRotationAnimator(),
+            bubbleImageRenderer: BubbleImageRenderer()
         )
         self.onTapPlace = nil
         self.onTapNoPlace = nil

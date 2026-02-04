@@ -34,8 +34,8 @@ struct MainTabShellView: View {
         _markerManager = State(initialValue: MessageMarkerManager(
             markerFactory: NaverMarkerFactory(),
             clustererFactory: NaverClustererFactory(leaf: leaf, cluster: cluster),
-            rotationAnimator: .init(),
-            bubbleImageRenderer: .init()
+            rotationAnimator: MessageRotationAnimator(),
+            bubbleImageRenderer: BubbleImageRenderer()
         ))
     }
 

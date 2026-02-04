@@ -8,9 +8,35 @@
 import SwiftUI
 import UIKit
 
+protocol BubbleImageRendering {
+    func setColorScheme(_ traitCollection: UITraitCollection)
+
+    func renderSingleBubble(
+        message: Message,
+        scale: CGFloat?
+    ) async -> UIImage
+
+    func renderRotatingBubble(
+        current: Message,
+        next: Message,
+        progress: Double,
+        scale: CGFloat?
+    ) async -> UIImage
+}
+
+extension BubbleImageRendering {
+    func renderSingleBubble(message: Message) async -> UIImage {
+        await renderSingleBubble(message: message, scale: nil)
+    }
+
+    func renderRotatingBubble(current: Message, next: Message, progress: Double) async -> UIImage {
+        await renderRotatingBubble(current: current, next: next, progress: progress, scale: nil)
+    }
+}
+
 /// 마커 이미지 렌더링을 담당하는 클래스
 @MainActor
-final class BubbleImageRenderer {
+final class BubbleImageRenderer: BubbleImageRendering {
 
     /// 회전 버블의 고정 너비
     private let rotatingBubbleWidth: CGFloat
@@ -20,6 +46,16 @@ final class BubbleImageRenderer {
 
     init(rotatingBubbleWidth: CGFloat = 170) {
         self.rotatingBubbleWidth = rotatingBubbleWidth
+    }
+
+    /// trait에 맞춰 렌더링 할 색 모드를 설정합니다.
+    func setColorScheme(_ traitCollection: UITraitCollection) {
+        switch traitCollection.userInterfaceStyle {
+        case .dark:
+            currentColorScheme = .dark
+        default:
+            currentColorScheme = .light
+        }
     }
 
     /// 단일 메시지 버블 이미지를 렌더링합니다.
@@ -86,17 +122,5 @@ extension BubbleImageRenderer {
         renderer.scale = scale
         renderer.isOpaque = false
         return renderer.uiImage ?? UIImage()
-    }
-}
-
-extension BubbleImageRenderer {
-    /// trait에 맞춰 렌더링 할 색 모드를 설정합니다.
-    func setColorScheme(_ traitCollection: UITraitCollection) {
-        switch traitCollection.userInterfaceStyle {
-        case .dark:
-            currentColorScheme = .dark
-        default:
-            currentColorScheme = .light
-        }
     }
 }

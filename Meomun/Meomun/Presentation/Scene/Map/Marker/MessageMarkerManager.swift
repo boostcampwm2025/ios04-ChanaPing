@@ -83,14 +83,14 @@ final class MessageMarkerManager {
 
     // MARK: - Dependencies
 
-    private let rotationAnimator: MessageRotationAnimator
-    private let bubbleImageRenderer: BubbleImageRenderer
+    private let rotationAnimator: MessageRotationAnimating
+    private let bubbleImageRenderer: BubbleImageRendering
 
     init(
         markerFactory: MarkerFactoryProtocol,
         clustererFactory: ClustererFactoryProtocol,
-        rotationAnimator: MessageRotationAnimator,
-        bubbleImageRenderer: BubbleImageRenderer,
+        rotationAnimator: MessageRotationAnimating,
+        bubbleImageRenderer: BubbleImageRendering,
         displayLimit: Int = 10
     ) {
         self.markerFactory = markerFactory
@@ -355,36 +355,36 @@ extension MessageMarkerManager {
 
 extension MessageMarkerManager {
 
-    /// 새로운 메시지를 그룹화하여 저장합니다.
-    ///
-    /// placeTag 유무에 따라 placeMessagesByCoord 또는 noPlaceMessagesByCoord에 저장합니다.
-    /// NoPlace 메시지가 Place 메시지 좌표와 겹치면 오프셋을 적용합니다.
-    /// 메시지는 오래된 순(createdAt 오름차순)으로 저장되며, 새 메시지는 항상 뒤에 추가됩니다.
-    /// 표시할 때는 suffix(displayLimit)로 최신 메시지들을 가져옵니다.
-    private func insertMessage(_ message: Message) {
-        if message.placeTag != nil {
-            // 장소 태그가 있는 메시지 -> 원본 좌표로 저장
-            let coord = message.coordinate
-            placeMessagesByCoord[coord, default: []].append(message)
-        } else {
-            // 장소 태그가 없는 메시지 -> Place 좌표와 겹치면 오프셋 적용
-            let coord = displayCoordinate(for: message)
-            noPlaceMessagesByCoord[coord, default: []].append(message)
-        }
-    }
+//    /// 새로운 메시지를 그룹화하여 저장합니다.
+//    ///
+//    /// placeTag 유무에 따라 placeMessagesByCoord 또는 noPlaceMessagesByCoord에 저장합니다.
+//    /// NoPlace 메시지가 Place 메시지 좌표와 겹치면 오프셋을 적용합니다.
+//    /// 메시지는 오래된 순(createdAt 오름차순)으로 저장되며, 새 메시지는 항상 뒤에 추가됩니다.
+//    /// 표시할 때는 suffix(displayLimit)로 최신 메시지들을 가져옵니다.
+//    private func insertMessage(_ message: Message) {
+//        if message.placeTag != nil {
+//            // 장소 태그가 있는 메시지 -> 원본 좌표로 저장
+//            let coord = message.coordinate
+//            placeMessagesByCoord[coord, default: []].append(message)
+//        } else {
+//            // 장소 태그가 없는 메시지 -> Place 좌표와 겹치면 오프셋 적용
+//            let coord = displayCoordinate(for: message)
+//            noPlaceMessagesByCoord[coord, default: []].append(message)
+//        }
+//    }
 
-    /// NoPlace 메시지의 표시용 좌표 계산
-    /// Place 좌표와 겹치면 오프셋 적용, 아니면 원본 좌표 반환
-    private func displayCoordinate(for message: Message) -> Coordinate {
-        let originalCoord = message.coordinate
-
-        // Place 메시지가 해당 좌표에 있으면 오프셋 적용
-        if placeMessagesByCoord[originalCoord] != nil {
-            return originalCoord.offset(for: message.id)
-        }
-
-        return originalCoord
-    }
+//    /// NoPlace 메시지의 표시용 좌표 계산
+//    /// Place 좌표와 겹치면 오프셋 적용, 아니면 원본 좌표 반환
+//    private func displayCoordinate(for message: Message) -> Coordinate {
+//        let originalCoord = message.coordinate
+//
+//        // Place 메시지가 해당 좌표에 있으면 오프셋 적용
+//        if placeMessagesByCoord[originalCoord] != nil {
+//            return originalCoord.offset(for: message.id)
+//        }
+//
+//        return originalCoord
+//    }
 
     /// 메시지를 제거합니다.
     /// NoPlace 메시지의 경우 원본 좌표와 오프셋 좌표 모두에서 검색합니다.
