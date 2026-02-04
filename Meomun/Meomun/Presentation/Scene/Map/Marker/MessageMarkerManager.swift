@@ -18,9 +18,7 @@ final class MessageMarkerManager: MarkerAttaching {
     /// 장소 태그가 없는 메시지들 (좌표별로 그룹화)
     private var noPlaceMessagesByCoord: [Coordinate: [Message]] = [:]
 
-    private lazy var markerRegistry: MarkerRegistry = {
-        MarkerRegistry(markerFactory: markerFactory, attacher: self)
-    }()
+    private let markerRegistry: MarkerRegistry
 
     /// 마커 별 회전 애니메이션 상태 (2개 이상 메시지가 있는 마커만 해당)
     private var animationStates: [MarkerGroupKey: BubbleAnimationState] = [:]
@@ -34,14 +32,7 @@ final class MessageMarkerManager: MarkerAttaching {
 
     // MARK: - Clustering
 
-    /// 클러스터가 활성화되는 최대 줌 레벨
-    private let clusterMaxZoom: Double = 16
-
-    /// 현재 클러스터 모드 여부
-    private var isClusterMode: Bool = false
-
-    /// 클러스터러
-    private var clusterer: ClustererProtocol?
+    private let clusterController: MarkerClusteringControlling
 
     /// 외부 바인딩(카메라 이벤트에서 모드 전환용)
     private weak var boundMapView: MapViewProtocol?
@@ -49,7 +40,6 @@ final class MessageMarkerManager: MarkerAttaching {
     // MARK: - Factory
 
     private let markerFactory: MarkerFactoryProtocol
-
     private let clustererFactory: ClustererFactoryProtocol
 
     // MARK: - Dependencies
@@ -71,6 +61,13 @@ final class MessageMarkerManager: MarkerAttaching {
         self.displayLimit = displayLimit
 
         self.renderScheduler = MarkerRenderScheduler(renderer: bubbleImageRenderer)
+        self.markerRegistry = MarkerRegistry(markerFactory: markerFactory, attacher: self)
+        self.clusterController = MarkerClusterController(
+            maxZoom: 16,
+            clustererFactory: clustererFactory,
+            itemsBuilder: ClusterItemsBuilder(),
+            markerRegistry: markerRegistry
+        )
     }
 }
 
@@ -80,7 +77,7 @@ extension MessageMarkerManager {
     /// 클러스터 모드 규칙을 담아 마커를 맵에 붙이거나/떼는 역할을 담당합니다.
     func attach(_ marker: MarkerProtocol, to mapView: MapViewProtocol) {
         // 클러스터 모드면 붙이지 않음
-        guard !isClusterMode else {
+        guard !clusterController.isClusterMode else {
             marker.setAttached(to: nil)
             return
         }
@@ -112,7 +109,7 @@ extension MessageMarkerManager {
         boundMapView = mapView
 
         // 클러스터러 준비
-        setupClustererIfNeeded(mapView: mapView)
+        clusterController.bind(mapView: mapView)
 
         applySnapshot(
             messages,
@@ -123,16 +120,14 @@ extension MessageMarkerManager {
     }
 
     func updateClusterModeIfNeeded(zoomLevel: Double) {
-        let shouldCluster = zoomLevel <= clusterMaxZoom
+        clusterController.updateModeIfNeeded(zoomLevel: zoomLevel)
 
-        guard let mapView = boundMapView else {
-            isClusterMode = shouldCluster
-            return
+        if clusterController.isClusterMode {
+            clusterController.syncItems(
+                placeStore: placeMessagesByCoord,
+                noPlaceStore: noPlaceMessagesByCoord
+            )
         }
-
-        if shouldCluster == isClusterMode { return }
-
-        setClusterMode(shouldCluster, mapView: mapView)
     }
 }
 
@@ -185,8 +180,11 @@ extension MessageMarkerManager {
         placeMessagesByCoord = newSnapshot.placeStore
         noPlaceMessagesByCoord = newSnapshot.noPlaceStore
 
-        if isClusterMode {
-            syncClusterItemsIfNeeded()
+        if clusterController.isClusterMode {
+            clusterController.syncItems(
+                placeStore: placeMessagesByCoord,
+                noPlaceStore: noPlaceMessagesByCoord
+            )
         }
 
         // 지도에서 사라질 마커 제거
@@ -471,7 +469,7 @@ extension MessageMarkerManager {
     /// 2. 애니메이션 중 -> animationDuration(1초) 동안 진행
     /// 3. 완료 -> 다음 메시지로 전환, 다시 대기
     func updateAnimations() {
-        if isClusterMode { return }
+        if clusterController.isClusterMode { return }
 
         let currentTime = Date().timeIntervalSince1970
 
@@ -521,106 +519,12 @@ extension MessageMarkerManager {
     }
 }
 
-// MARK: - Clustering
-
-private extension MessageMarkerManager {
-    func setupClustererIfNeeded(mapView: MapViewProtocol) {
-        guard clusterer == nil else { return }
-        clusterer = clustererFactory.makeClusterer()
-    }
-
-    /// 클러스터 모드 ON/OFF 전환
-    /// - ON: 기존 개별 마커 숨김 + clusterer를 mapView에 attach
-    /// - OFF: clusterer detach + 기존 개별 마커 복원
-    func setClusterMode(_ enabled: Bool, mapView: MapViewProtocol) {
-        isClusterMode = enabled
-
-        // 클러스터러가 없으면 sync/addAll/attach가 모두 무의미해지므로 여기서 보장
-        setupClustererIfNeeded(mapView: mapView)
-
-        if enabled {
-            // 1) 개별 마커 숨김
-            markerRegistry.detachAll()
-
-            // 2) 클러스터러 attach (attach 이후 addAll/clear가 반영되도록 순서 고정)
-            clusterer?.attach(to: mapView)
-
-            // 3) 아이템 동기화
-            syncClusterItemsIfNeeded()
-        } else {
-            // 1) 클러스터 숨김
-            clusterer?.attach(to: nil)
-
-            // 2) 개별 마커 복원
-            markerRegistry.attachAll(to: mapView)
-        }
-    }
-
-    func syncClusterItemsIfNeeded() {
-        guard let clusterer else { return }
-        guard isClusterMode else { return }
-
-        // place/noPlace 각각 비어있지 않은 좌표들을 ClusterItem으로 변환
-        var items: [ClusterItem] = []
-        items.reserveCapacity(placeMessagesByCoord.count + noPlaceMessagesByCoord.count)
-
-        for (coord, messages) in placeMessagesByCoord where messages.isEmpty == false {
-            let groupKey = MarkerGroupKey(coordinate: coord, isPlace: true)
-            items.append(
-                ClusterItem(
-                    id: stableClusterId(for: groupKey),
-                    coordinate: coord,
-                    tag: ClusterItemTag.place
-                )
-            )
-        }
-
-        for (coord, messages) in noPlaceMessagesByCoord where messages.isEmpty == false {
-            let groupKey = MarkerGroupKey(coordinate: coord, isPlace: false)
-            items.append(
-                ClusterItem(
-                    id: stableClusterId(for: groupKey),
-                    coordinate: coord,
-                    tag: ClusterItemTag.noPlace
-                )
-            )
-        }
-
-        items.sort { $0.id < $1.id }
-        clusterer.setItems(items)
-    }
-
-    func stableClusterId(for groupKey: MarkerGroupKey) -> Int {
-        // 1e-7 deg ≈ 1.1cm (offset이 수m 수준이면 절대 안 뭉침)
-        let scale = 10_000_000.0
-
-        // lat: -90...+90, lng: -180...+180
-        let latQ = Int64((groupKey.coordinate.latitude * scale).rounded())
-        let lngQ = Int64((groupKey.coordinate.longitude * scale).rounded())
-
-        // 양수화 (범위 안이면 안전)
-        let latShifted = latQ + Int64(90 * Int(scale))    // 0 .. 180*scale
-        let lngShifted = lngQ + Int64(180 * Int(scale))   // 0 .. 360*scale
-
-        // latShifted: 최대 1,800,000,000 (31bit)
-        // lngShifted: 최대 3,600,000,000 (32bit)
-        // [isPlace 1bit | lat 31bit | lng 32bit] = 64bit
-        let placeBit: Int64 = groupKey.isPlace ? 1 : 0
-        let packed = (placeBit << 63)
-        | ((latShifted & 0x7FFF_FFFF) << 32)
-        | (lngShifted & 0xFFFF_FFFF)
-
-        return Int(truncatingIfNeeded: packed)
-    }
-}
-
 // 동작 통일성 테스트에서 private인 내부 상태를 확인하기 위한 디버그 전용 getter
 // swiftlint:disable identifier_name
 #if DEBUG
 extension MessageMarkerManager {
     var debug_placeStoreKeys: Set<Coordinate> { Set(placeMessagesByCoord.keys) }
     var debug_noPlaceStoreKeys: Set<Coordinate> { Set(noPlaceMessagesByCoord.keys) }
-    var debug_isClusterMode: Bool { isClusterMode }
 }
 #endif
 // swiftlint:enable identifier_name
