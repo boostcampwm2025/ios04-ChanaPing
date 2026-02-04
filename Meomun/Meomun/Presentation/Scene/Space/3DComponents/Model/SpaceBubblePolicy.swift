@@ -1,5 +1,5 @@
 //
-//  SpaceBubbleLayoutPolicy.swift
+//  SpaceBubblePolicy.swift
 //  Meomun
 //
 //  Created by Hayeon Park on 1/29/26.
@@ -26,4 +26,19 @@ enum SpaceBubbleLayoutPolicy {
     static let recentThresholdSeconds: TimeInterval = 20 * 60
 
     static let textAlignY: Float = 0.04
+}
+
+/// 공간 메시지 버블 공간 배치 정책을 정의하는 모델입니다.
+enum SpaceBubblePositionPolicy {
+    static let minRadius: Float = 1.4
+    static let maxRadius: Float = 1.7
+
+    static let minXPosition: Float = -0.25
+    static let maxXPosition: Float = 0.25
+    static let minYPosition: Float = 0.7
+    static let maxYPosition: Float = 1.2
+
+    static let minDistanceFromCenter: Float = 1.3
+    static let minDistanceFromViewAxis: Float = 0.25
+    static let maxAttempts: Int = 60
 }
