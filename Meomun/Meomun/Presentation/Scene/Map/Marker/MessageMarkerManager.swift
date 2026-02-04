@@ -15,6 +15,10 @@ final class MessageMarkerManager: MarkerAttaching {
     /// 장소 태그가 없는 메시지들 (좌표별로 그룹화)
     private var noPlaceMessagesByCoord: [Coordinate: [Message]] = [:]
 
+    // MARK: - Handlers
+    private var onTapPlace: (([Message]) -> Void)?
+    private var onTapNoPlace: (([Message]) -> Void)?
+
     // MARK: - Rendering
 
     /// 좌표/타입별 마커 생명주기 관리(생성/재사용/제거)
@@ -71,6 +75,7 @@ final class MessageMarkerManager: MarkerAttaching {
 
         // MarkerRegistry는 Attacher를 통해 attach/detach 규칙을 위임받음
         registry.setAttacher(self)
+        AppLog.debug("[MarkerManager] initialized", category: .location)
     }
 }
 
@@ -99,7 +104,11 @@ extension MessageMarkerManager {
     func onViewWillAppear(mapView: MapViewProtocol, zoomLevel: Double) {
         clusterController.bind(mapView: mapView)
         clusterController.updateModeIfNeeded(zoomLevel: zoomLevel)
-        markerRegistry.attachAll(to: mapView)
+
+        if !clusterController.isClusterMode {
+            markerRegistry.attachAll(to: mapView)
+            rebindTapHandlersForAllMarkers()
+        }
     }
 
     /// 메시지 스냅샷을 적용하여 지도 마커를 최소 갱신합니다.
@@ -110,6 +119,9 @@ extension MessageMarkerManager {
         onTapPlace: (([Message]) -> Void)?,
         onTapNoPlace: (([Message]) -> Void)?
     ) {
+        self.onTapPlace = onTapPlace
+        self.onTapNoPlace = onTapNoPlace
+
         applySnapshot(
             messages,
             mapView: mapView,
@@ -122,6 +134,7 @@ extension MessageMarkerManager {
     func updateClusterModeIfNeeded(zoomLevel: Double, mapView: MapViewProtocol) {
         clusterController.updateModeIfNeeded(zoomLevel: zoomLevel)
         markerRegistry.attachAll(to: mapView)
+        rebindTapHandlersForAllMarkers()
     }
 }
 
@@ -204,6 +217,32 @@ private extension MessageMarkerManager {
         }
 
         return keys
+    }
+
+    func rebindTapHandlersForAllMarkers() {
+        guard !clusterController.isClusterMode else { return }
+
+        for key in markerRegistry.allKeys {
+            guard let marker = markerRegistry.marker(for: key) else { continue }
+
+            configureTapHandler(
+                marker: marker,
+                coord: key.coordinate,
+                isPlace: key.isPlace
+            ) { [weak self] messages in
+                guard let self else { return }
+
+                guard let route = self.tapRoutingPolicy.route(
+                    isPlaceMarker: key.isPlace,
+                    messages: messages
+                ) else { return }
+
+                switch route {
+                case .place(messages: let messages): self.onTapPlace?(messages)
+                case .noPlace(messages: let messsages): self.onTapNoPlace?(messsages)
+                }
+            }
+        }
     }
 }
 
