@@ -37,7 +37,6 @@ struct MessageMarkerDiffTests {
     @Test("common 키 존재-diff 계산-표시 대상 suffix(displayLimit)가 바뀌면 changed로 잡힌다")
     func diff_marksChangedWhenDisplaySuffixChanges() throws {
         let coord = DummyMessageFactory.gangnamStationCoordinate
-        let limit = 2
 
         // old: [m1, m2]
         let m1 = DummyMessageFactory.noPlaceMessage(createdAt: 1, coordinate: coord)
@@ -60,7 +59,6 @@ struct MessageMarkerDiffTests {
     @Test("common 키 존재-diff 계산-표시 대상 suffix(displayLimit)가 동일하면 changed가 아니다")
     func diff_doesNotMarkChangedWhenDisplaySuffixSame() throws {
         let coord = DummyMessageFactory.gangnamStationCoordinate
-        let limit = 10
 
         let m1 = DummyMessageFactory.noPlaceMessage(createdAt: 1, coordinate: coord)
         let m2 = DummyMessageFactory.noPlaceMessage(createdAt: 2, coordinate: coord)
