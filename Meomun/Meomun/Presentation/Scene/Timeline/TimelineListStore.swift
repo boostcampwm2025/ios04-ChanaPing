@@ -9,7 +9,19 @@ import Foundation
 import Combine
 
 final class TimelineListStore: Store {
+    struct Pagination: Equatable {
+        var currentPage: Int = 0
+        var pageSize: Int = 10
+        var isLoadingNextPage: Bool = false
+        var hasReachedEndPage: Bool = false
+    }
+
     struct State: Equatable {
+        var enableFetching: Bool = true
+        var pagination: Pagination = .init()
+        var isRefreshing: Bool = false
+        var toastMessage: String?
+
         var messages: [Message] = []
         var selectedSection: YearMonth?
         var isEditing: Bool = false
@@ -25,7 +37,10 @@ final class TimelineListStore: Store {
 
     enum Intent: Equatable {
         case onAppear
-        case setMessages([Message])
+        case requestNextPage
+        case refresh
+        case setToast(String?)
+
         case requestDeleteSelectedMessages          // 편집 모드 -> 삭제
         case confirmDeleteSelectedMessages          // 얼럿 - 삭제
         case requestDeleteMessage(MessageID)        // 단일 메시지 삭제 요청 (메뉴 버튼)
@@ -39,16 +54,26 @@ final class TimelineListStore: Store {
     }
 
     enum Action {
-        case setMessages([Message])
+        case setCurrentPage(Int)
+        case setLoadingNextPage(Bool)
+        case setReachedEndPage(Bool)
         case addMessages([Message])
+
+        case setRefreshing(Bool)
+        case prependMessages([Message])
+        case setToastMessage(String?)
+
+        case setSelectedSection(YearMonth?)
+
+        case setEditing(Bool)
         case toggleMessageSelection(MessageID)
         case clearSelectedMessageIDs
-        case setSelectedSection(YearMonth?)
-        case setEditing(Bool)
+
+        case setDeleteStatus(LoadingStatus)
         case deleteMessages(Set<MessageID>)
+
         case showDeleteAlert(MMAlertModel)
         case hideAlert
-        case setDeleteStatus(LoadingStatus)
     }
 
     @Published var state: State
@@ -63,7 +88,11 @@ final class TimelineListStore: Store {
         deleteMessagesUseCase: DeleteMessagesUseCase,
         onDeletedMessages: @escaping (Set<MessageID>) -> Void = { _ in }
     ) {
-        self.state = State(messages: initialMessages)
+        if initialMessages.isEmpty {
+            self.state = .init()
+        } else {
+            self.state = .init(enableFetching: false, messages: initialMessages)
+        }
         self.fetchRecentMessagesUseCase = fetchRecentMessagesUseCase
         self.deleteMessagesUseCase = deleteMessagesUseCase
         self.onDeletedMessages = onDeletedMessages
@@ -72,23 +101,18 @@ final class TimelineListStore: Store {
     func action(intent: Intent) -> AsyncStream<Action> {
         switch intent {
         case .onAppear:
+            return state.messages.isEmpty ? loadPage(page: 0) : performRefresh()
+
+        case .requestNextPage:
+            return loadPage(page: state.pagination.currentPage)
+
+        case .refresh:
+            return performRefresh()
+
+        case .setToast(let message):
             return .init { continuation in
-                guard state.messages.isEmpty else {
-                    continuation.finish()
-                    return
-                }
-
-                Task {
-                    do {
-                        // TODO: 페이지네이션 구현
-                        let messages = try await fetchRecentMessagesUseCase.execute(page: 0, pageSize: 10)
-                        continuation.yield(.addMessages(messages))
-                    } catch {
-                        AppLog.error(error.localizedDescription, category: .store, error: error)
-                    }
-
-                    continuation.finish()
-                }
+                continuation.yield(.setToastMessage(message))
+                continuation.finish()
             }
 
         case .tapSection(let section):
@@ -171,12 +195,6 @@ final class TimelineListStore: Store {
                 continuation.yield(.hideAlert)
                 continuation.finish()
             }
-
-        case .setMessages(let messages):
-            return .init { continuation in
-                continuation.yield(.setMessages(messages))
-                continuation.finish()
-            }
         }
     }
 
@@ -184,12 +202,31 @@ final class TimelineListStore: Store {
         var newState = state
 
         switch action {
-        case .setMessages(let messages):
-            newState.messages = messages
-            cleanupSectionIfNeeded(&newState)
+        case .setCurrentPage(let page):
+            newState.pagination.currentPage = page
+
+        case .setLoadingNextPage(let isLoadingNextPage):
+            newState.pagination.isLoadingNextPage = isLoadingNextPage
+
+        case .setReachedEndPage(let hasReachedEndPage):
+            newState.pagination.hasReachedEndPage = hasReachedEndPage
 
         case .addMessages(let messages):
             newState.messages += messages
+            cleanupSectionIfNeeded(&newState)
+
+        case .setRefreshing(let isRefreshing):
+            newState.isRefreshing = isRefreshing
+
+        case .prependMessages(let messages):
+            let existingIDs = Set(newState.messages.map(\.id))
+            let onlyNewMessages = messages.filter { !existingIDs.contains($0.id) }
+
+            newState.messages = onlyNewMessages + newState.messages
+            cleanupSectionIfNeeded(&newState)
+
+        case .setToastMessage(let message):
+            newState.toastMessage = message
 
         case .toggleMessageSelection(let messageID):
             if newState.selectedMessageIDs.contains(messageID) {
@@ -264,6 +301,100 @@ private extension TimelineListStore {
             }
         }
     }
+
+    func loadPage(page: Int) -> AsyncStream<Action> {
+        AsyncStream { continuation in
+            // 1. fetching 조건 확인
+            guard state.enableFetching else {
+                continuation.finish()
+                return
+            }
+
+            // 2. 마지막 페이지 도달 여부 확인
+            guard state.pagination.hasReachedEndPage == false else {
+                continuation.finish()
+                return
+            }
+
+            // 3. 페이지 로딩 상태 확인
+            guard state.pagination.isLoadingNextPage == false else {
+                continuation.finish()
+                return
+            }
+
+            // 4. 새로고침 상태 확인
+            guard state.isRefreshing == false else {
+                continuation.finish()
+                return
+            }
+
+            continuation.yield(.setLoadingNextPage(true))
+
+            let pageSize = state.pagination.pageSize
+
+            Task {
+                defer {
+                    continuation.yield(.setLoadingNextPage(false))
+                    continuation.finish()
+                }
+
+                do {
+                    let newMessages = try await fetchRecentMessagesUseCase.execute(
+                        page: page,
+                        pageSize: pageSize
+                    )
+
+                    continuation.yield(.addMessages(newMessages))
+                    continuation.yield(.setCurrentPage(page + 1))
+
+                    if newMessages.count < pageSize {
+                        continuation.yield(.setReachedEndPage(true))
+                    }
+                } catch {
+                    AppLog.error(error.localizedDescription, category: .store, error: error)
+                }
+            }
+        }
+    }
+
+    func performRefresh() -> AsyncStream<Action> {
+        AsyncStream { continuation in
+            guard state.enableFetching else {
+                continuation.finish()
+                return
+            }
+
+            guard state.isRefreshing == false else {
+                continuation.finish()
+                return
+            }
+
+            guard state.pagination.isLoadingNextPage == false else {
+                continuation.finish()
+                return
+            }
+
+            continuation.yield(.setRefreshing(true))
+            let pageSize = state.pagination.pageSize
+
+            Task {
+                defer {
+                    continuation.yield(.setRefreshing(false))
+                    continuation.finish()
+                }
+
+                do {
+                    let latestMessages = try await fetchRecentMessagesUseCase.execute(
+                        page: 0,
+                        pageSize: pageSize
+                    )
+                    continuation.yield(.prependMessages(latestMessages))
+                } catch {
+                    AppLog.error(error.localizedDescription, category: .store, error: error)
+                }
+            }
+        }
+    }
 }
 
 // MARK: Section Helper
@@ -301,5 +432,9 @@ extension TimelineListStore {
 
     func messages(in section: YearMonth) -> [Message] {
         state.sections.first(where: { $0.key == section })?.value ?? []
+    }
+
+    func isLastMessage(messageId: MessageID) -> Bool {
+        state.messages.last?.id == messageId
     }
 }

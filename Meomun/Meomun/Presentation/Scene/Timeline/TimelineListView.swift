@@ -16,6 +16,7 @@ fileprivate enum Constants {
 struct TimelineListView: View {
     @Environment(\.setTabBarHidden) private var setTabBarHidden
     @StateObject private var store: TimelineListStore
+
     private let configuration: Configuration
     private let onBecameEmpty: () -> Void
 
@@ -104,6 +105,7 @@ struct TimelineListView: View {
                     .transition(.identity) // 애니메이션 없음
             }
         }
+        .mmToast(toastBinding, bottomPadding: 0)
     }
 }
 
@@ -122,12 +124,13 @@ private extension TimelineListView {
                                 showTopLine: index != 0,
                                 showBottomLine: index != monthMessages.count - 1,
                                 selectionState: store.selectionState(for: message),
-                                onDelete: {
-                                    Task {
-                                        await store.send(intent: .requestDeleteMessage(message.id))
-                                    }
-                                }
+                                onDelete: { send(.requestDeleteMessage(message.id)) }
                             )
+                            .onAppear {
+                                if !store.state.enableFetching { return }
+                                guard store.isLastMessage(messageId: message.id) else { return }
+                                send(.requestNextPage)
+                            }
                             .animation(.spring(response: 0.3, dampingFraction: 0.6), value: store.state.isEditing)
                             .onTapGesture { send(.tapMessage(message.id)) }
                         }
@@ -151,6 +154,9 @@ private extension TimelineListView {
                 footer
             }
         }
+        .refreshable {
+            await triggerRefreshIfPossible()
+        }
     }
 
     var emptyContent: some View {
@@ -163,19 +169,32 @@ private extension TimelineListView {
         }
     }
 
+    @ViewBuilder
     var footer: some View {
         VStack(spacing: 10) {
-            Image(systemName: "book.pages")
-                .font(.system(size: 26, weight: .regular))
-                .foregroundStyle(Color.mmSecondary)
+            if store.state.pagination.hasReachedEndPage {
+                Image(systemName: "book.pages")
+                    .font(.system(size: 26, weight: .regular))
+                    .foregroundStyle(Color.mmSecondary)
 
-            Text("END OF RECORDS")
-                .font(.footnote.weight(.semibold))
-                .tracking(1.2)
-                .foregroundStyle(Color.mmSecondary)
+                Text("END OF RECORDS")
+                    .font(.footnote.weight(.semibold))
+                    .tracking(1.2)
+                    .foregroundStyle(Color.mmSecondary)
+
+            } else if store.state.pagination.isLoadingNextPage {
+                ProgressView()
+                    .padding(.top, 8)
+
+                Text("내 기록 불러오는 중...")
+                    .font(.footnote.weight(.semibold))
+                    .foregroundStyle(Color.mmSecondary)
+            } else {
+                EmptyView()
+            }
         }
         .frame(maxWidth: .infinity)
-        .padding(.bottom, 100)
+        .padding(.bottom, 30)
     }
 
     var selectionBar: some View {
@@ -277,6 +296,35 @@ private extension TimelineListView {
         case .fail: return Constants.deleteFailMessage
         case .idle: return ""
         }
+    }
+
+    var toastBinding: Binding<String?> {
+        Binding(
+            get: { store.state.toastMessage },
+            set: { send(.setToast($0)) }
+        )
+    }
+
+    @MainActor
+    private func triggerRefreshIfPossible() async {
+        guard store.state.enableFetching == true else { return }
+        guard store.state.isEditing == false else { return }
+        guard store.state.deleteStatus == .idle else { return }
+        guard store.state.isRefreshing == false else { return }
+        guard store.state.pagination.isLoadingNextPage == false else { return }
+
+        let generator = UIImpactFeedbackGenerator(style: .medium)
+        generator.impactOccurred()
+
+        await store.send(intent: .refresh)
+
+        let deadline = Date().addingTimeInterval(2.0)
+        while store.state.isRefreshing, Date() < deadline {
+            try? await Task.sleep(for: .milliseconds(100))
+        }
+
+        guard store.state.isRefreshing == false else { return }
+        await store.send(intent: .setToast("새로고침 완료!"))
     }
 }
 
