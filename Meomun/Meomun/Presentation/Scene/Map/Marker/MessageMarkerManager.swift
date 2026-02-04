@@ -498,6 +498,7 @@ extension MessageMarkerManager {
 extension MessageMarkerManager {
     var debug_placeStoreKeys: Set<Coordinate> { Set(placeMessagesByCoord.keys) }
     var debug_noPlaceStoreKeys: Set<Coordinate> { Set(noPlaceMessagesByCoord.keys) }
+    var debug_isClusterMode: Bool { clusterController.isClusterMode }
 }
 #endif
 // swiftlint:enable identifier_name

@@ -42,12 +42,21 @@ struct MessageMarkerSnapshotTests {
     func build_appliesOffsetForNoPlaceWhenPlaceExistsAtSameCoordinate() throws {
         let coord = DummyMessageFactory.seoulCityHallCoordinate
 
-        // placeTag 메시지: placeTag.coordinate = seoulCityHallCoordinate
-        let place = DummyMessageFactory.placeMessage(createdAt: 1, coordinate: coord)
+        let placeTag = DummyMessageFactory.makePlace(coordinate: coord)
 
-        // noPlace 메시지: message.coordinate = seoulCityHallCoordinate
+        let place = DummyMessageFactory.makeMessage(
+            coordinate: coord,
+            placeTag: placeTag,
+            createdAt: Date(timeIntervalSince1970: 1)
+        )
+
         let id = UUID(uuidString: "AAAAAAAA-BBBB-CCCC-DDDD-EEEEEEEEEEEE")!
-        let noPlace = DummyMessageFactory.noPlaceMessage(id: id, createdAt: 2, coordinate: coord)
+        let noPlace = DummyMessageFactory.makeMessage(
+            id: id,
+            coordinate: coord,
+            placeTag: nil,
+            createdAt: Date(timeIntervalSince1970: 2)
+        )
 
         let snapshot = MessageMarkerSnapshotBuilder.build(from: [noPlace, place])
 

@@ -10,10 +10,13 @@
 final class SpyMarkerFactory: MarkerFactoryProtocol {
     private(set) var makeCount = 0
     private(set) var lastCoord: Coordinate?
+    private(set) var lastMadeMarker: MarkerProtocol?
 
     func makeMarker(coordinate: Coordinate) -> MarkerProtocol {
         makeCount += 1
         lastCoord = coordinate
-        return SpyMarker()
+        let marker = SpyMarker()
+        lastMadeMarker = marker
+        return marker
     }
 }

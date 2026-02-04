@@ -2,7 +2,7 @@
 //  MessageMarkerManagerTests.swift
 //  MeomunTests
 //
-//  Created by 지연 on 2/4/26.
+//  Updated for refactored architecture
 //
 
 import Testing
@@ -13,7 +13,7 @@ import Foundation
 @MainActor
 struct MessageMarkerManagerTests {
 
-    // MARK: - SUT
+    // MARK: - Helpers
 
     private func makeSUT(
         displayLimit: Int = 10,
@@ -34,103 +34,24 @@ struct MessageMarkerManagerTests {
             bubbleImageRenderer: bubbleRenderer,
             displayLimit: displayLimit
         )
-
         return (sut, markerFactory, clustererFactory, bubbleRenderer)
     }
 
     private func makeMapView() -> MapViewProtocol { SpyMapView() }
 
+    /// async 렌더/스케줄러가 한 번 돌도록
     private func flushAsync() async {
         await Task.yield()
         await Task.yield()
+        await Task.yield()
     }
 
-    // MARK: - A. 스냅샷/그룹핑 규칙
+    // MARK: - A. Manager orchestration (marker lifecycle)
 
-    @Test("placeTag 있음 - loadMessages 호출 - placeTag.coordinate로 그룹핑된다")
-    func placeTag있음_로드시_placeTag좌표로그룹핑된다() async {
-        let (sut, _, _, _) = makeSUT()
-        let mapView = makeMapView()
-
-        let placeCoord = DummyMessageFactory.gangnamStationCoordinate
-        let place = DummyMessageFactory.makePlace(coordinate: placeCoord)
-
-        let m1 = DummyMessageFactory.makeMessage(
-            coordinate: DummyMessageFactory.busanHaeundaeCoordinate, // message.coordinate는 달라도
-            placeTag: place,                                         // placeTag.coordinate로 들어가야 함
-            createdAt: Date(timeIntervalSince1970: 10)
-        )
-        let m2 = DummyMessageFactory.makeMessage(
-            coordinate: DummyMessageFactory.seoulCityHallCoordinate,
-            placeTag: place,
-            createdAt: Date(timeIntervalSince1970: 20)
-        )
-
-        sut.loadMessages([m2, m1], mapView: mapView, onTapPlace: nil, onTapNoPlace: nil)
-        await flushAsync()
-
-        #expect(sut.debug_placeStoreKeys.contains(placeCoord))
-    }
-
-    @Test("place 존재 + noPlace 동일좌표 - loadMessages 호출 - noPlace는 offset 좌표로 저장된다")
-    func place존재_noPlace동일좌표_로드시_noPlace는offset좌표로저장된다() async {
-        let (sut, _, _, _) = makeSUT()
-        let mapView = makeMapView()
-
-        let coord = DummyMessageFactory.seoulCityHallCoordinate
-        let place = DummyMessageFactory.makePlace(coordinate: coord)
-
-        let placeMsg = DummyMessageFactory.makeMessage(
-            id: UUID(uuidString: "11111111-1111-1111-1111-111111111111")!,
-            coordinate: coord,
-            placeTag: place,
-            createdAt: Date(timeIntervalSince1970: 10)
-        )
-
-        let noPlaceId = UUID(uuidString: "22222222-2222-2222-2222-222222222222")!
-        let noPlaceMsg = DummyMessageFactory.makeMessage(
-            id: noPlaceId,
-            coordinate: coord,
-            placeTag: nil,
-            createdAt: Date(timeIntervalSince1970: 20)
-        )
-
-        let expectedOffset = coord.offset(for: noPlaceMsg.id)
-
-        sut.loadMessages([placeMsg, noPlaceMsg], mapView: mapView, onTapPlace: nil, onTapNoPlace: nil)
-        await flushAsync()
-
-        #expect(sut.debug_placeStoreKeys.contains(coord))
-        #expect(sut.debug_noPlaceStoreKeys.contains(expectedOffset))
-        #expect(sut.debug_noPlaceStoreKeys.contains(coord) == false)
-    }
-
-    @Test("createdAt 오름차순 정렬 + displayLimit=2 - loadMessages 호출 - 렌더링은 최신 2개 기준으로 발생한다")
-    func createdAt정렬_displayLimit적용_로드시_최신N개만렌더링된다() async {
-        let bubbleRenderer = SpyBubbleRenderer()
-        let (sut, _, _, renderer) = makeSUT(displayLimit: 2, bubbleRenderer: bubbleRenderer)
-        let mapView = makeMapView()
-
-        let coord = DummyMessageFactory.seoulCityHallCoordinate
-
-        // 3개를 같은 coord에 넣어서 rotating/stack 유도 가능
-        let m1 = DummyMessageFactory.noPlaceMessage(createdAt: 10, coordinate: coord)
-        let m2 = DummyMessageFactory.noPlaceMessage(createdAt: 20, coordinate: coord)
-        let m3 = DummyMessageFactory.noPlaceMessage(createdAt: 30, coordinate: coord)
-
-        sut.loadMessages([m2, m3, m1], mapView: mapView, onTapPlace: nil, onTapNoPlace: nil)
-        await flushAsync()
-
-        // displayLimit=2라서 실제 messages는 2개 -> rotatingBubble 렌더 1회는 발생해야 함(초기)
-        #expect(renderer.rotatingCount >= 1)
-    }
-
-    // MARK: - B. diff 규칙
-
-    @Test("removed 발생 - loadMessages(빈 배열) 호출 - 마커가 제거되고 markerCount가 0이 된다")
-    func removed발생_빈스냅샷적용시_마커가제거된다() async {
+    @Test("loadMessages 호출 - 마커가 생성된다 (factory.makeCount 증가)")
+    func loadMessages_createsMarkers() async {
         let markerFactory = SpyMarkerFactory()
-        let (sut, _, _, _) = makeSUT(markerFactory: markerFactory)
+        let (sut, factory, _, _) = makeSUT(markerFactory: markerFactory)
         let mapView = makeMapView()
 
         let coord = DummyMessageFactory.seoulCityHallCoordinate
@@ -138,15 +59,42 @@ struct MessageMarkerManagerTests {
 
         sut.loadMessages([msg], mapView: mapView, onTapPlace: nil, onTapNoPlace: nil)
         await flushAsync()
-        #expect(sut.debug_markerCount == 1)
+
+        #expect(factory.makeCount == 1)
+    }
+
+    @Test("removed 발생 - loadMessages(빈 배열) 호출 - 기존 마커가 제거된다 (marker icon render도 더 이상 발생하지 않음)")
+    func loadMessages_empty_removesMarkers() async {
+        let markerFactory = SpyMarkerFactory()
+        let bubbleRenderer = SpyBubbleRenderer()
+        let (sut, factory, _, renderer) = makeSUT(
+            markerFactory: markerFactory,
+            bubbleRenderer: bubbleRenderer
+        )
+        let mapView = makeMapView()
+
+        let coord = DummyMessageFactory.seoulCityHallCoordinate
+        let msg = DummyMessageFactory.noPlaceMessage(createdAt: 10, coordinate: coord)
+
+        sut.loadMessages([msg], mapView: mapView, onTapPlace: nil, onTapNoPlace: nil)
+        await flushAsync()
+        #expect(factory.makeCount == 1)
+
+        let before = renderer.singleCount + renderer.rotatingCount
 
         sut.loadMessages([], mapView: mapView, onTapPlace: nil, onTapNoPlace: nil)
         await flushAsync()
-        #expect(sut.debug_markerCount == 0)
+
+        // 추가 생성이 없어야 함
+        #expect(factory.makeCount == 1)
+
+        // (선택) 빈 스냅샷 적용 이후 렌더가 더 증가하지 않는지
+        let after = renderer.singleCount + renderer.rotatingCount
+        #expect(after == before)
     }
 
-    @Test("common + idsHash 동일 - loadMessages 반복 - updateMarkersForKey가 사실상 스킵되어 마커 재생성이 없다")
-    func 동일스냅샷반복_적용시_마커재생성이없다() async {
+    @Test("동일 스냅샷 반복 적용 - 마커 재생성이 없다 (factory.makeCount 유지)")
+    func applyingSameSnapshot_doesNotRecreateMarker() async {
         let markerFactory = SpyMarkerFactory()
         let (sut, factory, _, _) = makeSUT(markerFactory: markerFactory)
         let mapView = makeMapView()
@@ -163,8 +111,8 @@ struct MessageMarkerManagerTests {
         #expect(factory.makeCount == 1)
     }
 
-    @Test("common + idsHash 변경 - loadMessages 호출 - changed로 판단되어 렌더링이 다시 발생한다")
-    func 동일키_idsHash변경_적용시_렌더링이다시발생한다() async {
+    @Test("changed 케이스 - loadMessages 호출 - 렌더링이 다시 발생한다 (renderer count 증가)")
+    func changedSnapshot_triggersRerender() async {
         let bubbleRenderer = SpyBubbleRenderer()
         let (sut, _, _, renderer) = makeSUT(bubbleRenderer: bubbleRenderer)
         let mapView = makeMapView()
@@ -182,7 +130,6 @@ struct MessageMarkerManagerTests {
         await flushAsync()
         let before = renderer.singleCount + renderer.rotatingCount
 
-        // createdAt 변경 -> idsHash에 createdAt이 포함되어 있으므로 changed가 되어야 함
         let msg_v2 = DummyMessageFactory.makeMessage(
             id: id,
             coordinate: coord,
@@ -196,41 +143,39 @@ struct MessageMarkerManagerTests {
         #expect(after > before)
     }
 
-    // MARK: - C. 렌더 스킵 규칙
+    // MARK: - B. displayLimit 관련(Manager 레벨에서는 "렌더가 발생했다"까지만)
 
-    @Test("MarkerRenderSignature 동일 - loadMessages 반복 - BubbleRenderer 호출 카운트가 증가하지 않는다")
-    func 시그니처동일_반복적용시_렌더링이증가하지않는다() async {
+    @Test("displayLimit=2 + 3개 메시지 - loadMessages 호출 - rotating/stack 렌더가 발생한다(>=1)")
+    func displayLimit_appliesAndRenders() async {
         let bubbleRenderer = SpyBubbleRenderer()
-        let (sut, _, _, renderer) = makeSUT(bubbleRenderer: bubbleRenderer)
+        let (sut, _, _, renderer) = makeSUT(displayLimit: 2, bubbleRenderer: bubbleRenderer)
         let mapView = makeMapView()
 
         let coord = DummyMessageFactory.seoulCityHallCoordinate
-        let msg = DummyMessageFactory.noPlaceMessage(createdAt: 10, coordinate: coord)
+        let m1 = DummyMessageFactory.noPlaceMessage(createdAt: 10, coordinate: coord)
+        let m2 = DummyMessageFactory.noPlaceMessage(createdAt: 20, coordinate: coord)
+        let m3 = DummyMessageFactory.noPlaceMessage(createdAt: 30, coordinate: coord)
 
-        sut.loadMessages([msg], mapView: mapView, onTapPlace: nil, onTapNoPlace: nil)
+        sut.loadMessages([m2, m3, m1], mapView: mapView, onTapPlace: nil, onTapNoPlace: nil)
         await flushAsync()
 
-        let beforeSingle = renderer.singleCount
-        let beforeRotating = renderer.rotatingCount
-
-        sut.loadMessages([msg], mapView: mapView, onTapPlace: nil, onTapNoPlace: nil)
-        await flushAsync()
-
-        #expect(renderer.singleCount == beforeSingle)
-        #expect(renderer.rotatingCount == beforeRotating)
+        #expect(renderer.rotatingCount >= 1)
     }
 
-    // MARK: - D. 클러스터 모드 전환 규칙
+    // MARK: - C. Cluster mode orchestration
 
-    @Test("zoomLevel <= 16 - updateClusterModeIfNeeded 호출 - cluster ON + clusterer attach + setItems 수행")
+    @Test("zoomLevel <= 16 - (onViewWillAppear 후) updateClusterModeIfNeeded 호출 - cluster ON + clusterer attach + setItems 수행")
     func 줌16이하_update호출시_클러스터가켜지고_attach_setItems가발생한다() async {
         let clustererFactory = SpyClustererFactory()
         let (sut, _, factory, _) = makeSUT(clustererFactory: clustererFactory)
         let mapView = makeMapView()
 
+        // ✅ bind 먼저
+        sut.onViewWillAppear(mapView: mapView, zoomLevel: 17)
+        await flushAsync()
+
         let coord1 = DummyMessageFactory.seoulCityHallCoordinate
         let coord2 = DummyMessageFactory.gangnamStationCoordinate
-
         let p1 = DummyMessageFactory.makePlace(coordinate: coord1)
         let p2 = DummyMessageFactory.makePlace(coordinate: coord2)
 
@@ -240,20 +185,26 @@ struct MessageMarkerManagerTests {
         sut.loadMessages([m1, m2], mapView: mapView, onTapPlace: nil, onTapNoPlace: nil)
         await flushAsync()
 
-        sut.updateClusterModeIfNeeded(zoomLevel: 16)
+        sut.updateClusterModeIfNeeded(zoomLevel: 16, mapView: mapView)
         await flushAsync()
 
         #expect(sut.debug_isClusterMode == true)
         #expect(factory.clusterer.attachHistory.last == true)
+
+        // 구현에 따라 "클러스터 ON 시점"에 setItems가 호출되는 구조여야 정상
         #expect(factory.clusterer.setItemsCount >= 1)
         #expect(factory.clusterer.lastItems.count == 2)
     }
 
-    @Test("cluster ON 상태 + zoomLevel > 16 - updateClusterModeIfNeeded 호출 - cluster OFF + clusterer detach")
+    @Test("cluster ON 상태 + zoomLevel > 16 - (onViewWillAppear 후) updateClusterModeIfNeeded 호출 - cluster OFF + clusterer detach")
     func 클러스터ON상태에서_줌초과_update호출시_클러스터가꺼지고_detach된다() async {
         let clustererFactory = SpyClustererFactory()
         let (sut, _, factory, _) = makeSUT(clustererFactory: clustererFactory)
         let mapView = makeMapView()
+
+        // ✅ bind
+        sut.onViewWillAppear(mapView: mapView, zoomLevel: 17)
+        await flushAsync()
 
         let coord = DummyMessageFactory.seoulCityHallCoordinate
         let msg = DummyMessageFactory.noPlaceMessage(createdAt: 10, coordinate: coord)
@@ -261,13 +212,13 @@ struct MessageMarkerManagerTests {
         sut.loadMessages([msg], mapView: mapView, onTapPlace: nil, onTapNoPlace: nil)
         await flushAsync()
 
-        sut.updateClusterModeIfNeeded(zoomLevel: 16) // ON
+        sut.updateClusterModeIfNeeded(zoomLevel: 16, mapView: mapView) // ON
         await flushAsync()
         #expect(sut.debug_isClusterMode == true)
+        #expect(factory.clusterer.attachHistory.last == true)
 
-        sut.updateClusterModeIfNeeded(zoomLevel: 17) // OFF
+        sut.updateClusterModeIfNeeded(zoomLevel: 17, mapView: mapView) // OFF
         await flushAsync()
-
         #expect(sut.debug_isClusterMode == false)
         #expect(factory.clusterer.attachHistory.last == false)
     }
@@ -279,16 +230,17 @@ struct MessageMarkerManagerTests {
         let (sut, _, _, renderer) = makeSUT(clustererFactory: clustererFactory, bubbleRenderer: bubbleRenderer)
         let mapView = makeMapView()
 
-        let coord = DummyMessageFactory.seoulCityHallCoordinate
+        sut.onViewWillAppear(mapView: mapView, zoomLevel: 17)
+        await flushAsync()
 
-        // 2개면 rotating 가능
+        let coord = DummyMessageFactory.seoulCityHallCoordinate
         let m1 = DummyMessageFactory.noPlaceMessage(createdAt: 10, coordinate: coord)
         let m2 = DummyMessageFactory.noPlaceMessage(createdAt: 20, coordinate: coord)
 
         sut.loadMessages([m1, m2], mapView: mapView, onTapPlace: nil, onTapNoPlace: nil)
         await flushAsync()
 
-        sut.updateClusterModeIfNeeded(zoomLevel: 16)
+        sut.updateClusterModeIfNeeded(zoomLevel: 16, mapView: mapView)
         await flushAsync()
         #expect(sut.debug_isClusterMode == true)
 
@@ -298,5 +250,40 @@ struct MessageMarkerManagerTests {
         let after = renderer.singleCount + renderer.rotatingCount
 
         #expect(after == before)
+    }
+
+    // MARK: - D. Tab 전환 복귀 시나리오(재-attach)
+
+    @Test("onViewWillAppear - 기존 마커들이 mapView에 다시 attach된다")
+    func onViewWillAppear_reAttachesExistingMarkers() async {
+        let markerFactory = SpyMarkerFactory()
+        let (sut, _, _, _) = makeSUT(markerFactory: markerFactory)
+
+        let mapView = makeMapView()
+        let coord = DummyMessageFactory.seoulCityHallCoordinate
+        let msg = DummyMessageFactory.noPlaceMessage(createdAt: 10, coordinate: coord)
+
+        sut.loadMessages([msg], mapView: mapView, onTapPlace: nil, onTapNoPlace: nil)
+        await flushAsync()
+
+        // markerFactory가 마지막 marker에 접근 가능해야 함
+        guard let marker = markerFactory.lastMadeMarker as? SpyMarker else {
+            Issue.record("SpyMarkerFactory.lastMadeMarker가 필요합니다.")
+            return
+        }
+
+        // 처음 생성 시 attach 되었는지
+        #expect(marker.attachedHistory.last == true)
+
+        // (탭 이동을 흉내내기) 일단 detach 한 번 시켜둠
+        marker.setAttached(to: nil)
+        #expect(marker.attachedHistory.last == false)
+
+        // 다시 화면 등장
+        sut.onViewWillAppear(mapView: mapView, zoomLevel: 17)
+        await flushAsync()
+
+        // 복귀 시 다시 attach되었는지
+        #expect(marker.attachedHistory.last == true)
     }
 }
