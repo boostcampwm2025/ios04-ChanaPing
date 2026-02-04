@@ -33,17 +33,22 @@ enum MessageMarkerSnapshotBuilder {
             newPlace[coordinate, default: []].append(message)
         }
 
-        // 2) NoPlace (Place가 있는 좌표와 동일하면 offset 적용)
+        // 2) NoPlace를 먼저 원래 좌표로 그룹화
+        var tempNoPlace: [Coordinate: [Message]] = [:]
         for message in sorted where message.placeTag == nil {
-            let originalCoordinate = message.coordinate
-            let displayCoordinate: Coordinate
+            tempNoPlace[message.coordinate, default: []].append(message)
+        }
 
-            if newPlace[originalCoordinate] != nil {
-                displayCoordinate = originalCoordinate.offset(for: message.id)
+        // 그룹 단위로 오프셋 적용 (Place와 겹치는 경우만)
+        for (coord, messages) in tempNoPlace {
+            let displayCoordinate: Coordinate
+            if newPlace[coord] != nil {
+                // 첫 번째 메시지 ID로 한 번만 오프셋 (그룹 전체가 함께 이동)
+                displayCoordinate = coord.offset(for: messages[0].id)
             } else {
-                displayCoordinate = originalCoordinate
+                displayCoordinate = coord
             }
-            newNoPlace[displayCoordinate, default: []].append(message)
+            newNoPlace[displayCoordinate] = messages
         }
 
         let keys = makeAllGroupKeys(placeStore: newPlace, noPlaceStore: newNoPlace)

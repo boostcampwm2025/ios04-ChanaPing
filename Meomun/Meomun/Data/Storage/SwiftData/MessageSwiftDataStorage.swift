@@ -9,21 +9,13 @@ import SwiftData
 import Foundation
 
 actor MessageSwiftDataStorage: MessageStorage {
-    static let shared = MessageSwiftDataStorage()
+    private let container: ModelContainer
 
-    private var container: ModelContainer?
-
-    func configure(container: ModelContainer) {
-        if self.container != nil {
-            AppLog.warn("configure가 2번 이상 호출됨", category: .storage)
-        }
+    init(container: ModelContainer) {
         self.container = container
     }
 
     private func makeContext() -> ModelContext {
-        guard let container else {
-            fatalError("MessageSwiftDataStorage not configured. Call configure(container:) at app launch.")
-        }
         return ModelContext(container)
     }
 
@@ -78,12 +70,11 @@ actor MessageSwiftDataStorage: MessageStorage {
     func fetchRecent(page: Int, pageSize: Int) async throws -> [MessageResponseDTO] {
         let context = makeContext()
 
-        let descriptor = FetchDescriptor<MessageModel>(
+        var descriptor = FetchDescriptor<MessageModel>(
             sortBy: [SortDescriptor(\.createdAt, order: .reverse)]
         )
-        // TODO: 페이지네이션 구현 후 살리기
-        // descriptor.fetchLimit = pageSize
-        // descriptor.fetchOffset = max(0, page) * pageSize
+        descriptor.fetchLimit = pageSize
+        descriptor.fetchOffset = max(0, page) * pageSize
 
         let results = try context.fetch(descriptor)
         return results.map { $0.toDTO() }
