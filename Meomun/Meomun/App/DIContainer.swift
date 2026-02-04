@@ -7,6 +7,11 @@
 
 import SwiftData
 
+enum MessageStorageKey: String {
+    case swiftData
+    case inMemory
+}
+
 final class DIContainer {
     private static var shared = DIContainer()
 
@@ -14,21 +19,53 @@ final class DIContainer {
 
     private var instances: [ObjectIdentifier: Any] = [:]
     private var factories: [ObjectIdentifier: () -> Any] = [:]
+    private var keyedInstances: [KeyedIdentifier: Any] = [:]
+    private var keyedFactories: [KeyedIdentifier: () -> Any] = [:]
+
+    private struct KeyedIdentifier: Hashable {
+        let typeId: ObjectIdentifier
+        let key: AnyHashable
+
+        func hash(into hasher: inout Hasher) {
+            hasher.combine(typeId)
+            hasher.combine(key)
+        }
+
+        static func == (lhs: KeyedIdentifier, rhs: KeyedIdentifier) -> Bool {
+            lhs.typeId == rhs.typeId && lhs.key == rhs.key
+        }
+    }
 
     static func register<T>(_ dependency: T) {
         shared.register(dependency, as: T.self)
+    }
+
+    static func register<T>(_ dependency: T, key: AnyHashable) {
+        shared.register(dependency, as: T.self, key: key)
     }
 
     static func registerFactory<T>(_ type: T.Type = T.self, factory: @escaping () -> T) {
         shared.registerFactory(type, factory: factory)
     }
 
+    static func registerFactory<T>(_ type: T.Type = T.self, key: AnyHashable, factory: @escaping () -> T) {
+        shared.registerFactory(type, key: key, factory: factory)
+    }
+
     static func resolve<T>() -> T? {
         shared.resolve(T.self)
     }
 
+    static func resolve<T>(key: AnyHashable) -> T? {
+        shared.resolve(T.self, key: key)
+    }
+
     static func resolveOrDie<T>() -> T {
         shared.resolveOrDie(T.self)
+    }
+
+    static func resolveOrDie<T>(key: AnyHashable) -> T {
+        shared.resolveOrDie(T.self, key: key)
     }
 
     private func register<T>(_ dependency: T, as type: T.Type) {
@@ -36,9 +73,19 @@ final class DIContainer {
         instances[key] = dependency as Any
     }
 
+    private func register<T>(_ dependency: T, as type: T.Type, key: AnyHashable) {
+        let id = KeyedIdentifier(typeId: ObjectIdentifier(type), key: key)
+        keyedInstances[id] = dependency as Any
+    }
+
     private func registerFactory<T>(_ type: T.Type, factory: @escaping () -> T) {
         let key = ObjectIdentifier(type)
         factories[key] = factory
+    }
+
+    private func registerFactory<T>(_ type: T.Type, key: AnyHashable, factory: @escaping () -> T) {
+        let id = KeyedIdentifier(typeId: ObjectIdentifier(type), key: key)
+        keyedFactories[id] = factory
     }
 
     private func resolve<T>(_ type: T.Type) -> T? {
@@ -57,6 +104,22 @@ final class DIContainer {
         return nil
     }
 
+    private func resolve<T>(_ type: T.Type, key: AnyHashable) -> T? {
+        let id = KeyedIdentifier(typeId: ObjectIdentifier(type), key: key)
+
+        if let existing = keyedInstances[id] as? T {
+            return existing
+        }
+
+        if let factory = keyedFactories[id] {
+            let created = factory()
+            keyedInstances[id] = created
+            return created as? T
+        }
+
+        return nil
+    }
+
     private func resolveOrDie<T>(_ type: T.Type) -> T {
         let key = String(describing: type)
         let dependency: T? = resolve(type)
@@ -67,6 +130,21 @@ final class DIContainer {
             assertionFailure("\(key) Dependency가 없음")
             #endif
             preconditionFailure("\(key) Dependency가 없음")
+        }
+
+        return dependency
+    }
+
+    private func resolveOrDie<T>(_ type: T.Type, key: AnyHashable) -> T {
+        let name = String(describing: type)
+        let dependency: T? = resolve(type, key: key)
+
+        guard let dependency else {
+            AppLog.error("\(name) Dependency가 없음 (key: \(key))", category: .DIContainer)
+            #if DEBUG
+            assertionFailure("\(name) Dependency가 없음 (key: \(key))")
+            #endif
+            preconditionFailure("\(name) Dependency가 없음 (key: \(key))")
         }
 
         return dependency
@@ -93,12 +171,15 @@ extension DIContainer {
 
         // MARK: - Data
 
-        DIContainer.registerFactory(MessageStorage.self) {
+        DIContainer.registerFactory(MessageStorage.self, key: MessageStorageKey.swiftData) {
             let container: ModelContainer = DIContainer.resolveOrDie()
             return MessageSwiftDataStorage(container: container)
         }
+        DIContainer.registerFactory(MessageStorage.self, key: MessageStorageKey.inMemory) {
+            MessageInMemoryStorage.shared
+        }
         DIContainer.registerFactory(MessageRepository.self) {
-            let storage: MessageStorage = DIContainer.resolveOrDie()
+            let storage: MessageStorage = DIContainer.resolveOrDie(key: MessageStorageKey.swiftData)
             return MessageRepositoryImpl(storage: storage)
         }
         DIContainer.registerFactory(PlaceRepository.self) {
