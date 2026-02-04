@@ -172,7 +172,6 @@ extension SpaceController {
         // 카메라 앞에 랜덤 배치
         let distance = SpaceBubblePositionPolicy.minDistanceFromCenter
         let x = Float.random(in: SpaceBubblePositionPolicy.minXPosition...SpaceBubblePositionPolicy.maxXPosition)
-        AppLog.debug("\(x)", category: .space)
         let y = Float.random(in: SpaceBubblePositionPolicy.minYPosition...SpaceBubblePositionPolicy.maxYPosition)
         let z = rotationCamera.position.z - distance
 
