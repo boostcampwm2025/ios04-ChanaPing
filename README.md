@@ -23,14 +23,14 @@
 
 지도를 열면, 내가 머물렀던 모든 순간이 그 자리 그대로.
 
-</br>
+<br/>
 
 
 ## 📱 주요 기능
 
   <img width="1600" src="https://github.com/user-attachments/assets/510cb629-b27f-4a86-83f5-8f16ee9a3c5e"/>
 
-</br>
+<br/>
 
 ### 기억을 남겨보세요 💬
 - 지금 있는 위치에 메시지를 남길 수 있어요.
@@ -76,7 +76,7 @@
 | --- | --- |
 | <video width="600" src="https://github.com/user-attachments/assets/c2fa2bf5-e2e0-46c5-aaca-683c4cd3bf17"/> | <video width="600" src="https://github.com/user-attachments/assets/b9d77f07-74ea-4426-b91d-51bfd0e990a3"/> |
 
-</br>
+<br/>
 
 ## 🛠 기술 스택
 ![SwiftUI](https://img.shields.io/badge/Swift_UI-0563D6?style=for-the-badge&logo=swift&logoColor=ffffff) ![SwiftData](https://img.shields.io/badge/Swift_Data-678494?style=for-the-badge&logo=swift&logoColor=ffffff) ![RealityKit](https://img.shields.io/badge/Reality_Kit-F2CA31?style=for-the-badge&logo=swift&logoColor=ffffff) ![CoreLocation](https://img.shields.io/badge/Core_Location-C50FF0?style=for-the-badge&logo=swift&logoColor=ffffff)
@@ -97,8 +97,8 @@
 - MVVM의 상태 관리 복잡성을 해결
 - 디버깅 시 어떤 Intent가 어떤 State 상태 변화를 만들었는지 추적 용이
 
-</br>
-</br>
+<br/>
+<br/>
 
 # 👬🏻 Team. ChanaPing
 
