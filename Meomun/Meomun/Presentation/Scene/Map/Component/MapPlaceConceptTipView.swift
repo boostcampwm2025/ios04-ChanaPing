@@ -21,11 +21,11 @@ struct MapPlaceConceptTip: Tip {
     @Parameter static var isReady: Bool = false
 
     var title: Text {
-        Text("지도에서 남긴 메시지를 확인해요.")
+        Text("첫 메시지를 남겨보세요!")
     }
 
     var message: Text? {
-        Text("메시지를 탭하면 그 장소에 남겨진 메시지를 모아볼 수 있어요.")
+        Text("지금 떠오르는 말 그대로 적어보아요.")
     }
 
     var rules: [Rule] {
