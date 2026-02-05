@@ -23,6 +23,8 @@ final class RotationCamera {
     /// 회전 감도 조절을 위한 상수 (값이 클수록 빠르게 회전)
     private let sensitivity: Float
 
+    var position: SIMD3<Float> { camera.position }
+
     init(
         position: SIMD3<Float>,
         rotateSensitivity: Float

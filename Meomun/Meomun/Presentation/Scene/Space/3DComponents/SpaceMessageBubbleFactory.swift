@@ -13,9 +13,11 @@ final class SpaceMessageBubbleFactory {
     enum BubbleTextType { case content, date }
     enum TextAlignment { case center, above, below }
 
-    func makeBubbleRoot(message: Message, templateEntity: Entity) -> Entity {
-        let bubblePlacer = BubblePlacer()
-
+    func makeBubbleRoot(
+        message: Message,
+        templateEntity: Entity,
+        position: SIMD3<Float>
+    ) -> Entity {
         // 텍스트 가공 및 entity 생성
         let contentText = TextArranger.arrangeText(message.content)
         let dateText = message.displayDateString(using: AppConfig.timestampFormatter)
@@ -32,13 +34,7 @@ final class SpaceMessageBubbleFactory {
         bubbleRootEntity.components.set(BillboardComponent())
 
         // 버블 랜덤 배치
-        bubbleRootEntity.position = bubblePlacer.randomPositionInsideHemisphere(
-            radiusRange: 1.4...1.7,
-            yRange: 0.7...1.2,
-            minimumDistanceFromCenter: 1.3,
-            minimumDistanceFromViewAxis: 0.25,
-            maxAttempts: 60
-        )
+        bubbleRootEntity.position = position
 
         // messageBubbleTemplateEntity 복제
         let bubbleBubbleEntity = templateEntity.clone(recursive: true)
@@ -76,6 +72,14 @@ final class SpaceMessageBubbleFactory {
         placeTextInFrontOfBubble(dateTextEntity, bubbleEntity: bubbleBubbleEntity)
 
         return bubbleRootEntity
+    }
+
+    func bubbleUniformMultiplier(message: Message, templateEntity: Entity) -> Float {
+        let contentText = TextArranger.arrangeText(message.content)
+        let contentTextEntity = makeTextEntity(contentText, type: .content)
+        alignTextEntity(contentTextEntity, align: .center)
+
+        return uniformMultiplierToFitText(textEntity: contentTextEntity, bubbleEntity: templateEntity)
     }
 
     private func bubbleBaseSize(entity: Entity) -> SIMD2<Float> {

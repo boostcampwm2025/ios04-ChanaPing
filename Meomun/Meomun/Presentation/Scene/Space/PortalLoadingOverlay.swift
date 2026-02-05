@@ -104,6 +104,10 @@ struct PortalLoadingOverlay: View {
                         Text(title)
                             .font(.callout.weight(.semibold))
                             .foregroundStyle(.mmSecondary)
+                            .multilineTextAlignment(.center)
+                            .lineLimit(nil)
+                            .fixedSize(horizontal: false, vertical: true)
+                            .frame(maxWidth: portalSize * 0.95)
 
                         Text("공간을 구성 중…")
                             .font(.caption)
