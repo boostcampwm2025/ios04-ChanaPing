@@ -11,7 +11,7 @@ import TipKit
 struct TimelineSectionTipView: View {
     var body: some View {
         TipView(TimelineSectionTip(), arrowEdge: .top)
-            .padding(.top, 12)
+            .padding(.top, 3)
             .padding(.horizontal, 16)
             .shadow(color: .black.opacity(0.12), radius: 18, x: 0, y: 6)
     }

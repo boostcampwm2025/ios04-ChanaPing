@@ -6,6 +6,7 @@
 //
 
 import SwiftUI
+import TipKit
 
 fileprivate enum Constants {
     static let deleteLoadingMessage = "메시지를 삭제하고 있어요."
@@ -45,8 +46,6 @@ struct TimelineListView: View {
 
     var body: some View {
         VStack {
-            TimelineSectionTipView()
-
             if !store.state.messages.isEmpty {
                 content
                     .padding(.top, 10)
@@ -92,7 +91,6 @@ struct TimelineListView: View {
             onBecameEmpty()
         }
         .animation(.spring(response: 0.25, dampingFraction: 0.9), value: store.state.isEditing)
-        .background(Color.mmBackground)
         .mmAlert(
             deleteAlertBinding,
             title: { $0.title },
@@ -144,6 +142,7 @@ private extension TimelineListView {
                                 }
                             }
                         )
+                        .popoverTip(TimelineSectionTip())
                     }
                 }
             }

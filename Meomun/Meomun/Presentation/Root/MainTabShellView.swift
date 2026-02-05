@@ -26,6 +26,8 @@ struct MainTabShellView: View {
 
     var body: some View {
         ZStack {
+            Color.mmBackground.ignoresSafeArea()
+
             contentView(for: store.state.selectedTab)
                 .environment(\.setTabBarHidden) { hidden in
                     Task { await store.send(intent: .setTabBarHidden(hidden)) }
@@ -40,7 +42,6 @@ struct MainTabShellView: View {
                     .padding(.top, 12)
                     .transition(.opacity)
                     .zIndex(99)
-                    .background(store.state.selectedTab == .record ? Color.mmBackground : Color.clear)
             }
         }
         .safeAreaInset(edge: .bottom) {
