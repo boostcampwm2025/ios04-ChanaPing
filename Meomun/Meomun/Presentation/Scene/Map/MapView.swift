@@ -20,6 +20,7 @@ struct MapView: View {
     @Environment(\.setTabBarHidden) private var setTabBarHidden
     @Environment(\.setNavBarHidden) private var setNavBarHidden
     @Environment(\.setSplashReady) private var setSplashReady
+    @Environment(\.isSplashVisible) private var isSplashVisible
 
     @State private var navigationPath = NavigationPath()
     @State private var selectedPlaceForSpace: Place?
@@ -51,12 +52,18 @@ struct MapView: View {
                     .ignoresSafeArea()
             }
             .overlay(alignment: .bottomTrailing) {
-                writeButton
-                    .padding(.bottom, MMLayout.tabBarBottomOffset)
-            }
-            .overlay(alignment: .top) {
-                MapPlaceConceptTipView()
-                    .padding(.top, MMLayout.belowNavigationToolbarOffset)
+                ZStack(alignment: .bottomTrailing) {
+                    if !isSplashVisible && !store.state.hasAnyMessage {
+                        Color.clear
+                            .frame(width: 50, height: 1)
+                            .padding(.trailing, 120)
+                            .padding(.bottom, MMLayout.tabBarBottomOffset + 90)
+                            .popoverTip(MapPlaceConceptTip())
+                    }
+
+                    writeButton
+                        .padding(.bottom, MMLayout.tabBarBottomOffset)
+                }
             }
             .overlay(alignment: .bottom) {
                 if !store.state.carouselItems.isEmpty {
@@ -155,6 +162,7 @@ struct MapView: View {
             .transaction { $0.disablesAnimations = true }
             .sheet(isPresented: isTimelineListPresentedBinding) {
                 timeLineListView
+                    .background(Color.mmBackground)
                     .presentationDetents(.init(arrayLiteral: .medium, .large))
                     .presentationDragIndicator(.visible)
             }

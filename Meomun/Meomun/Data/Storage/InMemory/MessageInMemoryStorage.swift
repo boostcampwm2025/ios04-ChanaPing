@@ -46,6 +46,10 @@ actor MessageInMemoryStorage: MessageStorage {
         return pageData
     }
 
+    func hasAny() async throws -> Bool {
+        !storage.isEmpty
+    }
+
     func create(for message: CreateMessageRequestDTO) async throws {
         let newMessage = MessageResponseDTO(
             id: .init(),

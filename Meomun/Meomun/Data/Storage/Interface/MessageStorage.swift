@@ -25,6 +25,8 @@ protocol MessageStorage: Sendable {
     ///   - pageSize: 한 페이지에 포함될 메시지 개수
     func fetchRecent(page: Int, pageSize: Int) async throws -> [MessageResponseDTO]
 
+    func hasAny() async throws -> Bool
+
     func create(for message: CreateMessageRequestDTO) async throws
 
     func update(for message: UpdateMessageRequestDTO) async throws

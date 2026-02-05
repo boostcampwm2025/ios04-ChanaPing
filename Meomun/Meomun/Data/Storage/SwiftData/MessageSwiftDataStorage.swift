@@ -80,6 +80,16 @@ actor MessageSwiftDataStorage: MessageStorage {
         return results.map { $0.toDTO() }
     }
 
+    func hasAny() async throws -> Bool {
+        let context = makeContext()
+
+        var descriptor = FetchDescriptor<MessageModel>()
+        descriptor.fetchLimit = 1
+
+        let result = try context.fetch(descriptor)
+        return result.isEmpty == false
+    }
+
     func create(for message: CreateMessageRequestDTO) async throws {
         let context = makeContext()
 

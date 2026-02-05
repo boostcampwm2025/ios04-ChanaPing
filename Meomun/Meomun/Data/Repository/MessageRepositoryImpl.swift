@@ -82,4 +82,8 @@ final class MessageRepositoryImpl: MessageRepository {
         try await storage.fetchRecent(page: page, pageSize: pageSize)
             .map { $0.toDomain() }
     }
+
+    func hasAny() async throws -> Bool {
+        try await storage.hasAny()
+    }
 }

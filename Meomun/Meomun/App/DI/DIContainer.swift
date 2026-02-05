@@ -243,6 +243,10 @@ private extension DIContainer {
             let repo: MessageRepository = DIContainer.resolveOrDie()
             return ResetMessagesUseCaseImpl(messageRepository: repo)
         }
+        DIContainer.registerFactory(HasAnyMessageUseCase.self) {
+            let repo: MessageRepository = DIContainer.resolveOrDie()
+            return HasAnyMessageUseCaseImpl(messageRepository: repo)
+        }
         DIContainer.registerFactory(ReverseGeocodeUseCase.self) {
             let repo: ReverseGeocodeRepository = DIContainer.resolveOrDie()
             return ReverseGeocodeUseCaseImpl(repository: repo)
@@ -328,9 +332,14 @@ private extension DIContainer {
         }
         DIContainer.registerFactory(MainTabStore.self) { MainTabStore() }
         DIContainer.registerFactory(MapStore.self) {
-            let useCase: GetNearbyMessagesUseCase = DIContainer.resolveOrDie()
+            let getNearbyMessagesUseCase: GetNearbyMessagesUseCase = DIContainer.resolveOrDie()
+            let hasAnyMessageUseCase: HasAnyMessageUseCase = DIContainer.resolveOrDie()
             let networkMonitor: NetworkMonitoring = DIContainer.resolveOrDie()
-            return MapStore(getNearbyMessagesUseCase: useCase, networkMonitor: networkMonitor)
+            return MapStore(
+                getNearbyMessagesUseCase: getNearbyMessagesUseCase,
+                hasAnyMessageUseCase: hasAnyMessageUseCase,
+                networkMonitor: networkMonitor
+            )
         }
         DIContainer.registerFactory(SettingStore.self) {
             let appSettingsOpener: AppSettingsOpening = DIContainer.resolveOrDie()

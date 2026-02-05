@@ -25,7 +25,7 @@ struct SpaceIntroTip: Tip {
     }
 
     var message: Text? {
-        Text("이 장소에 남겨진 메시지 버블이 떠다니는 3D 공간이에요. 드래그로 둘러보고, 버블을 탭해 선택할 수 있어요.")
+        Text("이 장소에 남겨진 메시지 버블이 떠다니는 공간이에요. 드래그로 둘러보고, 버블을 눌러 삭제할 수 있어요.")
     }
 
     var rules: [Rule] {

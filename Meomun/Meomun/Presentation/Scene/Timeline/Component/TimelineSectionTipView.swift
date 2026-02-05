@@ -11,7 +11,7 @@ import TipKit
 struct TimelineSectionTipView: View {
     var body: some View {
         TipView(TimelineSectionTip(), arrowEdge: .top)
-            .padding(.top, 12)
+            .padding(.top, 3)
             .padding(.horizontal, 16)
             .shadow(color: .black.opacity(0.12), radius: 18, x: 0, y: 6)
     }
@@ -23,11 +23,11 @@ struct TimelineSectionTip: Tip {
     @Parameter static var isEditing: Bool = false
 
     var title: Text {
-        Text("시간 순으로 기록을 확인해요.")
+        Text("지금까지 남긴 말들이 모여있어요.")
     }
 
     var message: Text? {
-        Text("흔적 따라가기를 탭하면 해당 달의 기록을 모아볼 수 있어요.")
+        Text("월 별로 남긴 말들의 흔적을 따라가보세요!")
     }
 
     var rules: [Rule] {
