@@ -8,14 +8,6 @@
 import SwiftUI
 import TipKit
 
-struct MessageComposerConfirmDisabledTipView: View {
-    var body: some View {
-        TipView(MessageComposerConfirmDisabledTip(), arrowEdge: .bottom)
-            .padding(.top, 4)
-            .padding(.horizontal, 4)
-    }
-}
-
 struct MessageComposerConfirmDisabledTip: Tip {
     @Parameter static var isReady: Bool = false
     @Parameter static var shouldShow: Bool = false

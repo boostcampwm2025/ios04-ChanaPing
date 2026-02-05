@@ -23,11 +23,11 @@ struct TimelineSectionTip: Tip {
     @Parameter static var isEditing: Bool = false
 
     var title: Text {
-        Text("시간 순으로 기록을 확인해요.")
+        Text("지금까지 남긴 말들이 모여있어요.")
     }
 
     var message: Text? {
-        Text("흔적 따라가기를 탭하면 해당 달의 기록을 모아볼 수 있어요.")
+        Text("월 별로 남긴 말들의 흔적을 따라가보세요!")
     }
 
     var rules: [Rule] {
