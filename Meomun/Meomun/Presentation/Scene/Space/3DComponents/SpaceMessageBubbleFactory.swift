@@ -18,8 +18,6 @@ final class SpaceMessageBubbleFactory {
         templateEntity: Entity,
         position: SIMD3<Float>
     ) -> Entity {
-        let bubblePlacer = BubblePlacer()
-
         // 텍스트 가공 및 entity 생성
         let contentText = TextArranger.arrangeText(message.content)
         let dateText = message.displayDateString(using: AppConfig.timestampFormatter)
