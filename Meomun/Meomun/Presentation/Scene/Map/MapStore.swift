@@ -294,6 +294,13 @@ final class MapStore: Store {
             bounds: bounds,
             snapshot: snapshot
         ) {
+            getNearbyMessageTask?.cancel()
+            getNearbyMessageTask = nil
+
+            if state.isLoading {
+                continuation.yield(.setLoading(false))
+            }
+
             continuation.finish()
             return
         }
