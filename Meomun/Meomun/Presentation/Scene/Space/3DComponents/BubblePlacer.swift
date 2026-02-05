@@ -45,6 +45,7 @@ struct BubblePlacer {
         return SIMD3<Float>(minimumDistanceFromViewAxis, yRange.upperBound, -radiusRange.upperBound)
     }
 
+    // swiftlint:disable:next function_parameter_count
     func randomNonOverlappingPositionInsideHemisphere(
         radiusRange: ClosedRange<Float>,
         yRange: ClosedRange<Float>,

@@ -68,7 +68,6 @@ struct RootView: View {
 
 private extension RootView {
     func runBootstrap() async {
-        // TODO: 권한 체크, 네트워크 체크, 로컬 DB 로드, DI 준비 등
         await MainActor.run {
             DIContainer.registerAsyncDependencies()
             bootReady = true

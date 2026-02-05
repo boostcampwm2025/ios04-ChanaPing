@@ -105,6 +105,7 @@ final class MapStore: Store {
         self.networkMonitor = networkMonitor
     }
 
+    // swiftlint:disable:next function_body_length
     func action(intent: Intent) -> AsyncStream<Action> {
         AsyncStream { continuation in
             switch intent {
