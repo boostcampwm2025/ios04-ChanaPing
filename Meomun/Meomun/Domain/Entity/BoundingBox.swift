@@ -27,4 +27,11 @@ extension BoundingBox {
             maxLongitude: maxLongitude + longitudePadding
         )
     }
+
+    func contains(_ other: BoundingBox) -> Bool {
+        minLatitude <= other.minLatitude &&
+        maxLatitude >= other.maxLatitude &&
+        minLongitude <= other.minLongitude &&
+        maxLongitude >= other.maxLongitude
+    }
 }

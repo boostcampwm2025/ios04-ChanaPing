@@ -84,8 +84,11 @@ final class MapStore: Store {
     @Published var state: State
 
     private let debounceInterval: UInt64 = 300_000_000 // 300ms
+    private let prefetchRatio: Double = 0.2
 
     private var getNearbyMessageTask: Task<Void, Never>?
+    private var lastFetchBounds: BoundingBox?
+    private var lastFetchZoomBucket: Int?
     private let getNearbyMessagesUseCase: GetNearbyMessagesUseCase
     private let networkMonitor: NetworkMonitoring
 
@@ -133,6 +136,8 @@ final class MapStore: Store {
             case .onDisappear:
                 self.getNearbyMessageTask?.cancel()
                 self.getNearbyMessageTask = nil
+                self.lastFetchBounds = nil
+                self.lastFetchZoomBucket = nil
                 continuation.yield(.setLoading(false))
 
             case .userDidInteractMap:
@@ -148,6 +153,7 @@ final class MapStore: Store {
                 self.getNearbyMessages(
                     at: coordinate,
                     bounds: boundingBox,
+                    snapshot: snapshot,
                     continuation: continuation
                 )
                 return
@@ -159,6 +165,7 @@ final class MapStore: Store {
                 self.getNearbyMessages(
                     at: coordinate,
                     bounds: boundingBox,
+                    snapshot: snapshot,
                     continuation: continuation
                 )
                 return
@@ -174,10 +181,13 @@ final class MapStore: Store {
                     continuation.finish()
                     return
                 }
+                let snapshot = state.cameraSnapshot ?? .init(coordinate: coordinate)
 
                 self.getNearbyMessages(
                     at: coordinate,
                     bounds: bounds,
+                    snapshot: snapshot,
+                    force: true,
                     continuation: continuation
                 )
                 return
@@ -275,8 +285,19 @@ final class MapStore: Store {
     private func getNearbyMessages(
         at coordinate: Coordinate,
         bounds: BoundingBox,
+        snapshot: MapCameraSnapshot,
+        force: Bool = false,
         continuation: AsyncStream<Action>.Continuation
     ) {
+        if !force, shouldSkipFetch(
+            coordinate: coordinate,
+            bounds: bounds,
+            snapshot: snapshot
+        ) {
+            continuation.finish()
+            return
+        }
+
         getNearbyMessageTask?.cancel()
 
         getNearbyMessageTask = Task { [weak self] in
@@ -308,6 +329,9 @@ final class MapStore: Store {
 
                 guard !Task.isCancelled else { return }
 
+                self.lastFetchBounds = bounds.expanded(by: self.prefetchRatio)
+                self.lastFetchZoomBucket = self.zoomBucket(from: snapshot)
+
                 continuation.yield(.setMessages(messages))
                 continuation.yield(.setError(""))
             } catch is CancellationError {
@@ -323,6 +347,28 @@ final class MapStore: Store {
 }
 
 private extension MapStore {
+    func shouldSkipFetch(
+        coordinate: Coordinate,
+        bounds: BoundingBox,
+        snapshot: MapCameraSnapshot
+    ) -> Bool {
+        guard let lastFetchBounds,
+              let lastFetchZoomBucket
+        else {
+            return false
+        }
+
+        if lastFetchZoomBucket != zoomBucket(from: snapshot) {
+            return false
+        }
+
+        return lastFetchBounds.contains(bounds)
+    }
+
+    func zoomBucket(from snapshot: MapCameraSnapshot) -> Int {
+        Int(floor(snapshot.zoom))
+    }
+
     /// 메시지 배열을 Place별로 그룹화하여 캐러셀 아이템 배열로 변환
     func groupMessagesByPlace(_ messages: [Message]) -> [PlaceCarouselDisplayModel] {
         var placeMessages: [Place: [Message]] = [:]
