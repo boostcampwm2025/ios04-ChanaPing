@@ -12,21 +12,10 @@ import SwiftUI
 @MainActor
 final class BubbleDrawableFactory {
 
-    /// 베이스 레이어만 반환 (StackBack, 배경, 테두리, PlaceIcon, Chevron). 캐시 키: hasPlaceTag
+    /// 베이스 레이어만 반환 (에셋 이미지 배경 + Chevron). 캐시 키: hasPlaceTag
     static func makeBaseDrawables(rect: CGRect, hasPlaceTag: Bool) -> [BubbleDrawable] {
         var drawables: [BubbleDrawable] = []
-        if !hasPlaceTag {
-            drawables.append(BubbleStackBackDrawer(rect: rect))
-        }
-        drawables.append(BubbleBackgroundDrawer(rect: rect))
-        drawables.append(BubbleGradientStrokeDrawer(rect: rect, hasPlaceTag: hasPlaceTag))
-        if hasPlaceTag {
-            let iconCenter = CGPoint(
-                x: rect.midX,
-                y: rect.minY + BubbleLayoutConstants.placeIconOffsetY
-            )
-            drawables.append(BubblePlaceIconDrawer(centerPoint: iconCenter))
-        }
+        drawables.append(BubbleBackgroundImageDrawer(rect: rect, hasPlaceTag: hasPlaceTag))
         if hasPlaceTag {
             let chevronX = rect.maxX - BubbleLayoutConstants.paddingHorizontal
                 - BubbleLayoutConstants.chevronBackgroundSize / 2
