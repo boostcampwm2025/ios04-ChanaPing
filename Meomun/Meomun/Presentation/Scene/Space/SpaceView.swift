@@ -162,6 +162,9 @@ struct SpaceView: View {
                 guard let newValue else { return }
                 spaceController.update(domeEnvironment: newValue)
             }
+            .onChange(of: store.state.selectedMessageID) { _, newValue in
+                spaceController.selectMessage(newValue)
+            }
             .opacity(appearOpacity)
             .onAppear {
                 withAnimation(.easeInOut(duration: 0.25)) {

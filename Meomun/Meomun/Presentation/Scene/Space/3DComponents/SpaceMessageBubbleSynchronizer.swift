@@ -6,12 +6,17 @@
 //
 
 import RealityKit
+import Foundation
+import UIKit
 
 @MainActor
 final class SpaceMessageBubbleSynchronizer {
     private var bubbleRootByID: [MessageID: Entity] = [:]
     private var placementByID: [MessageID: BubblePlacementRecord] = [:]
     private let factory: SpaceMessageBubbleFactory
+
+    private let materialConfigurator: SpaceMaterialConfigurator = .init()
+    private var selectedID: MessageID?
 
     init(factory: SpaceMessageBubbleFactory = .init()) {
         self.factory = factory
@@ -35,6 +40,21 @@ final class SpaceMessageBubbleSynchronizer {
 
             addMessage(message: message, root: root, templateEntity: templateEntity)
         }
+    }
+
+    func applySelection(selectedID newID: MessageID?) {
+        if let oldID = selectedID,
+           let oldRoot = bubbleRootByID[oldID] {
+            restoreBaseGlow(root: oldRoot, messageID: oldID)
+        }
+
+        selectedID = newID
+
+        guard let newID,
+              let newRoot = bubbleRootByID[newID]
+        else { return }
+
+        setHighlightGlow(root: newRoot, messageID: newID)
     }
 
     private func addMessage(
@@ -85,5 +105,22 @@ final class SpaceMessageBubbleSynchronizer {
         entity.removeFromParent()
         bubbleRootByID[id] = nil
         placementByID[id] = nil
+    }
+}
+
+private extension SpaceMessageBubbleSynchronizer {
+    func restoreBaseGlow(root: Entity, messageID: MessageID) {
+        guard let model = root.findEntity(named: "MessageModel-\(messageID.value.uuidString)") else { return }
+
+        let defaultGlowColor = UIColor(red: 0.278, green: 0.600, blue: 0.741, alpha: 1.0)
+        materialConfigurator
+            .setMessageGlowColor(messageEntity: model, color: defaultGlowColor)
+    }
+
+    func setHighlightGlow(root: Entity, messageID: MessageID) {
+        guard let model = root.findEntity(named: "MessageModel-\(messageID.value.uuidString)") else { return }
+
+        let highlightGlowColor = UIColor.systemRed.withAlphaComponent(0.8)
+        materialConfigurator.setMessageGlowColor(messageEntity: model, color: highlightGlowColor)
     }
 }
