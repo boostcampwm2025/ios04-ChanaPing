@@ -31,8 +31,13 @@ struct MapStoreTests {
             // Arrange
             let expectedCoordinate = stubbedCoordinate
             let expectedResult = expectedCoordinate
-            let stubUseCase = StubGetNearbyMessagesUseCase(stubbedMessages: [])
-            let sut = MapStore(getNearbyMessagesUseCase: stubUseCase, networkMonitor: MapStoreTests.stubNetworkMonitor)
+            let stubGetNearbyMessagesUseCase = StubGetNearbyMessagesUseCase(stubbedMessages: [])
+            let stubHasAnyMessageUseCase = StubHasAnyMessageUseCase()
+            let sut = MapStore(
+                getNearbyMessagesUseCase: stubGetNearbyMessagesUseCase,
+                hasAnyMessageUseCase: stubHasAnyMessageUseCase,
+                networkMonitor: MapStoreTests.stubNetworkMonitor
+            )
 
             // Act
             await sut.send(intent: .onAppear(expectedCoordinate))
@@ -55,8 +60,13 @@ struct MapStoreTests {
         func fetchMessagesAfterCameraDrag() async throws {
             // Arrange
             let expectedResult = DummyMessageFactory.makeMessages(count: 3, at: stubbedCoordinate)
-            let stubUseCase = StubGetNearbyMessagesUseCase(stubbedMessages: expectedResult)
-            let sut = MapStore(getNearbyMessagesUseCase: stubUseCase, networkMonitor: MapStoreTests.stubNetworkMonitor)
+            let stubGetNearbyMessagesUseCase = StubGetNearbyMessagesUseCase(stubbedMessages: expectedResult)
+            let stubHasAnyMessageUseCase = StubHasAnyMessageUseCase()
+            let sut = MapStore(
+                getNearbyMessagesUseCase: stubGetNearbyMessagesUseCase,
+                hasAnyMessageUseCase: stubHasAnyMessageUseCase,
+                networkMonitor: MapStoreTests.stubNetworkMonitor
+            )
             let newCameraPosition = stubbedCoordinate
 
             // Act
@@ -72,8 +82,13 @@ struct MapStoreTests {
         func updateCameraCoordinateImmediately() async throws {
             // Arrange
             let expectedResult = testCoordinate
-            let stubUseCase = StubGetNearbyMessagesUseCase(stubbedMessages: [])
-            let sut = MapStore(getNearbyMessagesUseCase: stubUseCase, networkMonitor: MapStoreTests.stubNetworkMonitor)
+            let stubGetNearbyMessagesUseCase = StubGetNearbyMessagesUseCase(stubbedMessages: [])
+            let stubHasAnyMessageUseCase = StubHasAnyMessageUseCase()
+            let sut = MapStore(
+                getNearbyMessagesUseCase: stubGetNearbyMessagesUseCase,
+                hasAnyMessageUseCase: stubHasAnyMessageUseCase,
+                networkMonitor: MapStoreTests.stubNetworkMonitor
+            )
             let movedCoordinate = testCoordinate
 
             // Act
@@ -90,7 +105,12 @@ struct MapStoreTests {
             // Arrange
             let expectedCallCount = 1
             let spyUseCase = SpyGetNearbyMessagesUseCase(stubbedMessages: [])
-            let sut = MapStore(getNearbyMessagesUseCase: spyUseCase, networkMonitor: MapStoreTests.stubNetworkMonitor)
+            let stubUseCase = StubHasAnyMessageUseCase()
+            let sut = MapStore(
+                getNearbyMessagesUseCase: spyUseCase,
+                hasAnyMessageUseCase: stubUseCase,
+                networkMonitor: MapStoreTests.stubNetworkMonitor
+            )
 
             let firstLocation = stubbedCoordinate
             let secondLocation = DummyMessageFactory.gangnamStationCoordinate
@@ -126,7 +146,12 @@ struct MapStoreTests {
             // Arrange
             let expectedResult = DummyMessageFactory.makeMessages(count: 2, at: stubbedCoordinate)
             let spyUseCase = StubGetNearbyMessagesUseCase(stubbedMessages: expectedResult)
-            let sut = MapStore(getNearbyMessagesUseCase: spyUseCase, networkMonitor: MapStoreTests.stubNetworkMonitor)
+            let stubUseCase = StubHasAnyMessageUseCase()
+            let sut = MapStore(
+                getNearbyMessagesUseCase: spyUseCase,
+                hasAnyMessageUseCase: stubUseCase,
+                networkMonitor: MapStoreTests.stubNetworkMonitor
+            )
             let movedCoordinate = stubbedCoordinate
 
             // Act
@@ -141,8 +166,13 @@ struct MapStoreTests {
         func updateCameraCoordinateImmediately() async throws {
             // Arrange
             let expectedResult = stubbedCoordinate
-            let stubUseCase = StubGetNearbyMessagesUseCase(stubbedMessages: [])
-            let sut = MapStore(getNearbyMessagesUseCase: stubUseCase, networkMonitor: MapStoreTests.stubNetworkMonitor)
+            let stubGetNearbyMessagesUseCase = StubGetNearbyMessagesUseCase(stubbedMessages: [])
+            let stubHasAnyMessageUseCase = StubHasAnyMessageUseCase()
+            let sut = MapStore(
+                getNearbyMessagesUseCase: stubGetNearbyMessagesUseCase,
+                hasAnyMessageUseCase: stubHasAnyMessageUseCase,
+                networkMonitor: MapStoreTests.stubNetworkMonitor
+            )
 
             // Act
             await sut.send(intent: .cameraDidIdle(expectedResult, MapStoreTests.stubBoundingBox, MapStoreTests.stubMapCameraSnapshot))
@@ -164,8 +194,13 @@ struct MapStoreTests {
         func fetchMessagesOnUserMovement() async throws {
             // Arrange
             let expectedResult = DummyMessageFactory.makeMessages(count: 4, at: stubbedCoordinate)
-            let stubUseCase = StubGetNearbyMessagesUseCase(stubbedMessages: expectedResult)
-            let sut = MapStore(getNearbyMessagesUseCase: stubUseCase, networkMonitor: MapStoreTests.stubNetworkMonitor)
+            let stubGetNearbyMessagesUseCase = StubGetNearbyMessagesUseCase(stubbedMessages: expectedResult)
+            let stubHasAnyMessageUseCase = StubHasAnyMessageUseCase()
+            let sut = MapStore(
+                getNearbyMessagesUseCase: stubGetNearbyMessagesUseCase,
+                hasAnyMessageUseCase: stubHasAnyMessageUseCase,
+                networkMonitor: MapStoreTests.stubNetworkMonitor
+            )
             let movedCoordinate = stubbedCoordinate
 
             // Act
