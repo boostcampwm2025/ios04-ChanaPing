@@ -16,6 +16,7 @@ final class MapViewController: UIViewController {
 
     private var appLifecycleObservers: [NSObjectProtocol] = []
     private var isFollowingUser: Bool = true
+    private var tileCoverHelper: NMFTileCoverHelper?
 
     // MARK: - Animation Properties
 
@@ -126,6 +127,11 @@ final class MapViewController: UIViewController {
 
         // 카메라 delegate 등록
         naverMapView.mapView.addCameraDelegate(delegate: self)
+
+        // 타일 커버 헬퍼 등록 (타일 변경 시 fetch 트리거)
+        let tileCoverHelper = NMFTileCoverHelper(naverMapView.mapView)
+        tileCoverHelper.delegate = self
+        self.tileCoverHelper = tileCoverHelper
 
         // 앱 라이프사이클 옵저버 등록
         registerAppLifecycleObservers()
@@ -335,12 +341,6 @@ extension MapViewController: NMFMapViewCameraDelegate {
             onFirstMapIdle?()
         }
 
-        let center = mapView.cameraPosition.target
-        let coordinate = Coordinate(latitude: center.lat, longitude: center.lng)
-        let domainBounds = makeBoundingBox(from: mapView)
-        let snapshot = currentSnapshot(from: mapView)
-
-        onCameraIdle?(coordinate, domainBounds, snapshot)
         messageMarkerManager.updateClusterModeIfNeeded(
             zoomLevel: mapView.zoomLevel,
             mapView: mapViewAdapter
@@ -367,14 +367,6 @@ extension MapViewController: NMFMapViewCameraDelegate {
             onFollowRequested?()
             return
         }
-
-        // 카메라 중심 좌표 추출 및 콜백 호출
-        let center = mapView.cameraPosition.target
-        let coordinate = Coordinate(latitude: center.lat, longitude: center.lng)
-        let domainBounds = makeBoundingBox(from: mapView)
-        let snapshot = currentSnapshot(from: mapView)
-
-        onCameraChangedByLocation?(coordinate, domainBounds, snapshot)
     }
 
     private func makeBoundingBox(from mapView: NMFMapView) -> BoundingBox {
@@ -385,5 +377,22 @@ extension MapViewController: NMFMapViewCameraDelegate {
             minLongitude: nmfBounds.southWestLng,
             maxLongitude: nmfBounds.northEastLng
         )
+    }
+}
+
+// MARK: - NMFTileCoverHelperDelegate
+
+extension MapViewController: NMFTileCoverHelperDelegate {
+    func onTileChanged(_ addedTileIds: [NSNumber]?, removedTileIds: [NSNumber]?) {
+        let addedEmpty = addedTileIds?.isEmpty ?? true
+        let removedEmpty = removedTileIds?.isEmpty ?? true
+        guard !(addedEmpty && removedEmpty) else { return }
+
+        let center = naverMapView.mapView.cameraPosition.target
+        let coordinate = Coordinate(latitude: center.lat, longitude: center.lng)
+        let domainBounds = makeBoundingBox(from: naverMapView.mapView)
+        let snapshot = currentSnapshot(from: naverMapView.mapView)
+
+        onCameraIdle?(coordinate, domainBounds, snapshot)
     }
 }
