@@ -26,6 +26,14 @@ struct BubbleBackgroundImageDrawer: BubbleDrawable {
         let drawRect = hasPlaceTag
             ? CGRect(x: 0, y: 0, width: rect.width, height: rect.maxY)
             : rect
+
+        context.saveGState()
+        context.setShadow(
+            offset: BubbleStyleConstants.Shadow.offset,
+            blur: BubbleStyleConstants.Shadow.radius,
+            color: BubbleStyleConstants.Shadow.color.cgColor
+        )
         image.draw(in: drawRect)
+        context.restoreGState()
     }
 }
