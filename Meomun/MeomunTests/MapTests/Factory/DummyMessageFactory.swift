@@ -96,4 +96,31 @@ enum DummyMessageFactory {
             userInfo: [NSLocalizedDescriptionKey: "서버 오류가 발생했습니다."]
         )
     }
+
+    // 장소 태그 있는 메시지
+    static func placeMessage(
+        id: UUID = UUID(),
+        createdAt: TimeInterval,
+        coordinate: Coordinate
+    ) -> Message {
+        Self.makeMessage(
+            id: id,
+            coordinate: coordinate,
+            placeTag: makePlace(),
+            createdAt: Date(timeIntervalSince1970: createdAt)
+        )
+    }
+
+    // 장소 태그 없는 메시지
+    static func noPlaceMessage(
+        id: UUID = UUID(),
+        createdAt: TimeInterval,
+        coordinate: Coordinate
+    ) -> Message {
+        Self.makeMessage(
+            id: id,
+            coordinate: coordinate,
+            createdAt: Date(timeIntervalSince1970: createdAt)
+        )
+    }
 }

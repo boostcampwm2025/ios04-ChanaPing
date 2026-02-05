@@ -19,37 +19,33 @@ struct RootView: View {
     @State private var showSplash = true
     @State private var loadingProgress: CGFloat = 0
 
-    init() {
-        let provider = LocationProvider()
-        _locationProvider = StateObject(wrappedValue: provider)
-        _store = StateObject(
-            wrappedValue: RootStore(
-                locationProvider: provider,
-                appSettingsOpener: AppSettingsOpener()
-            )
-        )
+    init(locationProvider: LocationProvider, store: RootStore) {
+        _locationProvider = StateObject(wrappedValue: locationProvider)
+        _store = StateObject(wrappedValue: store)
     }
 
     var body: some View {
         ZStack {
-            MainTabShellView()
-                .environmentObject(locationProvider)
-                .environment(\.setSplashReady, markMapReady)
-                .ignoresSafeArea(.keyboard)
-                .overlay {
-                    if store.state.showLocationAlert {
-                        MMAlertView(type: .location) {
-                            Task { await store.send(intent: .tapOpenSettings) }
+            if bootReady {
+                MainTabShellView()
+                    .environmentObject(locationProvider)
+                    .environment(\.setSplashReady, markMapReady)
+                    .ignoresSafeArea(.keyboard)
+                    .overlay {
+                        if store.state.showLocationAlert {
+                            MMAlertView(type: .location) {
+                                Task { await store.send(intent: .tapOpenSettings) }
+                            }
                         }
                     }
-                }
-                .onReceive(locationProvider.$authorizationStatus) { status in
-                    Task { await store.send(intent: .authorizationStatusChanged(status)) }
-                }
-                .onChange(of: scenePhase) { _, newPhase in
-                    guard newPhase == .active else { return }
-                    Task { await store.send(intent: .appBecameActive) }
-                }
+                    .onReceive(locationProvider.$authorizationStatus) { status in
+                        Task { await store.send(intent: .authorizationStatusChanged(status)) }
+                    }
+                    .onChange(of: scenePhase) { _, newPhase in
+                        guard newPhase == .active else { return }
+                        Task { await store.send(intent: .appBecameActive) }
+                    }
+            }
 
             if showSplash {
                 MMSplashView(progress: loadingProgress)
@@ -57,7 +53,7 @@ struct RootView: View {
                     .zIndex(999)
             }
         }
-        .task {
+        .task { @MainActor in
             async let progressTask: Void = runProgressLoop()
             async let bootTask: Void = runBootstrap()
 
@@ -72,8 +68,8 @@ struct RootView: View {
 private extension RootView {
     func runBootstrap() async {
         // TODO: 권한 체크, 네트워크 체크, 로컬 DB 로드, DI 준비 등
-
         await MainActor.run {
+            DIContainer.registerAsyncDependencies()
             bootReady = true
         }
     }
@@ -107,5 +103,8 @@ private extension RootView {
 }
 
 #Preview {
-    RootView()
+    let locationProvider = LocationProvider()
+    let appSettingsOpener = AppSettingsOpener()
+    let rootStore = RootStore(locationProvider: locationProvider, appSettingsOpener: appSettingsOpener)
+    RootView(locationProvider: locationProvider, store: rootStore)
 }

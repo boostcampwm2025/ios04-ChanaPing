@@ -38,6 +38,7 @@ final class MapViewController: UIViewController {
     // MARK: - Dependencies
 
     private let messageMarkerManager: MessageMarkerManager
+    private lazy var mapViewAdapter: MapViewProtocol = NaverMapViewAdapter(naverMapView.mapView)
 
     // MARK: - Init
 
@@ -61,7 +62,15 @@ final class MapViewController: UIViewController {
     }
 
     required init?(coder: NSCoder) {
-        self.messageMarkerManager = .init(rotationAnimator: .init(), bubbleImageRenderer: .init())
+        self.messageMarkerManager = .init(
+            markerFactory: NaverMarkerFactory(),
+            clustererFactory: NaverClustererFactory(
+                leaf: LeafMarkerUpdater(),
+                cluster: ClusterMarkerUpdater()
+            ),
+            rotationAnimator: MessageRotationAnimator(),
+            bubbleImageRenderer: BubbleImageRenderer()
+        )
         self.onTapPlace = nil
         self.onTapNoPlace = nil
         self.onUserGesture = nil
@@ -120,15 +129,17 @@ final class MapViewController: UIViewController {
 
         // 앱 라이프사이클 옵저버 등록
         registerAppLifecycleObservers()
-
-        // 라이트 모드 <-> 다크 모드 변경 옵저버 등록
-        registerTraitObserver()
     }
 
     override func viewWillAppear(_ animated: Bool) {
         super.viewWillAppear(animated)
+
+        messageMarkerManager.onViewWillAppear(
+            mapView: mapViewAdapter,
+            zoomLevel: naverMapView.mapView.zoomLevel
+        )
+
         startBubbleRotationTimer()
-        messageMarkerManager.setColorScheme(traitCollection)
     }
 
     override func viewDidDisappear(_ animated: Bool) {
@@ -181,13 +192,6 @@ extension MapViewController {
         let center = NotificationCenter.default
         appLifecycleObservers.forEach { center.removeObserver($0) }
         appLifecycleObservers.removeAll()
-    }
-
-    private func registerTraitObserver() {
-        registerForTraitChanges([UITraitUserInterfaceStyle.self]) { [weak self] (controller: Self, _) in
-            self?.messageMarkerManager.setColorScheme(controller.traitCollection)
-            self?.messageMarkerManager.rebuildAllMarkers()
-        }
     }
 }
 
@@ -289,7 +293,7 @@ extension MapViewController {
     func loadMessages(_ messages: [Message]) {
         messageMarkerManager.loadMessages(
             messages,
-            mapView: naverMapView.mapView,
+            mapView: mapViewAdapter,
             onTapPlace: onTapPlace,
             onTapNoPlace: onTapNoPlace
         )
@@ -337,7 +341,10 @@ extension MapViewController: NMFMapViewCameraDelegate {
         let snapshot = currentSnapshot(from: mapView)
 
         onCameraIdle?(coordinate, domainBounds, snapshot)
-        messageMarkerManager.updateClusterModeIfNeeded(zoomLevel: mapView.zoomLevel)
+        messageMarkerManager.updateClusterModeIfNeeded(
+            zoomLevel: mapView.zoomLevel,
+            mapView: mapViewAdapter
+        )
     }
 
     func mapView(_ mapView: NMFMapView, cameraDidChangeByReason reason: Int, animated: Bool) {

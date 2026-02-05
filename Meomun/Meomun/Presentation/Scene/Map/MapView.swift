@@ -231,23 +231,16 @@ private extension MapView {
         place: Place?,
         onClose: @escaping () -> Void
     ) -> some View {
-        MessageComposerView(
-            store: .init(
+        let factory: MessageComposerStoreFactory = DIContainer.resolveOrDie()
+
+        return MessageComposerView(
+            store: factory.make(
                 currentLocation: location,
                 currentPlace: place,
-                createMessage: CreateMessageUseCaseImpl(
-                    messageRepository: MessageRepositoryImpl()
-                ),
-                reverseGeocoding: ReverseGeocodeUseCaseImpl(
-                    repository: ReverseGeocodeRepositoryImpl(
-                        remote: SupabaseServiceImpl(network: NetworkClientImpl())
-                    )
-                ),
                 onClose: { isSuccess in
                     if isSuccess {
                         send(.refreshVisibleMessages)
                     }
-
                     onClose()
                 }
             )
@@ -255,16 +248,10 @@ private extension MapView {
     }
 
     private func spaceView(place: Place) -> some View {
-        SpaceView(
-            store: .init(
-                fetchPlaceMessagesUseCase: FetchPlaceMessagesUseCaseImpl(
-                    messageRepository: MessageRepositoryImpl()
-                ),
-                deleteMessagesUseCase: DeleteMessagesUseCaseImpl(
-                    messageRepository: MessageRepositoryImpl()
-                ),
-                place: place
-            )
+        let factory: SpaceStoreFactory = DIContainer.resolveOrDie()
+
+        return SpaceView(
+            store: factory.make(place: place)
         )
         .onDisappear {
             send(.refreshVisibleMessages)
@@ -278,13 +265,9 @@ private extension MapView {
     @ViewBuilder
     var placeSearchOverlay: some View {
         if let current = locationProvider.current {
+            let factory: PlaceSearchStoreFactory = DIContainer.resolveOrDie()
             PlaceSearchOverlayView(
-                store: PlaceSearchStore(
-                    searchPlaces: SearchNearbyPlaceUseCaseImpl(
-                        placeRepository: NaverPlaceSearchRepositoryImpl(
-                            remote: SupabaseServiceImpl(network: NetworkClientImpl())
-                        )
-                    ),
+                store: factory.make(
                     userLocation: current,
                     onSelect: { place in
                         send(.selectPlace(place))
@@ -317,13 +300,11 @@ private extension MapView {
     }
 
     var timeLineListView: some View {
-        TimelineListView(
-            store: TimelineListStore(
+        let factory: TimelineListStoreFactory = DIContainer.resolveOrDie()
+
+        return TimelineListView(
+            store: factory.make(
                 initialMessages: store.state.selectedNoPlaceMessages,
-                fetchRecentMessagesUseCase: FetchRecentMessagesUseCaseImpl(
-                    repository: MessageRepositoryImpl()
-                ),
-                deleteMessagesUseCase: DeleteMessagesUseCaseImpl(messageRepository: MessageRepositoryImpl()),
                 onDeletedMessages: { _ in
                     send(.refreshVisibleMessages)
                 }

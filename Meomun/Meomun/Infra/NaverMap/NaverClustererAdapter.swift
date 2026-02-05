@@ -1,0 +1,66 @@
+//
+//  NaverClustererAdapter.swift
+//  Meomun
+//
+//  Created by 지연 on 2/4/26.
+//
+
+import Foundation
+import NMapsMap
+
+/// NMCClusterer를 ClustererProtocol로 감싼 어댑터
+final class NaverClustererAdapter: ClustererProtocol {
+
+    private let clusterer: NMCClusterer<ItemKey>
+    private var lastKeys: [ItemKey] = []
+
+    private let leafUpdater: NMCLeafMarkerUpdater
+    private let clusterUpdater: NMCClusterMarkerUpdater
+
+    init(
+        leafUpdater: NMCLeafMarkerUpdater,
+        clusterUpdater: NMCClusterMarkerUpdater
+    ) {
+        self.leafUpdater = leafUpdater
+        self.clusterUpdater = clusterUpdater
+
+        let builder = NMCBuilder<ItemKey>()
+        builder.leafMarkerUpdater = leafUpdater
+        builder.clusterMarkerUpdater = clusterUpdater
+        self.clusterer = builder.build()
+    }
+
+    func attach(to mapView: MapViewProtocol?) {
+        guard let mapView else {
+            clusterer.mapView = nil
+            return
+        }
+        guard let naver = mapView as? NaverMapViewAdapter else {
+            clusterer.mapView = nil
+            return
+        }
+        clusterer.mapView = naver.mapView
+    }
+
+    func clear() {
+        clusterer.clear()
+    }
+
+    func setItems(_ items: [ClusterItem]) {
+        if !lastKeys.isEmpty {
+            clusterer.removeAll(lastKeys)
+        }
+
+        var map: [ItemKey: NSObject] = [:]
+        map.reserveCapacity(items.count)
+
+        for item in items {
+            let pos = NMGLatLng(lat: item.coordinate.latitude, lng: item.coordinate.longitude)
+            let key = ItemKey(identifier: item.id, position: pos)
+            map[key] = item.tag
+        }
+
+        lastKeys = Array(map.keys)
+        clusterer.addAll(map)
+    }
+}
