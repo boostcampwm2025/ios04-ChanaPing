@@ -3,15 +3,15 @@
 ![iOS](https://img.shields.io/badge/iOS-18.0%2B-000000?style=for-the-badge&logo=apple&logoColor=white) ![Swift](https://img.shields.io/badge/Swift-6.0+-FA7343?style=for-the-badge&logo=swift&logoColor=white) ![Xcode](https://img.shields.io/badge/Xcode-26.0+-1575F9?style=for-the-badge&logo=Xcode&logoColor=white)
 
 
-
 <div align="center">
   <a href="https://apps.apple.com/kr/app/%EB%A8%B8%EB%AC%B8/id6758384170?itscg=30200&itsct=apps_box_badge&mttnsubad=6758384170" style="display: inline-block;">
-  <video src="https://github.com/user-attachments/assets/3b819e47-97ef-4b2e-9b13-0aa9b4e75d41" />
+<img width="1600" src="https://github.com/user-attachments/assets/8e72ab08-a36a-4465-8b3f-098f606ac771" />
   </a>
 </div>
 
 
 ## 📌 소개
+
 > **장소로 떠올리는 나의 기록**  
 > 내가 머문 공간을 기록하는 위치 기반 개인 기록 서비스 ‘머문’
 
@@ -23,11 +23,14 @@
 
 지도를 열면, 내가 머물렀던 모든 순간이 그 자리 그대로.
 
-
 </br>
 
 
 ## 📱 주요 기능
+
+  <img width="1600" src="https://github.com/user-attachments/assets/510cb629-b27f-4a86-83f5-8f16ee9a3c5e"/>
+
+</br>
 
 ### 기억을 남겨보세요 💬
 - 지금 있는 위치에 메시지를 남길 수 있어요.
