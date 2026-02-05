@@ -6,7 +6,7 @@
 
 <div align="center">
   <a href="https://apps.apple.com/kr/app/%EB%A8%B8%EB%AC%B8/id6758384170?itscg=30200&itsct=apps_box_badge&mttnsubad=6758384170" style="display: inline-block;">
-  <img src="https://toolbox.marketingtools.apple.com/api/v2/badges/download-on-the-app-store/black/en-us?releaseDate=1770163200" alt="Download on the App Store" style="width: 246px; height: 82px; vertical-align: middle; object-fit: contain;" />
+  <video src="https://github.com/user-attachments/assets/3b819e47-97ef-4b2e-9b13-0aa9b4e75d41" />
   </a>
 </div>
 
@@ -36,7 +36,7 @@
 
 | 위치로 남기기 | 장소로 남기기 |
 | --- | --- |
-| <video width="600" src="https://github.com/user-attachments/assets/98473dd4-eb28-460a-aa73-8cf2ce8620f6"> | <video width="600" src="https://github.com/user-attachments/assets/e0e664b6-8a64-46b3-9543-4737bd9a45f5"> |
+| <video width="600" src="https://github.com/user-attachments/assets/98473dd4-eb28-460a-aa73-8cf2ce8620f6"/> | <video width="600" src="https://github.com/user-attachments/assets/e0e664b6-8a64-46b3-9543-4737bd9a45f5"/> |
 
 ### 지도에서 장소를 탐색해보세요 🗺️
 - 지도 위에서 내 기록이 쌓인 장소들을 한눈에 확인할 수 있어요.
@@ -48,11 +48,11 @@
 
 | 지도 화면 | 쌓인 기록 열기 |
 | --- | --- |
-| <video width="600" src="https://github.com/user-attachments/assets/793d5d93-9004-4a0d-ba14-8bf62171a535"> | <video width="600" src="https://github.com/user-attachments/assets/36bd61aa-a708-4941-aba8-ddbdb3b99bde"> |
+| <video width="600" src="https://github.com/user-attachments/assets/793d5d93-9004-4a0d-ba14-8bf62171a535"/> | <video width="600" src="https://github.com/user-attachments/assets/36bd61aa-a708-4941-aba8-ddbdb3b99bde"/> |
 
 | 지도 탐색 | 장소 탐색 |
 | --- | --- |
-| <video width="600" src="https://github.com/user-attachments/assets/5ef382b1-46cf-42cb-8a30-3b4b4e512231"> | <video width="600" src="https://github.com/user-attachments/assets/da752a36-69ea-4a61-a809-6a7677578664"> |
+| <video width="600" src="https://github.com/user-attachments/assets/5ef382b1-46cf-42cb-8a30-3b4b4e512231"/> | <video width="600" src="https://github.com/user-attachments/assets/da752a36-69ea-4a61-a809-6a7677578664"/> |
 
 
 
@@ -61,7 +61,7 @@
 
 | 공간 화면 | 공간 메시지 삭제 |
 | --- | --- |
-| <video width="600" src="https://github.com/user-attachments/assets/76df3d3a-a04d-42ef-b363-f16c03dbac44"> | <video width="600" src="https://github.com/user-attachments/assets/bdca50b7-02fe-4596-9d63-217d2777ff0b"> |
+| <video width="600" src="https://github.com/user-attachments/assets/76df3d3a-a04d-42ef-b363-f16c03dbac44"/> | <video width="600" src="https://github.com/user-attachments/assets/bdca50b7-02fe-4596-9d63-217d2777ff0b"/> |
 
 
 ### 지난 기억을 따라가보세요 👣
@@ -71,18 +71,14 @@
 
 | 머물렀던 순간들 | 흔적 따라가기 |
 | --- | --- |
-| <video width="600" src="https://github.com/user-attachments/assets/c2fa2bf5-e2e0-46c5-aaca-683c4cd3bf17"> | <video width="600" src="https://github.com/user-attachments/assets/b9d77f07-74ea-4426-b91d-51bfd0e990a3"> |
+| <video width="600" src="https://github.com/user-attachments/assets/c2fa2bf5-e2e0-46c5-aaca-683c4cd3bf17"/> | <video width="600" src="https://github.com/user-attachments/assets/b9d77f07-74ea-4426-b91d-51bfd0e990a3"/> |
 
 </br>
 
 ## 🛠 기술 스택
-![SwiftUI](https://img.shields.io/badge/Swift_UI-0563D6?style=for-the-badge&logo=swift&logoColor=ffffff)
-![SwiftData](https://img.shields.io/badge/Swift_Data-678494?style=for-the-badge&logo=swift&logoColor=ffffff)
-![RealityKit](https://img.shields.io/badge/Reality_Kit-F2CA31?style=for-the-badge&logo=swift&logoColor=ffffff)
-![CoreLocation](https://img.shields.io/badge/Core_Location-C50FF0?style=for-the-badge&logo=swift&logoColor=ffffff)
+![SwiftUI](https://img.shields.io/badge/Swift_UI-0563D6?style=for-the-badge&logo=swift&logoColor=ffffff) ![SwiftData](https://img.shields.io/badge/Swift_Data-678494?style=for-the-badge&logo=swift&logoColor=ffffff) ![RealityKit](https://img.shields.io/badge/Reality_Kit-F2CA31?style=for-the-badge&logo=swift&logoColor=ffffff) ![CoreLocation](https://img.shields.io/badge/Core_Location-C50FF0?style=for-the-badge&logo=swift&logoColor=ffffff)
 
-![Naver Map SDK](https://img.shields.io/badge/Naver_Map_SDK-03C75A?style=for-the-badge&logo=naver&logoColor=ffffff)
-![Supabase](https://img.shields.io/badge/Supabase-3FCF8E?style=for-the-badge&logo=supabase&logoColor=ffffff)
+![Naver Map SDK](https://img.shields.io/badge/Naver_Map_SDK-03C75A?style=for-the-badge&logo=naver&logoColor=ffffff) ![Supabase](https://img.shields.io/badge/Supabase-3FCF8E?style=for-the-badge&logo=supabase&logoColor=ffffff)
 
 
 ### Architecture & Patterns
@@ -96,7 +92,7 @@
 **MVI 패턴**
 - Intent(사용자 인터랙션) → Action(상태 변경 트리거) → Reduce(상태 변경, 순수 함수) 기반의 단방향 데이터 플로우
 - MVVM의 상태 관리 복잡성을 해결
-- 디버깅 시 어떤 Intent가 어떤 State를 만들었는지 추적 가능
+- 디버깅 시 어떤 Intent가 어떤 State 상태 변화를 만들었는지 추적 용이
 
 </br>
 </br>
@@ -112,6 +108,6 @@
 
 ## 문의
 
-| 📧 Email | meomun.app@gamil.com |
+| 📧 Email | meomun.app@gmail.com |
 | --- | --- |
 | 📄 **Form** |[**문의 폼**](https://forms.gle/WcsNLJoGdDGmsLaUA) |
