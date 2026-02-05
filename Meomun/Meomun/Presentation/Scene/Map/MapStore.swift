@@ -327,10 +327,9 @@ final class MapStore: Store {
     }
 
     private func refreshHasAnyMessage() {
-        Task { [weak self] in
-            guard let self else { return }
+        Task { @MainActor in
             do {
-                let hasAny = try await self.hasAnyMessageUseCase.execute()
+                let hasAny = try await hasAnyMessageUseCase.execute()
                 state.hasAnyMessage = hasAny
             } catch {
                 state.hasAnyMessage = false

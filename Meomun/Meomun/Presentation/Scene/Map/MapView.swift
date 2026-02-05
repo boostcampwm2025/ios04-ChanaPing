@@ -20,6 +20,7 @@ struct MapView: View {
     @Environment(\.setTabBarHidden) private var setTabBarHidden
     @Environment(\.setNavBarHidden) private var setNavBarHidden
     @Environment(\.setSplashReady) private var setSplashReady
+    @Environment(\.isSplashVisible) private var isSplashVisible
 
     @State private var navigationPath = NavigationPath()
     @State private var selectedPlaceForSpace: Place?
@@ -52,16 +53,16 @@ struct MapView: View {
             }
             .overlay(alignment: .bottomTrailing) {
                 ZStack(alignment: .bottomTrailing) {
-                    writeButton
-                        .padding(.bottom, MMLayout.tabBarBottomOffset)
-
-                    if store.state.messages.isEmpty {
+                    if !isSplashVisible && !store.state.hasAnyMessage {
                         Color.clear
                             .frame(width: 50, height: 50)
                             .padding(.trailing, 90)
                             .padding(.bottom, MMLayout.tabBarBottomOffset + 28)
                             .popoverTip(MapPlaceConceptTip())
                     }
+
+                    writeButton
+                        .padding(.bottom, MMLayout.tabBarBottomOffset)
                 }
             }
             .overlay(alignment: .bottom) {

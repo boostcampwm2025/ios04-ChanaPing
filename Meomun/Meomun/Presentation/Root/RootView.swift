@@ -30,6 +30,7 @@ struct RootView: View {
                 MainTabShellView()
                     .environmentObject(locationProvider)
                     .environment(\.setSplashReady, markMapReady)
+                    .environment(\.isSplashVisible, showSplash)
                     .ignoresSafeArea(.keyboard)
                     .overlay {
                         if store.state.showLocationAlert {
