@@ -63,33 +63,61 @@ private extension SpaceMaterialConfigurator {
         configure: (inout ShaderGraphMaterial) throws -> Void
     ) {
         guard let surfaceEntity = parent.findEntity(named: surfaceName) else {
-            AppLog.warn(
-                "Surface entity '\(surfaceName)' not found",
-                category: category
-            )
+            AppLog.warn("Surface entity '\(surfaceName)' not found", category: category)
             return
         }
 
-        guard
-            let model = surfaceEntity.components[ModelComponent.self],
-            var material = model.materials.first as? ShaderGraphMaterial
-        else {
-            AppLog.warn(
-                "ShaderGraphMaterial not found on '\(surfaceName)'",
-                category: category
-            )
+        guard var model = surfaceEntity.components[ModelComponent.self] else {
+            AppLog.warn("ModelComponent not found on '\(surfaceName)'", category: category)
+            return
+        }
+
+        guard var material = model.materials.first as? ShaderGraphMaterial else {
+            AppLog.warn("ShaderGraphMaterial not found on '\(surfaceName)'", category: category)
             return
         }
 
         do {
             try configure(&material)
-            surfaceEntity.components[ModelComponent.self]?.materials = [material]
+
+            model.materials = [material]
+            surfaceEntity.components.set(model)
         } catch {
             AppLog.error(
                 "Failed to configure material on '\(surfaceName)'",
                 category: category,
                 error: error
             )
+        }
+    }
+}
+
+extension SpaceMaterialConfigurator {
+    func setMessageGlowColor(messageEntity: Entity, color: UIColor) {
+        guard let target = messageEntity
+            .findEntity(named: "Message")?
+            .findEntity(named: "Message") as? ModelEntity
+            ?? messageEntity.findEntity(named: "Message") as? ModelEntity
+        else {
+            AppLog.warn("Target ModelEntity not found under \(messageEntity.name)", category: .space)
+            return
+        }
+
+        guard var model = target.components[ModelComponent.self] else {
+            AppLog.warn("ModelComponent not found on target", category: .space)
+            return
+        }
+        guard var material = model.materials.first as? ShaderGraphMaterial else {
+            AppLog.warn("ShaderGraphMaterial not found on target", category: .space)
+            return
+        }
+
+        do {
+            try material.setParameter(name: "GlowColor", value: .color(color))
+            model.materials = [material]
+            target.components.set(model)
+        } catch {
+            AppLog.error("Failed set GlowColor", category: .space, error: error)
         }
     }
 }
