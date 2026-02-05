@@ -15,7 +15,12 @@ fileprivate enum Constants {
 
 struct MainTabShellView: View {
     @StateObject private var mapStore = MapStore(
-        getNearbyMessagesUseCase: GetNearbyMessagesUseCaseImpl(messageRepository: MessageRepositoryImpl()),
+        getNearbyMessagesUseCase: GetNearbyMessagesUseCaseImpl(
+            messageRepository: MessageRepositoryImpl()
+        ),
+        hasAnyMessageUseCase: HasAnyMessageUseCaseImpl(
+            messageRepository: MessageRepositoryImpl()
+        ),
         networkMonitor: NetworkMonitor()
     )
 

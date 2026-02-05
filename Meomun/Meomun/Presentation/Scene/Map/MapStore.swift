@@ -61,6 +61,7 @@ final class MapStore: Store {
 
     struct State {
         var messages: [Message] = []
+        var hasAnyMessage: Bool = false
         var cameraSnapshot: MapCameraSnapshot?
 
         var cameraCoordinate: Coordinate?
@@ -87,14 +88,17 @@ final class MapStore: Store {
 
     private var getNearbyMessageTask: Task<Void, Never>?
     private let getNearbyMessagesUseCase: GetNearbyMessagesUseCase
+    private let hasAnyMessageUseCase: HasAnyMessageUseCase
     private let networkMonitor: NetworkMonitoring
 
     init(
         getNearbyMessagesUseCase: GetNearbyMessagesUseCase,
+        hasAnyMessageUseCase: HasAnyMessageUseCase,
         networkMonitor: NetworkMonitoring
     ) {
         self.state = State()
         self.getNearbyMessagesUseCase = getNearbyMessagesUseCase
+        self.hasAnyMessageUseCase = hasAnyMessageUseCase
         self.networkMonitor = networkMonitor
     }
 
@@ -150,6 +154,7 @@ final class MapStore: Store {
                     bounds: boundingBox,
                     continuation: continuation
                 )
+                self.refreshHasAnyMessage()
                 return
 
             case .cameraChangedByLocation(let coordinate, let boundingBox, let snapshot):
@@ -317,6 +322,18 @@ final class MapStore: Store {
 
                 AppLog.error("Failed to fetch nearby messages", category: .store, error: error)
                 continuation.yield(.setError(error.localizedDescription))
+            }
+        }
+    }
+
+    private func refreshHasAnyMessage() {
+        Task { [weak self] in
+            guard let self else { return }
+            do {
+                let hasAny = try await self.hasAnyMessageUseCase.execute()
+                state.hasAnyMessage = hasAny
+            } catch {
+                state.hasAnyMessage = false
             }
         }
     }

@@ -51,12 +51,18 @@ struct MapView: View {
                     .ignoresSafeArea()
             }
             .overlay(alignment: .bottomTrailing) {
-                writeButton
-                    .padding(.bottom, MMLayout.tabBarBottomOffset)
-            }
-            .overlay(alignment: .top) {
-                MapPlaceConceptTipView()
-                    .padding(.top, MMLayout.belowNavigationToolbarOffset)
+                ZStack(alignment: .bottomTrailing) {
+                    writeButton
+                        .padding(.bottom, MMLayout.tabBarBottomOffset)
+
+                    if store.state.messages.isEmpty {
+                        Color.clear
+                            .frame(width: 50, height: 50)
+                            .padding(.trailing, 90)
+                            .padding(.bottom, MMLayout.tabBarBottomOffset + 28)
+                            .popoverTip(MapPlaceConceptTip())
+                    }
+                }
             }
             .overlay(alignment: .bottom) {
                 if !store.state.carouselItems.isEmpty {
@@ -359,24 +365,4 @@ private extension MapView {
             }
         )
     }
-}
-
-#Preview {
-    let rotationAnimator = MessageRotationAnimator()
-    let bubbleImageRenderer = BubbleImageRenderer()
-    let messageMarkerManager = MessageMarkerManager(
-        rotationAnimator: rotationAnimator,
-        bubbleImageRenderer: bubbleImageRenderer
-    )
-
-    return MapView(
-        store: MapStore(
-            getNearbyMessagesUseCase: GetNearbyMessagesUseCaseImpl(
-                messageRepository: MessageRepositoryImpl(storage: MessageInMemoryStorage.shared)
-            ),
-            networkMonitor: NetworkMonitor()
-        ),
-        messageMarkerManager: messageMarkerManager
-    )
-    .environmentObject(LocationProvider())
 }
