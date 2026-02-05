@@ -1,10 +1,11 @@
 import UIKit
 
+// swiftlint:disable file_length
+
 // MARK: - MessageMarkerManager
 /// 지도 상의 메시지 마커를 생성/갱신하고, 클러스터 모드 및 버블 애니메이션을 제어합니다.
 /// - Snapshot diff 기반으로 마커를 최소 갱신
 /// - 클러스터 모드에서는 개별 마커를 숨기고 clusterer에 items를 위임
-
 @MainActor
 final class MessageMarkerManager: MarkerAttaching {
 
@@ -75,7 +76,6 @@ final class MessageMarkerManager: MarkerAttaching {
 
         // MarkerRegistry는 Attacher를 통해 attach/detach 규칙을 위임받음
         registry.setAttacher(self)
-        AppLog.debug("[MarkerManager] initialized", category: .location)
     }
 }
 

@@ -146,6 +146,10 @@ extension SpaceController {
         )
     }
 
+    func selectMessage(_ messageID: MessageID?) {
+        bubbleSynchronizer.applySelection(selectedID: messageID)
+    }
+
     private func trySyncIfPossible() {
         guard let root = spaceRootEntity else { return }
         guard let template = messageBubbleTemplateEntity else { return }

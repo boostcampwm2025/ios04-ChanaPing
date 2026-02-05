@@ -162,6 +162,9 @@ struct SpaceView: View {
                 guard let newValue else { return }
                 spaceController.update(domeEnvironment: newValue)
             }
+            .onChange(of: store.state.selectedMessageID) { _, newValue in
+                spaceController.selectMessage(newValue)
+            }
             .opacity(appearOpacity)
             .onAppear {
                 withAnimation(.easeInOut(duration: 0.25)) {
@@ -214,7 +217,7 @@ extension SpaceView {
             if store.state.selectedMessageID != nil {
                 HStack {
                     Button { send(.selectMessage(nil)) } label: {
-                        Text("취소")
+                        Text("선택 취소")
                             .font(.headline)
                             .foregroundStyle(Color.mmTextBrand)
                             .padding(.horizontal, 16)
@@ -224,7 +227,7 @@ extension SpaceView {
 
                     if let messageID = store.state.selectedMessageID {
                         Button { send(.requestDeleteMessage(messageID)) } label: {
-                            Text("삭제")
+                            Text("선택 삭제")
                                 .font(.headline)
                                 .foregroundStyle(Color.red)
                                 .padding(.horizontal, 24)
