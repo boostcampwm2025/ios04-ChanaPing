@@ -10,6 +10,7 @@ import RealityKit
 @MainActor
 final class SpaceMessageBubbleSynchronizer {
     private var bubbleRootByID: [MessageID: Entity] = [:]
+    private var placementByID: [MessageID: BubblePlacementRecord] = [:]
     private let factory: SpaceMessageBubbleFactory
 
     init(factory: SpaceMessageBubbleFactory = .init()) {
@@ -41,17 +42,48 @@ final class SpaceMessageBubbleSynchronizer {
         root: Entity,
         templateEntity: Entity
     ) {
+        let bubblePlacer = BubblePlacer()
+
+        let multiplier = factory.bubbleUniformMultiplier(message: message, templateEntity: templateEntity)
+        let finalScale = SpaceBubbleLayoutPolicy.baseBubbleScale * multiplier
+
+        let collisionBoxSize = SIMD3<Float>(
+            repeating: 0.3 * finalScale / SpaceBubbleLayoutPolicy.baseBubbleScale
+        )
+        let radius = BubbleCollisionRadiusCalculator.radius(fromBoxSize: collisionBoxSize)
+
+        let existing = Array(placementByID.values)
+
+        let position = bubblePlacer.randomNonOverlappingPositionInsideHemisphere(
+            radiusRange: SpaceBubblePositionPolicy.minRadius...SpaceBubblePositionPolicy.maxRadius,
+            yRange: SpaceBubblePositionPolicy.minYPosition...SpaceBubblePositionPolicy.maxYPosition,
+            minimumDistanceFromCenter: SpaceBubblePositionPolicy.minDistanceFromCenter,
+            minimumDistanceFromViewAxis: SpaceBubblePositionPolicy.minDistanceFromViewAxis,
+            maxAttempts: SpaceBubblePositionPolicy.maxAttempts,
+            requiredRadius: radius,
+            existing: existing,
+            spacing: SpaceBubblePositionPolicy.minBubbleSpacing
+        )
+
         let bubbleRoot = factory.makeBubbleRoot(
             message: message,
-            templateEntity: templateEntity
+            templateEntity: templateEntity,
+            position: position
         )
+
         root.addChild(bubbleRoot)
         bubbleRootByID[message.id] = bubbleRoot
+        placementByID[message.id] = BubblePlacementRecord(
+            messageID: message.id,
+            position: position,
+            radius: radius
+        )
     }
 
     private func removeMessage(id: MessageID) {
         guard let entity = bubbleRootByID[id] else { return }
         entity.removeFromParent()
         bubbleRootByID[id] = nil
+        placementByID[id] = nil
     }
 }
