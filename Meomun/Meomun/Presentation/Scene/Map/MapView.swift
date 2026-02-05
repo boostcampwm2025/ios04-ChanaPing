@@ -162,6 +162,7 @@ struct MapView: View {
             .transaction { $0.disablesAnimations = true }
             .sheet(isPresented: isTimelineListPresentedBinding) {
                 timeLineListView
+                    .background(Color.mmBackground)
                     .presentationDetents(.init(arrayLiteral: .medium, .large))
                     .presentationDragIndicator(.visible)
             }
