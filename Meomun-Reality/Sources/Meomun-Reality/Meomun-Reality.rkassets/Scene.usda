@@ -12,7 +12,7 @@ reorder rootPrims = ["Root", "WaterMaterial"]
 
 def Xform "Root"
 {
-    def "Message" (
+    def "MessageRoot" (
         active = true
         references = @Message.usdz@
     )
@@ -33,14 +33,14 @@ def Xform "Root"
         )
         {
             reorder nameChildren = ["Material", "GroundingShadow", "Message_01"]
-            rel material:binding = </Root/Message/Message/Message_01> (
+            rel material:binding = </Root/MessageRoot/Message/Message_01> (
                 bindMaterialAs = "weakerThanDescendants"
             )
 
             over "Material"
             {
                 reorder nameChildren = ["Heartbeat", "PreviewSurface", "UnlitSurface", "FrenselMask"]
-                token outputs:mtlx:surface.connect = </Root/Message/Message/Material/PreviewSurface.outputs:out>
+                token outputs:mtlx:surface.connect = </Root/MessageRoot/Message/Material/PreviewSurface.outputs:out>
                 float2 ui:nodegraph:realitykit:subgraphOutputs:pos = (335.5, 100.5)
                 int ui:nodegraph:realitykit:subgraphOutputs:stackingOrder = 875
 
@@ -79,12 +79,12 @@ def Xform "Root"
                         }
                     }
                 )
-                color3f inputs:GlowColor = (0.27679446, 0.6000156, 0.741804) (
+                color3f inputs:GlowColor = (0.2784314, 0.6, 0.7411765) (
                     colorSpace = "srgb_texture"
                     customData = {
                         dictionary realitykit = {
                             float2 positionInSubgraph = (486, 27.5)
-                            int stackingOrderInSubgraph = 1731
+                            int stackingOrderInSubgraph = 1964
                         }
                     }
                 )
@@ -112,7 +112,7 @@ def Xform "Root"
                         }
                     }
                 )
-                token outputs:mtlx:surface.connect = </Root/Message/Message/Message_01/PreviewSurface.outputs:out>
+                token outputs:mtlx:surface.connect = </Root/MessageRoot/Message/Message_01/PreviewSurface.outputs:out>
                 token outputs:realitykit:vertex
                 float2 ui:nodegraph:realitykit:subgraphOutputs:pos = (1189.5, 169.5)
                 int ui:nodegraph:realitykit:subgraphOutputs:stackingOrder = 1881
@@ -123,7 +123,7 @@ def Xform "Root"
                     color3f inputs:diffuseColor = (1, 1, 1) (
                         colorSpace = "srgb_texture"
                     )
-                    color3f inputs:emissiveColor.connect = </Root/Message/Message/Message_01/Multiply_4.outputs:out>
+                    color3f inputs:emissiveColor.connect = </Root/MessageRoot/Message/Message_01/Multiply_4.outputs:out>
                     float inputs:ior
                     float inputs:metallic
                     float3 inputs:normal
@@ -145,8 +145,8 @@ def Xform "Root"
                             }
                         }
                     )
-                    float inputs:FrenselPower.connect = </Root/Message/Message/Message_01.inputs:FresnelPower>
-                    float outputs:FresnelMask_out.connect = </Root/Message/Message/Message_01/FrenselMask/FresnelMask.outputs:out>
+                    float inputs:FrenselPower.connect = </Root/MessageRoot/Message/Message_01.inputs:FresnelPower>
+                    float outputs:FresnelMask_out.connect = </Root/MessageRoot/Message/Message_01/FrenselMask/FresnelMask.outputs:out>
                     float2 ui:nodegraph:node:pos = (486, 460.5)
                     int ui:nodegraph:node:stackingOrder = 1940
                     float2 ui:nodegraph:realitykit:subgraphOutputs:pos = (1037.8086, 77.71484)
@@ -163,7 +163,7 @@ def Xform "Root"
                     def Shader "Oneminus"
                     {
                         uniform token info:id = "ND_realitykit_oneminus_float"
-                        float inputs:in.connect = </Root/Message/Message/Message_01/FrenselMask/DotProduct.outputs:out>
+                        float inputs:in.connect = </Root/MessageRoot/Message/Message_01/FrenselMask/DotProduct.outputs:out>
                         float outputs:out
                         float2 ui:nodegraph:node:pos = (589, 57.5)
                         int ui:nodegraph:node:stackingOrder = 846
@@ -182,8 +182,8 @@ def Xform "Root"
                     def Shader "FresnelMask"
                     {
                         uniform token info:id = "ND_power_float"
-                        float inputs:in1.connect = </Root/Message/Message/Message_01/FrenselMask/Oneminus.outputs:out>
-                        float inputs:in2.connect = </Root/Message/Message/Message_01/FrenselMask.inputs:FrenselPower>
+                        float inputs:in1.connect = </Root/MessageRoot/Message/Message_01/FrenselMask/Oneminus.outputs:out>
+                        float inputs:in2.connect = </Root/MessageRoot/Message/Message_01/FrenselMask.inputs:FrenselPower>
                         float outputs:out
                         float2 ui:nodegraph:node:pos = (818.5, 81.5)
                         int ui:nodegraph:node:stackingOrder = 846
@@ -192,8 +192,8 @@ def Xform "Root"
                     def Shader "DotProduct"
                     {
                         uniform token info:id = "ND_dotproduct_vector3"
-                        float3 inputs:in1.connect = </Root/Message/Message/Message_01/FrenselMask/Normal.outputs:out>
-                        float3 inputs:in2.connect = </Root/Message/Message/Message_01/FrenselMask/ViewDirection.outputs:out>
+                        float3 inputs:in1.connect = </Root/MessageRoot/Message/Message_01/FrenselMask/Normal.outputs:out>
+                        float3 inputs:in2.connect = </Root/MessageRoot/Message/Message_01/FrenselMask/ViewDirection.outputs:out>
                         float outputs:out
                         float2 ui:nodegraph:node:pos = (359.5, 57.5)
                         int ui:nodegraph:node:stackingOrder = 846
@@ -210,8 +210,8 @@ def Xform "Root"
                             }
                         }
                     )
-                    float inputs:TimeSpeed.connect = </Root/Message/Message/Message_01.inputs:TimeSpeed>
-                    float outputs:Add_out.connect = </Root/Message/Message/Message_01/Heartbeat/Add.outputs:out>
+                    float inputs:TimeSpeed.connect = </Root/MessageRoot/Message/Message_01.inputs:TimeSpeed>
+                    float outputs:Add_out.connect = </Root/MessageRoot/Message/Message_01/Heartbeat/Add.outputs:out>
                     float2 ui:nodegraph:node:pos = (275.5, 202.5)
                     int ui:nodegraph:node:stackingOrder = 1940
                     float2 ui:nodegraph:realitykit:subgraphOutputs:pos = (797, 57.5)
@@ -227,8 +227,8 @@ def Xform "Root"
                     def Shader "Multiply"
                     {
                         uniform token info:id = "ND_multiply_float"
-                        float inputs:in1.connect = </Root/Message/Message/Message_01/Heartbeat/Time.outputs:out>
-                        float inputs:in2.connect = </Root/Message/Message/Message_01/Heartbeat.inputs:TimeSpeed>
+                        float inputs:in1.connect = </Root/MessageRoot/Message/Message_01/Heartbeat/Time.outputs:out>
+                        float inputs:in2.connect = </Root/MessageRoot/Message/Message_01/Heartbeat.inputs:TimeSpeed>
                         float outputs:out
                         float2 ui:nodegraph:node:pos = (232.5, 57.5)
                         int ui:nodegraph:node:stackingOrder = 877
@@ -237,7 +237,7 @@ def Xform "Root"
                     def Shader "Add"
                     {
                         uniform token info:id = "ND_add_float"
-                        float inputs:in1.connect = </Root/Message/Message/Message_01/Heartbeat/Multiply_1.outputs:out>
+                        float inputs:in1.connect = </Root/MessageRoot/Message/Message_01/Heartbeat/Multiply_1.outputs:out>
                         float inputs:in2 = 0.5
                         float outputs:out
                         float2 ui:nodegraph:node:pos = (646.5, 57.5)
@@ -247,7 +247,7 @@ def Xform "Root"
                     def Shader "Sin"
                     {
                         uniform token info:id = "ND_sin_float"
-                        float inputs:in.connect = </Root/Message/Message/Message_01/Heartbeat/Multiply.outputs:out>
+                        float inputs:in.connect = </Root/MessageRoot/Message/Message_01/Heartbeat/Multiply.outputs:out>
                         float outputs:out
                         float2 ui:nodegraph:node:pos = (380.5, 57.5)
                         int ui:nodegraph:node:stackingOrder = 877
@@ -256,7 +256,7 @@ def Xform "Root"
                     def Shader "Multiply_1"
                     {
                         uniform token info:id = "ND_multiply_float"
-                        float inputs:in1.connect = </Root/Message/Message/Message_01/Heartbeat/Sin.outputs:out>
+                        float inputs:in1.connect = </Root/MessageRoot/Message/Message_01/Heartbeat/Sin.outputs:out>
                         float inputs:in2 = 0.4
                         float outputs:out
                         float2 ui:nodegraph:node:pos = (528.5, 57.5)
@@ -270,8 +270,8 @@ def Xform "Root"
                 )
                 {
                     uniform token info:id = "ND_multiply_color3FA"
-                    color3f inputs:in1.connect = </Root/Message/Message/Message_01/Multiply.outputs:out>
-                    float inputs:in2.connect = </Root/Message/Message/Message_01/Multiply_3.outputs:out>
+                    color3f inputs:in1.connect = </Root/MessageRoot/Message/Message_01/Multiply.outputs:out>
+                    float inputs:in2.connect = </Root/MessageRoot/Message/Message_01/Multiply_3.outputs:out>
                     color3f outputs:out
                     float2 ui:nodegraph:node:pos = (765.5, 169.5)
                     int ui:nodegraph:node:stackingOrder = 1731
@@ -280,8 +280,8 @@ def Xform "Root"
                 def Shader "Multiply"
                 {
                     uniform token info:id = "ND_multiply_color3FA"
-                    color3f inputs:in1.connect = </Root/Message/Message/Message_01.inputs:GlowColor>
-                    float inputs:in2.connect = </Root/Message/Message/Message_01.inputs:GlowOpacity>
+                    color3f inputs:in1.connect = </Root/MessageRoot/Message/Message_01.inputs:GlowColor>
+                    float inputs:in2.connect = </Root/MessageRoot/Message/Message_01.inputs:GlowOpacity>
                     color3f outputs:out
                     float2 ui:nodegraph:node:pos = (648.5, 57.5)
                     int ui:nodegraph:node:stackingOrder = 1731
@@ -292,8 +292,8 @@ def Xform "Root"
                 )
                 {
                     uniform token info:id = "ND_multiply_float"
-                    float inputs:in1.connect = </Root/Message/Message/Message_01.inputs:GlowIntensity>
-                    float inputs:in2.connect = </Root/Message/Message/Message_01/Heartbeat.outputs:Add_out>
+                    float inputs:in1.connect = </Root/MessageRoot/Message/Message_01.inputs:GlowIntensity>
+                    float inputs:in2.connect = </Root/MessageRoot/Message/Message_01/Heartbeat.outputs:Add_out>
                     float outputs:out
                     float2 ui:nodegraph:node:pos = (486, 248)
                     int ui:nodegraph:node:stackingOrder = 1940
@@ -304,8 +304,8 @@ def Xform "Root"
                 )
                 {
                     uniform token info:id = "ND_multiply_float"
-                    float inputs:in1.connect = </Root/Message/Message/Message_01/Multiply_2.outputs:out>
-                    float inputs:in2.connect = </Root/Message/Message/Message_01/FrenselMask.outputs:FresnelMask_out>
+                    float inputs:in1.connect = </Root/MessageRoot/Message/Message_01/Multiply_2.outputs:out>
+                    float inputs:in2.connect = </Root/MessageRoot/Message/Message_01/FrenselMask.outputs:FresnelMask_out>
                     float outputs:out
                     float2 ui:nodegraph:node:pos = (648.5, 317.5)
                     int ui:nodegraph:node:stackingOrder = 1940
