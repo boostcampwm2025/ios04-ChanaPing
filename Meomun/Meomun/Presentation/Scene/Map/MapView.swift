@@ -55,9 +55,9 @@ struct MapView: View {
                 ZStack(alignment: .bottomTrailing) {
                     if !isSplashVisible && !store.state.hasAnyMessage {
                         Color.clear
-                            .frame(width: 50, height: 50)
-                            .padding(.trailing, 90)
-                            .padding(.bottom, MMLayout.tabBarBottomOffset + 28)
+                            .frame(width: 50, height: 1)
+                            .padding(.trailing, 120)
+                            .padding(.bottom, MMLayout.tabBarBottomOffset + 90)
                             .popoverTip(MapPlaceConceptTip())
                     }
 

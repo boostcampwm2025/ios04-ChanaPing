@@ -8,15 +8,6 @@
 import SwiftUI
 import TipKit
 
-struct MapPlaceConceptTipView: View {
-    var body: some View {
-        TipView(MapPlaceConceptTip())
-            .padding(.top, 12)
-            .padding(.horizontal, 16)
-            .shadow(color: .black.opacity(0.12), radius: 18, x: 0, y: 6)
-    }
-}
-
 struct MapPlaceConceptTip: Tip {
     @Parameter static var isReady: Bool = false
 
@@ -25,7 +16,7 @@ struct MapPlaceConceptTip: Tip {
     }
 
     var message: Text? {
-        Text("지금 떠오르는 말 그대로 적어보아요.")
+        Text("남긴 메시지를 눌러 그 장소의 기록을\n모아보아요!")
     }
 
     var rules: [Rule] {
