@@ -7,11 +7,19 @@
 
 import RealityKit
 import SwiftUI
+import CoreMotion
 
 @MainActor
 final class SpaceController {
     private var domeEnvironment: DomeEnvironment?
     private var rotationCamera: RotationCamera
+
+    // MARK: - Gyro
+    private let motionManager = CMMotionManager()
+    private var isGyroEnabled: Bool = false
+    private var gyroBaseAttitude: simd_quatf?
+    private var gyroBaseCameraOrientation: simd_quatf?
+    private var gyroUpdateTask: Task<Void, Never>?
 
     private var spaceRootEntity: Entity?
     private var messageBubbleTemplateEntity: Entity?
@@ -37,6 +45,11 @@ final class SpaceController {
         self.rotationCamera = rotationCamera
         self.bubbleSynchronizer = SpaceMessageBubbleSynchronizer()
         self.materialConfigurator = SpaceMaterialConfigurator()
+    }
+
+    deinit {
+        motionManager.stopDeviceMotionUpdates()
+        gyroUpdateTask?.cancel()
     }
 
     // MARK: - Space Setup
@@ -188,17 +201,75 @@ extension SpaceController {
 extension SpaceController {
     func handleDrag(_ translation: CGSize) {
         rotationCamera.handleDrag(
-            translationX: Float(
-                translation.width
-            ),
-            translationY: Float(
-                translation.height
-            )
+            translationX: Float(translation.width),
+            translationY: Float(translation.height)
         )
     }
 
     func endDrag() {
         rotationCamera.endDrag()
+    }
+
+    func setGyroEnabled(_ isEnabled: Bool) {
+        guard isEnabled != isGyroEnabled else { return }
+        isGyroEnabled = isEnabled
+
+        if isEnabled {
+            startGyroUpdates()
+        } else {
+            stopGyroUpdates()
+
+            rotationCamera.syncDragAnglesFromCurrentOrientation()
+        }
+    }
+
+    private func startGyroUpdates() {
+        guard motionManager.isDeviceMotionAvailable else {
+            AppLog.debug("DeviceMotion 비활성화 상태 (혹은 시뮬레이터)", category: .space)
+            return
+        }
+
+        // Baseline 초기화
+        gyroBaseAttitude = nil
+        gyroBaseCameraOrientation = rotationCamera.orientation
+
+        motionManager.deviceMotionUpdateInterval = 1.0 / 60.0
+        motionManager.startDeviceMotionUpdates(using: .xArbitraryZVertical)
+
+        gyroUpdateTask?.cancel()
+        gyroUpdateTask = Task { [weak self] in
+            guard let self else { return }
+
+            while !Task.isCancelled {
+                if let attitude = self.motionManager.deviceMotion?.attitude {
+                    let current = self.simdQuat(from: attitude.quaternion)
+
+                    if self.gyroBaseAttitude == nil {
+                        self.gyroBaseAttitude = current
+                    } else if let baseAttitude = self.gyroBaseAttitude,
+                              let baseCamera = self.gyroBaseCameraOrientation {
+                        let delta = current * baseAttitude.inverse
+                        let target = baseCamera * delta
+
+                        self.rotationCamera.setOrientation(target)
+                    }
+                }
+
+                try? await Task.sleep(for: .milliseconds(16))
+            }
+        }
+    }
+
+    private func stopGyroUpdates() {
+        gyroUpdateTask?.cancel()
+        gyroUpdateTask = nil
+        gyroBaseAttitude = nil
+        gyroBaseCameraOrientation = nil
+        motionManager.stopDeviceMotionUpdates()
+    }
+
+    private func simdQuat(from quat: CMQuaternion) -> simd_quatf {
+        simd_quatf(ix: Float(quat.x), iy: Float(quat.y), iz: Float(quat.z), r: Float(quat.w))
     }
 }
 
