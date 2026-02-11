@@ -23,7 +23,9 @@ final class RotationCamera {
     /// 회전 감도 조절을 위한 상수 (값이 클수록 빠르게 회전)
     private let sensitivity: Float
 
+    /// 카메라 위치, 카메라가 바라보는 방향
     var position: SIMD3<Float> { camera.position }
+    var orientation: simd_quatf { camera.orientation }
 
     init(
         position: SIMD3<Float>,
@@ -38,6 +40,11 @@ final class RotationCamera {
         content.add(camera)
     }
 
+    /// 카메라가 바라보는 방향을 설정합니다
+    func setOrientation(_ orientation: simd_quatf) {
+        camera.orientation = orientation
+    }
+
     /// 드래그 입력을 처리하여 카메라를 회전시킵니다
     func handleDrag(translationX: Float, translationY: Float) {
         let deltaX = translationX - lastTranslation.x
@@ -50,6 +57,23 @@ final class RotationCamera {
 
     /// 드래그가 끝났을 때 호출합니다
     func endDrag() {
+        lastTranslation = (0, 0)
+    }
+
+    /// 현재 카메라 orientation으로부터 forward 벡터를 뽑아 yaw/pitch를 역산하여 내부 상태를 동기화합니다
+    func syncDragAnglesFromCurrentOrientation() {
+        let matrix = camera.transform.matrix
+        let forward = simd_normalize(SIMD3<Float>(
+            -matrix.columns.2.x,
+            -matrix.columns.2.y,
+            -matrix.columns.2.z
+            ))
+
+        yaw = atan2(forward.x, forward.z)
+
+        let rawPitch = asin(max(-1, min(1, forward.y)))
+        pitch = max(0, min(Float.pi / 2, rawPitch))
+
         lastTranslation = (0, 0)
     }
 
