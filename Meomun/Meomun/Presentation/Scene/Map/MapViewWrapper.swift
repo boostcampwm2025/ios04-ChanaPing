@@ -64,6 +64,9 @@ struct MapViewWrapper: UIViewControllerRepresentable {
         var lastMessagesSnapshot: Int?
         var lastCameraMoveTarget: MapCameraMoveCommand?
         var didInitialLoad = false
+
+        var lastUserLocation: Coordinate?
+        var lastIsFollowingUser: Bool?
     }
 
     func makeUIViewController(context: Context) -> MapViewController {
@@ -90,17 +93,41 @@ struct MapViewWrapper: UIViewControllerRepresentable {
     }
 
     func updateUIViewController(_ uiViewController: MapViewController, context: Context) {
-        uiViewController.setFollowingUser(isFollowingUser)
-        uiViewController.setTiltEnabled(isTiltOn, animated: true)
-
-        // 추적 상태에 따라 위치 반영
-        if isFollowingUser {
-            uiViewController.updateUserLocation(userLocation)
-        } else {
-            // 추적 해제 모드 시 파란점만 유지하고 카메라는 안 움직이도록 설정
-            uiViewController.updateUserLocationOverlayOnly(userLocation)
+        // 1) following 상태 변경 diff
+        if context.coordinator.lastIsFollowingUser != isFollowingUser {
+            context.coordinator.lastIsFollowingUser = isFollowingUser
+            uiViewController.setFollowingUser(isFollowingUser)
         }
 
+        // 2) 틸트는 바뀔 때만
+        uiViewController.setTiltEnabled(isTiltOn, animated: true)
+
+        // 3) 위치 업데이트 diff
+        let didUserLocationChange: Bool = {
+            guard let new = userLocation else { return false }
+            guard let old = context.coordinator.lastUserLocation else { return true }
+
+            // Coordinate가 Equatable이면 그냥 new != old
+            // 아니면 오차 허용 비교 (GPS 튐 방지)
+            return abs(new.latitude - old.latitude) > 0.00001
+            || abs(new.longitude - old.longitude) > 0.00001
+        }()
+
+        let didFollowingChange = (context.coordinator.lastIsFollowingUser != isFollowingUser)
+
+        if didUserLocationChange || didFollowingChange {
+            context.coordinator.lastUserLocation = userLocation
+
+            // 추적 상태에 따라 위치 반영
+            if isFollowingUser {
+                uiViewController.updateUserLocation(userLocation)
+            } else {
+                // 추적 해제 모드 시 파란점만 유지하고 카메라는 안 움직이도록 설정
+                uiViewController.updateUserLocationOverlayOnly(userLocation)
+            }
+        }
+
+        // 4) cameraMoveTarget diff
         if let target = cameraMoveTarget, context.coordinator.lastCameraMoveTarget != target {
             // 동일 target인 경우 호출 X
             context.coordinator.lastCameraMoveTarget = target
@@ -114,6 +141,7 @@ struct MapViewWrapper: UIViewControllerRepresentable {
             }
         }
 
+        // 5) messages diff
         let snap = messagesSnapshot(messages)
 
         // 동일 메시지인 경우 loadMessages() 호출 X
