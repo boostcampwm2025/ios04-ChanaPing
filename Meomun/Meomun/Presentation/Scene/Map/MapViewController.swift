@@ -290,6 +290,28 @@ extension MapViewController {
             heading: position.heading
         )
     }
+
+    func setTiltEnabled(_ enabled: Bool, animated: Bool = true) {
+        let mapView = naverMapView.mapView
+        let current = mapView.cameraPosition
+
+        let targetTilt: Double = enabled ? 45.0 : 0.0
+
+        if abs(current.tilt - targetTilt) < 0.1 { return }
+
+        let newPosition = NMFCameraPosition(
+            current.target,
+            zoom: current.zoom,
+            tilt: targetTilt,
+            heading: current.heading
+        )
+
+        let update = NMFCameraUpdate(position: newPosition)
+        update.animation = animated ? .easeIn : .none
+        update.animationDuration = animated ? 0.25 : 0
+
+        mapView.moveCamera(update)
+    }
 }
 
 // MARK: - Messages

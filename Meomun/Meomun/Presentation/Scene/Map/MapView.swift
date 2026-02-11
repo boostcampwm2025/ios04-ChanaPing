@@ -27,6 +27,7 @@ struct MapView: View {
     @State private var showSpace: Bool = false
     @State private var didApplyResolvedUserLocation = false
     @State private var isTimelineListPresented = false
+    @State private var isTiltOn: Bool = true
 
     @ObservedObject private var store: MapStore
     @EnvironmentObject private var locationProvider: LocationProvider
@@ -64,6 +65,11 @@ struct MapView: View {
                     writeButton
                         .padding(.bottom, MMLayout.tabBarBottomOffset)
                 }
+            }
+            .overlay(alignment: .topLeading) {
+                tiltToggleButton
+                    .padding(.top, MMLayout.belowNavigationToolbarOffset + 20)
+                    .padding(.leading, 30)
             }
             .overlay(alignment: .bottom) {
                 if !store.state.carouselItems.isEmpty {
@@ -178,6 +184,7 @@ private extension MapView {
         MapViewWrapper(
             userLocation: locationProvider.current ?? .seoulCity,
             isFollowingUser: store.state.isFollowingUser,
+            isTiltOn: isTiltOn,
             markerManager: messageMarkerManager,
             messages: store.state.messages,
             cameraMoveTarget: store.state.cameraMoveTarget,
@@ -222,6 +229,26 @@ private extension MapView {
                 send(.setToast(Constants.locationToastMessage))
             }
         }
+    }
+
+    var tiltToggleButton: some View {
+        Button {
+            withAnimation(.easeInOut(duration: 0.2)) {
+                isTiltOn.toggle()
+            }
+        } label: {
+            HStack(spacing: 6) {
+                Image(systemName: isTiltOn ? "graph.3d" : "graph.2d")
+                Text(isTiltOn ? "3D" : "2D")
+            }
+            .font(.system(size: 16, weight: .medium))
+            .foregroundStyle(Color.mmWriteButton)
+            .frame(width: 75, height: 38)
+            .background(Color.mmFloatingBackground)
+            .clipShape(Capsule())
+        }
+        .shadow(color: .black.opacity(0.15), radius: 6, y: 4)
+        .buttonStyle(.plain)
     }
 }
 

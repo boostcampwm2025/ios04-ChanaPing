@@ -22,10 +22,12 @@ struct MapViewWrapper: UIViewControllerRepresentable {
 
     private let messageMarkerManager: MessageMarkerManager
     private let isFollowingUser: Bool
+    private let isTiltOn: Bool
 
     init(
         userLocation: Coordinate?,
         isFollowingUser: Bool,
+        isTiltOn: Bool,
         markerManager: MessageMarkerManager,
         messages: [Message],
         cameraMoveTarget: MapCameraMoveCommand?,
@@ -40,6 +42,7 @@ struct MapViewWrapper: UIViewControllerRepresentable {
     ) {
         self.userLocation = userLocation
         self.isFollowingUser = isFollowingUser
+        self.isTiltOn = isTiltOn
         self.messageMarkerManager = markerManager
         self.messages = messages
         self.cameraMoveTarget = cameraMoveTarget
@@ -88,6 +91,7 @@ struct MapViewWrapper: UIViewControllerRepresentable {
 
     func updateUIViewController(_ uiViewController: MapViewController, context: Context) {
         uiViewController.setFollowingUser(isFollowingUser)
+        uiViewController.setTiltEnabled(isTiltOn, animated: true)
 
         // 추적 상태에 따라 위치 반영
         if isFollowingUser {
