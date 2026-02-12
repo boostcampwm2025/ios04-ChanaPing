@@ -49,11 +49,23 @@ struct SpaceView: View {
                 .allowsHitTesting(isSpaceReady)
                 .gesture(
                     DragGesture()
-                        .onChanged { spaceController.handleDrag($0.translation) }
-                        .onEnded { _ in spaceController.endDrag()}
+                        .onChanged {
+                            if store.state.isGyroEnabled {
+                                send(.setGyroEnabled(false))
+                            }
+                            spaceController.handleDrag($0.translation)
+                        }
+                        .onEnded { _ in
+                            spaceController.endDrag()
+                        }
                 )
                 .gesture(
-                    TapGesture().onEnded { send(.selectMessage(nil)) }
+                    TapGesture().onEnded {
+                        if store.state.isGyroEnabled {
+                            send(.setGyroEnabled(false))
+                        }
+                        send(.selectMessage(nil))
+                    }
                 )
                 .highPriorityGesture(
                     SpatialTapGesture()
@@ -141,10 +153,14 @@ struct SpaceView: View {
             .animation(.spring(response: 0.25, dampingFraction: 0.9), value: store.state.selectedMessageID)
             .allowsHitTesting(store.state.deleteStatus == .idle)
             .overlay(alignment: .top) {
-                SpaceTopBar(
-                    title: store.place.name,
-                    onBack: { dismissWithFade() }
-                )
+                ZStack(alignment: .topTrailing) {
+                    SpaceTopBar(
+                        title: store.place.name,
+                        onBack: { dismissWithFade() }
+                    )
+
+                    gyroToggleButton
+                }
                 .padding(.top, 12)
                 .opacity(!showPortal ? 1 : 0)
             }
@@ -165,6 +181,9 @@ struct SpaceView: View {
             .onChange(of: store.state.selectedMessageID) { _, newValue in
                 spaceController.selectMessage(newValue)
             }
+            .onChange(of: store.state.isGyroEnabled) { _, newValue in
+                spaceController.setGyroEnabled(newValue)
+            }
             .opacity(appearOpacity)
             .onAppear {
                 withAnimation(.easeInOut(duration: 0.25)) {
@@ -175,6 +194,9 @@ struct SpaceView: View {
     }
 
     func dismissWithFade() {
+        if store.state.isGyroEnabled {
+            send(.setGyroEnabled(false))
+        }
         Task { @MainActor in
             withAnimation(.easeInOut(duration: 0.25)) {
                 appearOpacity = 0
@@ -242,6 +264,21 @@ extension SpaceView {
             }
         }
         .mmFloatingContainer(color: Color.mmBackground, opacity: 0.8)
+    }
+
+    var gyroToggleButton: some View {
+        Button {
+            send(.setGyroEnabled(!store.state.isGyroEnabled))
+        } label: {
+            Image(systemName: store.state.isGyroEnabled ? "gyroscope" : "hand.draw")
+                .font(.system(size: 16, weight: .semibold))
+                .foregroundStyle(Color.mmTextBrand)
+                .padding(.horizontal, 12)
+                .padding(.vertical, 10)
+                .background(.mmFloatingBackground)
+                .clipShape(Circle())
+                .accessibilityLabel(store.state.isGyroEnabled ? "자이로스코프 끄기" : "자이로스코프 켜기")
+        }
     }
 }
 
