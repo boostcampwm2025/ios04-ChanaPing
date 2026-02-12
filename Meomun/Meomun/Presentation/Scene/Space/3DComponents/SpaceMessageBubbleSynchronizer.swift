@@ -22,6 +22,8 @@ final class SpaceMessageBubbleSynchronizer {
         self.factory = factory
     }
 
+    var allBubbleRoots: [Entity] { Array(bubbleRootByID.values) }
+
     func sync(to root: Entity, messages: [Message], templateEntity: Entity) {
         let incomingMessageIDs = Set(messages.map(\.id))
         let existingMessageIDs = Set(bubbleRootByID.keys)
@@ -39,11 +41,6 @@ final class SpaceMessageBubbleSynchronizer {
             guard let message = messages.first(where: { $0.id == messageID }) else { continue }
 
             addMessage(message: message, root: root, templateEntity: templateEntity)
-        }
-
-        // 3. floating
-        for (_, bubbleRoot) in bubbleRootByID {
-            attachFloatingIfNeeded(to: bubbleRoot)
         }
     }
 

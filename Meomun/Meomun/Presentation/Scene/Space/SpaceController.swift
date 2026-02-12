@@ -125,11 +125,12 @@ final class SpaceController {
     }
 
     func startFloating() {
-        floatingTask?.cancel()
+        if floatingTask != nil { return }
         floatingStartTime = CACurrentMediaTime()
 
         floatingTask = Task { @MainActor [weak self] in
             guard let self else { return }
+            defer { self.floatingTask = nil }
 
             while !Task.isCancelled {
                 let time = Float(CACurrentMediaTime() - self.floatingStartTime)
@@ -146,14 +147,16 @@ final class SpaceController {
 
     @MainActor
     private func updateFloating(time: Float) {
-        guard let root = spaceRootEntity else { return }
+        guard didFinishConfigure else { return }
 
-        // MessageBubble-... 루트 엔티티만 대상으로
-        let bubbles = root.allDescendants().filter { $0.name.hasPrefix("MessageBubble-") }
+        let bubbles = bubbleSynchronizer.allBubbleRoots
 
         for entity in bubbles {
             if let selectedMessageID,
-               entity.name == "MessageBubble-\(selectedMessageID.value.uuidString)" { continue }
+               let idComponent = entity.components[MessageBubbleIDComponent.self],
+               idComponent.messageID == selectedMessageID {
+                continue
+            }
 
             guard let floating = entity.components[FloatingComponent.self] else { continue }
 
@@ -218,8 +221,7 @@ extension SpaceController {
     }
 
     private func bringOneBubbleIntoView(root: Entity) {
-        let bubbleEntities = root.allDescendants().filter { $0.name.hasPrefix("MessageBubble-") }
-        guard let first = bubbleEntities.first else { return }
+        guard let first = bubbleSynchronizer.allBubbleRoots.first else { return }
 
         // 카메라 앞에 랜덤 배치
         let distance = SpaceBubblePositionPolicy.minDistanceFromCenter
@@ -228,6 +230,11 @@ extension SpaceController {
         let z = rotationCamera.position.z - distance
 
         first.position = SIMD3<Float>(x, y, z)
+
+        if var firstComponent = first.components[FloatingComponent.self] {
+            firstComponent.baseY = first.position.y
+            first.components.set(firstComponent)
+        }
     }
 }
 
