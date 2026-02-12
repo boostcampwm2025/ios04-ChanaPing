@@ -119,9 +119,9 @@ struct MapView: View {
             .task {
                 let initial = locationProvider.current ?? .seoulCity
                 send(.onAppear(initial))
-                send(.userLocationReady(locationProvider.current))
+                send(.userLocationReady(initial))
             }
-            .onChange(of: locationProvider.current) { _, newValue in
+            .onChange(of: locationProvider.current ?? .seoulCity) { _, newValue in
                 send(.userLocationReady(newValue))
             }
             .onAppear {

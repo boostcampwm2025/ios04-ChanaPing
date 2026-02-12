@@ -224,18 +224,19 @@ extension MapViewController {
 extension MapViewController {
     func setFollowingUser(_ isFollowing: Bool) {
         self.isFollowingUser = isFollowing
+
+        if !isFollowing {
+            if naverMapView.mapView.positionMode != .normal {
+                naverMapView.mapView.positionMode = .normal
+            }
+        }
     }
 
     func updateUserLocation(_ coordinate: Coordinate?) {
         guard let coordinate else { return }
+        updateUserLocationOverlayOnly(coordinate)
 
-        let latLng = NMGLatLng(lat: coordinate.latitude, lng: coordinate.longitude)
-
-        let overlay = naverMapView.mapView.locationOverlay
-        overlay.hidden = false
-        overlay.location = latLng
-
-        if naverMapView.mapView.positionMode != .direction {
+        if isFollowingUser, naverMapView.mapView.positionMode != .direction {
             naverMapView.mapView.positionMode = .direction
         }
     }

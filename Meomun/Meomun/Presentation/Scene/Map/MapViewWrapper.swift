@@ -81,6 +81,7 @@ struct MapViewWrapper: UIViewControllerRepresentable {
         )
 
         viewController.onFirstMapIdle = onFirstMapIdle
+        viewController.loadViewIfNeeded()
 
         // 초기 1회 loadMessages() 호출
         viewController.loadMessages(messages)
@@ -88,14 +89,18 @@ struct MapViewWrapper: UIViewControllerRepresentable {
 
         context.coordinator.lastMessagesSnapshot = messagesSnapshot(messages)
         context.coordinator.didInitialLoad = true
+        context.coordinator.lastUserLocation = userLocation
+        context.coordinator.lastIsFollowingUser = isFollowingUser
 
         return viewController
     }
 
     func updateUIViewController(_ uiViewController: MapViewController, context: Context) {
         // 1) following 상태 변경 diff
-        if context.coordinator.lastIsFollowingUser != isFollowingUser {
-            context.coordinator.lastIsFollowingUser = isFollowingUser
+        let prevFollowing = context.coordinator.lastIsFollowingUser
+        let didFollowingChange = (prevFollowing != isFollowingUser)
+
+        if didFollowingChange {
             uiViewController.setFollowingUser(isFollowingUser)
         }
 
@@ -104,16 +109,16 @@ struct MapViewWrapper: UIViewControllerRepresentable {
 
         // 3) 위치 업데이트 diff
         let didUserLocationChange: Bool = {
-            guard let new = userLocation else { return false }
+            guard let new = userLocation else {
+                return context.coordinator.lastUserLocation != nil
+            }
             guard let old = context.coordinator.lastUserLocation else { return true }
 
             // Coordinate가 Equatable이면 그냥 new != old
             // 아니면 오차 허용 비교 (GPS 튐 방지)
-            return abs(new.latitude - old.latitude) > 0.00001
-            || abs(new.longitude - old.longitude) > 0.00001
+            return abs(new.latitude - old.latitude) > 0.000001
+            || abs(new.longitude - old.longitude) > 0.000001
         }()
-
-        let didFollowingChange = (context.coordinator.lastIsFollowingUser != isFollowingUser)
 
         if didUserLocationChange || didFollowingChange {
             context.coordinator.lastUserLocation = userLocation
@@ -126,6 +131,8 @@ struct MapViewWrapper: UIViewControllerRepresentable {
                 uiViewController.updateUserLocationOverlayOnly(userLocation)
             }
         }
+
+        context.coordinator.lastIsFollowingUser = isFollowingUser
 
         // 4) cameraMoveTarget diff
         if let target = cameraMoveTarget, context.coordinator.lastCameraMoveTarget != target {

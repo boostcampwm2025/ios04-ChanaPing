@@ -11,7 +11,7 @@ import Combine
 final class MapStore: Store {
     enum Intent {
         case onAppear(Coordinate)
-        case userLocationReady(Coordinate?)
+        case userLocationReady(Coordinate)
         case onDisappear
 
         case tapTiltToggle
@@ -146,7 +146,6 @@ final class MapStore: Store {
 
             case .userLocationReady(let coordinate):
                 guard state.didApplyResolvedUserLocation == false else { break }
-                guard let coordinate else { break }
 
                 continuation.yield(.setDidApplyResolvedUserLocation(true))
                 continuation.yield(.setCameraCoordinate(coordinate))
