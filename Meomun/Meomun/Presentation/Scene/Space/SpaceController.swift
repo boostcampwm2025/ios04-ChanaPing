@@ -16,6 +16,7 @@ final class SpaceController {
 
     // MARK: - Gyro
     private let motionManager = CMMotionManager()
+    private let coreMotionToRealityKitBasis = simd_quatf(angle: -.pi / 2, axis: SIMD3<Float>(1, 0, 0))
     private var isGyroEnabled: Bool = false
     private var gyroBaseAttitude: simd_quatf?
     private var gyroBaseCameraOrientation: simd_quatf?
@@ -245,10 +246,16 @@ extension SpaceController {
                     let current = self.simdQuat(from: attitude.quaternion)
 
                     if self.gyroBaseAttitude == nil {
+                        // 첫 자세를 기준으로 잡음
                         self.gyroBaseAttitude = current
                     } else if let baseAttitude = self.gyroBaseAttitude,
                               let baseCamera = self.gyroBaseCameraOrientation {
-                        let delta = current * baseAttitude.inverse
+                        // base → current 상대 회전 (CoreMotion reference frame 기준)
+                        let deltaCM = current * baseAttitude.inverse
+                        // CoreMotion(Z-up) → RealityKit(Y-up) basis change
+                        let delta = self.remapCoreMotionDeltaToRealityKit(deltaCM)
+
+                        // 기존 카메라 기준 방향에 델타를 누적
                         let target = baseCamera * delta
 
                         self.rotationCamera.setOrientation(target)
@@ -270,6 +277,11 @@ extension SpaceController {
 
     private func simdQuat(from quat: CMQuaternion) -> simd_quatf {
         simd_quatf(ix: Float(quat.x), iy: Float(quat.y), iz: Float(quat.z), r: Float(quat.w))
+    }
+
+    private func remapCoreMotionDeltaToRealityKit(_ delta: simd_quatf) -> simd_quatf {
+        let basis = coreMotionToRealityKitBasis
+        return basis * delta * basis.inverse
     }
 }
 
