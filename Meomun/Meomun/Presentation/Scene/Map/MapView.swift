@@ -23,11 +23,6 @@ struct MapView: View {
     @Environment(\.isSplashVisible) private var isSplashVisible
 
     @State private var navigationPath = NavigationPath()
-    @State private var selectedPlaceForSpace: Place?
-    @State private var showSpace: Bool = false
-    @State private var didApplyResolvedUserLocation = false
-    @State private var isTimelineListPresented = false
-    @State private var isTiltOn: Bool = true
 
     @ObservedObject private var store: MapStore
     @EnvironmentObject private var locationProvider: LocationProvider
@@ -76,11 +71,7 @@ struct MapView: View {
                     PlaceCarousel(
                         items: store.state.carouselItems,
                         onTapped: { place in
-                            send(.dismissPlaceCarousel)
-                            selectedPlaceForSpace = place
-                            withAnimation(.easeInOut(duration: 0.25)) {
-                                showSpace = true
-                            }
+                            send(.tapCarouselPlace(place))
                         }
                     )
                     .padding(.bottom, MMLayout.aboveTabBarOffset)
@@ -100,17 +91,17 @@ struct MapView: View {
                         send(.dismissPlaceCarousel)
                     }
             )
-            .fullScreenCover(isPresented: $showSpace) {
-                if let place = selectedPlaceForSpace {
+            .fullScreenCover(isPresented: isSpacePresentedBinding) {
+                if let place = store.state.selectedPlaceForSpace {
                     spaceView(place: place)
-                    .onAppear {
-                        setTabBarHidden(true)
-                        setNavBarHidden(true)
-                    }
-                    .onDisappear {
-                        setTabBarHidden(false)
-                        setNavBarHidden(false)
-                    }
+                        .onAppear {
+                            setTabBarHidden(true)
+                            setNavBarHidden(true)
+                        }
+                        .onDisappear {
+                            setTabBarHidden(false)
+                            setNavBarHidden(false)
+                        }
                 }
             }
             .navigationDestination(for: MapDestination.self) { destination in
@@ -128,28 +119,10 @@ struct MapView: View {
             .task {
                 let initial = locationProvider.current ?? .seoulCity
                 send(.onAppear(initial))
-
-                if let coordinate = locationProvider.current, !didApplyResolvedUserLocation {
-                    didApplyResolvedUserLocation = true
-                    send(.userLocationReady(coordinate))
-                }
+                send(.userLocationReady(locationProvider.current))
             }
             .onChange(of: locationProvider.current) { _, newValue in
-                guard didApplyResolvedUserLocation == false else { return }
-                guard let coordinate = newValue else { return }
-
-                didApplyResolvedUserLocation = true
-                send(.userLocationReady(coordinate))
-            }
-            .onChange(of: store.state.selectedNoPlaceMessages.isEmpty) { _, isEmpty in
-                guard isEmpty, isTimelineListPresented else { return }
-
-                Task { @MainActor in
-                    try? await Task.sleep(for: .milliseconds(1000))
-                    withAnimation(.spring(response: 0.25, dampingFraction: 0.9)) {
-                        isTimelineListPresented = false
-                    }
-                }
+                send(.userLocationReady(newValue))
             }
             .onAppear {
                 setTabBarHidden(false)
@@ -184,7 +157,7 @@ private extension MapView {
         MapViewWrapper(
             userLocation: locationProvider.current ?? .seoulCity,
             isFollowingUser: store.state.isFollowingUser,
-            isTiltOn: isTiltOn,
+            isTiltOn: store.state.isTiltOn,
             markerManager: messageMarkerManager,
             messages: store.state.messages,
             cameraMoveTarget: store.state.cameraMoveTarget,
@@ -195,7 +168,6 @@ private extension MapView {
                 send(.tapPlaceMarker(messages))
             },
             onTapNoPlace: { messages in
-                isTimelineListPresented = true
                 send(.tapNoPlaceMarker(messages))
             },
             onUserGesture: {
@@ -233,10 +205,9 @@ private extension MapView {
 
     var tiltToggleButton: some View {
         Button {
-            withAnimation(.easeInOut(duration: 0.2)) {
-                isTiltOn.toggle()
-            }
+            send(.tapTiltToggle)
         } label: {
+            let isTiltOn = store.state.isTiltOn
             HStack(spacing: 6) {
                 Image(systemName: isTiltOn ? "graph.3d" : "graph.2d")
                 Text(isTiltOn ? "3D" : "2D")
@@ -328,6 +299,15 @@ private extension MapView {
         )
     }
 
+    var isSpacePresentedBinding: Binding<Bool> {
+        Binding(
+            get: { store.state.selectedPlaceForSpace != nil },
+            set: { isPresented in
+                if !isPresented { send(.dismissSpace) }
+            }
+        )
+    }
+
     var timeLineListView: some View {
         let factory: TimelineListStoreFactory = DIContainer.resolveOrDie()
 
@@ -343,24 +323,17 @@ private extension MapView {
             onBecameEmpty: {
                 Task { @MainActor in
                     try? await Task.sleep(for: .milliseconds(1000))
-
-                    guard isTimelineListPresented else { return }
-
-                    withAnimation(.spring(response: 0.25, dampingFraction: 0.9)) {
-                        isTimelineListPresented = false
-                    }
+                    send(.dismissTimelineView)
                 }
-                send(.dismissTimelineView)
             }
         )
     }
 
     var isTimelineListPresentedBinding: Binding<Bool> {
         Binding(
-            get: { isTimelineListPresented },
+            get: { store.state.selectedNoPlaceMessages.isEmpty == false },
             set: { isPresented in
                 if !isPresented {
-                    isTimelineListPresented = false
                     send(.dismissTimelineView)
                 }
             }

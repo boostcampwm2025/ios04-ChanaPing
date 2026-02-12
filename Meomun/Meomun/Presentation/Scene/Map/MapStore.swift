@@ -11,8 +11,10 @@ import Combine
 final class MapStore: Store {
     enum Intent {
         case onAppear(Coordinate)
-        case userLocationReady(Coordinate)
+        case userLocationReady(Coordinate?)
         case onDisappear
+
+        case tapTiltToggle
 
         case userDidInteractMap
         case followUserRequested
@@ -27,6 +29,10 @@ final class MapStore: Store {
         case dismissPlaceSearch
         case selectPlace(Place)
 
+        case tapCarouselPlace(Place)
+
+        case dismissSpace
+
         case dismissAddMessage
 
         case tapNoPlaceMarker([Message])
@@ -39,19 +45,26 @@ final class MapStore: Store {
     }
 
     enum Action {
+        case setHasAnyMessage(Bool)
+
         case setCameraCoordinate(Coordinate)
         case setFollowingUser(Bool)
         case setCameraMoveTarget(MapCameraMoveCommand?)
         case setCameraSnapshot(MapCameraSnapshot?)
         case setCameraBounds(BoundingBox)
+        case setDidApplyResolvedUserLocation(Bool)
 
         case presentPlaceSearch(Bool)
+
+        case setTiltOn(Bool)
 
         case setShowAddMessage(Bool)
         case setMessages([Message])
 
         case setSelectedNoPlace([Message])
         case setCarouselItems([PlaceCarouselDisplayModel])
+
+        case setSelectedPlaceForSpace(Place?)
 
         case setLoading(Bool)
         case setNetworkConnected(Bool)
@@ -75,6 +88,10 @@ final class MapStore: Store {
 
         var selectedNoPlaceMessages: [Message] = []
         var carouselItems: [PlaceCarouselDisplayModel] = []
+
+        var isTiltOn: Bool = true
+        var selectedPlaceForSpace: Place?
+        var didApplyResolvedUserLocation: Bool = false
 
         var isLoading: Bool = false
         var isNetworkConnected = true
@@ -128,6 +145,10 @@ final class MapStore: Store {
                 }
 
             case .userLocationReady(let coordinate):
+                guard state.didApplyResolvedUserLocation == false else { break }
+                guard let coordinate else { break }
+
+                continuation.yield(.setDidApplyResolvedUserLocation(true))
                 continuation.yield(.setCameraCoordinate(coordinate))
 
                 if state.isFollowingUser {
@@ -145,6 +166,9 @@ final class MapStore: Store {
                 self.lastFetchZoomBucket = nil
                 continuation.yield(.setLoading(false))
 
+            case .tapTiltToggle:
+                continuation.yield(.setTiltOn(!state.isTiltOn))
+
             case .userDidInteractMap:
                 continuation.yield(.setFollowingUser(false))
 
@@ -161,7 +185,7 @@ final class MapStore: Store {
                     snapshot: snapshot,
                     continuation: continuation
                 )
-                self.refreshHasAnyMessage()
+                self.refreshHasAnyMessage(continuation)
                 return
 
             case .cameraChangedByLocation(let coordinate, let boundingBox, let snapshot):
@@ -211,6 +235,13 @@ final class MapStore: Store {
                 )
                 continuation.yield(.setCameraMoveTarget(target))
 
+            case .tapCarouselPlace(let place):
+                continuation.yield(.setSelectedPlaceForSpace(place))
+                continuation.yield(.setCarouselItems([]))
+
+            case .dismissSpace:
+                continuation.yield(.setSelectedPlaceForSpace(nil))
+
             case .dismissAddMessage:
                 continuation.yield(.setShowAddMessage(false))
 
@@ -242,6 +273,9 @@ final class MapStore: Store {
         var newState = state
 
         switch action {
+        case .setHasAnyMessage(let value):
+            newState.hasAnyMessage = value
+
         case .setMessages(let messages):
             newState.messages = messages
 
@@ -257,11 +291,17 @@ final class MapStore: Store {
         case .setCameraBounds(let bounds):
             newState.cameraBounds = bounds
 
+        case .setDidApplyResolvedUserLocation(let value):
+            newState.didApplyResolvedUserLocation = value
+
         case .setCameraMoveTarget(let snapshot):
             newState.cameraMoveTarget = snapshot
 
         case .presentPlaceSearch(let isPresented):
             newState.isPlaceSearchPresented = isPresented
+
+        case .setTiltOn(let isTiltOn):
+            newState.isTiltOn = isTiltOn
 
         case .setShowAddMessage(let isShown):
             newState.isShowingAddMessage = isShown
@@ -271,6 +311,9 @@ final class MapStore: Store {
 
         case .setCarouselItems(let items):
             newState.carouselItems = items
+
+        case .setSelectedPlaceForSpace(let place):
+            newState.selectedPlaceForSpace = place
 
         case .setLoading(let isLoading):
             newState.isLoading = isLoading
@@ -358,13 +401,13 @@ final class MapStore: Store {
         }
     }
 
-    private func refreshHasAnyMessage() {
+    private func refreshHasAnyMessage(_ continuation: AsyncStream<Action>.Continuation? = nil) {
         Task { @MainActor in
             do {
                 let hasAny = try await hasAnyMessageUseCase.execute()
-                state.hasAnyMessage = hasAny
+                continuation?.yield(.setHasAnyMessage(hasAny))
             } catch {
-                state.hasAnyMessage = false
+                continuation?.yield(.setHasAnyMessage(false))
             }
         }
     }
