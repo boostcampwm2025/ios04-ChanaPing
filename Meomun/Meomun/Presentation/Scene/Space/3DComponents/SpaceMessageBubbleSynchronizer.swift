@@ -40,6 +40,11 @@ final class SpaceMessageBubbleSynchronizer {
 
             addMessage(message: message, root: root, templateEntity: templateEntity)
         }
+
+        // 3. floating
+        for (_, bubbleRoot) in bubbleRootByID {
+            attachFloatingIfNeeded(to: bubbleRoot)
+        }
     }
 
     func applySelection(selectedID newID: MessageID?) {
@@ -92,6 +97,8 @@ final class SpaceMessageBubbleSynchronizer {
         )
 
         root.addChild(bubbleRoot)
+        attachFloatingIfNeeded(to: bubbleRoot)
+
         bubbleRootByID[message.id] = bubbleRoot
         placementByID[message.id] = BubblePlacementRecord(
             messageID: message.id,
@@ -122,5 +129,20 @@ private extension SpaceMessageBubbleSynchronizer {
 
         let highlightGlowColor = UIColor.systemRed.withAlphaComponent(0.8)
         materialConfigurator.setMessageGlowColor(messageEntity: model, color: highlightGlowColor)
+    }
+
+    func attachFloatingIfNeeded(to entity: Entity) {
+        if entity.components[FloatingComponent.self] != nil { return }
+
+        let baseY = entity.position.y
+        entity.components.set(
+            FloatingComponent(
+                baseY: baseY,
+                amplitude: .random(in: 0.02...0.04),
+                frequency: .random(in: 0.8...1.0),
+                phase: .random(in: 0...(2 * .pi)),
+                yawAmplitude: .random(in: 0.03...0.08)
+            )
+        )
     }
 }

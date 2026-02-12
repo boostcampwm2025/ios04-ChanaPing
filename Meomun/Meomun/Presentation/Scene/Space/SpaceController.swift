@@ -28,6 +28,10 @@ final class SpaceController {
     private var didFinishConfigure: Bool = false
     private var readyHandlers: [() -> Void] = []
 
+    private var floatingTask: Task<Void, Never>?
+    private var floatingStartTime: TimeInterval = CACurrentMediaTime()
+    private var selectedMessageID: MessageID?
+
     init(
         rotationCamera: RotationCamera = .init(
             position: .init(x: 0, y: 0.7, z: 0),
@@ -102,7 +106,7 @@ final class SpaceController {
 
                 didFinishConfigure = true
                 flushReadyHandlers()
-
+                startFloating()
                 trySyncIfPossible()
             } catch {
                 AppLog.error(
@@ -118,6 +122,49 @@ final class SpaceController {
         let handlers = readyHandlers
         readyHandlers.removeAll()
         handlers.forEach { $0() }
+    }
+
+    func startFloating() {
+        floatingTask?.cancel()
+        floatingStartTime = CACurrentMediaTime()
+
+        floatingTask = Task { @MainActor [weak self] in
+            guard let self else { return }
+
+            while !Task.isCancelled {
+                let time = Float(CACurrentMediaTime() - self.floatingStartTime)
+                self.updateFloating(time: time)
+                try? await Task.sleep(nanoseconds: 16_666_667) // ~60fps
+            }
+        }
+    }
+
+    func stopFloating() {
+        floatingTask?.cancel()
+        floatingTask = nil
+    }
+
+    @MainActor
+    private func updateFloating(time: Float) {
+        guard let root = spaceRootEntity else { return }
+
+        // MessageBubble-... 루트 엔티티만 대상으로
+        let bubbles = root.allDescendants().filter { $0.name.hasPrefix("MessageBubble-") }
+
+        for entity in bubbles {
+            if let selectedMessageID,
+               entity.name == "MessageBubble-\(selectedMessageID.value.uuidString)" { continue }
+
+            guard let floating = entity.components[FloatingComponent.self] else { continue }
+
+            // y 부유
+            let y = floating.baseY + sin((time * floating.frequency) + floating.phase) * floating.amplitude
+            entity.position.y = y
+
+            // 좌우 흔들림(회전)
+            let yaw = sin((time * floating.frequency * 0.7) + floating.phase) * floating.yawAmplitude
+            entity.transform.rotation = simd_quatf(angle: yaw, axis: [0, 1, 0])
+        }
     }
 }
 
@@ -147,6 +194,7 @@ extension SpaceController {
     }
 
     func selectMessage(_ messageID: MessageID?) {
+        selectedMessageID = messageID
         bubbleSynchronizer.applySelection(selectedID: messageID)
     }
 
