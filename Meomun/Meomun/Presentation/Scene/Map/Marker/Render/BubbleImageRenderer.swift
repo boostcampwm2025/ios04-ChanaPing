@@ -126,7 +126,11 @@ final class BubbleImageRenderer: BubbleImageRendering {
         if let cached = await bubbleImageCache.locationTextImage(locationText: locationText) {
             locationImage = cached
         } else {
-            let locationDrawable = BubbleDrawableFactory.makeLocationDrawable(rect: rect, locationName: locationText)
+            let locationDrawable = BubbleDrawableFactory.makeLocationDrawable(
+                rect: rect,
+                locationName: locationText,
+                hasPlaceTag: hasPlaceTag
+            )
             locationImage = compositor.render(drawables: [locationDrawable])
             await bubbleImageCache.setLocationTextImage(locationImage, locationText: locationText)
         }

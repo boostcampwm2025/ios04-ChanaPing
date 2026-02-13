@@ -26,11 +26,11 @@ final class BubbleDrawableFactory {
     }
 
     /// 위치(장소명/주소) 레이어 1개 반환. 캐시 키: locationText
-    static func makeLocationDrawable(rect: CGRect, locationName: String) -> BubbleDrawable {
+    static func makeLocationDrawable(rect: CGRect, locationName: String, hasPlaceTag: Bool) -> BubbleDrawable {
         let contentTop = rect.minY + BubbleLayoutConstants.paddingTop
         let locationY = contentTop + BubbleLayoutConstants.locationTopPadding
         let locationPoint = CGPoint(x: rect.minX + BubbleLayoutConstants.paddingHorizontal, y: locationY)
-        return BubbleLocationDrawer(locationName: locationName, point: locationPoint)
+        return BubbleLocationDrawer(locationName: locationName, point: locationPoint, hasPlaceTag: hasPlaceTag)
     }
 
     /// 애니메이션 레이어만 반환 (current/next 텍스트 / 날짜 4개). 매 프레임 그리기용
