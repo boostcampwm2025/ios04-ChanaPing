@@ -79,7 +79,9 @@ struct SpaceView: View {
                 VStack {
                     Spacer()
 
-                    HStack {
+                    HStack(alignment: .center) {
+                        gyroToggleButton
+
                         Spacer()
 
                         WriteButton(mode: .white) {
@@ -92,10 +94,11 @@ struct SpaceView: View {
                                 )
                             }
                         }
-                        .opacity(!showPortal ? 1 : 0)
-                        .allowsHitTesting(!showPortal && isSpaceReady)
                     }
-                    .padding(.bottom, 96)
+                    .opacity(!showPortal ? 1 : 0)
+                    .allowsHitTesting(!showPortal && isSpaceReady)
+                    .padding(.bottom, MMLayout.tabBarBottomOffset)
+                    .padding(.horizontal, MMSpacing.floatingHorizontalPadding)
                 }
 
                 if store.state.deleteStatus != .idle {
@@ -153,16 +156,12 @@ struct SpaceView: View {
             .animation(.spring(response: 0.25, dampingFraction: 0.9), value: store.state.selectedMessageID)
             .allowsHitTesting(store.state.deleteStatus == .idle)
             .overlay(alignment: .top) {
-                ZStack(alignment: .topTrailing) {
-                    SpaceTopBar(
-                        title: store.place.name,
-                        onBack: { dismissWithFade() }
-                    )
-
-                    gyroToggleButton
-                }
-                .padding(.top, 12)
-                .opacity(!showPortal ? 1 : 0)
+                SpaceTopBar(
+                    title: store.place.name,
+                    onBack: { dismissWithFade() }
+                )
+                    .padding(.top, 12)
+                    .opacity(!showPortal ? 1 : 0)
             }
             .task {
                 if !isSpaceReady {
@@ -271,12 +270,12 @@ extension SpaceView {
             send(.setGyroEnabled(!store.state.isGyroEnabled))
         } label: {
             Image(systemName: store.state.isGyroEnabled ? "gyroscope" : "hand.draw")
-                .font(.system(size: 16, weight: .semibold))
-                .foregroundStyle(Color.mmTextBrand)
-                .padding(.horizontal, 12)
-                .padding(.vertical, 10)
-                .background(.mmFloatingBackground)
+                .font(.system(size: 22, weight: .regular))
+                .foregroundStyle(.mmWriteButton)
+                .frame(width: 53, height: 53)
+                .background(.mmFloatingBackground.opacity(0.85))
                 .clipShape(Circle())
+                .shadow(color: .black.opacity(0.15), radius: 6, y: 4)
                 .accessibilityLabel(store.state.isGyroEnabled ? "자이로스코프 끄기" : "자이로스코프 켜기")
         }
     }
