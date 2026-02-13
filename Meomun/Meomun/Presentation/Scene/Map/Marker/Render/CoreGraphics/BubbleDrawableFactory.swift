@@ -53,7 +53,17 @@ final class BubbleDrawableFactory {
             : 0
         let textWidth = BubbleLayoutConstants.width - 2 * BubbleLayoutConstants.paddingHorizontal - chevronSpace
 
+        // 애니메이션 영역 클리핑 (텍스트+날짜 영역만 허용, 주소 영역 침범 방지)
+        let dateLineHeight: CGFloat = 16
+        let clipRect = CGRect(
+            x: rect.minX,
+            y: textY,
+            width: rect.width,
+            height: (dateY + dateLineHeight) - textY
+        )
+
         return [
+            BubbleClipDrawable(clipRect: clipRect),
             BubbleTextDrawer(
                 text: current.content,
                 point: textPoint,
