@@ -27,7 +27,7 @@ final class BubbleDrawableFactory {
 
     /// 위치(장소명/주소) 레이어 1개 반환. 캐시 키: locationText
     static func makeLocationDrawable(rect: CGRect, locationName: String) -> BubbleDrawable {
-        let contentTop = rect.minY + BubbleLayoutConstants.paddingTop + BubbleLayoutConstants.paddingVertical
+        let contentTop = rect.minY + BubbleLayoutConstants.paddingTop
         let locationY = contentTop + BubbleLayoutConstants.locationTopPadding
         let locationPoint = CGPoint(x: rect.minX + BubbleLayoutConstants.paddingHorizontal, y: locationY)
         return BubbleLocationDrawer(locationName: locationName, point: locationPoint)
@@ -41,7 +41,7 @@ final class BubbleDrawableFactory {
         rect: CGRect,
         hasPlaceTag: Bool
     ) -> [BubbleDrawable] {
-        let contentTop = rect.minY + BubbleLayoutConstants.paddingTop + BubbleLayoutConstants.paddingVertical
+        let contentTop = rect.minY + BubbleLayoutConstants.paddingTop
         let locationY = contentTop + BubbleLayoutConstants.locationTopPadding
         let locationHeight: CGFloat = 20
         let textY = locationY + locationHeight + BubbleLayoutConstants.sectionSpacing

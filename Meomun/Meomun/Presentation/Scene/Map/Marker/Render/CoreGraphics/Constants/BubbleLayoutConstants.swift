@@ -14,16 +14,15 @@ struct BubbleLayoutConstants {
     static let height: CGFloat = 103
     static let cornerRadius: CGFloat = 22
 
-    // 패딩 (MessageBubble.swift와 동일)
-    static let paddingTop: CGFloat = 1
-    static let paddingVertical: CGFloat = 7
+    // 패딩
+    static let paddingTop: CGFloat = 8
     static let paddingHorizontal: CGFloat = 10
 
     // VStack spacing (MessageBubble line 42)
     static let sectionSpacing: CGFloat = 5
 
     // Location (MessageBubble line 79-89)
-    static let locationIconSize: CGFloat = 15
+    static let locationIconSize: CGFloat = 16
     static let locationIconSpacing: CGFloat = 4
     static let locationTopPadding: CGFloat = 4
 

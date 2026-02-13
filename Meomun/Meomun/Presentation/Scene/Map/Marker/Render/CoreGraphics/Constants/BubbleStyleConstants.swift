@@ -9,14 +9,9 @@ import SwiftUI
 
 struct BubbleStyleConstants {
     struct Colors {
-        static let background: UIColor = .mmBubbleBackground
         static let textPrimary: UIColor = .mmTextPrimary
         static let textSecondary: UIColor = .mmTextSecondary
-        static let tabActive: UIColor = .mmTabActive
-        static let locationIconColor: UIColor = UIColor(red: 0x53/255, green: 0x80/255, blue: 0x8C/255, alpha: 1.0)
-
-        static let stackBack1 = UIColor(red: 0xE6/255, green: 0xE6/255, blue: 0xE6/255, alpha: 1.0)
-        static let stackBack2 = UIColor(red: 0xF4/255, green: 0xF4/255, blue: 0xF4/255, alpha: 1.0)
+        static let locationIconColor: UIColor = UIColor(Color(hex: "#53808C"))
     }
 
     // 폰트
@@ -42,7 +37,7 @@ struct BubbleStyleConstants {
             case gray   // placeTag 없을 때
 
             func colors(colorScheme: ColorScheme) -> [UIColor] {
-                let tabActive = Colors.tabActive
+                let tabActive = UIColor(resource: .mmTabActive)
 
                 switch self {
                 case .green:
