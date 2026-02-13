@@ -219,8 +219,6 @@ extension SpaceController {
             startGyroUpdates()
         } else {
             stopGyroUpdates()
-
-            rotationCamera.syncDragAnglesFromCurrentOrientation()
         }
     }
 

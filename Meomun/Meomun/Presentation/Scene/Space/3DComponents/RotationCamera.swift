@@ -60,23 +60,6 @@ final class RotationCamera {
         lastTranslation = (0, 0)
     }
 
-    /// 현재 카메라 orientation으로부터 forward 벡터를 뽑아 yaw/pitch를 역산하여 내부 상태를 동기화합니다
-    func syncDragAnglesFromCurrentOrientation() {
-        let matrix = camera.transform.matrix
-        let forward = simd_normalize(SIMD3<Float>(
-            -matrix.columns.2.x,
-            -matrix.columns.2.y,
-            -matrix.columns.2.z
-            ))
-
-        yaw = atan2(forward.x, forward.z)
-
-        let rawPitch = asin(max(-1, min(1, forward.y)))
-        pitch = max(0, min(Float.pi / 2, rawPitch))
-
-        lastTranslation = (0, 0)
-    }
-
     private func rotate(deltaX: Float, deltaY: Float) {
         yaw += deltaX * sensitivity
         pitch += deltaY * sensitivity
