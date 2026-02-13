@@ -15,33 +15,14 @@ struct BubbleChevronDrawer: BubbleDrawable {
     }
 
     func draw(in context: CGContext, colorScheme: ColorScheme) {
-        let tabActive = BubbleStyleConstants.Colors.tabActive
-        // 배경 원
-        let circleSize = BubbleLayoutConstants.chevronBackgroundSize
-        let circleRect = CGRect(
-            x: point.x - circleSize / 2,
-            y: point.y - circleSize / 2,
-            width: circleSize,
-            height: circleSize
+        let image = UIImage(resource: .rotatingBubbleChevron)
+        let size = BubbleLayoutConstants.chevronBackgroundSize
+        let imageRect = CGRect(
+            x: point.x - size / 2,
+            y: point.y - size / 2,
+            width: size,
+            height: size
         )
-
-        context.setFillColor(tabActive.withAlphaComponent(0.1).cgColor)
-        context.fillEllipse(in: circleRect)
-
-        // Chevron 아이콘
-        if let chevron = UIImage(systemName: "chevron.right") {
-            let iconSize = BubbleLayoutConstants.chevronIconSize
-            let iconRect = CGRect(
-                x: point.x - iconSize / 2,
-                y: point.y - iconSize / 2,
-                width: iconSize,
-                height: iconSize
-            )
-            let tintedChevron = chevron.withTintColor(
-                tabActive.withAlphaComponent(0.75),
-                renderingMode: .alwaysOriginal
-            )
-            tintedChevron.draw(in: iconRect)
-        }
+        image.draw(in: imageRect)
     }
 }
