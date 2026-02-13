@@ -37,6 +37,7 @@ struct BubbleLayoutConstants {
 
     // PlaceIcon (DecoratedMessageBubble line 10-12, 79-91)
     static let placeIconSize: CGFloat = 30
+    static let placeIconTopInset: CGFloat = 20  // 아이콘 돌출 높이 (offset -20 -> 버블 위 20pt만 필요)
     static let placeIconOffsetY: CGFloat = -15
     static let placeIconBackgroundOffset: CGFloat = 3
 

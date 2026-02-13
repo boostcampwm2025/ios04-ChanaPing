@@ -93,7 +93,7 @@ final class BubbleImageRenderer: BubbleImageRendering {
         let bubbleHeight = BubbleLayoutConstants.height
         let bubbleWidth = BubbleLayoutConstants.width
         let stackBackInset = BubbleLayoutConstants.stackBackOffset1.width
-        let placeIconTopInset = BubbleLayoutConstants.placeIconSize
+        let placeIconTopInset = BubbleLayoutConstants.placeIconTopInset
 
         let size: CGSize
         let rect: CGRect
