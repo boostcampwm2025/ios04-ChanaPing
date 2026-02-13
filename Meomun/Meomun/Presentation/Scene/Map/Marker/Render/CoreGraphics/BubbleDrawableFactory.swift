@@ -38,7 +38,8 @@ final class BubbleDrawableFactory {
         current: Message,
         next: Message,
         progress: Double,
-        rect: CGRect
+        rect: CGRect,
+        hasPlaceTag: Bool
     ) -> [BubbleDrawable] {
         let contentTop = rect.minY + BubbleLayoutConstants.paddingTop + BubbleLayoutConstants.paddingVertical
         let locationY = contentTop + BubbleLayoutConstants.locationTopPadding
@@ -47,7 +48,10 @@ final class BubbleDrawableFactory {
         let dateY = textY + BubbleLayoutConstants.textHeight + BubbleLayoutConstants.sectionSpacing
         let textPoint = CGPoint(x: rect.minX + BubbleLayoutConstants.paddingHorizontal, y: textY)
         let datePoint = CGPoint(x: rect.minX + BubbleLayoutConstants.paddingHorizontal, y: dateY)
-        let textWidth = BubbleLayoutConstants.width - 2 * BubbleLayoutConstants.paddingHorizontal
+        let chevronSpace: CGFloat = hasPlaceTag
+            ? BubbleLayoutConstants.chevronBackgroundSize + 4
+            : 0
+        let textWidth = BubbleLayoutConstants.width - 2 * BubbleLayoutConstants.paddingHorizontal - chevronSpace
 
         return [
             BubbleTextDrawer(

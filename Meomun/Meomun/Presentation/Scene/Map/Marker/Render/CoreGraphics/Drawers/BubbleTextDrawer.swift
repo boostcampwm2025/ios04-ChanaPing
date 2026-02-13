@@ -36,7 +36,7 @@ struct BubbleTextDrawer: BubbleDrawable {
         context.translateBy(x: 0, y: yOffset)
 
         let paragraphStyle = NSMutableParagraphStyle()
-        paragraphStyle.lineBreakMode = .byTruncatingTail
+        paragraphStyle.lineBreakMode = .byWordWrapping
 
         let attributes: [NSAttributedString.Key: Any] = [
             .font: BubbleStyleConstants.Fonts.text,

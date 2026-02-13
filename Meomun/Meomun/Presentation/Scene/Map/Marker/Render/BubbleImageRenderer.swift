@@ -139,7 +139,8 @@ final class BubbleImageRenderer: BubbleImageRendering {
             current: current,
             next: next,
             progress: progress,
-            rect: rect
+            rect: rect,
+            hasPlaceTag: hasPlaceTag
         )
         return compositor.render(drawables: animationDrawables, over: underlay)
     }
