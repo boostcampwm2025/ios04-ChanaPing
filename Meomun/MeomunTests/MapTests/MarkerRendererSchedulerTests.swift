@@ -32,17 +32,8 @@ final class ControllableBubbleRenderer: BubbleImageRendering {
     func renderSingleBubble(message: Message, scale: CGFloat? = nil) async -> UIImage {
         singleCount += 1
 
-        // 취소되면 continuation을 반드시 resume해서 leak 방지
-        return await withTaskCancellationHandler {
-            await withCheckedContinuation { cont in
-                continuations.append(cont)
-            }
-        } onCancel: {
-            // 취소 시 대기 중 continuation이 있으면 안전하게 풀어준다
-            if !continuations.isEmpty {
-                let cont = continuations.removeFirst()
-                cont.resume(returning: UIImage())
-            }
+        return await withCheckedContinuation { cont in
+            continuations.append(cont)
         }
     }
 
@@ -130,7 +121,7 @@ struct MarkerRenderSchedulerTests {
 
     @Test("마커 교체-적용 검증-이전 마커에는 아이콘이 적용되지 않는다")
     func scheduleInitialRender_markerReplaced_doesNotApplyToOldMarker() async {
-        let renderer = ControllableBubbleRenderer()
+        let renderer = await ControllableBubbleRenderer()
         let scheduler = await MainActor.run {
             MarkerRenderScheduler(renderer: renderer, fadeAnimator: ImmediateFadeAnimator())
         }

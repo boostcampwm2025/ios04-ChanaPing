@@ -17,16 +17,21 @@ struct MessageMarkerManagerTests {
 
     private func makeSUT(
         displayLimit: Int = 10,
-        markerFactory: SpyMarkerFactory = .init(),
-        clustererFactory: SpyClustererFactory = .init(),
-        bubbleRenderer: SpyBubbleRenderer = .init(),
-        rotationAnimator: StubRotationAnimator = .init()
+        markerFactory: SpyMarkerFactory? = nil,
+        clustererFactory: SpyClustererFactory? = nil,
+        bubbleRenderer: SpyBubbleRenderer? = nil,
+        rotationAnimator: StubRotationAnimator? = nil
     ) -> (
         sut: MessageMarkerManager,
         markerFactory: SpyMarkerFactory,
         clustererFactory: SpyClustererFactory,
         bubbleRenderer: SpyBubbleRenderer
     ) {
+        let markerFactory = markerFactory ?? SpyMarkerFactory()
+        let clustererFactory = clustererFactory ?? SpyClustererFactory()
+        let bubbleRenderer = bubbleRenderer ?? SpyBubbleRenderer()
+        let rotationAnimator = rotationAnimator ?? StubRotationAnimator()
+
         let sut = MessageMarkerManager(
             markerFactory: markerFactory,
             clustererFactory: clustererFactory,
