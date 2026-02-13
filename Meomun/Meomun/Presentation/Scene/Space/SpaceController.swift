@@ -48,7 +48,7 @@ final class SpaceController {
         self.materialConfigurator = SpaceMaterialConfigurator()
     }
 
-    deinit {
+    isolated deinit {
         motionManager.stopDeviceMotionUpdates()
         gyroUpdateTask?.cancel()
     }
@@ -239,9 +239,9 @@ extension SpaceController {
 
         gyroUpdateTask?.cancel()
         gyroUpdateTask = Task { [weak self] in
-            guard let self else { return }
-
             while !Task.isCancelled {
+                guard let self else { return }
+
                 if let attitude = self.motionManager.deviceMotion?.attitude {
                     let current = self.simdQuat(from: attitude.quaternion)
 
