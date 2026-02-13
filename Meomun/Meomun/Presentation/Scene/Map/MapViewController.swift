@@ -21,8 +21,6 @@ final class MapViewController: UIViewController {
 
     private var bubbleRotationTimer: Timer?
     private let frameInterval: TimeInterval = 1.0 / 60.0
-    private let rotationInterval: TimeInterval = 3.0
-    private let animationDuration: TimeInterval = 1.0
 
     // MARK: - Callback
 
