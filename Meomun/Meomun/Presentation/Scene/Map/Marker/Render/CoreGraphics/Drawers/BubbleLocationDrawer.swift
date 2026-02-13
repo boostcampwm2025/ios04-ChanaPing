@@ -41,19 +41,13 @@ struct BubbleLocationDrawer: BubbleDrawable {
     }
 
     private func drawMappinIcon(at point: CGPoint, in context: CGContext) {
-        if let icon = UIImage(systemName: "mappin.and.ellipse") {
-            let iconSize = BubbleLayoutConstants.locationIconSize
-            let iconRect = CGRect(
-                x: point.x,
-                y: point.y,
-                width: iconSize,
-                height: iconSize
-            )
-            let tintedIcon = icon.withTintColor(
-                BubbleStyleConstants.Colors.locationIconColor,
-                renderingMode: .alwaysOriginal
-            )
-            tintedIcon.draw(in: iconRect)
-        }
+        let iconRect = CGRect(
+            x: point.x,
+            y: point.y,
+            width: BubbleLayoutConstants.locationIconSize,
+            height: BubbleLayoutConstants.locationIconSize
+        )
+        let image = UIImage(resource: .mappinBubble)
+        image.draw(in: iconRect)
     }
 }
