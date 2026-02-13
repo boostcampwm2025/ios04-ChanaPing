@@ -224,18 +224,19 @@ extension MapViewController {
 extension MapViewController {
     func setFollowingUser(_ isFollowing: Bool) {
         self.isFollowingUser = isFollowing
+
+        if !isFollowing {
+            if naverMapView.mapView.positionMode != .normal {
+                naverMapView.mapView.positionMode = .normal
+            }
+        }
     }
 
     func updateUserLocation(_ coordinate: Coordinate?) {
         guard let coordinate else { return }
+        updateUserLocationOverlayOnly(coordinate)
 
-        let latLng = NMGLatLng(lat: coordinate.latitude, lng: coordinate.longitude)
-
-        let overlay = naverMapView.mapView.locationOverlay
-        overlay.hidden = false
-        overlay.location = latLng
-
-        if naverMapView.mapView.positionMode != .direction {
+        if isFollowingUser, naverMapView.mapView.positionMode != .direction {
             naverMapView.mapView.positionMode = .direction
         }
     }
@@ -289,6 +290,28 @@ extension MapViewController {
             tilt: position.tilt,
             heading: position.heading
         )
+    }
+
+    func setTiltEnabled(_ enabled: Bool, animated: Bool = true) {
+        let mapView = naverMapView.mapView
+        let current = mapView.cameraPosition
+
+        let targetTilt: Double = enabled ? 45.0 : 0.0
+
+        if abs(current.tilt - targetTilt) < 0.1 { return }
+
+        let newPosition = NMFCameraPosition(
+            current.target,
+            zoom: current.zoom,
+            tilt: targetTilt,
+            heading: current.heading
+        )
+
+        let update = NMFCameraUpdate(position: newPosition)
+        update.animation = animated ? .easeIn : .none
+        update.animationDuration = animated ? 0.25 : 0
+
+        mapView.moveCamera(update)
     }
 }
 
