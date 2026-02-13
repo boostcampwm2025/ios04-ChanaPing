@@ -30,7 +30,6 @@ struct BubbleLayoutConstants {
     // Text (MessageBubble line 153-164)
     static let textFontSize: CGFloat = 14
     static let textHeight: CGFloat = 36  // fixedSize layout
-    static let textLineLimit: Int = 2
 
     // Date (MessageBubble line 106-109)
     static let dateFontSize: CGFloat = 11
