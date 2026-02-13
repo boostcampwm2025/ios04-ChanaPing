@@ -228,6 +228,7 @@ final class MapStore: Store {
                 continuation.yield(.presentPlaceSearch(false))
 
             case .selectPlace(let place):
+                continuation.yield(.setFollowingUser(false))
                 let target = MapCameraMoveCommand(
                     snapshot: .init(coordinate: place.coordinate),
                     reason: .userAction

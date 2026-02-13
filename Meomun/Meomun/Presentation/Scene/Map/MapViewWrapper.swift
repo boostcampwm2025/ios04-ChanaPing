@@ -135,16 +135,20 @@ struct MapViewWrapper: UIViewControllerRepresentable {
         context.coordinator.lastIsFollowingUser = isFollowingUser
 
         // 4) cameraMoveTarget diff
-        if let target = cameraMoveTarget, context.coordinator.lastCameraMoveTarget != target {
-            // 동일 target인 경우 호출 X
-            context.coordinator.lastCameraMoveTarget = target
-            uiViewController.moveCamera(
-                to: target.snapshot,
-                animated: target.reason == .userAction
-            )
+        if let target = cameraMoveTarget {
+            let isSameAsLast = (context.coordinator.lastCameraMoveTarget == target)
+            let shouldMove = (!isSameAsLast) || (target.reason == .userAction)
 
-            DispatchQueue.main.async {
-                onCameraMoveConsumed()
+            if shouldMove {
+                context.coordinator.lastCameraMoveTarget = target
+                uiViewController.moveCamera(
+                    to: target.snapshot,
+                    animated: target.reason == .userAction
+                )
+
+                DispatchQueue.main.async {
+                    onCameraMoveConsumed()
+                }
             }
         }
 
