@@ -23,7 +23,9 @@ final class RotationCamera {
     /// 회전 감도 조절을 위한 상수 (값이 클수록 빠르게 회전)
     private let sensitivity: Float
 
+    /// 카메라 위치, 카메라가 바라보는 방향
     var position: SIMD3<Float> { camera.position }
+    var orientation: simd_quatf { camera.orientation }
 
     init(
         position: SIMD3<Float>,
@@ -36,6 +38,11 @@ final class RotationCamera {
 
     func addToScene(_ content: RealityViewCameraContent) {
         content.add(camera)
+    }
+
+    /// 카메라가 바라보는 방향을 설정합니다
+    func setOrientation(_ orientation: simd_quatf) {
+        camera.orientation = orientation
     }
 
     /// 드래그 입력을 처리하여 카메라를 회전시킵니다

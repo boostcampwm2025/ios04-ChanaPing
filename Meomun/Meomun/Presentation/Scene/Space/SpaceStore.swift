@@ -16,6 +16,7 @@ final class SpaceStore: Store {
         case requestDeleteMessage(MessageID)
         case confirmDeleteMessage(MessageID)
         case dismissAlert
+        case setGyroEnabled(Bool)
     }
 
     enum Action {
@@ -30,6 +31,7 @@ final class SpaceStore: Store {
         case showDeleteAlert(MMAlertModel)
         case hideAlert
         case setDeleteStatus(LoadingStatus)
+        case setGyroEnabled(Bool)
     }
 
     struct State {
@@ -40,6 +42,7 @@ final class SpaceStore: Store {
         var currentPlaceID: PlaceID?
         var toastMessage: String?
         var selectedMessageID: MessageID?
+        var isGyroEnabled: Bool = false
         var deleteAlert: MMAlertModel?
         var deleteStatus: LoadingStatus = .idle
     }
@@ -96,6 +99,10 @@ final class SpaceStore: Store {
             case .dismissAlert:
                 continuation.yield(.hideAlert)
                 continuation.finish()
+
+            case .setGyroEnabled(let enabled):
+                continuation.yield(.setGyroEnabled(enabled))
+                continuation.finish()
             }
         }
     }
@@ -136,6 +143,9 @@ final class SpaceStore: Store {
 
         case .setDeleteStatus(let status):
             newState.deleteStatus = status
+
+        case .setGyroEnabled(let enabled):
+            newState.isGyroEnabled = enabled
         }
 
         return newState

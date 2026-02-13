@@ -49,11 +49,23 @@ struct SpaceView: View {
                 .allowsHitTesting(isSpaceReady)
                 .gesture(
                     DragGesture()
-                        .onChanged { spaceController.handleDrag($0.translation) }
-                        .onEnded { _ in spaceController.endDrag()}
+                        .onChanged {
+                            if store.state.isGyroEnabled {
+                                send(.setGyroEnabled(false))
+                            }
+                            spaceController.handleDrag($0.translation)
+                        }
+                        .onEnded { _ in
+                            spaceController.endDrag()
+                        }
                 )
                 .gesture(
-                    TapGesture().onEnded { send(.selectMessage(nil)) }
+                    TapGesture().onEnded {
+                        if store.state.isGyroEnabled {
+                            send(.setGyroEnabled(false))
+                        }
+                        send(.selectMessage(nil))
+                    }
                 )
                 .highPriorityGesture(
                     SpatialTapGesture()
@@ -67,7 +79,9 @@ struct SpaceView: View {
                 VStack {
                     Spacer()
 
-                    HStack {
+                    HStack(alignment: .center) {
+                        gyroToggleButton
+
                         Spacer()
 
                         WriteButton(mode: .white) {
@@ -80,10 +94,11 @@ struct SpaceView: View {
                                 )
                             }
                         }
-                        .opacity(!showPortal ? 1 : 0)
-                        .allowsHitTesting(!showPortal && isSpaceReady)
                     }
-                    .padding(.bottom, 96)
+                    .opacity(!showPortal ? 1 : 0)
+                    .allowsHitTesting(!showPortal && isSpaceReady)
+                    .padding(.bottom, MMLayout.tabBarBottomOffset)
+                    .padding(.horizontal, MMSpacing.floatingHorizontalPadding)
                 }
 
                 if store.state.deleteStatus != .idle {
@@ -145,8 +160,8 @@ struct SpaceView: View {
                     title: store.place.name,
                     onBack: { dismissWithFade() }
                 )
-                .padding(.top, 12)
-                .opacity(!showPortal ? 1 : 0)
+                    .padding(.top, 12)
+                    .opacity(!showPortal ? 1 : 0)
             }
             .task {
                 if !isSpaceReady {
@@ -165,6 +180,9 @@ struct SpaceView: View {
             .onChange(of: store.state.selectedMessageID) { _, newValue in
                 spaceController.selectMessage(newValue)
             }
+            .onChange(of: store.state.isGyroEnabled) { _, newValue in
+                spaceController.setGyroEnabled(newValue)
+            }
             .opacity(appearOpacity)
             .onAppear {
                 spaceController.startFloating()
@@ -179,6 +197,9 @@ struct SpaceView: View {
     }
 
     func dismissWithFade() {
+        if store.state.isGyroEnabled {
+            send(.setGyroEnabled(false))
+        }
         Task { @MainActor in
             withAnimation(.easeInOut(duration: 0.25)) {
                 appearOpacity = 0
@@ -246,6 +267,21 @@ extension SpaceView {
             }
         }
         .mmFloatingContainer(color: Color.mmBackground, opacity: 0.8)
+    }
+
+    var gyroToggleButton: some View {
+        Button {
+            send(.setGyroEnabled(!store.state.isGyroEnabled))
+        } label: {
+            Image(systemName: store.state.isGyroEnabled ? "gyroscope" : "hand.draw")
+                .font(.system(size: 22, weight: .regular))
+                .foregroundStyle(.mmWriteButton)
+                .frame(width: 53, height: 53)
+                .background(.mmFloatingBackground.opacity(0.85))
+                .clipShape(Circle())
+                .shadow(color: .black.opacity(0.15), radius: 6, y: 4)
+                .accessibilityLabel(store.state.isGyroEnabled ? "자이로스코프 끄기" : "자이로스코프 켜기")
+        }
     }
 }
 
