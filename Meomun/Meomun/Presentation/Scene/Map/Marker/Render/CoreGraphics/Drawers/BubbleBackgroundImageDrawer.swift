@@ -22,13 +22,18 @@ struct BubbleBackgroundImageDrawer: BubbleDrawable {
             ? UIImage(resource: .bubbleBackgroundWithPlace)
             : UIImage(resource: .bubbleBackgroundNoPlace)
 
-        // WithPlace: 아이콘 + 버블 전체 한 장 -> 캔버스 전체에 그림
-        // NoPlace: 스택백 포함 이미지 -> 캔버스 전체(rect + stackBack offset)에 그림
+        // WithPlace: 아이콘 + 버블 전체 한 장 -> rect 기준으로 아이콘 상단 포함 영역에 그림
+        // NoPlace: 스택백 포함 이미지 -> rect 기준으로 스택백 오프셋 포함 영역에 그림
         let drawRect = hasPlaceTag
-            ? CGRect(x: 0, y: 0, width: rect.width, height: rect.maxY)
+            ? CGRect(
+                x: rect.minX,
+                y: rect.minY - BubbleLayoutConstants.placeIconTopInset,
+                width: rect.width,
+                height: BubbleLayoutConstants.placeIconTopInset + rect.height
+            )
             : CGRect(
-                x: 0,
-                y: 0,
+                x: rect.minX,
+                y: rect.minY,
                 width: rect.width + BubbleLayoutConstants.stackBackOffset1.width,
                 height: rect.height + BubbleLayoutConstants.stackBackOffset1.height
             )

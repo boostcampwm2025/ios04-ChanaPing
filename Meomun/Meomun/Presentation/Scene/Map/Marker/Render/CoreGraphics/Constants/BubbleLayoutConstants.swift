@@ -49,4 +49,7 @@ struct BubbleLayoutConstants {
 
     // Rotation (RotatingMessageStack.swift)
     static let rotationMovingDistance: CGFloat = 16
+
+    // 섀도우 여백 (캔버스 잘림 방지)
+    static let shadowPadding: CGFloat = 18  // blur(12) + offset.height(6)
 }
