@@ -167,9 +167,13 @@ struct SpaceView: View {
             }
             .opacity(appearOpacity)
             .onAppear {
+                spaceController.startFloating()
                 withAnimation(.easeInOut(duration: 0.25)) {
                     appearOpacity = 1
                 }
+            }
+            .onDisappear {
+                spaceController.stopFloating()
             }
         }
     }
