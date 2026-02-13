@@ -31,5 +31,5 @@ enum MMLayout {
     static let aboveTabBarOffset: CGFloat = 90
 
     /// 탭바 높이를 고려한 기본 bottom offset
-    static let tabBarBottomOffset: CGFloat = 96
+    static let tabBarBottomOffset: CGFloat = 113
 }

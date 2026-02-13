@@ -57,12 +57,13 @@ struct MapView: View {
                         Color.clear
                             .frame(width: 50, height: 1)
                             .padding(.trailing, 120)
-                            .padding(.bottom, MMLayout.tabBarBottomOffset + 90)
+                            .padding(.bottom, MMLayout.tabBarBottomOffset + 73)
                             .popoverTip(MapPlaceConceptTip())
                     }
 
                     writeButton
                         .padding(.bottom, MMLayout.tabBarBottomOffset)
+                        .padding(.trailing, MMSpacing.floatingHorizontalPadding + 5)
                 }
             }
             .overlay(alignment: .bottom) {
