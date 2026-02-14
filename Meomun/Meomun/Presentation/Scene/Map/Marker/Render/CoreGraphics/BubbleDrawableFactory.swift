@@ -62,8 +62,7 @@ final class BubbleDrawableFactory {
             height: (dateY + dateLineHeight) - textY
         )
 
-        return [
-            BubbleClipDrawable(clipRect: clipRect),
+        let animationDrawables: [BubbleDrawable] = [
             BubbleTextDrawer(
                 text: current.content,
                 point: textPoint,
@@ -93,5 +92,7 @@ final class BubbleDrawableFactory {
                 yOffset: (1 - progress) * BubbleLayoutConstants.rotationMovingDistance
             )
         ]
+
+        return [BubbleClipDrawable(clipRect: clipRect, children: animationDrawables)]
     }
 }
