@@ -9,13 +9,14 @@ import SwiftUI
 
 struct BubbleChevronDrawer: BubbleDrawable {
     private let point: CGPoint
+    private let image: UIImage
 
     init(point: CGPoint) {
         self.point = point
+        self.image = UIImage(resource: .rotatingBubbleChevron)
     }
 
     func draw(in context: CGContext, colorScheme: ColorScheme) {
-        let image = UIImage(resource: .rotatingBubbleChevron)
         let size = BubbleLayoutConstants.chevronBackgroundSize
         let imageRect = CGRect(
             x: point.x - size / 2,

@@ -89,20 +89,32 @@ final class BubbleImageRenderer: BubbleImageRendering {
         let hasPlaceTag = current.placeTag != nil
         let locationText = current.displayLocationName
 
-        // 캔버스 = 버블 + 스택 배경/아이콘 여백만 반영. 스택백 offset, place 아이콘 상단
+        // 캔버스 = 버블 + 스택 배경/아이콘 여백 + 섀도우 여백 반영
         let bubbleHeight = BubbleLayoutConstants.height
         let bubbleWidth = BubbleLayoutConstants.width
         let stackBackInset = BubbleLayoutConstants.stackBackOffset1.width
         let placeIconTopInset = BubbleLayoutConstants.placeIconTopInset
+        let shadowPad = BubbleLayoutConstants.shadowPadding
 
         let size: CGSize
         let rect: CGRect
         if hasPlaceTag {
-            size = CGSize(width: bubbleWidth, height: placeIconTopInset + bubbleHeight)
-            rect = CGRect(x: 0, y: placeIconTopInset, width: bubbleWidth, height: bubbleHeight)
+            size = CGSize(
+                width: bubbleWidth + shadowPad * 2,
+                height: placeIconTopInset + bubbleHeight + shadowPad * 2
+            )
+            rect = CGRect(
+                x: shadowPad,
+                y: placeIconTopInset + shadowPad,
+                width: bubbleWidth,
+                height: bubbleHeight
+            )
         } else {
-            size = CGSize(width: bubbleWidth + stackBackInset, height: bubbleHeight + stackBackInset)
-            rect = CGRect(x: 0, y: 0, width: bubbleWidth, height: bubbleHeight)
+            size = CGSize(
+                width: bubbleWidth + stackBackInset + shadowPad * 2,
+                height: bubbleHeight + stackBackInset + shadowPad * 2
+            )
+            rect = CGRect(x: shadowPad, y: shadowPad, width: bubbleWidth, height: bubbleHeight)
         }
         let scaleToUse = scale ?? UIScreen.main.scale
         let compositor = BubbleCompositor(
@@ -126,7 +138,11 @@ final class BubbleImageRenderer: BubbleImageRendering {
         if let cached = await bubbleImageCache.locationTextImage(locationText: locationText) {
             locationImage = cached
         } else {
-            let locationDrawable = BubbleDrawableFactory.makeLocationDrawable(rect: rect, locationName: locationText)
+            let locationDrawable = BubbleDrawableFactory.makeLocationDrawable(
+                rect: rect,
+                locationName: locationText,
+                hasPlaceTag: hasPlaceTag
+            )
             locationImage = compositor.render(drawables: [locationDrawable])
             await bubbleImageCache.setLocationTextImage(locationImage, locationText: locationText)
         }
