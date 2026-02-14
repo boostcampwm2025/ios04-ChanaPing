@@ -11,11 +11,13 @@ struct BubbleLocationDrawer: BubbleDrawable {
     private let locationName: String
     private let point: CGPoint
     private let hasPlaceTag: Bool
+    private let mappinIcon: UIImage
 
     init(locationName: String, point: CGPoint, hasPlaceTag: Bool) {
         self.locationName = locationName
         self.point = point
         self.hasPlaceTag = hasPlaceTag
+        self.mappinIcon = UIImage(resource: .mappinBubble)
     }
 
     func draw(in context: CGContext, colorScheme: ColorScheme) {
@@ -74,7 +76,6 @@ struct BubbleLocationDrawer: BubbleDrawable {
             width: BubbleLayoutConstants.locationIconSize,
             height: BubbleLayoutConstants.locationIconSize
         )
-        let image = UIImage(resource: .mappinBubble)
-        image.draw(in: iconRect)
+        mappinIcon.draw(in: iconRect)
     }
 }
